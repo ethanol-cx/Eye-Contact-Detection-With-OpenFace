@@ -96,7 +96,7 @@ cv::Point3f RaySphereIntersect(cv::Point3f rayOrigin, cv::Point3f rayDir, cv::Po
 	return rayOrigin + rayDir * t;
 }
 
-cv::Point3f GetPupilPosition(cv::Mat_<double> eyeLdmks3d){
+cv::Point3f FaceAnalysis::GetPupilPosition(cv::Mat_<double> eyeLdmks3d){
 	
 	eyeLdmks3d = eyeLdmks3d.t();
 

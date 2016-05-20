@@ -68,5 +68,8 @@ namespace FaceAnalysis
 	void EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Point3f& gaze_absolute, float fx, float fy, float cx, float cy, bool left_eye);
 	void DrawGaze(cv::Mat img, const LandmarkDetector::CLNF& clnf_model, cv::Point3f gazeVecAxisLeft, cv::Point3f gazeVecAxisRight, float fx, float fy, float cx, float cy);
 
+	// Some utilities
+	cv::Point3f GetPupilPosition(cv::Mat_<double> eyeLdmks3d);
+
 }
 #endif
