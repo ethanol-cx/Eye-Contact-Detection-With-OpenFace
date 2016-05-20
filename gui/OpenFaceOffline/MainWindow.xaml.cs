@@ -129,10 +129,17 @@ namespace OpenFaceOffline
         FaceAnalyserManaged face_analyser;
 
         // Recording parameters (default values)
-        // TODO these should only be initialized when starting the recording, might not need to have them as members (also all should be on by default)
         bool record_HOG = false; // HOG features extracted from face images
         bool record_aligned = false; // aligned face images
         bool record_tracked_vid = false;
+
+        // Check wich things need to be recorded
+        bool record_2D_landmarks = false;
+        bool record_3D_landmarks = false;
+        bool record_model_params = false;
+        bool record_pose = false;
+        bool record_AUs = false;
+        bool record_gaze = false;
 
         // Visualisation options
         bool show_tracked_video = true;
@@ -169,9 +176,15 @@ namespace OpenFaceOffline
 
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
             {
+                RecordAUCheckBox.IsChecked = record_AUs;
                 RecordAlignedCheckBox.IsChecked = record_aligned;
                 RecordTrackedVidCheckBox.IsChecked = record_tracked_vid;
                 RecordHOGCheckBox.IsChecked = record_HOG;
+                RecordGazeCheckBox.IsChecked = record_gaze;
+                RecordLandmarks2DCheckBox.IsChecked = record_2D_landmarks;
+                RecordLandmarks3DCheckBox.IsChecked = record_3D_landmarks;
+                RecordParamsCheckBox.IsChecked = record_model_params;
+                RecordPoseCheckBox.IsChecked = record_pose;
 
                 UseDynamicModelsCheckBox.IsChecked = use_dynamic_models;
                 UseDynamicScalingCheckBox.IsChecked = dynamic_AU_scale;
@@ -220,7 +233,8 @@ namespace OpenFaceOffline
                         // Prepare recording if any based on the directory
                         String file_no_ext = System.IO.Path.GetDirectoryName(filenames[0]);
                         file_no_ext = System.IO.Path.GetFileName(file_no_ext);
-                        SetupRecording(record_root, file_no_ext, capture.width, capture.height);
+                        
+                        SetupRecording(record_root, file_no_ext, capture.width, capture.height, record_2D_landmarks, record_2D_landmarks, record_model_params, record_pose, record_AUs, record_gaze);
 
                         // Start the actual processing                        
                         VideoLoop();
@@ -289,8 +303,8 @@ namespace OpenFaceOffline
                         {
                             // Prepare recording if any
                             String file_no_ext = System.IO.Path.GetFileNameWithoutExtension(filename);
-
-                            SetupRecording(record_root, file_no_ext, capture.width, capture.height);
+                            
+                            SetupRecording(record_root, file_no_ext, capture.width, capture.height, record_2D_landmarks, record_3D_landmarks, record_model_params, record_pose, record_AUs, record_gaze);
 
                             // Start the actual processing                        
                             VideoLoop();
@@ -423,14 +437,6 @@ namespace OpenFaceOffline
             double fps = capture.GetFPS();
             if (fps <= 0) fps = 30;
 
-            // Check wich things need to be recorded
-            bool output_2D_landmarks = RecordLandmarks2DCheckBox.IsChecked;
-            bool output_3D_landmarks = RecordLandmarks3DCheckBox.IsChecked;
-            bool output_model_params = RecordParamsCheckBox.IsChecked;
-            bool output_pose = RecordPoseCheckBox.IsChecked;
-            bool output_AUs = RecordAUCheckBox.IsChecked;
-            bool output_gaze = RecordGazeCheckBox.IsChecked;
-
             while (thread_running)
             {
                 //////////////////////////////////////////////
@@ -487,7 +493,7 @@ namespace OpenFaceOffline
                 List<double> non_rigid_params = clnf_model.GetNonRigidParams();
 
                 // The face analysis step (only done if recording AUs, HOGs or video)
-                if (output_AUs || record_HOG || record_aligned || show_aus || show_appearance || record_tracked_vid || output_gaze)
+                if (record_AUs || record_HOG || record_aligned || show_aus || show_appearance || record_tracked_vid || record_gaze)
                 {
                     face_analyser.AddNextFrame(frame, clnf_model, fx, fy, cx, cy, false, show_appearance, record_tracked_vid);
                 }
@@ -624,7 +630,7 @@ namespace OpenFaceOffline
 
                 // Recording the tracked model
                 RecordFrame(clnf_model, detectionSucceeding, frame_id, frame, grayFrame, (fps * (double)frame_id)/1000.0,
-                    output_2D_landmarks, output_2D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, fx, fy, cx, cy);
+                    record_2D_landmarks, record_2D_landmarks, record_model_params, record_pose, record_AUs, record_gaze, fx, fy, cx, cy);
 
                 if (reset)
                 {
@@ -925,9 +931,15 @@ namespace OpenFaceOffline
             // Actually update the GUI accordingly
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
             {
+                RecordAUCheckBox.IsChecked = record_AUs;
                 RecordAlignedCheckBox.IsChecked = record_aligned;
                 RecordTrackedVidCheckBox.IsChecked = record_tracked_vid;
                 RecordHOGCheckBox.IsChecked = record_HOG;
+                RecordGazeCheckBox.IsChecked = record_gaze;
+                RecordLandmarks2DCheckBox.IsChecked = record_2D_landmarks;
+                RecordLandmarks3DCheckBox.IsChecked = record_3D_landmarks;
+                RecordParamsCheckBox.IsChecked = record_model_params;
+                RecordPoseCheckBox.IsChecked = record_pose;
 
                 ShowVideoCheckBox.IsChecked = true;
                 ShowAppearanceFeaturesCheckBox.IsChecked = false;
@@ -1171,9 +1183,15 @@ namespace OpenFaceOffline
 
         private void recordCheckBox_click(object sender, RoutedEventArgs e)
         {
+            record_AUs = RecordAUCheckBox.IsChecked;
             record_aligned = RecordAlignedCheckBox.IsChecked;
             record_HOG = RecordHOGCheckBox.IsChecked;
+            record_gaze = RecordGazeCheckBox.IsChecked;
             record_tracked_vid = RecordTrackedVidCheckBox.IsChecked;
+            record_2D_landmarks = RecordLandmarks2DCheckBox.IsChecked;
+            record_3D_landmarks = RecordLandmarks3DCheckBox.IsChecked;
+            record_model_params = RecordParamsCheckBox.IsChecked;
+            record_pose = RecordPoseCheckBox.IsChecked;
         }
 
         private void UseDynamicModelsCheckBox_Click(object sender, RoutedEventArgs e)
