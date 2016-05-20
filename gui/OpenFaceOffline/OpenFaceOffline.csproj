@@ -16,7 +16,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -172,7 +172,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>xcopy /I /E /Y /D "$(ProjectDir)logo1.ico" "$(SolutionDir)/$(Configuration)"</PreBuildEvent>
+    <PreBuildEvent>xcopy /I /E /Y /D "$(ProjectDir)logo1.ico" "$(SolutionDir)/$(Platform)/$(Configuration)"
+xcopy /I /E /Y /D "$(ProjectDir)logo1.ico" "$(SolutionDir)/$(Configuration)"</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
