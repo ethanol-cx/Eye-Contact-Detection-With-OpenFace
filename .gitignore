@@ -35,3 +35,6 @@ matlab_runners/Action Unit Experiments/out_fera/
 matlab_runners/Demos/output_features_seq/
 matlab_runners/Demos/output_features_vid/
 matlab_runners/Feature Point Experiments/300VW_features/
+matlab_runners/Feature Point Experiments/300VW_features_2/
+exe/FeatureExtraction/300VW_features_experiments/
+matlab_runners/Feature Point Experiments/300VW_features_experiments/
