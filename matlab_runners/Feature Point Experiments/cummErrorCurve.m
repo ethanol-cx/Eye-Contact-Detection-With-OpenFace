@@ -3,7 +3,7 @@ function [x, y] = cummErrorCurve( errorVec )
 %   Detailed explanation goes here
 
     
-    spacing = 0.001;       
+    spacing = 0.0005;       
     
     sampling = [0:spacing:max(errorVec)];
 
@@ -14,6 +14,11 @@ function [x, y] = cummErrorCurve( errorVec )
     for i=1:numel(sampling)
     
         y(i) = sum(errorVec < sampling(i)) / numel(errorVec);
+    end
+    
+    for i=1:200
+        x = cat(2, x, x(end)+spacing);
+        y = cat(2, y, 1);
     end
 end
 
