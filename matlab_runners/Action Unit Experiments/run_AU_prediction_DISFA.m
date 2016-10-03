@@ -1,10 +1,10 @@
 clear
 DISFA_dir = 'D:/Datasets/DISFA/Videos_LeftCamera/';
-clm_exe = '"../../x64/Release/FeatureExtraction.exe"';
+executable = '"../../x64/Release/FeatureExtraction.exe"';
 
 videos = dir([DISFA_dir, '*.avi']);
 
-output = 'AU_preds/';
+output = 'out_DISFA/';
 if(~exist(output, 'file'))
     mkdir(output);
 end
@@ -20,7 +20,7 @@ parfor v = 1:numel(videos)
     
     % where to output tracking results
     output_file = [output name '_au.txt'];
-    command = [clm_exe ' -f "' vid_file '" -of "' output_file '" -q -no2Dfp -no3Dfp -noMparams -noPose -noGaze'];
+    command = [executable ' -f "' vid_file '" -of "' output_file '" -q -no2Dfp -no3Dfp -noMparams -noPose -noGaze'];
         
     dos(command);
     
@@ -33,7 +33,7 @@ end
 % the results
 
 Label_dir = 'D:/Datasets/DISFA/ActionUnit_Labels/';
-prediction_dir = 'AU_preds/';
+prediction_dir = 'out_DISFA/';
 
 label_folders = dir([Label_dir, 'SN*']);
 
@@ -83,11 +83,11 @@ for i=1:numel(preds_files)
 end
 
 %% now do the actual evaluation that the collection has been done
-f = fopen('DISFA_valid_res.txt', 'w');
+f = fopen('results/DISFA_valid_res.txt', 'w');
 au_res = zeros(1, numel(AUs_disfa));
 for au = 1:numel(AUs_disfa)
    [ accuracies, F1s, corrs, ccc, rms, classes ] = evaluate_au_prediction_results( preds_all(:,au), labels_all(:,au));
-   fprintf(f, 'AU%d results - corr %.3f, ccc - %.3f\n', AUs_disfa(au), corrs, ccc);
+   fprintf(f, 'AU%d results - corr %.3f, rms %.3f, ccc - %.3f\n', AUs_disfa(au), corrs, rms, ccc);
    au_res(au) = ccc;
 end
 fclose(f);

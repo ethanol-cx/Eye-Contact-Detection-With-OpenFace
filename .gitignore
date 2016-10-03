@@ -20,9 +20,31 @@ matlab_runners/Feature Point Experiments/yt_features/
 matlab_runners/Feature Point Experiments/yt_features_clm/
 matlab_runners/Gaze Experiments/mpii_out/
 build/
-Debug/
 Release/AU_predictors/
 Release/
+exe/Recording/recording/
 ipch/
+exe/FeatureExtraction/out_bp4d/
+matlab_runners/Action Unit Experiments/out_bp4d/
+matlab_runners/Action Unit Experiments/out_SEMAINE/
+x64/Debug/
+matlab_runners/Action Unit Experiments/out_unbc/
+matlab_runners/Action Unit Experiments/out_bosph/
+matlab_runners/Action Unit Experiments/out_DISFA/
+matlab_runners/Action Unit Experiments/out_fera/
 matlab_runners/Demos/output_features_seq/
 matlab_runners/Demos/output_features_vid/
+exe/FaceLandmarkImg/Debug/
+exe/FaceLandmarkVid/Debug/
+exe/FaceLandmarkVidMulti/Debug/
+exe/FeatureExtraction/Debug/
+exe/Recording/Debug/
+gui/OpenFaceOffline/bin/
+gui/OpenFaceOffline/obj/
+lib/3rdParty/dlib/Debug/
+lib/local/CamCom/Debug/
+lib/local/CamCom/x64/
+lib/local/CppInerop/Debug/
+lib/local/CppInerop/x64/Debug/
+lib/local/FaceAnalyser/Debug/
+lib/local/LandmarkDetector/Debug/

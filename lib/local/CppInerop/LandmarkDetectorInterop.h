@@ -319,11 +319,11 @@ namespace CppInterop {
 
 				cv::Vec6d pose = ::LandmarkDetector::GetCorrectedPoseWorld(*clnf, fx,fy, cx, cy);
 
-				vector<pair<cv::Point, cv::Point>> vecLines = ::LandmarkDetector::CalculateBox(pose, fx, fy, cx, cy);
+				vector<pair<cv::Point2d, cv::Point2d>> vecLines = ::LandmarkDetector::CalculateBox(pose, fx, fy, cx, cy);
 
 				auto lines = gcnew System::Collections::Generic::List<System::Tuple<System::Windows::Point,System::Windows::Point>^>();
 
-				for(pair<cv::Point, cv::Point> line : vecLines) {
+				for(pair<cv::Point2d, cv::Point2d> line : vecLines) {
 					lines->Add(gcnew System::Tuple<System::Windows::Point, System::Windows::Point>(System::Windows::Point(line.first.x, line.first.y), System::Windows::Point(line.second.x, line.second.y)));
 				}
 

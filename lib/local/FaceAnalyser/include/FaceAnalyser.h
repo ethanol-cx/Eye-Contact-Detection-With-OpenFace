@@ -99,6 +99,10 @@ public:
 	std::vector<std::pair<std::string, double>> GetCurrentAUsReg() const;   // AU intensity
 	std::vector<std::pair<std::string, double>> GetCurrentAUsCombined() const; // Both presense and intensity
 
+	// A standalone call for predicting AUs from a static image, the first element in the pair represents occurence the second intensity
+	// This call is useful for detecting action units in images
+	std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, double>>> PredictStaticAUs(const cv::Mat& frame, const LandmarkDetector::CLNF& clnf, bool visualise = true);
+
 	void Reset();
 
 	void GetLatestHOG(cv::Mat_<double>& hog_descriptor, int& num_rows, int& num_cols);
@@ -118,8 +122,13 @@ public:
 	std::vector<std::string> GetAUClassNames() const; // Presence
 	std::vector<std::string> GetAURegNames() const; // Intensity
 
-	void ExtractAllPredictionsOfflineReg(vector<std::pair<std::string, vector<double>>>& au_predictions, vector<double>& confidences, vector<bool>& successes, vector<double>& timestamps);
-	void ExtractAllPredictionsOfflineClass(vector<std::pair<std::string, vector<double>>>& au_predictions, vector<double>& confidences, vector<bool>& successes, vector<double>& timestamps);
+	// Identify if models are static or dynamic (useful for correction and shifting)
+	std::vector<bool> GetDynamicAUClass() const; // Presence
+	std::vector<std::pair<string, bool>> GetDynamicAUReg() const; // Intensity
+
+
+	void ExtractAllPredictionsOfflineReg(vector<std::pair<std::string, vector<double>>>& au_predictions, vector<double>& confidences, vector<bool>& successes, vector<double>& timestamps, bool dynamic);
+	void ExtractAllPredictionsOfflineClass(vector<std::pair<std::string, vector<double>>>& au_predictions, vector<double>& confidences, vector<bool>& successes, vector<double>& timestamps, bool dynamic);
 
 private:
 
@@ -212,7 +221,7 @@ private:
 	void UpdatePredictionTrack(cv::Mat_<unsigned int>& prediction_corr_histogram, int& prediction_correction_count, vector<double>& correction, const vector<pair<string, double>>& predictions, double ratio=0.25, int num_bins = 200, double min_val = -3, double max_val = 5, int min_frames = 10);
 	void GetSampleHist(cv::Mat_<unsigned int>& prediction_corr_histogram, int prediction_correction_count, vector<double>& sample, double ratio, int num_bins = 200, double min_val = 0, double max_val = 5);
 
-	vector<std::pair<std::string, vector<double>>> PostprocessPredictions();
+	void PostprocessPredictions();
 
 	vector<cv::Mat_<unsigned int>> au_prediction_correction_histogram;
 	vector<int> au_prediction_correction_count;
@@ -233,6 +242,15 @@ private:
 	double align_scale;	
 	int align_width;
 	int align_height;
+
+	// Useful placeholder for renormalizing the initial frames of shorter videos
+	int max_init_frames = 3000;
+	vector<cv::Mat_<double>> hog_desc_frames_init;
+	vector<cv::Mat_<double>> geom_descriptor_frames_init;
+	vector<int> views;
+	bool postprocessed = false;
+	int frames_tracking_succ = 0;
+
 };
   //===========================================================================
 }

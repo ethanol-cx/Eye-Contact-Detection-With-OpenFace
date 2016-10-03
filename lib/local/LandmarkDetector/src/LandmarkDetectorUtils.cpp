@@ -76,6 +76,11 @@ using namespace std;
 namespace LandmarkDetector
 {
 
+// For subpixel accuracy drawing
+const int draw_shiftbits = 4;
+const int draw_multiplier = 1 << 4;
+
+
 // Useful utility for creating directories for storing the output files
 void create_directory_from_file(string output_path)
 {
@@ -115,8 +120,8 @@ void create_directories(string output_path)
 }
 
 // Extracting the following command line arguments -f, -fd, -op, -of, -ov (and possible ordered repetitions)
-void get_video_input_output_params(vector<string> &input_video_files, vector<string> &depth_dirs,
-	vector<string> &output_files, vector<string> &output_video_files, bool& world_coordinates_pose, vector<string> &arguments)
+void get_video_input_output_params(vector<string> &input_video_files, vector<string> &depth_dirs, vector<string> &output_files,
+	vector<string> &output_video_files, bool& world_coordinates_pose, string& output_codec, vector<string> &arguments)
 {
 	bool* valid = new bool[arguments.size()];
 
@@ -128,46 +133,65 @@ void get_video_input_output_params(vector<string> &input_video_files, vector<str
 	// By default use rotation with respect to camera (not world coordinates)
 	world_coordinates_pose = false;
 
-	string root = "";
+    // By default use DIVX codec
+	output_codec = "DIVX";
+
+	string input_root = "";
+	string output_root = "";
+
+	string separator = string(1, boost::filesystem::path::preferred_separator);
+
 	// First check if there is a root argument (so that videos and outputs could be defined more easilly)
 	for(size_t i = 0; i < arguments.size(); ++i)
 	{
-		if (arguments[i].compare("-root") == 0) 
-		{                    
-			root = arguments[i + 1];
-			// Do not discard root as it might be used in other later steps
+		if (arguments[i].compare("-root") == 0)
+		{
+			input_root = arguments[i + 1] + separator;
+			output_root = arguments[i + 1] + separator;
+
+			// Add the / or \ to the directory
 			i++;
-		}		
+		}
+		if (arguments[i].compare("-inroot") == 0)
+		{
+			input_root = arguments[i + 1] + separator;
+			i++;
+		}
+		if (arguments[i].compare("-outroot") == 0)
+		{
+			output_root = arguments[i + 1] + separator;
+			i++;
+		}
 	}
 
 	for(size_t i = 0; i < arguments.size(); ++i)
 	{
 		if (arguments[i].compare("-f") == 0) 
 		{                    
-			input_video_files.push_back(root + arguments[i + 1]);			
+			input_video_files.push_back(input_root + arguments[i + 1]);
 			valid[i] = false;
 			valid[i+1] = false;			
 			i++;
 		}		
 		else if (arguments[i].compare("-fd") == 0) 
 		{                    
-			depth_dirs.push_back(root + arguments[i + 1]);
+			depth_dirs.push_back(input_root + arguments[i + 1]);
 			valid[i] = false;
 			valid[i+1] = false;		
 			i++;
 		}
 		else if (arguments[i].compare("-of") == 0)
 		{
-			output_files.push_back(root + arguments[i + 1]);
-			create_directory_from_file(root + arguments[i + 1]);
+			output_files.push_back(output_root + arguments[i + 1]);
+			create_directory_from_file(output_root + arguments[i + 1]);
 			valid[i] = false;
 			valid[i+1] = false;
 			i++;
 		}
 		else if (arguments[i].compare("-ov") == 0)
 		{
-			output_video_files.push_back(root + arguments[i + 1]);
-			create_directory_from_file(root + arguments[i + 1]);
+			output_video_files.push_back(output_root + arguments[i + 1]);
+			create_directory_from_file(output_root + arguments[i + 1]);
 			valid[i] = false;
 			valid[i+1] = false;
 			i++;
@@ -175,6 +199,11 @@ void get_video_input_output_params(vector<string> &input_video_files, vector<str
 		else if (arguments[i].compare("-world_coord") == 0)
 		{
 			world_coordinates_pose = true;
+		}
+		else if (arguments[i].compare("-oc") == 0)
+		{
+			if(arguments[i + 1].length() == 4)
+				output_codec = arguments[i + 1];
 		}
 	}
 
@@ -253,19 +282,45 @@ void get_image_input_output_params(vector<string> &input_image_files, vector<str
 	
 	string out_pts_dir, out_pose_dir, out_img_dir;
 
+	string input_root = "";
+	string output_root = "";
+
+	string separator = string(1, boost::filesystem::path::preferred_separator);
+
+	// First check if there is a root argument (so that videos and outputs could be defined more easilly)
+	for (size_t i = 0; i < arguments.size(); ++i)
+	{
+		if (arguments[i].compare("-root") == 0)
+		{
+			input_root = arguments[i + 1] + separator;
+			output_root = arguments[i + 1] + separator;
+			i++;
+		}
+		if (arguments[i].compare("-inroot") == 0)
+		{
+			input_root = arguments[i + 1] + separator;
+			i++;
+		}
+		if (arguments[i].compare("-outroot") == 0)
+		{
+			output_root = arguments[i + 1] + separator;
+			i++;
+		}
+	}
+
 	for(size_t i = 0; i < arguments.size(); ++i)
 	{
 		valid[i] = true;
 		if (arguments[i].compare("-f") == 0) 
 		{                    
-			input_image_files.push_back(arguments[i + 1]);
+			input_image_files.push_back(input_root + arguments[i + 1]);
 			valid[i] = false;
 			valid[i+1] = false;			
 			i++;
 		}		
 		else if (arguments[i].compare("-fd") == 0) 
 		{                    
-			input_depth_files.push_back(arguments[i + 1]);
+			input_depth_files.push_back(input_root + arguments[i + 1]);
 			valid[i] = false;
 			valid[i+1] = false;		
 			i++;
@@ -355,21 +410,21 @@ void get_image_input_output_params(vector<string> &input_image_files, vector<str
 		}
 		else if (arguments[i].compare("-op") == 0)
 		{
-			output_pose_files.push_back(arguments[i + 1]);
+			output_pose_files.push_back(output_root + arguments[i + 1]);
 			valid[i] = false;
 			valid[i + 1] = false;
 			i++;
 		}
 		else if (arguments[i].compare("-of") == 0)
 		{
-			output_feature_files.push_back(arguments[i + 1]);
+			output_feature_files.push_back(output_root + arguments[i + 1]);
 			valid[i] = false;
 			valid[i+1] = false;
 			i++;
 		} 
 		else if (arguments[i].compare("-oi") == 0)
 		{
-			output_image_files.push_back(arguments[i + 1]);
+			output_image_files.push_back(output_root + arguments[i + 1]);
 			valid[i] = false;
 			valid[i+1] = false;
 			i++;
@@ -384,7 +439,7 @@ void get_image_input_output_params(vector<string> &input_image_files, vector<str
 			path image_loc(input_image_files[i]);
 
 			path fname = image_loc.filename();
-			fname = fname.replace_extension("jpg");
+			fname = fname.replace_extension("bmp");
 			output_image_files.push_back(out_img_dir + "/" + fname.string());
 			
 		}
@@ -846,7 +901,7 @@ void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, flo
 	cv::Mat_<double> rotBoxProj;
 	Project(rotBoxProj, rotBox, fx, fy, cx, cy);
 
-	cv::Rect image_rect(0,0,image.cols, image.rows);
+	cv::Rect image_rect(0,0,image.cols * draw_multiplier, image.rows * draw_multiplier);
 	
 	for (size_t i = 0; i < edges.size(); ++i)
 	{
@@ -856,20 +911,21 @@ void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, flo
 		rotBoxProj.row(edges[i].first).copyTo(begin);
 		rotBoxProj.row(edges[i].second).copyTo(end);
 
-		cv::Point p1((int)begin.at<double>(0), (int)begin.at<double>(1));
-		cv::Point p2((int)end.at<double>(0), (int)end.at<double>(1));
+
+		cv::Point p1(cvRound(begin.at<double>(0) * (double)draw_multiplier), cvRound(begin.at<double>(1) * (double)draw_multiplier));
+		cv::Point p2(cvRound(end.at<double>(0) * (double)draw_multiplier), cvRound(end.at<double>(1) * (double)draw_multiplier));
 		
 		// Only draw the line if one of the points is inside the image
 		if(p1.inside(image_rect) || p2.inside(image_rect))
 		{
-			cv::line(image, p1, p2, color, thickness);
+			cv::line(image, p1, p2, color, thickness, CV_AA, draw_shiftbits);
 		}
 		
 	}
 
 }
 
-vector<std::pair<cv::Point, cv::Point>> CalculateBox(cv::Vec6d pose, float fx, float fy, float cx, float cy)
+vector<std::pair<cv::Point2d, cv::Point2d>> CalculateBox(cv::Vec6d pose, float fx, float fy, float cx, float cy)
 {
 	double boxVerts[] = {-1, 1, -1,
 						1, 1, -1,
@@ -913,7 +969,7 @@ vector<std::pair<cv::Point, cv::Point>> CalculateBox(cv::Vec6d pose, float fx, f
 	cv::Mat_<double> rotBoxProj;
 	Project(rotBoxProj, rotBox, fx, fy, cx, cy);
 
-	vector<std::pair<cv::Point, cv::Point>> lines;
+	vector<std::pair<cv::Point2d, cv::Point2d>> lines;
 	
 	for (size_t i = 0; i < edges.size(); ++i)
 	{
@@ -923,10 +979,10 @@ vector<std::pair<cv::Point, cv::Point>> CalculateBox(cv::Vec6d pose, float fx, f
 		rotBoxProj.row(edges[i].first).copyTo(begin);
 		rotBoxProj.row(edges[i].second).copyTo(end);
 
-		cv::Point p1((int)begin.at<double>(0), (int)begin.at<double>(1));
-		cv::Point p2((int)end.at<double>(0), (int)end.at<double>(1));
+		cv::Point2d p1(begin.at<double>(0), begin.at<double>(1));
+		cv::Point2d p2(end.at<double>(0), end.at<double>(1));
 		
-		lines.push_back(pair<cv::Point, cv::Point>(p1,p2));
+		lines.push_back(pair<cv::Point2d, cv::Point2d>(p1,p2));
 		
 	}
 
@@ -944,7 +1000,7 @@ void DrawBox(vector<pair<cv::Point, cv::Point>> lines, cv::Mat image, cv::Scalar
 		// Only draw the line if one of the points is inside the image
 		if(p1.inside(image_rect) || p2.inside(image_rect))
 		{
-			cv::line(image, p1, p2, color, thickness);
+			cv::line(image, p1, p2, color, thickness, CV_AA);
 		}
 		
 	}
@@ -1019,6 +1075,7 @@ vector<cv::Point2d> CalculateLandmarks(CLNF& clnf_model)
 void Draw(cv::Mat img, const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities)
 {
 	int n = shape2D.rows/2;
+	
 
 	// Drawing feature points
 	if(n >= 66)
@@ -1027,14 +1084,15 @@ void Draw(cv::Mat img, const cv::Mat_<double>& shape2D, const cv::Mat_<int>& vis
 		{		
 			if(visibilities.at<int>(i))
 			{
-				cv::Point featurePoint((int)shape2D.at<double>(i), (int)shape2D.at<double>(i +n));
+				cv::Point featurePoint(cvRound(shape2D.at<double>(i) * (double)draw_multiplier), cvRound(shape2D.at<double>(i + n) * (double)draw_multiplier));
 
 				// A rough heuristic for drawn point size
 				int thickness = (int)std::ceil(3.0* ((double)img.cols) / 640.0);
 				int thickness_2 = (int)std::ceil(1.0* ((double)img.cols) / 640.0);
 
-				cv::circle(img, featurePoint, 1, cv::Scalar(0,0,255), thickness);
-				cv::circle(img, featurePoint, 1, cv::Scalar(255,0,0), thickness_2);
+				cv::circle(img, featurePoint, 1 * draw_multiplier, cv::Scalar(0, 0, 255), thickness, CV_AA, draw_shiftbits);
+				cv::circle(img, featurePoint, 1 * draw_multiplier, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
+
 			}
 		}
 	}
@@ -1042,7 +1100,7 @@ void Draw(cv::Mat img, const cv::Mat_<double>& shape2D, const cv::Mat_<int>& vis
 	{
 		for( int i = 0; i < n; ++i)
 		{		
-			cv::Point featurePoint((int)shape2D.at<double>(i), (int)shape2D.at<double>(i +n));
+			cv::Point featurePoint(cvRound(shape2D.at<double>(i) * (double)draw_multiplier), cvRound(shape2D.at<double>(i + n) * (double)draw_multiplier));
 
 			// A rough heuristic for drawn point size
 			int thickness = 1.0;
@@ -1056,15 +1114,12 @@ void Draw(cv::Mat img, const cv::Mat_<double>& shape2D, const cv::Mat_<int>& vis
 			if(i == 27)
 				next_point = 20;
 
-			cv::Point nextFeaturePoint((int)shape2D.at<double>(next_point), (int)shape2D.at<double>(next_point+n));
+			cv::Point nextFeaturePoint(cvRound(shape2D.at<double>(next_point) * (double)draw_multiplier), cvRound(shape2D.at<double>(next_point + n) * (double)draw_multiplier));
 			if( i < 8 || i > 19)
-				cv::line(img, featurePoint, nextFeaturePoint, cv::Scalar(255, 0, 0), thickness_2);
+				cv::line(img, featurePoint, nextFeaturePoint, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
 			else
-				cv::line(img, featurePoint, nextFeaturePoint, cv::Scalar(0, 0, 255), thickness_2);
+				cv::line(img, featurePoint, nextFeaturePoint, cv::Scalar(0, 0, 255), thickness_2, CV_AA, draw_shiftbits);
 
-			//cv::circle(img, featurePoint, 1, Scalar(0,255,0), thickness);
-			//cv::circle(img, featurePoint, 1, Scalar(0,0,255), thickness_2);
-			
 
 		}
 	}
@@ -1072,21 +1127,18 @@ void Draw(cv::Mat img, const cv::Mat_<double>& shape2D, const cv::Mat_<int>& vis
 	{
 		for( int i = 0; i < n; ++i)
 		{		
-			cv::Point featurePoint((int)shape2D.at<double>(i), (int)shape2D.at<double>(i +n));
+			cv::Point featurePoint(cvRound(shape2D.at<double>(i) * (double)draw_multiplier), cvRound(shape2D.at<double>(i + n) * (double)draw_multiplier));
 
 			// A rough heuristic for drawn point size
 			int thickness = 1.0;
 			int thickness_2 = 1.0;
 
-			//cv::circle(img, featurePoint, 1, Scalar(0,255,0), thickness);
-			//cv::circle(img, featurePoint, 1, Scalar(0,0,255), thickness_2);
-			
 			int next_point = i + 1;
 			if(i == 5)
 				next_point = 0;
 
-			cv::Point nextFeaturePoint((int)shape2D.at<double>(next_point), (int)shape2D.at<double>(next_point+n));
-			cv::line(img, featurePoint, nextFeaturePoint, cv::Scalar(255, 0, 0), thickness_2);
+			cv::Point nextFeaturePoint(cvRound(shape2D.at<double>(next_point) * (double)draw_multiplier), cvRound(shape2D.at<double>(next_point + n) * (double)draw_multiplier));
+			cv::line(img, featurePoint, nextFeaturePoint, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
 		}
 	}
 }
@@ -1111,18 +1163,18 @@ void Draw(cv::Mat img, const cv::Mat_<double>& shape2D)
 		cv::Point featurePoint;
 		if(shape2D.cols == 1)
 		{
-			featurePoint = cv::Point((int)shape2D.at<double>(i), (int)shape2D.at<double>(i +n));
+			featurePoint = cv::Point(cvRound(shape2D.at<double>(i) * (double)draw_multiplier), cvRound(shape2D.at<double>(i + n) * (double)draw_multiplier));
 		}
 		else
 		{
-			featurePoint = cv::Point((int)shape2D.at<double>(i, 0), (int)shape2D.at<double>(i, 1));
+			featurePoint = cv::Point(cvRound(shape2D.at<double>(i, 0) * (double)draw_multiplier), cvRound(shape2D.at<double>(i, 1) * (double)draw_multiplier));
 		}
 		// A rough heuristic for drawn point size
 		int thickness = (int)std::ceil(5.0* ((double)img.cols) / 640.0);
 		int thickness_2 = (int)std::ceil(1.5* ((double)img.cols) / 640.0);
 
-		cv::circle(img, featurePoint, 1, cv::Scalar(0,0,255), thickness);
-		cv::circle(img, featurePoint, 1, cv::Scalar(255,0,0), thickness_2);
+		cv::circle(img, featurePoint, 1 * draw_multiplier, cv::Scalar(0, 0, 255), thickness, CV_AA, draw_shiftbits);
+		cv::circle(img, featurePoint, 1 * draw_multiplier, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
 
 	}
 	
@@ -1151,12 +1203,13 @@ void DrawLandmarks(cv::Mat img, vector<cv::Point> landmarks)
 {
 	for(cv::Point p : landmarks)
 	{		
+
 		// A rough heuristic for drawn point size
 		int thickness = (int)std::ceil(5.0* ((double)img.cols) / 640.0);
 		int thickness_2 = (int)std::ceil(1.5* ((double)img.cols) / 640.0);
 
-		cv::circle(img, p, 1, cv::Scalar(0,0,255), thickness);
-		cv::circle(img, p, 1, cv::Scalar(255,0,0), thickness_2);
+		cv::circle(img, p, 1, cv::Scalar(0,0,255), thickness, CV_AA);
+		cv::circle(img, p, 1, cv::Scalar(255,0,0), thickness_2, CV_AA);
 	}
 	
 }

@@ -151,7 +151,8 @@ int main (int argc, char **argv)
 
 	// Get the input output file parameters
 	bool u;
-	LandmarkDetector::get_video_input_output_params(files, depth_directories, dummy_out, tracked_videos_output, u, arguments);
+	string output_codec;
+	LandmarkDetector::get_video_input_output_params(files, depth_directories, dummy_out, tracked_videos_output, u, output_codec, arguments);
 	// Get camera parameters
 	LandmarkDetector::get_camera_params(device, fx, fy, cx, cy, arguments);
 	
@@ -219,7 +220,11 @@ int main (int argc, char **argv)
 			video_capture >> captured_image;
 		}
 
-		if( !video_capture.isOpened() ) FATAL_STREAM( "Failed to open video source" );
+		if (!video_capture.isOpened())
+		{
+			FATAL_STREAM("Failed to open video source");
+			return 1;
+		}
 		else INFO_STREAM( "Device or file opened");
 
 		cv::Mat captured_image;
@@ -239,7 +244,14 @@ int main (int argc, char **argv)
 		cv::VideoWriter writerFace;
 		if(!tracked_videos_output.empty())
 		{
-			writerFace = cv::VideoWriter(tracked_videos_output[f_n], CV_FOURCC('D','I','V','X'), 30, captured_image.size(), true);
+			try
+			{
+				writerFace = cv::VideoWriter(tracked_videos_output[f_n], CV_FOURCC(output_codec[0],output_codec[1],output_codec[2],output_codec[3]), 30, captured_image.size(), true);
+			}
+			catch(cv::Exception e)
+			{
+				WARN_STREAM( "Could not open VideoWriter, OUTPUT FILE WILL NOT BE WRITTEN. Currently using codec " << output_codec << ", try using an other one (-oc option)");
+			}
 		}
 		
 		// For measuring the timings
@@ -412,7 +424,7 @@ int main (int argc, char **argv)
 			sprintf(fpsC, "%d", (int)fps);
 			string fpsSt("FPS:");
 			fpsSt += fpsC;
-			cv::putText(disp_image, fpsSt, cv::Point(10,20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255,0,0));		
+			cv::putText(disp_image, fpsSt, cv::Point(10,20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255,0,0), 1, CV_AA);
 			
 			int num_active_models = 0;
 
@@ -428,7 +440,7 @@ int main (int argc, char **argv)
 			sprintf(active_m_C, "%d", num_active_models);
 			string active_models_st("Active models:");
 			active_models_st += active_m_C;
-			cv::putText(disp_image, active_models_st, cv::Point(10,60), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255,0,0));		
+			cv::putText(disp_image, active_models_st, cv::Point(10,60), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255,0,0), 1, CV_AA);
 			
 			if(!det_parameters[0].quiet_mode)
 			{

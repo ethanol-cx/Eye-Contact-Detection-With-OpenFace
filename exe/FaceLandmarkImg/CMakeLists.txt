@@ -1,3 +1,6 @@
+#TBB library
+include_directories(${TBB_ROOT_DIR}/include)
+
 # Local libraries
 include_directories(${LandmarkDetector_SOURCE_DIR}/include)
 	
@@ -11,4 +14,4 @@ target_link_libraries(FaceLandmarkImg dlib)
 
 target_link_libraries(FaceLandmarkImg ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES})
 
-install (TARGETS FaceLandmarkImg DESTINATION ${CMAKE_BINARY_DIR}/bin)
+install (TARGETS FaceLandmarkImg DESTINATION bin)
