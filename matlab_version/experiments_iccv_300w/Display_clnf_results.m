@@ -95,7 +95,7 @@ drmf_error = compute_error(labels_all, shapes_all);
 plot(error_x, error_y, '-.k','DisplayName', 'DRMF (CVPR 13)', 'LineWidth',line_width);
 
 set(gca,'xtick',[0:0.05:0.15])
-xlim([0,0.15]);
+xlim([0,0.08]);
 xlabel('Size normalised shape RMS error','FontName','Helvetica');
 ylabel('Proportion of images','FontName','Helvetica');
 grid on

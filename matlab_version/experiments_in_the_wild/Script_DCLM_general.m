@@ -1,4 +1,4 @@
-function Script_CLNF_general()
+function Script_DCLM_general()
 
 addpath('../PDM_helpers/');
 addpath('../fitting/normxcorr2_mex_ALL');
@@ -22,12 +22,11 @@ clmParams = struct;
 clmParams.window_size = [25,25; 23,23; 21,21;];
 clmParams.numPatchIters = size(clmParams.window_size,1);
 
-[patches] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*_general.mat', [], [], clmParams);
+[patches] = Load_DCLM_Patch_Experts( '../models/general/', 'dccnf_patches_*_general.mat', [], [], clmParams);
 
 %% Fitting the model to the provided image
-patches = patches(1);
-verbose = false; % set to true to visualise the fitting
-output_root = './wild_fit_clnf/';
+
+output_root = './wild_fit_dclm/';
 
 % the default PDM to use
 pdmLoc = ['../models/pdm/pdm_68_aligned_wild.mat'];
@@ -65,7 +64,7 @@ all_views_used = zeros(numel(images),1);
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
 multi_view = true;
-
+verbose = true;
 tic
 for i=1:numel(images)
 
@@ -181,7 +180,7 @@ fprintf('experiment %d done: mean normed error %.3f median normed error %.4f\n',
     numel(experiments), mean(experiment.errors_normed), median(experiment.errors_normed));
 
 %%
-output_results = 'results/results_wild_clnf_general.mat';
+output_results = 'results/results_wild_dclm_general.mat';
 save(output_results, 'experiments');
     
 end

@@ -136,6 +136,8 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
             responses = PatchResponseSVM_multi_modal( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale).normalisationOptionsCol, clmParams, clmParams.window_size(i,:));
         elseif(strcmp(patchExperts(scale).type, 'CCNF'))                        
             responses = PatchResponseCCNF( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
+        elseif(strcmp(patchExperts(scale).type, 'DNN'))                        
+            responses = PatchResponseDNN( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
         end
         
         % If a depth image is provided compute patch experts around it as
