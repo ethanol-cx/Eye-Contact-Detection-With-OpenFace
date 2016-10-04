@@ -48,3 +48,5 @@ lib/local/CppInerop/Debug/
 lib/local/CppInerop/x64/Debug/
 lib/local/FaceAnalyser/Debug/
 lib/local/LandmarkDetector/Debug/
+OpenFaceDemo/bin/
+OpenFaceDemo/obj/
