@@ -332,24 +332,36 @@ public:
 		
 		cv::Mat_<double> cameraMat = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
 
-		vector<cv::Point3d> points_left;
-		points_left.push_back(cv::Point3d(*pupil_left));
-		points_left.push_back(cv::Point3d(*pupil_left + *gazeDirection0*40.0));
+		vector<cv::Point3f> points_left;
+		points_left.push_back(cv::Point3f(*pupil_left));
+		points_left.push_back(cv::Point3f(*pupil_left + *gazeDirection0*40.0));
 
-		vector<cv::Point3d> points_right;
-		points_right.push_back(cv::Point3d(*pupil_right));
-		points_right.push_back(cv::Point3d(*pupil_right + *gazeDirection1*40.0));
+		vector<cv::Point3f> points_right;
+		points_right.push_back(cv::Point3f(*pupil_right));
+		points_right.push_back(cv::Point3f(*pupil_right + *gazeDirection1*40.0));
 
+		// Perform manual projection of points
 		vector<cv::Point2d> imagePoints_left;
-		projectPoints(points_left, cv::Mat::eye(3, 3, cv::DataType<double>::type), cv::Mat::zeros(1, 3, cv::DataType<double>::type), cameraMat, cv::Mat::zeros(4, 1, cv::DataType<double>::type), imagePoints_left);
-		
+		for (int i = 0; i < points_left.size(); ++i)
+		{
+			double x = points_left[i].x * fx / points_left[i].z + cx;
+			double y = points_left[i].y * fy / points_left[i].z + cy;
+			imagePoints_left.push_back(cv::Point2d(x, y));
+
+		}
+
 		vector<cv::Point2d> imagePoints_right;
-		projectPoints(points_right, cv::Mat::eye(3, 3, cv::DataType<double>::type), cv::Mat::zeros(1, 3, cv::DataType<double>::type), cameraMat, cv::Mat::zeros(4, 1, cv::DataType<double>::type), imagePoints_right);
-		
+		for (int i = 0; i < points_right.size(); ++i)
+		{
+			double x = points_right[i].x * fx / points_right[i].z + cx;
+			double y = points_right[i].y * fy / points_right[i].z + cy;
+			imagePoints_right.push_back(cv::Point2d(x, y));
+
+		}
+
 		auto lines = gcnew System::Collections::Generic::List<System::Tuple<System::Windows::Point, System::Windows::Point>^>();
 		lines->Add(gcnew System::Tuple<System::Windows::Point, System::Windows::Point>(System::Windows::Point(imagePoints_left[0].x, imagePoints_left[0].y), System::Windows::Point(imagePoints_left[1].x, imagePoints_left[1].y)));
 		lines->Add(gcnew System::Tuple<System::Windows::Point, System::Windows::Point>(System::Windows::Point(imagePoints_right[0].x, imagePoints_right[0].y), System::Windows::Point(imagePoints_right[1].x, imagePoints_right[1].y)));
-
 		return lines;
 	}
 

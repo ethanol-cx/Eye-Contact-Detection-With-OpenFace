@@ -293,8 +293,8 @@ namespace OpenFaceDemo
                     double nose_wrinkle = au_regs["AU09"] / 4.0 + 0.05;
 
                     Dictionary<int, double> smileDict = new Dictionary<int, double>();
-                    smileDict[0] = 0.5 * smile_cumm + 0.5 * smile;
-                    smileDict[1] = 0.5 * frown_cumm + 0.5 * frown;
+                    smileDict[0] = 0.6 * smile_cumm + 0.4 * smile;
+                    smileDict[1] = 0.6 * frown_cumm + 0.4 * frown;
                     smilePlot.AddDataPoint(new DataPoint() { Time = CurrentTime, values = smileDict, Confidence = confidence });
 
                     Dictionary<int, double> browDict = new Dictionary<int, double>();
@@ -466,6 +466,8 @@ namespace OpenFaceDemo
             }
             
             face_analyser.Dispose();
+            clnf_model.Dispose();
+            this.Close();
         }
 
     }
