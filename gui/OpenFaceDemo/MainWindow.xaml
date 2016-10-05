@@ -38,5 +38,16 @@
         <local:AxesBorder MinHeight="180" Grid.Row="4" Grid.Column="1" Padding="60 20 30 40" RangeLabel="Eye gaze" Orientation="Horizontal" MinVal="-1" MaxVal="1" NumVertGrid="5">
             <local:TimeSeriesPlot x:Name="gazePlot" Orientation="Horizontal" ShowLegend="True"/>
         </local:AxesBorder>
+
+        <local:AxesBorder Grid.Column="2" Grid.Row="1" MinHeight="130" ShowXLabel="False" Padding="60 20 30 10" XTicks="False" RangeLabel="Lips" Orientation="Horizontal" MinVal="0" MaxVal="1" NumVertGrid="5">
+            <local:TimeSeriesPlot x:Name="smilePlot" Orientation="Horizontal" ShowLegend="True"/>
+        </local:AxesBorder>
+        <local:AxesBorder Grid.Column="2" Grid.Row="2" MinHeight="130" ShowXLabel="False" Padding="60 20 30 10" XTicks="False" RangeLabel="Brows" Orientation="Horizontal" MinVal="0" MaxVal="1" NumVertGrid="5">
+            <local:TimeSeriesPlot x:Name="browPlot" Orientation="Horizontal" ShowLegend="True"/>
+        </local:AxesBorder>
+        <local:AxesBorder Grid.Column="2" Grid.Row="3"  MinHeight="130" ShowXLabel="False" Padding="60 20 30 10" XTicks="False" RangeLabel="Other" Orientation="Horizontal" MinVal="0" MaxVal="1" NumVertGrid="5">
+            <local:TimeSeriesPlot x:Name="eyePlot" Orientation="Horizontal" ShowLegend="True"/>
+        </local:AxesBorder>
+    
     </Grid>
 </Window>
