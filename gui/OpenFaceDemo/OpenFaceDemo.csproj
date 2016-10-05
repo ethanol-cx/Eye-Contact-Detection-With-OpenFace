@@ -123,16 +123,23 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\gui\OpenFaceOffline\OpenFaceOffline.csproj">
+    <ProjectReference Include="..\OpenFaceOffline\OpenFaceOffline.csproj">
       <Project>{a4760f41-2b1f-4144-b7b2-62785affe79b}</Project>
       <Name>OpenFaceOffline</Name>
     </ProjectReference>
-    <ProjectReference Include="..\lib\local\CppInerop\CppInerop.vcxproj">
+    <ProjectReference Include="..\..\lib\local\CppInerop\CppInerop.vcxproj">
       <Project>{78196985-ee54-411f-822b-5a23edf80642}</Project>
       <Name>CppInerop</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /I /E /Y /D "$(ProjectDir)logo1.ico" "$(ProjectDir)$(OutDir)"</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

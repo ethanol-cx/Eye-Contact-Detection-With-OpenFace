@@ -86,7 +86,7 @@ namespace OpenFaceDemo
 
                 if (cam_sec == null)
                 {
-                    cam_sec = new CameraSelection();
+                    cam_sec = new CameraSelection(); 
                 }
                 else
                 {

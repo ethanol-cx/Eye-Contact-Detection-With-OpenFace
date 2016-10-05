@@ -50,3 +50,6 @@ lib/local/FaceAnalyser/Debug/
 lib/local/LandmarkDetector/Debug/
 OpenFaceDemo/bin/
 OpenFaceDemo/obj/
+Debug/model/
+Debug/
+*.suo

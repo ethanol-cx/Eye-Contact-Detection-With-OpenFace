@@ -33,7 +33,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CamCom", "lib\local\CamCom\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenFaceOffline", "gui\OpenFaceOffline\OpenFaceOffline.csproj", "{A4760F41-2B1F-4144-B7B2-62785AFFE79B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenFaceDemo", "OpenFaceDemo\OpenFaceDemo.csproj", "{E143A2AA-312E-4DFE-B61D-9A87CCBC8E90}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenFaceDemo", "gui\OpenFaceDemo\OpenFaceDemo.csproj", "{E143A2AA-312E-4DFE-B61D-9A87CCBC8E90}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

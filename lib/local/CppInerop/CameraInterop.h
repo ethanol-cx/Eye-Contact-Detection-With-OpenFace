@@ -257,11 +257,13 @@ namespace CameraInterop {
 			{
 				cameras[i].activate();
 				std::string name = cameras[i].name(); 
-				if(name.compare("Microsoft LifeCam Front") == 0)
-				{
-					cameras.push_back(cameras[i]);
-					cameras.erase(cameras.begin() + i);
-				}
+
+				// TODO, something is odd here
+				//if(name.compare("Microsoft LifeCam Front") == 0)
+				//{
+				//	cameras.push_back(cameras[i]);
+				//	cameras.erase(cameras.begin() + i);
+				//}
 			}
 			
 
