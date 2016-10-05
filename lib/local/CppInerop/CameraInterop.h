@@ -186,6 +186,15 @@ namespace CameraInterop {
 			vid_length = image_files->Count;
 		}
 
+		static void split(const std::string &s, char delim, std::vector<string> &elems) {
+			std::stringstream ss;
+			ss.str(s);
+			std::string item;
+			while (std::getline(ss, item, delim)) {
+				elems.push_back(item);
+			}
+		}
+
 		static System::Collections::Generic::Dictionary<System::String^, System::Collections::Generic::List<System::Tuple<int,int>^>^>^ GetListingFromFile(std::string filename)
 		{
 			// Check what cameras have been written (using OpenCVs XML packages)
@@ -204,8 +213,13 @@ namespace CameraInterop {
 				auto resolutions = gcnew System::Collections::Generic::List<System::Tuple<int, int>^>();
 				for(size_t r_idx = 0; r_idx < resolution_list.size(); r_idx++ )
 				{
-					int x = (int)resolution_list[r_idx]["x"];
-					int y = (int)resolution_list[r_idx]["y"];
+					string res = resolution_list[r_idx]["res"];
+					
+					std::vector<std::string> elems;
+					split(res, 'x', elems);
+
+					int x = stoi(elems[0]);
+					int y = stoi(elems[1]);
 					resolutions->Add(gcnew System::Tuple<int,int>(x, y));
 				}
 				managed_camera_list_initial[gcnew System::String(camera_name.c_str())] = resolutions;
@@ -229,8 +243,10 @@ namespace CameraInterop {
 					auto resolutions = camera_list[name_m];
 					for(int j = 0; j < resolutions->Count; j++)
 					{
+						stringstream ss;
+						ss << resolutions[j]->Item1 << "x" << resolutions[j]->Item2;
 
-						fs << "{:" << "x" << resolutions[j]->Item1 << "y" << resolutions[j]->Item2;
+						fs << "{:" << "res" << ss.str();
 						fs<< "}";
 					}
 					fs << "]";
