@@ -22,7 +22,6 @@ using CppInterop.LandmarkDetector;
 using CameraInterop;
 using FaceAnalyser_Interop;
 using System.Windows.Threading;
-using OpenFaceDemo.UI_items;
 
 namespace OpenFaceDemo
 {
@@ -31,7 +30,7 @@ namespace OpenFaceDemo
     /// </summary>
     public partial class MainWindow : Window
     {
-
+        
         // -----------------------------------------------------------------
         // Members
         // -----------------------------------------------------------------

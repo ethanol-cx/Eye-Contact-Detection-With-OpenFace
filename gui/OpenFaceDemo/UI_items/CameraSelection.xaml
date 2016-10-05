@@ -1,9 +1,9 @@
-﻿<Window x:Class="OpenFaceDemo.UI_items.CameraSelection"
+﻿<Window x:Class="OpenFaceDemo.CameraSelection"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:OpenFaceDemo.UI_items"
+        xmlns:local="clr-namespace:OpenFaceDemo"
         mc:Ignorable="d"
         Title="CameraSelection" Height="460" Width="600" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Closing="Window_Closing">
     <Grid>

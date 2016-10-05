@@ -54,6 +54,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>logo1.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -75,8 +78,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="UI_items\AxesBorder.cs" />
     <Compile Include="UI_items\CameraSelection.xaml.cs">
       <DependentUpon>CameraSelection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI_items\TimeSeriesPlot.xaml.cs">
+      <DependentUpon>TimeSeriesPlot.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -91,6 +98,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="UI_items\CameraSelection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI_items\TimeSeriesPlot.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -131,6 +142,9 @@
       <Project>{78196985-ee54-411f-822b-5a23edf80642}</Project>
       <Name>CppInerop</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="logo1.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

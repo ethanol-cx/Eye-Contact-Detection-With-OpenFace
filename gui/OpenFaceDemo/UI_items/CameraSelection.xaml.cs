@@ -16,7 +16,7 @@ using CppInterop;
 using System.Windows.Threading;
 using System.Threading;
 
-namespace OpenFaceDemo.UI_items
+namespace OpenFaceDemo
 {
     /// <summary>
     /// Interaction logic for CameraSelection.xaml

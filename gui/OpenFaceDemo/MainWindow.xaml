@@ -30,6 +30,9 @@
         <Border Name="VideoBorder" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="3" BorderBrush="Black" BorderThickness="1" Background="LightGray" Margin="5,5,0,0">
             <of:OverlayImage x:Name="video" />
         </Border>
-                
+        
+        <local:AxesBorder NumVertGrid="7" MinVal="-1" MaxVal="1" MinHeight="180" Grid.Row="4" Grid.Column="0" Padding="60 20 30 40" RangeLabel="Head pose" Orientation="Horizontal">
+            <local:TimeSeriesPlot ShowLegend="True" x:Name="headPosePlot" Orientation="Horizontal"/>
+        </local:AxesBorder>                
     </Grid>
 </Window>
