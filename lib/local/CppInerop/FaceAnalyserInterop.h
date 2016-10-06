@@ -258,7 +258,7 @@ public:
 
 	void AddNextFrame(OpenCVWrappers::RawImage^ frame, CppInterop::LandmarkDetector::CLNF^ clnf, double fx, double fy, double cx, double cy, bool online, bool vis_hog, bool vis_tracked) {
 			
-		face_analyser->AddNextFrame(frame->Mat, *clnf->getCLM(), 0, online, vis_hog);
+		face_analyser->AddNextFrame(frame->Mat, *clnf->getCLNF(), 0, online, vis_hog);
 
 		face_analyser->GetLatestHOG(*hog_features, *num_rows, *num_cols);
 		
@@ -290,29 +290,29 @@ public:
 		}
 
 		// After the AUs have been detected do some gaze estimation as well
-		FaceAnalysis::EstimateGaze(*clnf->getCLM(), *gazeDirection0, fx, fy, cx, cy, true);
-		FaceAnalysis::EstimateGaze(*clnf->getCLM(), *gazeDirection1, fx, fy, cx, cy, false);
+		FaceAnalysis::EstimateGaze(*clnf->getCLNF(), *gazeDirection0, fx, fy, cx, cy, true);
+		FaceAnalysis::EstimateGaze(*clnf->getCLNF(), *gazeDirection1, fx, fy, cx, cy, false);
 
 		// Grab pupil locations
 		int part_left = -1;
 		int part_right = -1;
-		for (size_t i = 0; i < clnf->getCLM()->hierarchical_models.size(); ++i)
+		for (size_t i = 0; i < clnf->getCLNF()->hierarchical_models.size(); ++i)
 		{
-			if (clnf->getCLM()->hierarchical_model_names[i].compare("left_eye_28") == 0)
+			if (clnf->getCLNF()->hierarchical_model_names[i].compare("left_eye_28") == 0)
 			{
 				part_left = i;
 			}
-			if (clnf->getCLM()->hierarchical_model_names[i].compare("right_eye_28") == 0)
+			if (clnf->getCLNF()->hierarchical_model_names[i].compare("right_eye_28") == 0)
 			{
 				part_right = i;
 			}
 		}
 
-		cv::Mat_<double> eyeLdmks3d_left = clnf->getCLM()->hierarchical_models[part_left].GetShape(fx, fy, cx, cy);
+		cv::Mat_<double> eyeLdmks3d_left = clnf->getCLNF()->hierarchical_models[part_left].GetShape(fx, fy, cx, cy);
 		cv::Point3f pupil_left_h = FaceAnalysis::GetPupilPosition(eyeLdmks3d_left);
 		pupil_left->x = pupil_left_h.x; pupil_left->y = pupil_left_h.y; pupil_left->z = pupil_left_h.z;
 
-		cv::Mat_<double> eyeLdmks3d_right = clnf->getCLM()->hierarchical_models[part_right].GetShape(fx, fy, cx, cy);
+		cv::Mat_<double> eyeLdmks3d_right = clnf->getCLNF()->hierarchical_models[part_right].GetShape(fx, fy, cx, cy);
 		cv::Point3f pupil_right_h = FaceAnalysis::GetPupilPosition(eyeLdmks3d_right);
 		pupil_right->x = pupil_right_h.x; pupil_right->y = pupil_right_h.y; pupil_right->z = pupil_right_h.z;
 	}

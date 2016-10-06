@@ -184,7 +184,7 @@ namespace CppInterop {
 				delete clnf;
 			}
 
-			::LandmarkDetector::CLNF* getCLM() {
+			::LandmarkDetector::CLNF* getCLNF() {
 				return clnf;
 			}
 
@@ -202,15 +202,15 @@ namespace CppInterop {
 				return clnf->detection_certainty;
 			}
 
-			bool DetectLandmarksInVideo(OpenCVWrappers::RawImage^ image, FaceModelParameters^ clmParams) {
-				return ::LandmarkDetector::DetectLandmarksInVideo(image->Mat, *clnf, *clmParams->getParams());
+			bool DetectLandmarksInVideo(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {
+				return ::LandmarkDetector::DetectLandmarksInVideo(image->Mat, *clnf, *modelParams->getParams());
 			}
 
-			bool DetectFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, FaceModelParameters^ clmParams) {
-				return ::LandmarkDetector::DetectLandmarksInImage(image->Mat, *clnf, *clmParams->getParams());
+			bool DetectFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {
+				return ::LandmarkDetector::DetectLandmarksInImage(image->Mat, *clnf, *modelParams->getParams());
 			}
 
-			System::Collections::Generic::List<System::Collections::Generic::List<System::Tuple<double,double>^>^>^ DetectMultiFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, FaceModelParameters^ clmParams) {
+			System::Collections::Generic::List<System::Collections::Generic::List<System::Tuple<double,double>^>^>^ DetectMultiFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {
 
 				auto all_landmarks = gcnew System::Collections::Generic::List<System::Collections::Generic::List<System::Tuple<double,double>^>^>();
 
@@ -231,7 +231,7 @@ namespace CppInterop {
 				{
 					cv::Mat depth;
 					// if there are multiple detections go through them
-					bool success = ::LandmarkDetector::DetectLandmarksInImage(image->Mat, depth, face_detections[face], *clnf, *clmParams->getParams());
+					bool success = ::LandmarkDetector::DetectLandmarksInImage(image->Mat, depth, face_detections[face], *clnf, *modelParams->getParams());
 
 					auto landmarks_curr = gcnew System::Collections::Generic::List<System::Tuple<double,double>^>();
 					if(clnf->detected_landmarks.cols == 1)
@@ -301,7 +301,7 @@ namespace CppInterop {
 			}
 
 
-			// Static functions from the CLMTracker namespace.
+			// Static functions from the LandmarkDetector namespace.
 			void DrawLandmarks(OpenCVWrappers::RawImage^ img, System::Collections::Generic::List<System::Windows::Point>^ landmarks) {
 
 				vector<cv::Point> vecLandmarks;
