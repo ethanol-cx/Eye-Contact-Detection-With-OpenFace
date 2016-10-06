@@ -116,7 +116,7 @@ namespace OpenFaceDemo
                 smilePlot.AssocName(1, "Frown");
                 smilePlot.AssocThickness(0, 2);
                 smilePlot.AssocThickness(1, 2);
-
+                
                 browPlot.AssocColor(0, Colors.Green);
                 browPlot.AssocColor(1, Colors.Red);
                 browPlot.AssocName(0, "Raise");
@@ -268,8 +268,14 @@ namespace OpenFaceDemo
                 List<Tuple<double, double>> landmarks = null;
                 List<Tuple<Point, Point>> gaze_lines = null;
                 var gaze = face_analyser.GetGazeCamera();
-                double x_gaze = (gaze.Item1.Item1 + gaze.Item2.Item1) / 2.0;
-                double y_gaze = (gaze.Item1.Item2 + gaze.Item2.Item2) / 2.0;
+               
+                // Get the rough gaze angle
+                double x_gaze = (Math.Atan2(gaze.Item1.Item1, -gaze.Item1.Item3) + Math.Atan2(gaze.Item2.Item1, -gaze.Item2.Item3))/2.0;
+                double y_gaze = (Math.Atan2(gaze.Item1.Item2, -gaze.Item1.Item3) + Math.Atan2(gaze.Item2.Item2, -gaze.Item2.Item3)) / 2.0;
+
+                // Scaling for clearer vis.
+                x_gaze *= 2;
+                y_gaze *= 2;
 
                 if (detectionSucceeding)
                 {
@@ -284,29 +290,29 @@ namespace OpenFaceDemo
 
                     var au_regs = face_analyser.GetCurrentAUsReg();
 
-                    double smile = (au_regs["AU12"] + au_regs["AU06"]) / 7.5 + 0.05;
-                    double frown = (au_regs["AU15"] + au_regs["AU17"] + au_regs["AU04"]) / 10.0 + 0.05;
+                    double smile = (au_regs["AU12"] + au_regs["AU06"] + au_regs["AU25"]) / 13.0;
+                    double frown = (au_regs["AU15"] + au_regs["AU17"]) / 12.0;
 
-                    double brow_up = (au_regs["AU01"] + au_regs["AU02"]) / 7.5 + 0.05;
-                    double brow_down = au_regs["AU04"] / 5.0 + 0.05;
+                    double brow_up = (au_regs["AU01"] + au_regs["AU02"]) / 10.0;
+                    double brow_down = au_regs["AU04"] / 5.0;
 
-                    double eye_widen = au_regs["AU05"] / 2.5 + 0.05;
-                    double nose_wrinkle = au_regs["AU09"] / 4.0 + 0.05;
+                    double eye_widen = au_regs["AU05"] / 3.0;
+                    double nose_wrinkle = au_regs["AU09"] / 4.0;
 
                     Dictionary<int, double> smileDict = new Dictionary<int, double>();
-                    smileDict[0] = 0.6 * smile_cumm + 0.4 * smile;
-                    smileDict[1] = 0.6 * frown_cumm + 0.4 * frown;
-                    smilePlot.AddDataPoint(new DataPoint() { Time = CurrentTime, values = smileDict, Confidence = confidence });
+                    smileDict[0] = 0.7 * smile_cumm + 0.3 * smile;
+                    smileDict[1] = 0.7 * frown_cumm + 0.3 * frown;
+                    smilePlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = smileDict, Confidence = confidence });
 
                     Dictionary<int, double> browDict = new Dictionary<int, double>();
-                    browDict[0] = 0.5 * brow_up_cumm + 0.5 * brow_up;
-                    browDict[1] = 0.5 * brow_down_cumm + 0.5 * brow_down;
-                    browPlot.AddDataPoint(new DataPoint() { Time = CurrentTime, values = browDict, Confidence = confidence });
+                    browDict[0] = 0.7 * brow_up_cumm + 0.3 * brow_up;
+                    browDict[1] = 0.7 * brow_down_cumm + 0.3 * brow_down;
+                    browPlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = browDict, Confidence = confidence });
 
                     Dictionary<int, double> eyeDict = new Dictionary<int, double>();
                     eyeDict[0] = 0.7 * widen_cumm + 0.3 * eye_widen;
                     eyeDict[1] = 0.7 * wrinkle_cumm + 0.3 * nose_wrinkle;
-                    eyePlot.AddDataPoint(new DataPoint() { Time = CurrentTime, values = eyeDict, Confidence = confidence });
+                    eyePlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = eyeDict, Confidence = confidence });
 
                     smile_cumm = smileDict[0];
                     frown_cumm = smileDict[1];
@@ -316,22 +322,20 @@ namespace OpenFaceDemo
                     wrinkle_cumm = eyeDict[1];
 
                     Dictionary<int, double> poseDict = new Dictionary<int, double>();
-                    poseDict[0] = -pose[3] / 2.0 + 0.5;// (face_analyser.GetRapport() - 1.0) / 6.5;
-                    poseDict[1] = pose[4] / 2.0 + 0.5;// (rapport_fixed - 1.0) / 6.0;
-                    poseDict[2] = pose[5] / 2.0 + 0.5;
-                    headPosePlot.AddDataPoint(new DataPoint() { Time = CurrentTime, values = poseDict, Confidence = confidence });
+                    poseDict[0] = -pose[3];
+                    poseDict[1] = pose[4];
+                    poseDict[2] = pose[5];
+                    headPosePlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = poseDict, Confidence = confidence });
 
                     Dictionary<int, double> gazeDict = new Dictionary<int, double>();
-                    gazeDict[0] = x_gaze * 2.5;
-                    gazeDict[0] = 0.5 * old_gaze_x + 0.5 * gazeDict[0] + 0.5;
-                    gazeDict[1] = -y_gaze * 2.0;
-                    gazeDict[1] = 0.5 * old_gaze_y + 0.5 * gazeDict[1] + 0.5;
-                    //gazeDict[2] = face_analyser.GetEyeAttention();
-                    //Console.WriteLine("{0}, {1}", x_gaze, y_gaze);
-                    gazePlot.AddDataPoint(new DataPoint() { Time = CurrentTime, values = gazeDict, Confidence = confidence });
+                    gazeDict[0] = x_gaze;
+                    gazeDict[0] = 0.5 * old_gaze_x + 0.5 * gazeDict[0];
+                    gazeDict[1] = -y_gaze;
+                    gazeDict[1] = 0.5 * old_gaze_y + 0.5 * gazeDict[1];
+                    gazePlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = gazeDict, Confidence = confidence });
 
-                    old_gaze_x = gazeDict[0] - 0.5;
-                    old_gaze_y = gazeDict[1] - 0.5;
+                    old_gaze_x = gazeDict[0];
+                    old_gaze_y = gazeDict[1];
 
                     //Dictionary<int, double> valenceDict = new Dictionary<int, double>();
                     //valenceDict[0] = (face_analyser.GetValence() - 1.0) / 6.5;
