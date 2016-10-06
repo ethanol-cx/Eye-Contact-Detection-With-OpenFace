@@ -22,7 +22,7 @@ namespace OpenFaceDemo
     {
         public DataPointGraph()
         {
-            Time = TimeSeriesPlot.CurrentTime;
+            Time = AxesTimeSeriesPlot.CurrentTime;
 
         }
         public DateTime Time { get; set; }
@@ -111,6 +111,12 @@ namespace OpenFaceDemo
         {
             lock (dataPoints)
                 dataPoints.Enqueue(dp);
+        }
+
+        public void ClearDataPoints()
+        {
+            lock (dataPoints)
+                dataPoints.Clear();
         }
 
         private void Timer_Tick(object sender, EventArgs e)

@@ -387,6 +387,16 @@ namespace OpenFaceDemo
                     clnf_model.Reset();
                     face_analyser.Reset();
                     reset = false;
+
+                    Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
+                    {
+                        headPosePlot.ClearDataPoints();
+                        headPosePlot.ClearDataPoints();
+                        gazePlot.ClearDataPoints();
+                        smilePlot.ClearDataPoints();
+                        browPlot.ClearDataPoints();
+                        eyePlot.ClearDataPoints();
+                    }));
                 }
 
                 frame_id++;
