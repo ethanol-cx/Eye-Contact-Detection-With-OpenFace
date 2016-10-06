@@ -258,6 +258,7 @@ namespace OpenFaceDemo
                 List<double> pose = new List<double>();
                 clnf_model.GetCorrectedPoseCamera(pose, fx, fy, cx, cy);
                 List<double> non_rigid_params = clnf_model.GetNonRigidParams();
+                double scale = clnf_model.GetRigidParams()[0];
 
                 double time_stamp = (DateTime.Now - (DateTime)startTime).TotalMilliseconds;
                 // The face analysis step (only done if recording AUs, HOGs or video)
@@ -274,7 +275,7 @@ namespace OpenFaceDemo
                 {
                     landmarks = clnf_model.CalculateLandmarks();
                     lines = clnf_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
-                    gaze_lines = face_analyser.CalculateGazeLines((float)fx, (float)fy, (float)cx, (float)cy);
+                    gaze_lines = face_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
                 }
 
                 // Visualisation
@@ -303,8 +304,8 @@ namespace OpenFaceDemo
                     browPlot.AddDataPoint(new DataPoint() { Time = CurrentTime, values = browDict, Confidence = confidence });
 
                     Dictionary<int, double> eyeDict = new Dictionary<int, double>();
-                    eyeDict[0] = 0.5 * widen_cumm + 0.5 * eye_widen;
-                    eyeDict[1] = 0.5 * wrinkle_cumm + 0.5 * nose_wrinkle;
+                    eyeDict[0] = 0.7 * widen_cumm + 0.3 * eye_widen;
+                    eyeDict[1] = 0.7 * wrinkle_cumm + 0.3 * nose_wrinkle;
                     eyePlot.AddDataPoint(new DataPoint() { Time = CurrentTime, values = eyeDict, Confidence = confidence });
 
                     smile_cumm = smileDict[0];
