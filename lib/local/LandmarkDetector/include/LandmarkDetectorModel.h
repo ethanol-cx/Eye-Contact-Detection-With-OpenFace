@@ -155,6 +155,10 @@ public:
 	// Useful when resetting or initialising the model closer to a specific location (when multiple faces are present)
 	cv::Point_<double> preference_det;
 
+	// Useful to control where face detections should not occur (for live demos etc.)
+	double detect_Z_max = -1; // Do not detect faces further than this in mm. (-1) refers to detecting all faces
+	cv::Rect_<double> detect_ROI = cv::Rect(0, 0, 1, 1); // the face detection bounds (0,0,1,1) means full image (0.25,0.25,0.5,0.5) would imply region of the face only
+
 	// A default constructor
 	CLNF();
 

@@ -93,7 +93,7 @@ CLNF::CLNF(string fname)
 CLNF::CLNF(const CLNF& other): pdm(other.pdm), params_local(other.params_local.clone()), params_global(other.params_global), detected_landmarks(other.detected_landmarks.clone()),
 	landmark_likelihoods(other.landmark_likelihoods.clone()), patch_experts(other.patch_experts), landmark_validator(other.landmark_validator), face_detector_location(other.face_detector_location),
 	hierarchical_mapping(other.hierarchical_mapping), hierarchical_models(other.hierarchical_models), hierarchical_model_names(other.hierarchical_model_names),
-	hierarchical_params(other.hierarchical_params), eye_model(other.eye_model)
+	hierarchical_params(other.hierarchical_params), eye_model(other.eye_model), detect_Z_max(other.detect_Z_max), detect_ROI(other.detect_ROI)
 {
 	this->detection_success = other.detection_success;
 	this->tracking_initialised = other.tracking_initialised;
@@ -173,6 +173,9 @@ CLNF & CLNF::operator= (const CLNF& other)
 		this->hierarchical_models = other.hierarchical_models;
 		this->hierarchical_model_names = other.hierarchical_model_names;
 		this->hierarchical_params = other.hierarchical_params;
+
+		this->detect_Z_max = other.detect_Z_max;
+		this->detect_ROI = detect_ROI;
 	}
 
 	face_detector_HOG = dlib::get_frontal_face_detector();
@@ -213,6 +216,8 @@ CLNF::CLNF(const CLNF&& other)
 
 	this->eye_model = other.eye_model;
 
+	this->detect_Z_max = other.detect_Z_max;
+	this->detect_ROI = detect_ROI;
 }
 
 // Assignment operator for rvalues
@@ -247,6 +252,9 @@ CLNF & CLNF::operator= (const CLNF&& other)
 	this->hierarchical_params = other.hierarchical_params;
 
 	this->eye_model = other.eye_model;
+	
+	this->detect_Z_max = other.detect_Z_max;
+	this->detect_ROI = detect_ROI;
 
 	return *this;
 }
@@ -365,6 +373,10 @@ void CLNF::Read(string main_location)
 	
 	// The other module locations should be defined as relative paths from the main model
 	boost::filesystem::path root = boost::filesystem::path(main_location).parent_path();	
+	
+	// Initializing defaults that could be overwriten
+	detect_Z_max = -1;
+	detect_ROI = cv::Rect_<double>(0, 0, 1, 1);
 
 	// The main file contains the references to other files
 	while (!locations.eof())
@@ -527,6 +539,16 @@ void CLNF::Read(string main_location)
 			landmark_validator.Read(location);
 			cout << "Done" << endl;
 		}
+		else if (module.compare("DetectorConstaints") == 0)
+		{
+			cout << "Reading detectir constraints...";
+			lineStream >> detect_Z_max;
+			lineStream >> detect_ROI.x;
+			lineStream >> detect_ROI.y;
+			lineStream >> detect_ROI.width;
+			lineStream >> detect_ROI.height;
+			cout << "Done" << endl;
+		}
 	}
  
 	detected_landmarks.create(2 * pdm.NumberOfPoints(), 1);
@@ -550,6 +572,7 @@ void CLNF::Read(string main_location)
 
 	preference_det.x = -1;
 	preference_det.y = -1;
+
 
 }
 

@@ -86,7 +86,7 @@ namespace OpenFaceDemo
 
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
-            clnf_params = new FaceModelParameters(root);
+            clnf_params = new FaceModelParameters(root, true);
             clnf_model = new CLNF(clnf_params);
             face_analyser = new FaceAnalyserManaged(root, true);
 
@@ -259,7 +259,10 @@ namespace OpenFaceDemo
                     confidence = 1;
 
                 List<double> pose = new List<double>();
+
+
                 clnf_model.GetCorrectedPoseCamera(pose, fx, fy, cx, cy);
+
                 List<double> non_rigid_params = clnf_model.GetNonRigidParams();
                 double scale = clnf_model.GetRigidParams()[0];
 
@@ -277,8 +280,8 @@ namespace OpenFaceDemo
                 double y_gaze = (Math.Atan2(gaze.Item1.Item2, -gaze.Item1.Item3) + Math.Atan2(gaze.Item2.Item2, -gaze.Item2.Item3)) / 2.0;
 
                 // Scaling for clearer vis.
-                x_gaze *= 2;
-                y_gaze *= 2;
+                x_gaze *= 2.5;
+                y_gaze *= 2.5;
 
                 if (detectionSucceeding)
                 {
@@ -339,17 +342,7 @@ namespace OpenFaceDemo
 
                     old_gaze_x = gazeDict[0];
                     old_gaze_y = gazeDict[1];
-
-                    //Dictionary<int, double> valenceDict = new Dictionary<int, double>();
-                    //valenceDict[0] = (face_analyser.GetValence() - 1.0) / 6.5;
-                    //valenceDict[1] = face_analyser.GetArousal();
-                    //valencePlot.AddDataPoint(new DataPoint() { Time = CurrentTime, values = valenceDict, Confidence = confidence });
-
-                    //Dictionary<int, double> avDict = new Dictionary<int, double>();
-                    //avDict[0] = (face_analyser.GetArousal() - 0.5) * 2.0;
-                    //avDict[1] = ((face_analyser.GetValence() - 1.0) / 6.5 - 0.5)*2;
-                    //avPlot.AddDataPoint(new DataPoint() { Time = CurrentTime, values = avDict, Confidence = confidence });
-
+                    
                     if (latest_img == null)
                     {
                         latest_img = frame.CreateWriteableBitmap();

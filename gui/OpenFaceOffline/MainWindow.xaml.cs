@@ -193,7 +193,7 @@ namespace OpenFaceOffline
 
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
-            clnf_params = new FaceModelParameters(root);
+            clnf_params = new FaceModelParameters(root, false);
             clnf_model = new CLNF(clnf_params);
             face_analyser = new FaceAnalyserManaged(root, use_dynamic_models);
 

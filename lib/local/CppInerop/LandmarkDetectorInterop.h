@@ -97,13 +97,18 @@ namespace CppInterop {
 		public:
 
 			// Initialise the parameters
-			FaceModelParameters(System::String^ root)
+			FaceModelParameters(System::String^ root, bool demo)
 			{
 				std::string root_std = msclr::interop::marshal_as<std::string>(root);
 				vector<std::string> args;
 				args.push_back(root_std);
 
 				params = new ::LandmarkDetector::FaceModelParameters(args);
+
+				if(demo)
+				{
+					params->model_location = "model/main_clnf_demos.txt";
+				}
 
 				params->track_gaze = true;
 			}

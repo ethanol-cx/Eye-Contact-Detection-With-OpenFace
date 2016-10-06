@@ -1295,7 +1295,7 @@ cv::Vec3d RotationMatrix2AxisAngle(const cv::Matx33d& rotation_matrix)
 //============================================================================
 // Face detection helpers
 //============================================================================
-bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity)
+bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, double min_width, cv::Rect_<double> roi)
 {
 	cv::CascadeClassifier classifier("./classifiers/haarcascade_frontalface_alt.xml");
 	if(classifier.empty())
@@ -1305,47 +1305,60 @@ bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& i
 	}
 	else
 	{
-		return DetectFaces(o_regions, intensity, classifier);
+		return DetectFaces(o_regions, intensity, classifier, min_width, roi);
 	}
 
 }
 
-bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, cv::CascadeClassifier& classifier)
+bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, cv::CascadeClassifier& classifier, double min_width, cv::Rect_<double> roi)
 {
 		
 	vector<cv::Rect> face_detections;
-	classifier.detectMultiScale(intensity, face_detections, 1.2, 2, 0, cv::Size(50, 50));
+	if(min_width == -1)
+	{
+		classifier.detectMultiScale(intensity, face_detections, 1.2, 2, 0, cv::Size(50, 50));
+	}
+	else
+	{
+		classifier.detectMultiScale(intensity, face_detections, 1.2, 2, 0, cv::Size(min_width, min_width));
+	}
 
 	// Convert from int bounding box do a double one with corrections
-	o_regions.resize(face_detections.size());
-
 	for( size_t face = 0; face < o_regions.size(); ++face)
 	{
 		// OpenCV is overgenerous with face size and y location is off
 		// CLNF detector expects the bounding box to encompass from eyebrow to chin in y, and from cheeck outline to cheeck outline in x, so we need to compensate
 
 		// The scalings were learned using the Face Detections on LFPW, Helen, AFW and iBUG datasets, using ground truth and detections from openCV
-
+		cv::Rect_<double> region;
 		// Correct for scale
-		o_regions[face].width = face_detections[face].width * 0.8924; 
-		o_regions[face].height = face_detections[face].height * 0.8676;
+		region.width = face_detections[face].width * 0.8924;
+		region.height = face_detections[face].height * 0.8676;
 
 		// Move the face slightly to the right (as the width was made smaller)
-		o_regions[face].x = face_detections[face].x + 0.0578 * face_detections[face].width;
+		region.x = face_detections[face].x + 0.0578 * face_detections[face].width;
 		// Shift face down as OpenCV Haar Cascade detects the forehead as well, and we're not interested
-		o_regions[face].y = face_detections[face].y + face_detections[face].height * 0.2166;
+		region.y = face_detections[face].y + face_detections[face].height * 0.2166;
 		
-		
+		if (min_width != -1)
+		{
+			if (region.width < min_width || region.x < ((double)intensity.cols) * roi.x || region.y < ((double)intensity.cols) * roi.y ||
+				region.x + region.width >((double)intensity.cols) * (roi.x + roi.width) || region.y + region.height >((double)intensity.rows) * (roi.y + roi.height))
+				continue;
+		}
+
+
+		o_regions.push_back(region);
 	}
 	return o_regions.size() > 0;
 }
 
-bool DetectSingleFace(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& intensity_image, cv::CascadeClassifier& classifier, cv::Point preference)
+bool DetectSingleFace(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& intensity_image, cv::CascadeClassifier& classifier, cv::Point preference, double min_width, cv::Rect_<double> roi)
 {
 	// The tracker can return multiple faces
 	vector<cv::Rect_<double> > face_detections;
 				
-	bool detect_success = LandmarkDetector::DetectFaces(face_detections, intensity_image, classifier);
+	bool detect_success = LandmarkDetector::DetectFaces(face_detections, intensity_image, classifier, min_width, roi);
 					
 	if(detect_success)
 	{
@@ -1399,15 +1412,15 @@ bool DetectSingleFace(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& intens
 	return detect_success;
 }
 
-bool DetectFacesHOG(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, std::vector<double>& confidences)
+bool DetectFacesHOG(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, std::vector<double>& confidences, double min_width, cv::Rect_<double> roi)
 {
 	dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
 
-	return DetectFacesHOG(o_regions, intensity, detector, confidences);
+	return DetectFacesHOG(o_regions, intensity, detector, confidences, min_width, roi);
 
 }
 
-bool DetectFacesHOG(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, dlib::frontal_face_detector& detector, std::vector<double>& o_confidences)
+bool DetectFacesHOG(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, dlib::frontal_face_detector& detector, std::vector<double>& o_confidences, double min_width, cv::Rect_<double> roi)
 {
 		
 	cv::Mat_<uchar> upsampled_intensity;
@@ -1422,37 +1435,46 @@ bool DetectFacesHOG(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>
 	detector(cv_grayscale, face_detections, -0.2);
 
 	// Convert from int bounding box do a double one with corrections
-	o_regions.resize(face_detections.size());
-	o_confidences.resize(face_detections.size());
+	//o_regions.resize(face_detections.size());
+	//o_confidences.resize(face_detections.size());
 
-	for( size_t face = 0; face < o_regions.size(); ++face)
+	for( size_t face = 0; face < face_detections.size(); ++face)
 	{
 		// CLNF expects the bounding box to encompass from eyebrow to chin in y, and from cheeck outline to cheeck outline in x, so we need to compensate
 
-		// The scalings were learned using the Face Detections on LFPW and Helen using ground truth and detections from the HOG detector
-
+		cv::Rect_<double> region;
 		// Move the face slightly to the right (as the width was made smaller)
-		o_regions[face].x = (face_detections[face].rect.get_rect().tl_corner().x() + 0.0389 * face_detections[face].rect.get_rect().width())/scaling;
+		region.x = (face_detections[face].rect.get_rect().tl_corner().x() + 0.0389 * face_detections[face].rect.get_rect().width()) / scaling;
 		// Shift face down as OpenCV Haar Cascade detects the forehead as well, and we're not interested
-		o_regions[face].y = (face_detections[face].rect.get_rect().tl_corner().y() + 0.1278 * face_detections[face].rect.get_rect().height())/scaling;
+		region.y = (face_detections[face].rect.get_rect().tl_corner().y() + 0.1278 * face_detections[face].rect.get_rect().height()) / scaling;
 
 		// Correct for scale
-		o_regions[face].width = (face_detections[face].rect.get_rect().width() * 0.9611)/scaling; 
-		o_regions[face].height = (face_detections[face].rect.get_rect().height() * 0.9388)/scaling;
+		region.width = (face_detections[face].rect.get_rect().width() * 0.9611) / scaling;
+		region.height = (face_detections[face].rect.get_rect().height() * 0.9388) / scaling;
 
-		o_confidences[face] = face_detections[face].detection_confidence;
+		// The scalings were learned using the Face Detections on LFPW and Helen using ground truth and detections from the HOG detector
+		if (min_width != -1)
+		{
+			if (region.width < min_width || region.x < ((double)intensity.cols) * roi.x || region.y < ((double)intensity.cols) * roi.y ||
+				region.x + region.width > ((double)intensity.cols) * (roi.x+roi.width) || region.y + region.height >((double)intensity.rows) * (roi.y + roi.height))
+				continue;
+		}
+
+
+		o_regions.push_back(region);
+		o_confidences.push_back(face_detections[face].detection_confidence);
 		
 		
 	}
 	return o_regions.size() > 0;
 }
 
-bool DetectSingleFaceHOG(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& intensity_img, dlib::frontal_face_detector& detector, double& confidence, cv::Point preference)
+bool DetectSingleFaceHOG(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& intensity_img, dlib::frontal_face_detector& detector, double& confidence, cv::Point preference, double min_width, cv::Rect_<double> roi)
 {
 	// The tracker can return multiple faces
 	vector<cv::Rect_<double> > face_detections;
 	vector<double> confidences;
-	bool detect_success = LandmarkDetector::DetectFacesHOG(face_detections, intensity_img, detector, confidences);
+	bool detect_success = LandmarkDetector::DetectFacesHOG(face_detections, intensity_img, detector, confidences, min_width, roi);
 
 	// In case of multiple faces pick the biggest one
 	bool use_size = true;

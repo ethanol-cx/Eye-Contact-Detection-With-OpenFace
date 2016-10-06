@@ -350,14 +350,27 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 		}
 
 		bool face_detection_success;
+
+		// For pruning face detections
+		double min_size;
+		if (clnf_model.detect_Z_max == -1)
+		{
+			min_size = -1;
+		}
+		else
+		{
+			double fx_est = 500.0 * (grayscale_image.cols / 640.0);
+			min_size = fx_est * 150.0 / clnf_model.detect_Z_max;
+		}
+
 		if(params.curr_face_detector == FaceModelParameters::HOG_SVM_DETECTOR)
 		{
 			double confidence;
-			face_detection_success = LandmarkDetector::DetectSingleFaceHOG(bounding_box, grayscale_image, clnf_model.face_detector_HOG, confidence, preference_det);
+			face_detection_success = LandmarkDetector::DetectSingleFaceHOG(bounding_box, grayscale_image, clnf_model.face_detector_HOG, confidence, preference_det, min_size, clnf_model.detect_ROI);
 		}
 		else if(params.curr_face_detector == FaceModelParameters::HAAR_DETECTOR)
 		{
-			face_detection_success = LandmarkDetector::DetectSingleFace(bounding_box, grayscale_image, clnf_model.face_detector_HAAR, preference_det);
+			face_detection_success = LandmarkDetector::DetectSingleFace(bounding_box, grayscale_image, clnf_model.face_detector_HAAR, preference_det, min_size, clnf_model.detect_ROI);
 		}
 
 		// Attempt to detect landmarks using the detected face (if unseccessful the detection will be ignored)
