@@ -548,6 +548,9 @@ void CLNF::Read(string main_location)
 
 	failures_in_a_row = -1;
 
+	preference_det.x = -1;
+	preference_det.y = -1;
+
 }
 
 // Resetting the model (for a new video, or complet reinitialisation

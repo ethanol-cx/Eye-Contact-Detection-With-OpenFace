@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:OpenFaceDemo"
         xmlns:of="clr-namespace:OpenFaceOffline;assembly=OpenFaceOffline"
         mc:Ignorable="d"
-        Title="OpenFace Analyser" Height="800" Width="1300" MinWidth="700" MinHeight="450" Closing="Window_Closing" WindowStartupLocation="CenterScreen">
+        Title="OpenFace Analyser" Height="800" Width="1300" MinWidth="700" MinHeight="450" Closing="Window_Closing" WindowStartupLocation="CenterScreen" KeyDown="Window_KeyDown">
     <Grid Name="MainGrid" Margin="-1,1,1.333,-1.333">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1.8*"/>
@@ -27,8 +27,8 @@
                 </MenuItem>
             </MenuItem>
         </Menu>
-        <Border Name="VideoBorder" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="3" BorderBrush="Black" BorderThickness="1" Background="LightGray" Margin="5,5,0,0">
-            <of:OverlayImage x:Name="video" />
+        <Border Name="VideoBorder" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="3" BorderBrush="Black" BorderThickness="1" Background="LightGray" Margin="5,5,0,0" >
+            <of:OverlayImage x:Name="video" MouseDown="video_MouseDown" />
         </Border>
 
         <local:AxesTimeSeriesPlot NumVertGrid="5" x:Name="headPosePlot" ShowLegend="True" MinVal="-1" MaxVal="1" MinHeight="180" Grid.Row="4" Grid.Column="0" Padding="60 20 30 40" RangeLabel="Head pose" Orientation="Horizontal">

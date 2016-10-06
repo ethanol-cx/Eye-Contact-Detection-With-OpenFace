@@ -62,8 +62,10 @@ namespace OpenFaceDemo
         
         FpsTracker processing_fps = new FpsTracker();
 
+        // Controlling the model reset
         volatile bool detectionSucceeding = false;
         volatile bool reset = false;
+        Point? resetPoint = null;
 
         // For selecting webcams
         CameraSelection cam_sec;
@@ -72,6 +74,7 @@ namespace OpenFaceDemo
         FaceModelParameters clnf_params;
         CLNF clnf_model;
         FaceAnalyserManaged face_analyser;
+
 
         public MainWindow()
         {
@@ -245,7 +248,7 @@ namespace OpenFaceDemo
                     cx = grayFrame.Width / 2f;
                     cy = grayFrame.Height / 2f;
                 }
-
+                
                 bool detectionSucceeding = ProcessFrame(clnf_model, clnf_params, frame, grayFrame, fx, fy, cx, cy);
 
                 double confidence = (-clnf_model.GetConfidence()) / 2.0 + 0.5;
@@ -384,7 +387,16 @@ namespace OpenFaceDemo
 
                 if (reset)
                 {
-                    clnf_model.Reset();
+                    if (resetPoint.HasValue)
+                    {
+                        clnf_model.Reset(resetPoint.Value.X, resetPoint.Value.Y);
+                        resetPoint = null;
+                    }
+                    else
+                    {
+                        clnf_model.Reset();
+                    }
+
                     face_analyser.Reset();
                     reset = false;
 
@@ -477,13 +489,32 @@ namespace OpenFaceDemo
                 thread_running = false;
                 processing_thread.Join();
 
-                capture.Dispose();
+                if (capture != null)
+                    capture.Dispose();
+                
             }
-            
-            face_analyser.Dispose();
-            clnf_model.Dispose();
-            this.Close();
+            if (face_analyser != null)
+                face_analyser.Dispose();
+            if(clnf_model != null)
+                clnf_model.Dispose();
+
         }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.R)
+            {
+                reset = true;
+            }
+        }
+
+        private void video_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var clickPos = e.GetPosition(video);
+            resetPoint = new Point(clickPos.X / video.ActualWidth, clickPos.Y / video.ActualHeight);
+            reset = true;
+        }
+
 
     }
 }

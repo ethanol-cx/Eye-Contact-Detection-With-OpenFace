@@ -1452,9 +1452,11 @@ bool DetectSingleFaceHOG(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& int
 	// The tracker can return multiple faces
 	vector<cv::Rect_<double> > face_detections;
 	vector<double> confidences;
-
 	bool detect_success = LandmarkDetector::DetectFacesHOG(face_detections, intensity_img, detector, confidences);
-					
+
+	// In case of multiple faces pick the biggest one
+	bool use_size = true;
+
 	if(detect_success)
 	{
 
@@ -1463,9 +1465,13 @@ bool DetectSingleFaceHOG(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& int
 		// keep the most confident one or the one closest to preference point if set
 		double best_so_far;
 		if(use_preferred)
-		{			
+		{					
 			best_so_far = sqrt((preference.x - (face_detections[0].width/2 + face_detections[0].x)) * (preference.x - (face_detections[0].width/2 + face_detections[0].x)) + 
 							   (preference.y - (face_detections[0].height/2 + face_detections[0].y)) * (preference.y - (face_detections[0].height/2 + face_detections[0].y)));
+		}
+		else if (use_size)
+		{
+			best_so_far = (face_detections[0].width + face_detections[0].height) / 2.0;
 		}
 		else
 		{
@@ -1481,9 +1487,15 @@ bool DetectSingleFaceHOG(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& int
 
 			if(use_preferred)
 			{
-				dist = sqrt((preference.x - (face_detections[0].width/2 + face_detections[0].x)) * (preference.x - (face_detections[0].width/2 + face_detections[0].x)) + 
-							   (preference.y - (face_detections[0].height/2 + face_detections[0].y)) * (preference.y - (face_detections[0].height/2 + face_detections[0].y)));
+				dist = sqrt((preference.x - (face_detections[i].width/2 + face_detections[i].x)) * (preference.x - (face_detections[i].width/2 + face_detections[i].x)) + 
+							   (preference.y - (face_detections[i].height/2 + face_detections[i].y)) * (preference.y - (face_detections[i].height/2 + face_detections[i].y)));
+
 				better = dist < best_so_far;
+			}
+			else if (use_size)
+			{
+				dist = (face_detections[i].width + face_detections[i].height) / 2.0;
+				better = dist > best_so_far;
 			}
 			else
 			{
