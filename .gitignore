@@ -38,3 +38,5 @@ matlab_runners/Feature Point Experiments/300VW_features/
 matlab_runners/Feature Point Experiments/300VW_features_2/
 matlab_version/experiments_JANUS/wild_fit_clnf/
 matlab_version/experiments_JANUS/wild_fit_dclm/
+exe/FeatureExtraction/300VW_features_experiments/
+matlab_runners/Feature Point Experiments/300VW_features_experiments/
