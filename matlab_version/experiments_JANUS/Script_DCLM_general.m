@@ -7,13 +7,9 @@ addpath('../CCNF/');
 addpath('../models/');
 
 % Replace this with the location of in 300 faces in the wild data
-if(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
-    root_test_data = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
-else
-    root_test_data = 'D:/Dropbox/Dropbox/AAM/test data/';
-end
+root_test_data = 'D:/Datasets/janus_labeled';
 
-[images, detections, labels] = Collect_wild_imgs(root_test_data);
+[images, detections, labels] = Collect_JANUS_imgs(root_test_data);
 
 %% loading the patch experts
    
@@ -80,7 +76,7 @@ for i=1:numel(images)
     % have a multi-view version
     if(multi_view)
 
-        views = [0,0,0; 0,-30,0; -30,0,0; 0,30,0; 30,0,0];
+        views = [0,0,0; 0,-45,0; -30,0,0; 0,45,0; 30,0,0];
         views = views * pi/180;                                                                                     
 
         shapes = zeros(num_points, 2, size(views,1));
@@ -123,11 +119,13 @@ for i=1:numel(images)
         width = max(actualShape(:,1)) - min(actualShape(:,1));
         height = max(actualShape(:,2)) - min(actualShape(:,2));
 
-        img_min_x = max(int32(min(actualShape(:,1))) - width/3,1);
-        img_max_x = min(int32(max(actualShape(:,1))) + width/3,width_img);
+        v_points = sum(squeeze(labels(i,:,:)),2) > 0;
 
-        img_min_y = max(int32(min(actualShape(:,2))) - height/3,1);
-        img_max_y = min(int32(max(actualShape(:,2))) + height/3,height_img);
+        img_min_x = max(int32(min(actualShape(v_points,1))) - width/3,1);
+        img_max_x = min(int32(max(actualShape(v_points,1))) + width/3,width_img);
+
+        img_min_y = max(int32(min(actualShape(v_points,2))) - height/3,1);
+        img_max_y = min(int32(max(actualShape(v_points,2))) + height/3,height_img);
 
         shape(:,1) = shape(:,1) - double(img_min_x);
         shape(:,2) = shape(:,2) - double(img_min_y);
@@ -136,7 +134,6 @@ for i=1:numel(images)
 
         % valid points to draw (not to draw
         % occluded ones)
-        v_points = sum(squeeze(labels(i,:,:)),2) > 0;
 
 %         f = figure('visible','off');
         f = figure;
@@ -149,12 +146,13 @@ for i=1:numel(images)
         axis equal;
         hold on;
         
-        plot(shape(v_points,1), shape(v_points,2),'.r','MarkerSize',20);
-        plot(shape(v_points,1), shape(v_points,2),'.b','MarkerSize',10);
+        plot(shape(:,1), shape(:,2),'.r','MarkerSize',20);
+        plot(shape(:,1), shape(:,2),'.b','MarkerSize',10);
 %                                         print(f, '-r80', '-dpng', sprintf('%s/%s%d.png', output_root, 'fit', i));
-%         print(f, '-djpeg', sprintf('%s/%s%d.jpg', output_root, 'fit', i));
+        print(f, '-djpeg', sprintf('%s/%s%d.jpg', output_root, 'fit', i));
 %                                         close(f);
         hold off;
+%         drawnow expose
         close(f);
         catch warn
 
@@ -164,7 +162,7 @@ for i=1:numel(images)
 end
 toc
 
-experiment.errors_normed = compute_error(labels_all - 0.5, shapes_all);
+experiment.errors_normed = compute_error(labels_all, shapes_all + 0.5);
 experiment.lhoods = lhoods;
 experiment.shapes = shapes_all;
 experiment.labels = labels_all;

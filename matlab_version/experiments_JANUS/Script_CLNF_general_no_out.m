@@ -1,4 +1,4 @@
-function Script_DCLM_general()
+function Script_CLNF_general_no_out()
 
 addpath('../PDM_helpers/');
 addpath('../fitting/normxcorr2_mex_ALL');
@@ -7,26 +7,24 @@ addpath('../CCNF/');
 addpath('../models/');
 
 % Replace this with the location of in 300 faces in the wild data
-if(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
-    root_test_data = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
-else
-    root_test_data = 'D:/Dropbox/Dropbox/AAM/test data/';
-end
+root_test_data = 'D:/Datasets/janus_labeled';
 
-[images, detections, labels] = Collect_wild_imgs(root_test_data);
+[images, detections, labels] = Collect_JANUS_imgs(root_test_data);
+
 
 %% loading the patch experts
    
 clmParams = struct;
 
-clmParams.window_size = [25,25; 23,23; 21,21; 21,21];
+clmParams.window_size = [25,25; 23,23; 21,21];
 clmParams.numPatchIters = size(clmParams.window_size,1);
 
-[patches] = Load_DCLM_Patch_Experts( '../models/general/', 'dccnf_patches_*_general.mat', [], [], clmParams);
+[patches] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*_general.mat', [], [], clmParams);
 
 %% Fitting the model to the provided image
 
-output_root = './wild_fit_dclm/';
+verbose = true; % set to true to visualise the fitting
+output_root = './wild_fit_clnf/';
 
 % the default PDM to use
 pdmLoc = ['../models/pdm/pdm_68_aligned_wild.mat'];
@@ -38,9 +36,9 @@ pdm.M = double(M);
 pdm.E = double(E);
 pdm.V = double(V);
 
-clmParams.regFactor = [35, 27, 20, 20];
-clmParams.sigmaMeanShift = [1.25, 1.375, 1.5, 1.5]; 
-clmParams.tikhonov_factor = [2.5, 5, 7.5, 7.5];
+clmParams.regFactor = [35, 27, 20];
+clmParams.sigmaMeanShift = [1.25, 1.375, 1.5]; 
+clmParams.tikhonov_factor = [2.5, 5, 7.5];
 
 clmParams.startScale = 1;
 clmParams.num_RLMS_iter = 10;
@@ -48,7 +46,16 @@ clmParams.fTol = 0.01;
 clmParams.useMultiScale = true;
 clmParams.use_multi_modal = 1;
 clmParams.multi_modal_types  = patches(1).multi_modal_types;
-clmParams.numPatchIters = 4;
+   
+% Loading the final scale
+[clmParams_inner, pdm_inner] = Load_CLM_params_inner();
+clmParams_inner.window_size = [17,17;19,19;21,21;23,23];
+inds_inner = 18:68;
+[patches_inner] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*general_no_out.mat', [], [], clmParams_inner);
+clmParams_inner.multi_modal_types  = patches_inner(1).multi_modal_types;
+
+% load('results/results_wild_clnf_general.mat');
+% clear 'experiments';
 
 % for recording purposes
 experiment.params = clmParams;
@@ -64,19 +71,19 @@ all_views_used = zeros(numel(images),1);
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
 multi_view = true;
-verbose = true;
+
 tic
 for i=1:numel(images)
 
     image = imread(images(i).img);
     image_orig = image;
-    
+
     if(size(image,3) == 3)
         image = rgb2gray(image);
     end              
 
     bbox = detections(i,:);                  
-    
+
     % have a multi-view version
     if(multi_view)
 
@@ -103,10 +110,31 @@ for i=1:numel(images)
         [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
     end
 
-    all_lmark_lhoods(:,i) = lmark_lhood;
-    all_views_used(i) = view_used;
+    % Perform inner face fitting
+    shape_inner = shape(inds_inner,:);
 
-    shapes_all(:,:,i) = shape;
+    [ a, R, T, ~, l_params, err] = fit_PDM_ortho_proj_to_2D_no_reg(pdm_inner.M, pdm_inner.E, pdm_inner.V, shape_inner);
+    if(a > 0.9)
+        g_param = [a; Rot2Euler(R)'; T];
+
+        bbox = [min(shape_inner(:,1)), min(shape_inner(:,2)), max(shape_inner(:,1)), max(shape_inner(:,2))];
+
+        [shape_inner] = Fitting_from_bb(image, [], bbox, pdm_inner, patches_inner, clmParams_inner, 'gparam', g_param, 'lparam', l_params);
+
+        % Now after detections incorporate the eyes back
+        % into the face model
+
+        shape(inds_inner, :) = shape_inner;
+
+        [ ~, ~, ~, ~, ~, ~, shape_fit] = fit_PDM_ortho_proj_to_2D_no_reg(pdm.M, pdm.E, pdm.V, shape);    
+
+        all_lmark_lhoods(:,i) = lmark_lhood;
+        all_views_used(i) = view_used;
+
+        shapes_all(:,:,i) = shape_fit;
+    else
+        shapes_all(:,:,i) = shape;                    
+    end
     labels_all(:,:,i) = labels(i,:,:);
 
     if(mod(i, 200)==0)
@@ -123,11 +151,13 @@ for i=1:numel(images)
         width = max(actualShape(:,1)) - min(actualShape(:,1));
         height = max(actualShape(:,2)) - min(actualShape(:,2));
 
-        img_min_x = max(int32(min(actualShape(:,1))) - width/3,1);
-        img_max_x = min(int32(max(actualShape(:,1))) + width/3,width_img);
+        v_points = sum(squeeze(labels(i,:,:)),2) > 0;
 
-        img_min_y = max(int32(min(actualShape(:,2))) - height/3,1);
-        img_max_y = min(int32(max(actualShape(:,2))) + height/3,height_img);
+        img_min_x = max(int32(min(actualShape(v_points,1))) - width/3,1);
+        img_max_x = min(int32(max(actualShape(v_points,1))) + width/3,width_img);
+
+        img_min_y = max(int32(min(actualShape(v_points,2))) - height/3,1);
+        img_max_y = min(int32(max(actualShape(v_points,2))) + height/3,height_img);
 
         shape(:,1) = shape(:,1) - double(img_min_x);
         shape(:,2) = shape(:,2) - double(img_min_y);
@@ -136,7 +166,6 @@ for i=1:numel(images)
 
         % valid points to draw (not to draw
         % occluded ones)
-        v_points = sum(squeeze(labels(i,:,:)),2) > 0;
 
 %         f = figure('visible','off');
         f = figure;
@@ -149,12 +178,13 @@ for i=1:numel(images)
         axis equal;
         hold on;
         
-        plot(shape(v_points,1), shape(v_points,2),'.r','MarkerSize',20);
-        plot(shape(v_points,1), shape(v_points,2),'.b','MarkerSize',10);
+        plot(shape(:,1), shape(:,2),'.r','MarkerSize',20);
+        plot(shape(:,1), shape(:,2),'.b','MarkerSize',10);
 %                                         print(f, '-r80', '-dpng', sprintf('%s/%s%d.png', output_root, 'fit', i));
-%         print(f, '-djpeg', sprintf('%s/%s%d.jpg', output_root, 'fit', i));
+        print(f, '-djpeg', sprintf('%s/%s%d.jpg', output_root, 'fit', i));
 %                                         close(f);
         hold off;
+%         drawnow expose
         close(f);
         catch warn
 
@@ -180,7 +210,7 @@ fprintf('experiment %d done: mean normed error %.3f median normed error %.4f\n',
     numel(experiments), mean(experiment.errors_normed), median(experiment.errors_normed));
 
 %%
-output_results = 'results/results_wild_dclm_general.mat';
+output_results = 'results/results_wild_clnf_general_final_inner.mat';
 save(output_results, 'experiments');
     
 end

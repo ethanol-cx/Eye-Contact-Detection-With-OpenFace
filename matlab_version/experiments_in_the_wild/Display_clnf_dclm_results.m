@@ -25,21 +25,7 @@ clnf_error = compute_error( labels,  shapes);
 [error_x, error_y] = cummErrorCurve(clnf_error);
 hold on;
 
-plot(error_x, error_y, 'DisplayName', 'CLNF - 4 scales', 'LineWidth',line_width);
-
-load('results/results_wild_clnf_general.mat');
-labels = experiments.labels([1:60,62:64,66:end],:,:);
-shapes = experiments.shapes([1:60,62:64,66:end],:,:);
-labels = labels(18:end,:,:) - 0.5;
-shapes = shapes(18:end,:,:);
-
-clnf_error = compute_error( labels,  shapes);
-
-[error_x, error_y] = cummErrorCurve(clnf_error);
-hold on;
-
-plot(error_x, error_y, 'DisplayName', 'CLNF - 1 scale', 'LineWidth',line_width);
-
+plot(error_x, error_y, 'DisplayName', 'CLNF', 'LineWidth',line_width);
 
 load('results/results_wild_dclm_general.mat');
 labels = experiments.labels([1:60,62:64,66:end],:,:);
@@ -51,7 +37,7 @@ clm_error = compute_error( labels,  shapes);
 
 [error_x, error_y] = cummErrorCurve(clm_error);
 
-plot(error_x, error_y, 'DisplayName', 'DCLM - 1 scale', 'LineWidth',line_width);
+plot(error_x, error_y, 'DisplayName', 'DCLM', 'LineWidth',line_width);
 
 set(gca,'xtick',[0:0.01:0.08])
 xlim([0,0.08]);

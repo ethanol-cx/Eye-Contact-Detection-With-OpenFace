@@ -17,7 +17,7 @@ function [ responses ] = PatchResponseDNN(patches, patch_experts_class, visibili
             smallRegionVec = patches(i,:);
             smallRegion = reshape(smallRegionVec, window_size(1), window_size(2));
 
-            patch = im2col(smallRegion, patchSize, 'sliding')';
+            patch = im2col_mine(smallRegion, patchSize)';
             
             % Normalize
             if(col_norm)
@@ -43,7 +43,8 @@ function [ responses ] = PatchResponseDNN(patches, patch_experts_class, visibili
                 patch_normed = weights{(w-1)*2+1}' * patch_normed + repmat(weights{(w-1)*2+2}', 1, size(patch_normed,2));
 
                 if w < 3
-                   patch_normed(patch_normed < 0) = 0;
+%                    patch_normed(patch_normed < 0) = 0;
+                   patch_normed = max(0, patch_normed);
                 else
                    patch_normed = 1./(1+exp(-patch_normed));
                 end
