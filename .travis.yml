@@ -46,6 +46,7 @@ install:
   
   - if [[ ${TRAVIS_OS_NAME} = osx ]]; then brew update; fi
   - if [[ ${TRAVIS_OS_NAME} = osx ]]; then brew tap homebrew/science; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then /usr/bin/yes | pip uninstall numpy; fi
   - if [[ ${TRAVIS_OS_NAME} = osx ]]; then brew install tbb opencv3; fi
     
 before_script:
