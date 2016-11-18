@@ -629,7 +629,7 @@ namespace OpenFaceOffline
                 }));
 
                 // Recording the tracked model
-                RecordFrame(clnf_model, detectionSucceeding, frame_id, frame, grayFrame, (fps * (double)frame_id)/1000.0,
+                RecordFrame(clnf_model, detectionSucceeding, frame_id, frame, grayFrame, (1000.0 * (double)frame_id)/fps,
                     record_2D_landmarks, record_2D_landmarks, record_model_params, record_pose, record_AUs, record_gaze, fx, fy, cx, cy);
 
                 if (reset)
@@ -844,7 +844,7 @@ namespace OpenFaceOffline
             }
 
             if (output_pose)
-                output_features_file.WriteLine(String.Format("{1:F3},{2:F3},{3:F3},{4:F3},{5:F3},{6:F3}", pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]));
+                output_features_file.WriteLine(String.Format("{0:F3},{1:F3},{2:F3},{3:F3},{4:F3},{5:F3}", pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]));
 
             if (output_2D_landmarks)
             {
