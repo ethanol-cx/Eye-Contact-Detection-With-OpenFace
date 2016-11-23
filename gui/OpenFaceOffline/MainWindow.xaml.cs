@@ -72,6 +72,7 @@ using CppInterop;
 using CppInterop.LandmarkDetector;
 using CameraInterop;
 using FaceAnalyser_Interop;
+using System.Globalization;
 
 namespace OpenFaceOffline
 {
@@ -134,12 +135,12 @@ namespace OpenFaceOffline
         bool record_tracked_vid = false;
 
         // Check wich things need to be recorded
-        bool record_2D_landmarks = false;
+        bool record_2D_landmarks = true;
         bool record_3D_landmarks = false;
-        bool record_model_params = false;
-        bool record_pose = false;
-        bool record_AUs = false;
-        bool record_gaze = false;
+        bool record_model_params = true;
+        bool record_pose = true;
+        bool record_AUs = true;
+        bool record_gaze = true;
 
         // Visualisation options
         bool show_tracked_video = true;
@@ -629,7 +630,7 @@ namespace OpenFaceOffline
                 }));
 
                 // Recording the tracked model
-                RecordFrame(clnf_model, detectionSucceeding, frame_id, frame, grayFrame, (1000.0 * (double)frame_id)/fps,
+                RecordFrame(clnf_model, detectionSucceeding, frame_id + 1, frame, grayFrame, ((double)frame_id)/fps,
                     record_2D_landmarks, record_2D_landmarks, record_model_params, record_pose, record_AUs, record_gaze, fx, fy, cx, cy);
 
                 if (reset)
@@ -828,6 +829,12 @@ namespace OpenFaceOffline
         private void RecordFrame(CLNF clnf_model, bool success, int frame_ind, RawImage frame, RawImage grayscale_frame, double time_stamp, bool output_2D_landmarks, bool output_3D_landmarks,
                                     bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze, double fx, double fy, double cx, double cy)
         {
+            // Making sure that full stop is used instead of a comma for data recording
+            System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
+            customCulture.NumberFormat.NumberDecimalSeparator = ".";
+
+            System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
+
             double confidence = (-clnf_model.GetConfidence()) / 2.0 + 0.5;
 
             List<double> pose = new List<double>();
@@ -839,12 +846,12 @@ namespace OpenFaceOffline
             {
                 var gaze = face_analyser.GetGazeCamera();
 
-                output_features_file.Write(String.Format(", {0:F3}, {1:F3}, {2:F3}, {3:F3}, {4:F3}, {5:F3}", gaze.Item1.Item1, gaze.Item1.Item2, gaze.Item1.Item3,
+                output_features_file.Write(String.Format(", {0:F5}, {1:F5}, {2:F5}, {3:F5}, {4:F5}, {5:F5}", gaze.Item1.Item1, gaze.Item1.Item2, gaze.Item1.Item3,
                     gaze.Item2.Item1, gaze.Item2.Item2, gaze.Item2.Item3));
             }
 
             if (output_pose)
-                output_features_file.WriteLine(String.Format("{0:F3},{1:F3},{2:F3},{3:F3},{4:F3},{5:F3}", pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]));
+                output_features_file.Write(String.Format(", {0:F3}, {1:F3}, {2:F3}, {3:F3}, {4:F3}, {5:F3}", pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]));
 
             if (output_2D_landmarks)
             {

@@ -809,6 +809,7 @@ void post_process_output_file(FaceAnalysis::FaceAnalyser& face_analyser, string 
 	// Now overwrite the whole file
 	std::ofstream outfile(output_file, ios_base::out);
 	// Write the header
+	outfile << std::setprecision(4);
 	outfile << output_file_contents[0].c_str() << endl;
 	
 	// Write the contents
@@ -817,6 +818,7 @@ void post_process_output_file(FaceAnalysis::FaceAnalyser& face_analyser, string 
 		std::vector<std::string> tokens;
 		boost::split(tokens, output_file_contents[i], boost::is_any_of(","));
 
+		boost::trim(tokens[0]);
 		outfile << tokens[0];
 
 		for (int t = 1; t < (int)tokens.size(); ++t)
@@ -834,6 +836,7 @@ void post_process_output_file(FaceAnalysis::FaceAnalyser& face_analyser, string 
 			}
 			else
 			{
+				boost::trim(tokens[t]);
 				outfile << ", " << tokens[t];
 			}
 		}
@@ -852,7 +855,7 @@ void prepareOutputFile(std::ofstream* output_file, bool output_2D_landmarks, boo
 
 	if (output_gaze)
 	{
-		*output_file << ", gaze_0_x, gaze_0_y, gaze_0_z, gaze_1_x, gaze_1_y, gaze_2_z";
+		*output_file << ", gaze_0_x, gaze_0_y, gaze_0_z, gaze_1_x, gaze_1_y, gaze_1_z";
 	}
 
 	if (output_pose)
@@ -926,8 +929,14 @@ void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, boo
 {
 
 	double confidence = 0.5 * (1 - face_model.detection_certainty);
+	
+	*output_file << std::setprecision(9);
+	*output_file << frame_count + 1 << ", " << time_stamp << ", ";
 
-	*output_file << frame_count + 1 << ", " << time_stamp << ", " << confidence << ", " << detection_success;
+	*output_file << std::setprecision(2);
+	*output_file << confidence << ", " << detection_success;
+
+	*output_file << std::setprecision(5);
 
 	// Output the estimated gaze
 	if (output_gaze)
@@ -936,6 +945,7 @@ void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, boo
 			<< ", " << gazeDirection1.x << ", " << gazeDirection1.y << ", " << gazeDirection1.z;
 	}
 
+	*output_file << std::setprecision(4);
 	// Output the estimated head pose
 	if (output_pose)
 	{
@@ -950,6 +960,7 @@ void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, boo
 		}
 	}
 
+	*output_file << std::setprecision(4);
 	// Output the detected 2D facial landmarks
 	if (output_2D_landmarks)
 	{
