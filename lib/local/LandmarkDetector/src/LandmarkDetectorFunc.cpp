@@ -70,63 +70,11 @@
 
 using namespace LandmarkDetector;
 
-// Getting a head pose estimate from the currently detected landmarks (rotation with respect to point camera)
+// Getting a head pose estimate from the currently detected landmarks, with appropriate correction due to the PDM assuming an orthographic camera
+// which is only correct close to the centre of the image
+// This method returns a corrected pose estimate with respect to world coordinates with camera at origin (0,0,0)
 // The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-cv::Vec6d LandmarkDetector::GetPoseCamera(const CLNF& clnf_model, double fx, double fy, double cx, double cy)
-{
-	if(!clnf_model.detected_landmarks.empty() && clnf_model.params_global[0] != 0)
-	{
-		double Z = fx / clnf_model.params_global[0];
-	
-		double X = ((clnf_model.params_global[4] - cx) * (1.0/fx)) * Z;
-		double Y = ((clnf_model.params_global[5] - cy) * (1.0/fy)) * Z;
-	
-		return cv::Vec6d(X, Y, Z, clnf_model.params_global[1], clnf_model.params_global[2], clnf_model.params_global[3]);
-	}
-	else
-	{
-		return cv::Vec6d(0,0,0,0,0,0);
-	}
-}
-
-// Getting a head pose estimate from the currently detected landmarks (rotation in world coordinates)
-// The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-cv::Vec6d LandmarkDetector::GetPoseWorld(const CLNF& clnf_model, double fx, double fy, double cx, double cy)
-{
-	if(!clnf_model.detected_landmarks.empty() && clnf_model.params_global[0] != 0)
-	{
-		double Z = fx / clnf_model.params_global[0];
-	
-		double X = ((clnf_model.params_global[4] - cx) * (1.0/fx)) * Z;
-		double Y = ((clnf_model.params_global[5] - cy) * (1.0/fy)) * Z;
-	
-		// Here we correct for the camera orientation, for this need to determine the angle the camera makes with the head pose
-		double z_x = cv::sqrt(X * X + Z * Z);
-		double eul_x = atan2(Y, z_x);
-
-		double z_y = cv::sqrt(Y * Y + Z * Z);
-		double eul_y = -atan2(X, z_y);
-
-		cv::Matx33d camera_rotation = LandmarkDetector::Euler2RotationMatrix(cv::Vec3d(eul_x, eul_y, 0));
-		cv::Matx33d head_rotation = LandmarkDetector::AxisAngle2RotationMatrix(cv::Vec3d(clnf_model.params_global[1], clnf_model.params_global[2], clnf_model.params_global[3]));
-
-		cv::Matx33d corrected_rotation = camera_rotation.t() * head_rotation;
-
-		cv::Vec3d euler_corrected = LandmarkDetector::RotationMatrix2Euler(corrected_rotation);
-
-		return cv::Vec6d(X, Y, Z, euler_corrected[0], euler_corrected[1], euler_corrected[2]);
-	}
-	else
-	{
-		return cv::Vec6d(0,0,0,0,0,0);
-	}
-}
-
-// Getting a head pose estimate from the currently detected landmarks, with appropriate correction due to orthographic camera issue
-// This is because rotation estimate under orthographic assumption is only correct close to the centre of the image
-// This method returns a corrected pose estimate with respect to world coordinates (Experimental)
-// The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-cv::Vec6d LandmarkDetector::GetCorrectedPoseWorld(const CLNF& clnf_model, double fx, double fy, double cx, double cy)
+cv::Vec6d LandmarkDetector::GetPose(const CLNF& clnf_model, double fx, double fy, double cx, double cy)
 {
 	if(!clnf_model.detected_landmarks.empty() && clnf_model.params_global[0] != 0)
 	{
@@ -161,7 +109,7 @@ cv::Vec6d LandmarkDetector::GetCorrectedPoseWorld(const CLNF& clnf_model, double
 
 		cv::Vec3d euler = LandmarkDetector::AxisAngle2Euler(vec_rot);
 		
-		return cv::Vec6d(vec_trans[0], vec_trans[1], vec_trans[2], vec_rot[0], vec_rot[1], vec_rot[2]);
+		return cv::Vec6d(vec_trans[0], vec_trans[1], vec_trans[2], euler[0], euler[1], euler[2]);
 	}
 	else
 	{
@@ -170,9 +118,9 @@ cv::Vec6d LandmarkDetector::GetCorrectedPoseWorld(const CLNF& clnf_model, double
 }
 
 // Getting a head pose estimate from the currently detected landmarks, with appropriate correction due to perspective projection
-// This method returns a corrected pose estimate with respect to a point camera (NOTE not the world coordinates) (Experimental)
+// This method returns a corrected pose estimate with respect to a point camera (NOTE not the world coordinates), which is useful to find out if the person is looking at a camera
 // The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-cv::Vec6d LandmarkDetector::GetCorrectedPoseCamera(const CLNF& clnf_model, double fx, double fy, double cx, double cy)
+cv::Vec6d LandmarkDetector::GetPoseWRTCamera(const CLNF& clnf_model, double fx, double fy, double cx, double cy)
 {
 	if(!clnf_model.detected_landmarks.empty() && clnf_model.params_global[0] != 0)
 	{

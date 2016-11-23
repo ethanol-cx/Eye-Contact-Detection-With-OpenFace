@@ -190,7 +190,7 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 		// A rough heuristic for box around the face width
 		int thickness = (int)std::ceil(2.0* ((double)captured_image.cols) / 640.0);
 
-		cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetCorrectedPoseWorld(face_model, fx, fy, cx, cy);
+		cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
 		// Draw it in reddish if uncertain, blueish if certain
 		LandmarkDetector::DrawBox(captured_image, pose_estimate_to_draw, cv::Scalar((1 - vis_certainty)*255.0, 0, vis_certainty * 255), thickness, fx, fy, cx, cy);
@@ -252,9 +252,8 @@ int main (int argc, char **argv)
 	// Get the input output file parameters
 	
 	// Indicates that rotation should be with respect to camera or world coordinates
-	bool use_world_coordinates;
 	string output_codec; //not used but should
-	LandmarkDetector::get_video_input_output_params(input_files, depth_directories, output_files, tracked_videos_output, use_world_coordinates, output_codec, arguments);
+	LandmarkDetector::get_video_input_output_params(input_files, depth_directories, output_files, tracked_videos_output, output_codec, arguments);
 
 	bool video_input = true;
 	bool verbose = true;
@@ -596,15 +595,7 @@ int main (int argc, char **argv)
 			}
 
 			// Work out the pose of the head from the tracked model
-			cv::Vec6d pose_estimate;
-			if(use_world_coordinates)
-			{
-				pose_estimate = LandmarkDetector::GetCorrectedPoseWorld(face_model, fx, fy, cx, cy);
-			}
-			else
-			{
-				pose_estimate = LandmarkDetector::GetCorrectedPoseCamera(face_model, fx, fy, cx, cy);
-			}
+			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
 			if(hog_output_file.is_open())
 			{

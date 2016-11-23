@@ -263,7 +263,7 @@ namespace CppInterop {
 			}
 
 			void GetCorrectedPoseCamera(System::Collections::Generic::List<double>^ pose, double fx, double fy, double cx, double cy) {
-				auto pose_vec = ::LandmarkDetector::GetCorrectedPoseCamera(*clnf, fx, fy, cx, cy);
+				auto pose_vec = ::LandmarkDetector::GetPoseWRTCamera(*clnf, fx, fy, cx, cy);
 				pose->Clear();
 				for(int i = 0; i < 6; ++i)
 				{
@@ -272,7 +272,7 @@ namespace CppInterop {
 			}
 
 			void GetCorrectedPoseWorld(System::Collections::Generic::List<double>^ pose, double fx, double fy, double cx, double cy) {
-				auto pose_vec = ::LandmarkDetector::GetCorrectedPoseWorld(*clnf, fx, fy, cx, cy);
+				auto pose_vec = ::LandmarkDetector::GetPose(*clnf, fx, fy, cx, cy);
 				pose->Clear();
 				for(int i = 0; i < 6; ++i)
 				{
@@ -322,7 +322,7 @@ namespace CppInterop {
 
 			System::Collections::Generic::List<System::Tuple<System::Windows::Point, System::Windows::Point>^>^ CalculateBox(float fx, float fy, float cx, float cy) {
 
-				cv::Vec6d pose = ::LandmarkDetector::GetCorrectedPoseWorld(*clnf, fx,fy, cx, cy);
+				cv::Vec6d pose = ::LandmarkDetector::GetPose(*clnf, fx,fy, cx, cy);
 
 				vector<pair<cv::Point2d, cv::Point2d>> vecLines = ::LandmarkDetector::CalculateBox(pose, fx, fy, cx, cy);
 

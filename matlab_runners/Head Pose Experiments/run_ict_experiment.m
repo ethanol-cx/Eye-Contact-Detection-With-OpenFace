@@ -41,7 +41,7 @@ for i=3:numTogether:numel(dbSeqDir)
         inputFile = [ictDir dbSeqDir(i+n).name '/colour undist.avi'];
         outputFile = [outputDir dbSeqDir(i+n).name '.txt'];
         
-        command = cat(2, command,  [' -f "' inputFile '" -op "' outputFile  '" ']);
+        command = cat(2, command,  [' -f "' inputFile '" -of "' outputFile  '" ']);
         
         if(depth)
             dDir = [ictDir dbSeqDir(i+n).name '/depthAligned/'];

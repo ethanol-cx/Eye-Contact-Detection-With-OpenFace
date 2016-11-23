@@ -121,7 +121,7 @@ void create_directories(string output_path)
 
 // Extracting the following command line arguments -f, -fd, -op, -of, -ov (and possible ordered repetitions)
 void get_video_input_output_params(vector<string> &input_video_files, vector<string> &depth_dirs, vector<string> &output_files,
-	vector<string> &output_video_files, bool& world_coordinates_pose, string& output_codec, vector<string> &arguments)
+	vector<string> &output_video_files, string& output_codec, vector<string> &arguments)
 {
 	bool* valid = new bool[arguments.size()];
 
@@ -129,9 +129,6 @@ void get_video_input_output_params(vector<string> &input_video_files, vector<str
 	{
 		valid[i] = true;
 	}
-
-	// By default use rotation with respect to camera (not world coordinates)
-	world_coordinates_pose = false;
 
     // By default use DIVX codec
 	output_codec = "DIVX";
@@ -195,10 +192,6 @@ void get_video_input_output_params(vector<string> &input_video_files, vector<str
 			valid[i] = false;
 			valid[i+1] = false;
 			i++;
-		}		
-		else if (arguments[i].compare("-world_coord") == 0)
-		{
-			world_coordinates_pose = true;
 		}
 		else if (arguments[i].compare("-oc") == 0)
 		{
