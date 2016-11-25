@@ -482,6 +482,8 @@ namespace OpenFaceOffline
 
                 bool detectionSucceeding = ProcessFrame(clnf_model, clnf_params, frame, grayFrame, fx, fy, cx, cy);
 
+                double scale = clnf_model.GetRigidParams()[0];
+
                 double confidence = (-clnf_model.GetConfidence()) / 2.0 + 0.5;
 
                 if (confidence < 0)
@@ -507,8 +509,7 @@ namespace OpenFaceOffline
                 {
                     landmarks = clnf_model.CalculateLandmarks();
                     lines = clnf_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
-                    //gaze_lines = face_analyser.CalculateGazeLines((float)fx, (float)fy, (float)cx, (float)cy); // TODO figure out what is happening here
-                    gaze_lines = new List<Tuple<Point, Point>>();
+                    gaze_lines = face_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
                 }
 
                 // Visualisation
