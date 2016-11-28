@@ -260,7 +260,6 @@ namespace OpenFaceDemo
 
                 List<double> pose = new List<double>();
 
-
                 clnf_model.GetCorrectedPoseCamera(pose, fx, fy, cx, cy);
 
                 List<double> non_rigid_params = clnf_model.GetNonRigidParams();
@@ -272,6 +271,7 @@ namespace OpenFaceDemo
 
                 List<Tuple<Point, Point>> lines = null;
                 List<Tuple<double, double>> landmarks = null;
+                List<Tuple<double, double>> eye_landmarks = null;
                 List<Tuple<Point, Point>> gaze_lines = null;
                 var gaze = face_analyser.GetGazeCamera();
                
@@ -286,6 +286,7 @@ namespace OpenFaceDemo
                 if (detectionSucceeding)
                 {
                     landmarks = clnf_model.CalculateLandmarks();
+                    eye_landmarks = clnf_model.CalculateEyeLandmarks();
                     lines = clnf_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
                     gaze_lines = face_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
                 }
@@ -359,6 +360,7 @@ namespace OpenFaceDemo
                     {
                         video.OverlayLines.Clear();
                         video.OverlayPoints.Clear();
+                        video.OverlayEyePoints.Clear();
                         video.GazeLines.Clear();
                     }
                     else
@@ -371,8 +373,15 @@ namespace OpenFaceDemo
                             landmark_points.Add(new Point(p.Item1, p.Item2));
                         }
 
-                        video.OverlayPoints = landmark_points;
+                        List<Point> eye_landmark_points = new List<Point>();
+                        foreach (var p in eye_landmarks)
+                        {
+                            eye_landmark_points.Add(new Point(p.Item1, p.Item2));
+                        }
 
+
+                        video.OverlayPoints = landmark_points;
+                        video.OverlayEyePoints = eye_landmark_points;
                         video.GazeLines = gaze_lines;
                     }
 
