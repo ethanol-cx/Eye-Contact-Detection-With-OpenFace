@@ -503,11 +503,13 @@ namespace OpenFaceOffline
 
                 List<Tuple<Point, Point>> lines = null;
                 List<Tuple<double, double>> landmarks = null;
+                List<Tuple<double, double>> eye_landmarks = null;
                 List<Tuple<Point, Point>> gaze_lines = null;
 
                 if (detectionSucceeding)
                 {
                     landmarks = clnf_model.CalculateLandmarks();
+                    eye_landmarks = clnf_model.CalculateEyeLandmarks();
                     lines = clnf_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
                     gaze_lines = face_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
                 }

@@ -1064,6 +1064,30 @@ vector<cv::Point2d> CalculateLandmarks(CLNF& clnf_model)
 
 }
 
+// Computing eye landmarks (to be drawn later or in different interfaces)
+vector<cv::Point2d> CalculateEyeLandmarks(CLNF& clnf_model)
+{
+
+	int idx = clnf_model.patch_experts.GetViewIdx(clnf_model.params_global, 0);
+	vector<cv::Point2d> to_return;
+	// If the model has hierarchical updates draw those too
+	for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
+	{
+
+		if (clnf_model.hierarchical_model_names[i].compare("left_eye_28") == 0 ||
+			clnf_model.hierarchical_model_names[i].compare("right_eye_28") == 0)
+		{
+			auto lmks = CalculateLandmarks(clnf_model.hierarchical_models[i].detected_landmarks, clnf_model.hierarchical_models[i].patch_experts.visibilities[0][idx]);
+			for (auto lmk : lmks)
+			{
+				to_return.push_back(lmk);
+			}
+		}
+	}
+	return to_return;
+}
+
+
 // Drawing landmarks on a face image
 void Draw(cv::Mat img, const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities)
 {

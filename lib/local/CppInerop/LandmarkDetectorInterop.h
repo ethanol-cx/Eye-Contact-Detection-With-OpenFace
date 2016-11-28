@@ -291,6 +291,17 @@ namespace CppInterop {
 				return landmarks;
 			}
 
+			System::Collections::Generic::List<System::Tuple<double, double>^>^ CalculateEyeLandmarks() {
+				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateEyeLandmarks(*clnf);
+
+				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double, double>^>();
+				for (cv::Point2d p : vecLandmarks) {
+					landmarks->Add(gcnew System::Tuple<double, double>(p.x, p.y));
+				}
+
+				return landmarks;
+			}
+
 			System::Collections::Generic::List<System::Windows::Media::Media3D::Point3D>^ Calculate3DLandmarks(double fx, double fy, double cx, double cy) {
 				
 				cv::Mat_<double> shape3D = clnf->GetShape(fx, fy, cx, cy);
