@@ -1068,7 +1068,6 @@ vector<cv::Point2d> CalculateLandmarks(CLNF& clnf_model)
 vector<cv::Point2d> CalculateEyeLandmarks(CLNF& clnf_model)
 {
 
-	int idx = clnf_model.patch_experts.GetViewIdx(clnf_model.params_global, 0);
 	vector<cv::Point2d> to_return;
 	// If the model has hierarchical updates draw those too
 	for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
@@ -1077,7 +1076,7 @@ vector<cv::Point2d> CalculateEyeLandmarks(CLNF& clnf_model)
 		if (clnf_model.hierarchical_model_names[i].compare("left_eye_28") == 0 ||
 			clnf_model.hierarchical_model_names[i].compare("right_eye_28") == 0)
 		{
-			auto lmks = CalculateLandmarks(clnf_model.hierarchical_models[i].detected_landmarks, clnf_model.hierarchical_models[i].patch_experts.visibilities[0][idx]);
+			auto lmks = CalculateLandmarks(clnf_model.hierarchical_models[i].detected_landmarks, clnf_model.hierarchical_models[i].patch_experts.visibilities[0][0]);
 			for (auto lmk : lmks)
 			{
 				to_return.push_back(lmk);

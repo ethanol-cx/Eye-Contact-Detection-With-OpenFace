@@ -248,7 +248,7 @@ namespace OpenFaceDemo
                     cx = grayFrame.Width / 2f;
                     cy = grayFrame.Height / 2f;
                 }
-                
+
                 bool detectionSucceeding = ProcessFrame(clnf_model, clnf_params, frame, grayFrame, fx, fy, cx, cy);
 
                 double confidence = (-clnf_model.GetConfidence()) / 2.0 + 0.5;
