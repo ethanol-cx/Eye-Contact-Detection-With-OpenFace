@@ -75,6 +75,7 @@ namespace OpenFaceOffline
             InitializeComponent();
             OverlayLines = new List<Tuple<Point, Point>>();
             OverlayPoints = new List<Point>();
+            OverlayEyePoints = new List<Point>();
             GazeLines = new List<Tuple<Point, Point>>();
 
             Progress = -1;
@@ -89,6 +90,9 @@ namespace OpenFaceOffline
 
             if (OverlayPoints == null)
                 OverlayPoints = new List<Point>();
+
+            if (OverlayEyePoints == null)
+                OverlayEyePoints = new List<Point>();
 
             if (Source == null || !(Source is WriteableBitmap))
                 return;
@@ -120,7 +124,34 @@ namespace OpenFaceOffline
 
                 var q = new Point(ActualWidth * p.X / width, ActualHeight * p.Y / height);
 
-                dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(200 * Confidence), 255, 255, 100)), null, q, 2, 2);
+                dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(200 * Confidence), 255, 255, 100)), null, q, 1, 1);
+            }
+
+            for (int id = 0; id < OverlayEyePoints.Count; id++)
+            {
+
+                var q1 = new Point(ActualWidth * OverlayEyePoints[id].X / width, ActualHeight * OverlayEyePoints[id].Y / height);
+
+                int next_point = id + 1;
+
+                if (id == 7) next_point = 0;
+                if (id == 19) next_point = 8;
+                if (id == 27) next_point = 20;
+
+                if (id == 35) next_point = 28;
+                if (id == 47) next_point = 36;
+                if (id == 55) next_point = 48;
+
+                var q2 = new Point(ActualWidth * OverlayEyePoints[next_point].X / width, ActualHeight * OverlayEyePoints[next_point].Y / height);
+
+                if (id < 28 && (id < 8 || id > 19) || (id>=28 &&(id-28<8 || id-28 >19)))
+                { 
+                    dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(200, (byte)(240), (byte)(30), (byte)100)), 1), q1, q2);
+                }
+                else
+                {
+                    dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(200, (byte)(100), (byte)(30), (byte)240)), 1), q1, q2);
+                }
             }
 
             double scaling = ActualWidth / 400.0;
@@ -156,6 +187,7 @@ namespace OpenFaceOffline
         public List<Tuple<Point, Point>> OverlayLines { get; set; }
         public List<Tuple<Point, Point>> GazeLines { get; set; }
         public List<Point> OverlayPoints { get; set; }
+        public List<Point> OverlayEyePoints { get; set; }
         public double Confidence { get; set; }
         public double FPS { get; set; }
 

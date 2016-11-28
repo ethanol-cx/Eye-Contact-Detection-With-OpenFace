@@ -595,6 +595,7 @@ namespace OpenFaceOffline
                         {
                             video.OverlayLines.Clear();
                             video.OverlayPoints.Clear();
+                            video.OverlayEyePoints.Clear();
                             video.GazeLines.Clear();
                         }
                         else
@@ -607,8 +608,15 @@ namespace OpenFaceOffline
                                 landmark_points.Add(new Point(p.Item1, p.Item2));
                             }
 
-                            video.OverlayPoints = landmark_points;
+                            List<Point> eye_landmark_points = new List<Point>();
+                            foreach (var p in eye_landmarks)
+                            {
+                                eye_landmark_points.Add(new Point(p.Item1, p.Item2));
+                            }
 
+
+                            video.OverlayPoints = landmark_points;
+                            video.OverlayEyePoints = eye_landmark_points;
                             video.GazeLines = gaze_lines;
                         }
                     }
