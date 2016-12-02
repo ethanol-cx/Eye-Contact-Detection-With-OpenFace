@@ -262,7 +262,7 @@ namespace CppInterop {
 				return all_landmarks;
 			}
 
-			void GetCorrectedPoseCamera(System::Collections::Generic::List<double>^ pose, double fx, double fy, double cx, double cy) {
+			void GetPoseWRTCamera(System::Collections::Generic::List<double>^ pose, double fx, double fy, double cx, double cy) {
 				auto pose_vec = ::LandmarkDetector::GetPoseWRTCamera(*clnf, fx, fy, cx, cy);
 				pose->Clear();
 				for(int i = 0; i < 6; ++i)
@@ -271,7 +271,7 @@ namespace CppInterop {
 				}
 			}
 
-			void GetCorrectedPoseWorld(System::Collections::Generic::List<double>^ pose, double fx, double fy, double cx, double cy) {
+			void GetPose(System::Collections::Generic::List<double>^ pose, double fx, double fy, double cx, double cy) {
 				auto pose_vec = ::LandmarkDetector::GetPose(*clnf, fx, fy, cx, cy);
 				pose->Clear();
 				for(int i = 0; i < 6; ++i)

@@ -260,7 +260,7 @@ namespace OpenFaceDemo
 
                 List<double> pose = new List<double>();
 
-                clnf_model.GetCorrectedPoseCamera(pose, fx, fy, cx, cy);
+                clnf_model.GetPose(pose, fx, fy, cx, cy);
 
                 List<double> non_rigid_params = clnf_model.GetNonRigidParams();
                 double scale = clnf_model.GetRigidParams()[0];

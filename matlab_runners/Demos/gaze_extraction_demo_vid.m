@@ -43,12 +43,28 @@ gaze  = dlmread([filename, '_gaze.txt'], ',', 1, 0);
 valid_frames = gaze(:,4);
 
 % only picking left, right and up down views for visualisation
+
+% These are gaze angles with respect to head pose
+gaze_angle = gaze(:,[11,12]);
+
+figure;
+plot(smooth(gaze_angle(:,1)), 'DisplayName', 'Left - right');
+hold on;
+plot(smooth(gaze_angle(:,2)), 'DisplayName', 'Up - down');
+xlabel('Frame') % x-axis label
+ylabel('Radians') % y-axis label
+legend('show');
+hold off;
+
+% These are gaze direction vectors
 gaze = gaze(:,[5,6,7,8,9,10]);
+
 gaze = (gaze(:,[1,2,3]) + gaze(:,[4,5,6]))/2;
 gaze(:,1) = smooth(gaze(:,1));
 gaze(:,2) = smooth(gaze(:,2));
 gaze(:,3) = smooth(gaze(:,3));
 
+figure;
 plot(gaze(:,1), 'DisplayName', 'Left - right');
 hold on;
 plot(gaze(:,2), 'DisplayName', 'Up - down');

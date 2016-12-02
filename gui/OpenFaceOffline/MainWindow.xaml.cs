@@ -492,7 +492,7 @@ namespace OpenFaceOffline
                     confidence = 1;
 
                 List<double> pose = new List<double>();
-                clnf_model.GetCorrectedPoseWorld(pose, fx, fy, cx, cy);
+                clnf_model.GetPose(pose, fx, fy, cx, cy);
                 List<double> non_rigid_params = clnf_model.GetNonRigidParams();
 
                 // The face analysis step (only done if recording AUs, HOGs or video)
@@ -505,6 +505,7 @@ namespace OpenFaceOffline
                 List<Tuple<double, double>> landmarks = null;
                 List<Tuple<double, double>> eye_landmarks = null;
                 List<Tuple<Point, Point>> gaze_lines = null;
+                Tuple<double, double> gaze_angle = new Tuple<double, double>(0,0);
 
                 if (detectionSucceeding)
                 {
@@ -512,6 +513,7 @@ namespace OpenFaceOffline
                     eye_landmarks = clnf_model.CalculateEyeLandmarks();
                     lines = clnf_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
                     gaze_lines = face_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
+                    gaze_angle = face_analyser.GetGazeAngle();
                 }
 
                 // Visualisation
@@ -554,26 +556,8 @@ namespace OpenFaceOffline
                         nonRigidGraph.Update(non_rigid_params);
 
                         // Update eye gaze
-                        var gaze_both = face_analyser.GetGazeCamera();
-                        double x = (gaze_both.Item1.Item1 + gaze_both.Item2.Item1) / 2.0;
-                        double y = (gaze_both.Item1.Item2 + gaze_both.Item2.Item2) / 2.0;
-
-                        // Tweak it to a more presentable value
-                        x = (int)(x * 35);
-                        y = (int)(y * 70);
-
-                        if (x < -10)
-                            x = -10;
-                        if (x > 10)
-                            x = 10;
-                        if (y < -10)
-                            y = -10;
-                        if (y > 10)
-                            y = 10;
-
-                        GazeXLabel.Content = x / 10.0;
-                        GazeYLabel.Content = y / 10.0;
-
+                        GazeXLabel.Content = gaze_angle.Item1 * (180.0/ Math.PI);
+                        GazeYLabel.Content = gaze_angle.Item2 * (180.0 / Math.PI);
 
                     }
 
@@ -849,16 +833,17 @@ namespace OpenFaceOffline
             double confidence = (-clnf_model.GetConfidence()) / 2.0 + 0.5;
 
             List<double> pose = new List<double>();
-            clnf_model.GetCorrectedPoseWorld(pose, fx, fy, cx, cy);
+            clnf_model.GetPose(pose, fx, fy, cx, cy);
             
             output_features_file.Write(String.Format("{0}, {1}, {2:F3}, {3}", frame_ind, time_stamp, confidence, success ? 1 : 0));
 
             if (output_gaze)
             {
                 var gaze = face_analyser.GetGazeCamera();
+                var gaze_angle = face_analyser.GetGazeAngle();
 
-                output_features_file.Write(String.Format(", {0:F5}, {1:F5}, {2:F5}, {3:F5}, {4:F5}, {5:F5}", gaze.Item1.Item1, gaze.Item1.Item2, gaze.Item1.Item3,
-                    gaze.Item2.Item1, gaze.Item2.Item2, gaze.Item2.Item3));
+                output_features_file.Write(String.Format(", {0:F5}, {1:F5}, {2:F5}, {3:F5}, {4:F5}, {5:F5}, {6:F5}, {7:F5}", gaze.Item1.Item1, gaze.Item1.Item2, gaze.Item1.Item3,
+                    gaze.Item2.Item1, gaze.Item2.Item2, gaze.Item2.Item3, gaze_angle.Item1, gaze_angle.Item2));
             }
 
             if (output_pose)

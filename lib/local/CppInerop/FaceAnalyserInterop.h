@@ -126,7 +126,8 @@ private:
 	// Absolute gaze direction
 	cv::Point3f* gazeDirection0;
 	cv::Point3f* gazeDirection1;
-	
+	cv::Vec2d* gazeAngle;
+
 	cv::Point3f* pupil_left;
 	cv::Point3f* pupil_right;
 
@@ -174,6 +175,7 @@ public:
 
 		gazeDirection0 = new cv::Point3f();
 		gazeDirection1 = new cv::Point3f();
+		gazeAngle = new cv::Vec2d();
 
 		pupil_left = new cv::Point3f();
 		pupil_right = new cv::Point3f();
@@ -293,6 +295,13 @@ public:
 		FaceAnalysis::EstimateGaze(*clnf->getCLNF(), *gazeDirection0, fx, fy, cx, cy, true);
 		FaceAnalysis::EstimateGaze(*clnf->getCLNF(), *gazeDirection1, fx, fy, cx, cy, false);
 
+		// Estimate the gaze angle WRT to head pose here
+		System::Collections::Generic::List<double>^ pose_list = gcnew System::Collections::Generic::List<double>();
+		clnf->GetPose(pose_list, fx, fy, cx, cy);
+		cv::Vec6d pose(pose_list[0], pose_list[1], pose_list[2], pose_list[3], pose_list[4], pose_list[5]);
+
+		cv::Vec2d gaze_angle = FaceAnalysis::GetGazeAngle(*gazeDirection0, *gazeDirection1, pose);
+
 		// Grab pupil locations
 		int part_left = -1;
 		int part_right = -1;
@@ -327,6 +336,12 @@ public:
 
 	}
 
+	System::Tuple<double, double>^ GetGazeAngle()
+	{
+		auto gaze_angle = gcnew System::Tuple<double, double>((*gazeAngle)[0], (*gazeAngle)[1]);
+		return gaze_angle;
+
+	}
 	System::Collections::Generic::List<System::Tuple<System::Windows::Point, System::Windows::Point>^>^ CalculateGazeLines(double scale, float fx, float fy, float cx, float cy)
 	{
 		
@@ -453,6 +468,7 @@ public:
 
 		delete gazeDirection0;
 		delete gazeDirection1;
+		delete gazeAngle;
 
 		delete pupil_left;
 		delete pupil_right;
