@@ -21,6 +21,17 @@ cd('../');
 
 %% AUs
 cd('Action Unit Experiments');
+run_AU_prediction_Bosphorus
+assert(mean(cccs_reg) > 0.56);
+assert(mean(f1s_class) > 0.46);
+
+run_AU_prediction_BP4D
+assert(mean(ints_cccs) > 0.6);
+assert(mean(f1s_class) > 0.6);
+
+run_AU_prediction_UNBC
+assert(mean(ints_cccs) > 0.38);
+
 run_AU_prediction_DISFA
 assert(mean(au_res) > 0.7);
 

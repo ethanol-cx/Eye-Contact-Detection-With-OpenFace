@@ -300,7 +300,7 @@ int main (int argc, char **argv)
 	vector<string> output_similarity_align;
 	vector<string> output_hog_align_files;
 
-	double sim_scale = 0.7;
+	double sim_scale = -1;
 	int sim_size = 112;
 	bool grayscale = false;	
 	bool video_output = false;
@@ -320,6 +320,7 @@ int main (int argc, char **argv)
 	get_output_feature_params(output_similarity_align, output_hog_align_files, sim_scale, sim_size, grayscale, verbose, dynamic,
 		output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, arguments);
 	
+
 	// Used for image masking
 
 	string tri_loc;
@@ -338,11 +339,6 @@ int main (int argc, char **argv)
 			return 1;
 		}
 	}	
-
-	// Will warp to scaled mean shape
-	cv::Mat_<double> similarity_normalised_shape = face_model.pdm.mean_shape * sim_scale;
-	// Discard the z component
-	similarity_normalised_shape = similarity_normalised_shape(cv::Rect(0, 0, 1, 2*similarity_normalised_shape.rows/3)).clone();
 
 	// If multiple video files are tracked, use this to indicate if we are done
 	bool done = false;	
@@ -381,7 +377,11 @@ int main (int argc, char **argv)
 	}	
 
 	// Creating a  face analyser that will be used for AU extraction
-	FaceAnalysis::FaceAnalyser face_analyser(vector<cv::Vec3d>(), 0.7, 112, 112, au_loc, tri_loc);
+
+	// Make sure sim_scale is proportional to sim_size if not set
+	if (sim_scale == -1) sim_scale = sim_size * (0.7 / 112.0);
+
+	FaceAnalysis::FaceAnalyser face_analyser(vector<cv::Vec3d>(), sim_scale, sim_size, sim_size, au_loc, tri_loc);
 		
 	while(!done) // this is not a for loop as we might also be reading from a webcam
 	{
@@ -588,7 +588,7 @@ int main (int argc, char **argv)
 				}
 				if(hog_output_file.is_open())
 				{
-					FaceAnalysis::Extract_FHOG_descriptor(hog_descriptor, sim_warped_img, num_hog_rows, num_hog_cols);						
+					face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 
 					if(visualise_hog && !det_parameters.quiet_mode)
 					{

@@ -125,6 +125,8 @@ end
 
 %%
 f = fopen('results/BP4D_valid_res_class.txt', 'w');
+f1s_class = zeros(1, numel(aus_BP4D));
+
 for au = 1:numel(aus_BP4D)
 
     if(inds_au_class(au) ~= 0)
@@ -137,7 +139,7 @@ for au = 1:numel(aus_BP4D)
         recall = tp./(tp+fn);
 
         f1 = 2 * precision .* recall ./ (precision + recall);
-
+        f1s_class(au) = f1;
         fprintf(f, 'AU%d class, Precision - %.3f, Recall - %.3f, F1 - %.3f\n', aus_BP4D(au), precision, recall, f1);
     end    
     
@@ -195,8 +197,10 @@ end
 
 %%
 f = fopen('results/BP4D_valid_res_int.txt', 'w');
+ints_cccs = zeros(1, numel(aus_BP4D));
 for au = 1:numel(aus_BP4D)
     [ accuracies, F1s, corrs, ccc, rms, classes ] = evaluate_au_prediction_results( preds_all_int(valid_ids, inds_au_int(au)), labels_gt(valid_ids,au));
+    ints_cccs(au) = ccc;
     fprintf(f, 'AU%d results - rms %.3f, corr %.3f, ccc - %.3f\n', aus_BP4D(au), rms, corrs, ccc);    
 end
 fclose(f);

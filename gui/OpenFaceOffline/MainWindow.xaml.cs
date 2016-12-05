@@ -148,6 +148,8 @@ namespace OpenFaceOffline
         bool show_geometry = true;
         bool show_aus = true;
 
+        int image_output_size = 112;
+
         // TODO classifiers converted to regressors
 
         // TODO indication that track is done        
@@ -166,7 +168,7 @@ namespace OpenFaceOffline
         bool dynamic_AU_shift = true;
         bool dynamic_AU_scale = false;
         bool use_dynamic_models = true;
-        
+
         public MainWindow()
         {
             InitializeComponent();
@@ -196,7 +198,7 @@ namespace OpenFaceOffline
 
             clnf_params = new FaceModelParameters(root, false);
             clnf_model = new CLNF(clnf_params);
-            face_analyser = new FaceAnalyserManaged(root, use_dynamic_models);
+            face_analyser = new FaceAnalyserManaged(root, use_dynamic_models, image_output_size);
 
         }
 
@@ -234,7 +236,7 @@ namespace OpenFaceOffline
                         // Prepare recording if any based on the directory
                         String file_no_ext = System.IO.Path.GetDirectoryName(filenames[0]);
                         file_no_ext = System.IO.Path.GetFileName(file_no_ext);
-                        
+
                         SetupRecording(record_root, file_no_ext, capture.width, capture.height, record_2D_landmarks, record_2D_landmarks, record_model_params, record_pose, record_AUs, record_gaze);
 
                         // Start the actual processing                        
@@ -304,7 +306,7 @@ namespace OpenFaceOffline
                         {
                             // Prepare recording if any
                             String file_no_ext = System.IO.Path.GetFileNameWithoutExtension(filename);
-                            
+
                             SetupRecording(record_root, file_no_ext, capture.width, capture.height, record_2D_landmarks, record_3D_landmarks, record_model_params, record_pose, record_AUs, record_gaze);
 
                             // Start the actual processing                        
@@ -445,7 +447,7 @@ namespace OpenFaceOffline
                 //////////////////////////////////////////////
                 RawImage frame = null;
                 double progress = -1;
-                
+
                 frame = new RawImage(capture.GetNextFrame(false));
                 progress = capture.GetProgress();
 
@@ -505,7 +507,7 @@ namespace OpenFaceOffline
                 List<Tuple<double, double>> landmarks = null;
                 List<Tuple<double, double>> eye_landmarks = null;
                 List<Tuple<Point, Point>> gaze_lines = null;
-                Tuple<double, double> gaze_angle = new Tuple<double, double>(0,0);
+                Tuple<double, double> gaze_angle = new Tuple<double, double>(0, 0);
 
                 if (detectionSucceeding)
                 {
@@ -556,7 +558,7 @@ namespace OpenFaceOffline
                         nonRigidGraph.Update(non_rigid_params);
 
                         // Update eye gaze
-                        GazeXLabel.Content = gaze_angle.Item1 * (180.0/ Math.PI);
+                        GazeXLabel.Content = gaze_angle.Item1 * (180.0 / Math.PI);
                         GazeYLabel.Content = gaze_angle.Item2 * (180.0 / Math.PI);
 
                     }
@@ -625,7 +627,7 @@ namespace OpenFaceOffline
                 }));
 
                 // Recording the tracked model
-                RecordFrame(clnf_model, detectionSucceeding, frame_id + 1, frame, grayFrame, ((double)frame_id)/fps,
+                RecordFrame(clnf_model, detectionSucceeding, frame_id + 1, frame, grayFrame, ((double)frame_id) / fps,
                     record_2D_landmarks, record_2D_landmarks, record_model_params, record_pose, record_AUs, record_gaze, fx, fy, cx, cy);
 
                 if (reset)
@@ -694,7 +696,7 @@ namespace OpenFaceOffline
         // ----------------------------------------------------------
         // Recording helpers (TODO simplify)
 
-        private void SetupRecording(String root, String filename, int width, int height, bool output_2D_landmarks, bool output_3D_landmarks, 
+        private void SetupRecording(String root, String filename, int width, int height, bool output_2D_landmarks, bool output_3D_landmarks,
                                     bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze)
         {
             // Disallow changing recording settings when the recording starts, TODO move this up a bit
@@ -810,7 +812,7 @@ namespace OpenFaceOffline
 
             if (record_tracked_vid)
                 face_analyser.StopTrackingRecording();
-            
+
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
             {
                 RecordingMenu.IsEnabled = true;
@@ -834,7 +836,7 @@ namespace OpenFaceOffline
 
             List<double> pose = new List<double>();
             clnf_model.GetPose(pose, fx, fy, cx, cy);
-            
+
             output_features_file.Write(String.Format("{0}, {1}, {2:F3}, {3}", frame_ind, time_stamp, confidence, success ? 1 : 0));
 
             if (output_gaze)
@@ -852,7 +854,7 @@ namespace OpenFaceOffline
             if (output_2D_landmarks)
             {
                 List<Tuple<double, double>> landmarks_2d = clnf_model.CalculateLandmarks();
-                
+
                 for (int i = 0; i < landmarks_2d.Count; ++i)
                     output_features_file.Write(", {0:F2}", landmarks_2d[i].Item1);
 
@@ -863,7 +865,7 @@ namespace OpenFaceOffline
             if (output_3D_landmarks)
             {
                 List<System.Windows.Media.Media3D.Point3D> landmarks_3d = clnf_model.Calculate3DLandmarks(fx, fy, cx, cy);
-                
+
                 for (int i = 0; i < landmarks_3d.Count; ++i)
                     output_features_file.Write(", {0:F2}", landmarks_3d[i].X);
 
@@ -892,8 +894,8 @@ namespace OpenFaceOffline
                 var au_classes = face_analyser.GetCurrentAUsClass();
 
                 foreach (var name_class in au_class_names)
-                    output_features_file.Write(", {0:F0}", au_classes[name_class]);                
-                
+                    output_features_file.Write(", {0:F0}", au_classes[name_class]);
+
             }
 
             output_features_file.WriteLine();
@@ -1206,10 +1208,26 @@ namespace OpenFaceOffline
             {
                 // Change the face analyser, this should be safe as the model is only allowed to change when not running
                 String root = AppDomain.CurrentDomain.BaseDirectory;
-                face_analyser = new FaceAnalyserManaged(root, UseDynamicModelsCheckBox.IsChecked);
+                face_analyser = new FaceAnalyserManaged(root, UseDynamicModelsCheckBox.IsChecked, image_output_size);
             }
             use_dynamic_models = UseDynamicModelsCheckBox.IsChecked;
         }
 
+        private void setOutputImageSize_Click(object sender, RoutedEventArgs e)
+        {
+
+            NumberEntryWindow number_entry_window = new NumberEntryWindow();
+            number_entry_window.Icon = this.Icon;
+
+            number_entry_window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+
+            if (number_entry_window.ShowDialog() == true)
+            {
+                image_output_size = number_entry_window.OutputInt;
+                String root = AppDomain.CurrentDomain.BaseDirectory;
+                face_analyser = new FaceAnalyserManaged(root, use_dynamic_models, image_output_size);
+
+            }
+        }
     }
 }

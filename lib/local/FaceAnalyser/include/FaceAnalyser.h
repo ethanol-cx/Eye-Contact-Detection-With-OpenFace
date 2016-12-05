@@ -111,12 +111,8 @@ public:
 	void GetLatestNeutralHOG(cv::Mat_<double>& hog_descriptor, int& num_rows, int& num_cols);
 	
 	cv::Mat_<int> GetTriangulation();
-
-	cv::Mat_<uchar> GetLatestAlignedFaceGrayscale();
 	
 	void GetGeomDescriptor(cv::Mat_<double>& geom_desc);
-
-	void ExtractCurrentMedians(vector<cv::Mat>& hog_medians, vector<cv::Mat>& face_image_medians, vector<cv::Vec3d>& orientations);
 
 	// Grab the names of AUs being predicted
 	std::vector<std::string> GetAUClassNames() const; // Presence
@@ -148,8 +144,8 @@ private:
 	int frames_tracking;
 
 	// Cache of intermediate images
-	cv::Mat_<uchar> aligned_face_grayscale;
-	cv::Mat aligned_face;
+	cv::Mat aligned_face_for_au;
+	cv::Mat aligned_face_for_output;
 	cv::Mat hog_descriptor_visualisation;
 
 	// Private members to be used for predictions

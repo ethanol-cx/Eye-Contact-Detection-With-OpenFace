@@ -88,7 +88,7 @@ namespace OpenFaceDemo
 
             clnf_params = new FaceModelParameters(root, true);
             clnf_model = new CLNF(clnf_params);
-            face_analyser = new FaceAnalyserManaged(root, true);
+            face_analyser = new FaceAnalyserManaged(root, true, 112);
 
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
             {

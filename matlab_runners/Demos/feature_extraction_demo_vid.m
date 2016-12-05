@@ -36,7 +36,7 @@ for i=1:numel(in_files)
     output_shape_params = [output name '.params.txt'];
     
     command = cat(2, command, [' -f "' inputFile '" -of "' outputFile '"']);        
-    command = cat(2, command, [' -simalign "' outputDir_aligned '" -hogalign "' outputHOG_aligned '"' ]);    
+    command = cat(2, command, [' -simsize 224 -simalign "' outputDir_aligned '" -hogalign "' outputHOG_aligned '"' ]);    
                  
 end
 
@@ -153,7 +153,7 @@ hold off;
 [hog_data, valid_inds, vid_id] = Read_HOG_files({name}, output);
 
 %% Output aligned images
-img_files = dir([outputDir_aligned, '/*.png']);
+img_files = dir([outputDir_aligned, '/*.bmp']);
 imgs = cell(numel(img_files, 1));
 for i=1:numel(img_files)
    imgs{i} = imread([ outputDir_aligned, '/', img_files(i).name]);

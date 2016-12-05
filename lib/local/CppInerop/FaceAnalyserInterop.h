@@ -133,15 +133,17 @@ private:
 
 public:
 
-	FaceAnalyserManaged(System::String^ root, bool dynamic) 
+	FaceAnalyserManaged(System::String^ root, bool dynamic, int output_width) 
 	{
 			
 		vector<cv::Vec3d> orientation_bins;
 		orientation_bins.push_back(cv::Vec3d(0,0,0));
-		double scale = 0.7;
-		int width = 112;
-		int height = 112;
+
+		int width = output_width;
+		int height = output_width;
 		
+		double scale = width * (0.7 / 112.0);
+
 		string root_std = msclr::interop::marshal_as<std::string>(root);
 		
 		// TODO diff paths and locations for the demo mode
@@ -265,7 +267,7 @@ public:
 		face_analyser->GetLatestHOG(*hog_features, *num_rows, *num_cols);
 		
 		face_analyser->GetLatestAlignedFace(*aligned_face);
-
+		
 		*good_frame = clnf->clnf->detection_success;
 
 		if(vis_hog)

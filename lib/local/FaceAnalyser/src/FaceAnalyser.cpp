@@ -226,7 +226,7 @@ void FaceAnalyser::GetLatestHOG(cv::Mat_<double>& hog_descriptor, int& num_rows,
 
 void FaceAnalyser::GetLatestAlignedFace(cv::Mat& image)
 {
-	image = this->aligned_face.clone();
+	image = this->aligned_face_for_output.clone();
 }
 
 void FaceAnalyser::GetLatestNeutralHOG(cv::Mat_<double>& hog_descriptor, int& num_rows, int& num_cols)
@@ -267,50 +267,15 @@ int GetViewId(const vector<cv::Vec3d> orientations_all, const cv::Vec3d& orienta
 	
 }
 
-void FaceAnalyser::ExtractCurrentMedians(vector<cv::Mat>& hog_medians, vector<cv::Mat>& face_image_medians, vector<cv::Vec3d>& orientations)
-{
-
-	orientations = this->head_orientations;
-
-	for(size_t i = 0; i < orientations.size(); ++i)
-	{
-		cv::Mat_<double> median_face(this->face_image_median.rows, this->face_image_median.cols, 0.0);
-		cv::Mat_<double> median_hog(this->hog_desc_median.rows, this->hog_desc_median.cols, 0.0);
-
-		ExtractMedian(this->face_image_hist[i], this->face_image_hist_sum[i], median_face, 256, 0, 255);		
-		ExtractMedian(this->hog_desc_hist[i], this->hog_hist_sum[i], median_hog, this->num_bins_hog, 0, 1);
-
-		// Add the HOG sample
-		hog_medians.push_back(median_hog.clone());
-
-		// For the face image need to convert it to suitable format
-		cv::Mat_<uchar> aligned_face_cols_uchar;
-		median_face.convertTo(aligned_face_cols_uchar, CV_8U);
-
-		cv::Mat aligned_face_uchar;
-		if(aligned_face.channels() == 1)
-		{
-			aligned_face_uchar = cv::Mat(aligned_face.rows, aligned_face.cols, CV_8U, aligned_face_cols_uchar.data);
-		}
-		else
-		{
-			aligned_face_uchar = cv::Mat(aligned_face.rows, aligned_face.cols, CV_8UC3, aligned_face_cols_uchar.data);
-		}
-
-		face_image_medians.push_back(aligned_face_uchar.clone());
-		
-	}
-}
-
 std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, double>>> FaceAnalyser::PredictStaticAUs(const cv::Mat& frame, const LandmarkDetector::CLNF& clnf, bool visualise)
 {
 	
 	// First align the face
-	AlignFaceMask(aligned_face, frame, clnf, triangulation, true, align_scale, align_width, align_height);
+	AlignFaceMask(aligned_face_for_au, frame, clnf, triangulation, true, 0.7, 112, 112);
 	
 	// Extract HOG descriptor from the frame and convert it to a useable format
 	cv::Mat_<double> hog_descriptor;
-	Extract_FHOG_descriptor(hog_descriptor, aligned_face, this->num_hog_rows, this->num_hog_cols);
+	Extract_FHOG_descriptor(hog_descriptor, aligned_face_for_au, this->num_hog_rows, this->num_hog_cols);
 
 	// Store the descriptor
 	hog_desc_frame = hog_descriptor;
@@ -326,10 +291,10 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 
 	cv::hconcat(locs.t(), geom_descriptor_frame.clone(), geom_descriptor_frame);
 	
-	// First convert the face image to double representation as a row vector
-	cv::Mat_<uchar> aligned_face_cols(1, aligned_face.cols * aligned_face.rows * aligned_face.channels(), aligned_face.data, 1);
-	cv::Mat_<double> aligned_face_cols_double;
-	aligned_face_cols.convertTo(aligned_face_cols_double, CV_64F);
+	// First convert the face image to double representation as a row vector, TODO rem
+	//cv::Mat_<uchar> aligned_face_cols(1, aligned_face_for_au.cols * aligned_face_for_au.rows * aligned_face_for_au.channels(), aligned_face_for_au.data, 1);
+	//cv::Mat_<double> aligned_face_cols_double;
+	//aligned_face_cols.convertTo(aligned_face_cols_double, CV_64F);
 
 	// Visualising the median HOG
 	if (visualise)
@@ -363,26 +328,31 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CL
 	// First align the face if tracking was successfull
 	if(clnf_model.detection_success)
 	{
-		AlignFaceMask(aligned_face, frame, clnf_model, triangulation, true, align_scale, align_width, align_height);
-	}
-	else
-	{
-		aligned_face = cv::Mat(align_height, align_width, CV_8UC3);
-		aligned_face.setTo(0);
-	}
 
-	if(aligned_face.channels() == 3)
-	{
-		cv::cvtColor(aligned_face, aligned_face_grayscale, CV_BGR2GRAY);
+		// The aligned face requirement for AUs
+		AlignFaceMask(aligned_face_for_au, frame, clnf_model, triangulation, true, 0.7, 112, 112);
+
+		// If the output requirement matches use the already computed one, else compute it again
+		if(align_scale == 0.7 && align_width == 112 && align_height == 112)
+		{
+			aligned_face_for_output = aligned_face_for_au.clone();
+		}
+		else
+		{
+			AlignFaceMask(aligned_face_for_output, frame, clnf_model, triangulation, true, align_scale, align_width, align_height);
+		}
 	}
 	else
 	{
-		aligned_face_grayscale = aligned_face.clone();
+		aligned_face_for_output = cv::Mat(align_height, align_width, CV_8UC3);
+		aligned_face_for_au = cv::Mat(112, 112, CV_8UC3);
+		aligned_face_for_output.setTo(0);
+		aligned_face_for_au.setTo(0);
 	}
 
 	// Extract HOG descriptor from the frame and convert it to a useable format
 	cv::Mat_<double> hog_descriptor;
-	Extract_FHOG_descriptor(hog_descriptor, aligned_face, this->num_hog_rows, this->num_hog_cols);
+	Extract_FHOG_descriptor(hog_descriptor, aligned_face_for_au, this->num_hog_rows, this->num_hog_cols);
 	
 	// Store the descriptor
 	hog_desc_frame = hog_descriptor;
@@ -450,14 +420,11 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CL
 		UpdateRunningMedian(this->geom_desc_hist, this->geom_hist_sum, this->geom_descriptor_median, geom_descriptor_frame, update_median, this->num_bins_geom, this->min_val_geom, this->max_val_geom);
 	}
 
-	// First convert the face image to double representation as a row vector
-	cv::Mat_<uchar> aligned_face_cols(1, aligned_face.cols * aligned_face.rows * aligned_face.channels(), aligned_face.data, 1);
-	cv::Mat_<double> aligned_face_cols_double;
-	aligned_face_cols.convertTo(aligned_face_cols_double, CV_64F);
+	// First convert the face image to double representation as a row vector, TODO rem?
+	//cv::Mat_<uchar> aligned_face_cols(1, aligned_face.cols * aligned_face.rows * aligned_face.channels(), aligned_face.data, 1);
+	//cv::Mat_<double> aligned_face_cols_double;
+	//aligned_face_cols.convertTo(aligned_face_cols_double, CV_64F);
 	
-	// TODO get rid of this completely as it takes too long?
-	//UpdateRunningMedian(this->face_image_hist[orientation_to_use], this->face_image_hist_sum[orientation_to_use], this->face_image_median, aligned_face_cols_double, update_median, 256, 0, 255);
-
 	// Visualising the median HOG
 	if(visualise)
 	{
@@ -1095,12 +1062,6 @@ vector<pair<string, double>> FaceAnalyser::PredictCurrentAUsClass(int view)
 	}
 
 	return predictions;
-}
-
-
-cv::Mat_<uchar> FaceAnalyser::GetLatestAlignedFaceGrayscale()
-{
-	return aligned_face_grayscale.clone();
 }
 
 cv::Mat FaceAnalyser::GetLatestHOGDescriptorVisualisation()

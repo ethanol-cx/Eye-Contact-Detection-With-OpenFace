@@ -91,6 +91,9 @@
     <Compile Include="UI_items\MultiBarGraphHorz.xaml.cs">
       <DependentUpon>MultiBarGraphHorz.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI_items\NumberEntryWindow.xaml.cs">
+      <DependentUpon>NumberEntryWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI_items\OverlayImage.xaml.cs">
       <DependentUpon>OverlayImage.xaml</DependentUpon>
     </Compile>
@@ -122,6 +125,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UI_items\MultiBarGraphHorz.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI_items\NumberEntryWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
