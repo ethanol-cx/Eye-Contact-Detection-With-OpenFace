@@ -98,7 +98,7 @@ end
 
 %%
 f = fopen('results/UNBC_valid_res_int.txt', 'w');
-ints_cccs = zeros(1, numel(aus_UNBC);
+ints_cccs = zeros(1, numel(aus_UNBC));
 for au = 1:numel(aus_UNBC)
     
     [ accuracies, F1s, corrs, ccc, rms, classes ] = evaluate_au_prediction_results( preds_all_int(:, inds_au_int(au)), labels_gt(:,au));

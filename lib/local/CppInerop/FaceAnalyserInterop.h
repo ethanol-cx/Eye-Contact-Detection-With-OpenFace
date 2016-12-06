@@ -302,7 +302,7 @@ public:
 		clnf->GetPose(pose_list, fx, fy, cx, cy);
 		cv::Vec6d pose(pose_list[0], pose_list[1], pose_list[2], pose_list[3], pose_list[4], pose_list[5]);
 
-		cv::Vec2d gaze_angle = FaceAnalysis::GetGazeAngle(*gazeDirection0, *gazeDirection1, pose);
+		*gazeAngle = FaceAnalysis::GetGazeAngle(*gazeDirection0, *gazeDirection1, pose);
 
 		// Grab pupil locations
 		int part_left = -1;

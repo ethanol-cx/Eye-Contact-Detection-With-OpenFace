@@ -163,7 +163,6 @@ cv::Vec2d FaceAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& ga
 	cv::Vec3d eulerAngles(head_pose(3), head_pose(4), head_pose(5));
 	cv::Matx33d rotMat = LandmarkDetector::Euler2RotationMatrix(eulerAngles);
 	cv::Point3f gaze_point = (gaze_vector_1 + gaze_vector_2) / 2;
-	double gaze_diff = acos(gaze_vector_1.dot(gaze_vector_2));
 	cv::Vec3d gaze(gaze_point.x, gaze_point.y, gaze_point.z);
 
 	gaze = rotMat * gaze;

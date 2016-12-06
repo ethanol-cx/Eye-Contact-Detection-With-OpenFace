@@ -559,9 +559,10 @@ namespace OpenFaceOffline
                         nonRigidGraph.Update(non_rigid_params);
 
                         // Update eye gaze
-                        GazeXLabel.Content = gaze_angle.Item1 * (180.0 / Math.PI);
-                        GazeYLabel.Content = gaze_angle.Item2 * (180.0 / Math.PI);
-
+                        String x_angle = String.Format("{0:F0}°", gaze_angle.Item1 * (180.0 / Math.PI));
+                        String y_angle = String.Format("{0:F0}°", gaze_angle.Item2 * (180.0 / Math.PI));
+                        GazeXLabel.Content = x_angle;
+                        GazeYLabel.Content = y_angle;
                     }
 
                     if (show_tracked_video)
@@ -695,7 +696,7 @@ namespace OpenFaceOffline
 
 
         // ----------------------------------------------------------
-        // Recording helpers (TODO simplify)
+        // Recording helpers
 
         private void SetupRecording(String root, String filename, int width, int height, bool output_2D_landmarks, bool output_3D_landmarks,
                                     bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze)
