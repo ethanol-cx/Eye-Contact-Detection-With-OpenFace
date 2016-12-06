@@ -140,6 +140,7 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
             responses = PatchResponseDNN( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
         end
         
+        
         % If a depth image is provided compute patch experts around it as
         % well (unless it's the final iteration)
         if(~isempty(DepthImage) && (i ~= clmParams.numPatchIters))

@@ -40,3 +40,14 @@ matlab_version/experiments_JANUS/wild_fit_clnf/
 matlab_version/experiments_JANUS/wild_fit_dclm/
 exe/FeatureExtraction/300VW_features_experiments/
 matlab_runners/Feature Point Experiments/300VW_features_experiments/
+matlab_version/experiments_300VW/CLM_res/
+matlab_version/experiments_300VW/CLNF_res/
+matlab_version/experiments_300VW/DCLM_res/
+matlab_version/experiments_in_the_wild/patch_expert_responses/
+matlab_version/experiments_in_the_wild/wild_fit_clnf/
+matlab_version/experiments_in_the_wild/wild_fit_dclm/
+matlab_version/experiments_iccv_300w/wild_fit_cfss/
+matlab_version/experiments_iccv_300w/wild_fit_clnf/
+matlab_version/experiments_iccv_300w/wild_fit_dclm/
+matlab_version/experiments_JANUS/all_fit_cvpr/
+matlab_version/experiments_JANUS/cfss_fit/

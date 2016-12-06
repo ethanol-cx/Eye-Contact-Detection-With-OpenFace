@@ -39,6 +39,19 @@ clm_error = compute_error( labels,  shapes);
 
 plot(error_x, error_y, 'DisplayName', 'DCLM', 'LineWidth',line_width);
 
+load('results/results_wild_dclm_wild.mat');
+labels = experiments.labels([1:60,62:64,66:end],:,:);
+shapes = experiments.shapes([1:60,62:64,66:end],:,:);
+labels = labels(18:end,:,:) - 0.5;
+shapes = shapes(18:end,:,:);
+
+clm_error = compute_error( labels,  shapes);
+
+[error_x, error_y] = cummErrorCurve(clm_error);
+
+plot(error_x, error_y, 'DisplayName', 'DCLM2', 'LineWidth',line_width);
+
+
 set(gca,'xtick',[0:0.01:0.08])
 xlim([0,0.08]);
 xlabel('Size normalised shape RMS error','FontName','Helvetica');
