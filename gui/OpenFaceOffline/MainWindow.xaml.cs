@@ -73,6 +73,7 @@ using CppInterop.LandmarkDetector;
 using CameraInterop;
 using FaceAnalyser_Interop;
 using System.Globalization;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace OpenFaceOffline
 {
@@ -1227,6 +1228,26 @@ namespace OpenFaceOffline
                 String root = AppDomain.CurrentDomain.BaseDirectory;
                 face_analyser = new FaceAnalyserManaged(root, use_dynamic_models, image_output_size);
 
+            }
+        }
+
+        private void OutputLocationItem_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new CommonOpenFileDialog();
+            dlg.Title = "Select output directory";
+            dlg.IsFolderPicker = true;
+            dlg.AllowNonFileSystemItems = false;
+            dlg.EnsureFileExists = true;
+            dlg.EnsurePathExists = true;
+            dlg.EnsureReadOnly = false;
+            dlg.EnsureValidNames = true;
+            dlg.Multiselect = false;
+            dlg.ShowPlacesList = true;
+
+            if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                var folder = dlg.FileName;
+                record_root = folder;
             }
         }
     }

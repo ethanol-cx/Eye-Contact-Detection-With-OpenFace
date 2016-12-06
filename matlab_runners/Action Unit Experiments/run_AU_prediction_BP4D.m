@@ -22,32 +22,32 @@ new_bp4d_dirs = {};
 % This might take some time
 for i = 1:numel(bp4d_dirs)
     dirs = dir([bp4d_loc, '/', bp4d_dirs{i}, '/T*']);
-    
+
     tmp_dir = [bp4d_loc, '/../tmp/', bp4d_dirs{i}, '/'];
     new_bp4d_dirs = cat(1, new_bp4d_dirs, tmp_dir);
-    
+
     if(~exist(tmp_dir, 'file'))
         mkdir(tmp_dir);
-        
+
         % Move all images and resize them
         for d=1:numel(dirs)
-           
+
             in_files = dir([bp4d_loc, '/', bp4d_dirs{i}, '/', dirs(d).name, '/*.jpg']);
-            
+
             for img_ind=1:numel(in_files)
-               
+
                 img_file = [bp4d_loc, '/', bp4d_dirs{i}, '/', dirs(d).name, '/', in_files(img_ind).name];
                 img = imread(img_file);
                 img = imresize(img, 0.5);
                 img_out = [tmp_dir, dirs(d).name, '_', in_files(img_ind).name];
                 imwrite(img, img_out);
-                
+
             end
-            
+
         end
-        
+
     end
-    
+
 end
 %%
 

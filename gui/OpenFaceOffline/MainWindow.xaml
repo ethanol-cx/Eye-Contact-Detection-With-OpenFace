@@ -30,7 +30,6 @@
                 </MenuItem>
             </MenuItem>
             <MenuItem Name="RecordingMenu"  Header="Record">
-                <MenuItem Header="Set Location"></MenuItem>
                 <MenuItem Name="RecordAUCheckBox" IsCheckable="True" Header="Record AUs" Click="recordCheckBox_click"></MenuItem>
                 <MenuItem Name="RecordPoseCheckBox" IsCheckable="True" Header="Record pose" Click="recordCheckBox_click"></MenuItem>
                 <MenuItem Name="RecordLandmarks2DCheckBox" IsCheckable="True" Header="Record 2D landmarks" Click="recordCheckBox_click"></MenuItem>
@@ -42,7 +41,7 @@
                 <MenuItem Name="RecordTrackedVidCheckBox" IsCheckable="True" Header="Record tracked video" Click="recordCheckBox_click"></MenuItem>
             </MenuItem>
             <MenuItem Name="SettingsMenu"  Header="Recording settings">
-                <MenuItem Header="Set output location..."></MenuItem>
+                <MenuItem Name="OutputLocationItem" Header="Set output location..." Click="OutputLocationItem_Click" ></MenuItem>
                 <MenuItem Header="Set output image size..." Click="setOutputImageSize_Click"></MenuItem>
             </MenuItem>
             <MenuItem Header="AU settings">
