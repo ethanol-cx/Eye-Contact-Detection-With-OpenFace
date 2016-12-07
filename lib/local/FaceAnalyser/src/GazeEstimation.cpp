@@ -141,7 +141,7 @@ void FaceAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 
 	cv::Mat faceLdmks3d = clnf_model.GetShape(fx, fy, cx, cy);
 	faceLdmks3d = faceLdmks3d.t();
-	cv::Mat offset = (cv::Mat_<double>(3, 1) << 0, -3.50, 0);
+	cv::Mat offset = (cv::Mat_<double>(3, 1) << 0, -3.5, 7.0);
 	int eyeIdx = 1;
 	if (left_eye)
 	{

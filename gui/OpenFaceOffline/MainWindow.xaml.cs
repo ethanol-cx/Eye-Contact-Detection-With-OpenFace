@@ -717,7 +717,7 @@ namespace OpenFaceOffline
             output_features_file.Write("frame, timestamp, confidence, success");
 
             if (output_gaze)
-                output_features_file.Write(", gaze_0_x, gaze_0_y, gaze_0_z, gaze_1_x, gaze_1_y, gaze_2_z");
+                output_features_file.Write(", gaze_0_x, gaze_0_y, gaze_0_z, gaze_1_x, gaze_1_y, gaze_1_z");
 
             if (output_pose)
                 output_features_file.Write(", pose_Tx, pose_Ty, pose_Tz, pose_Rx, pose_Ry, pose_Rz");
