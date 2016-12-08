@@ -273,15 +273,7 @@ namespace OpenFaceDemo
                 List<Tuple<double, double>> landmarks = null;
                 List<Tuple<double, double>> eye_landmarks = null;
                 List<Tuple<Point, Point>> gaze_lines = null;
-                var gaze = face_analyser.GetGazeCamera();
-               
-                // Get the rough gaze angle
-                double x_gaze = (Math.Atan2(gaze.Item1.Item1, -gaze.Item1.Item3) + Math.Atan2(gaze.Item2.Item1, -gaze.Item2.Item3))/2.0;
-                double y_gaze = (Math.Atan2(gaze.Item1.Item2, -gaze.Item1.Item3) + Math.Atan2(gaze.Item2.Item2, -gaze.Item2.Item3)) / 2.0;
-
-                // Scaling for clearer vis.
-                x_gaze *= 2.5;
-                y_gaze *= 2.5;
+                Tuple<double, double> gaze_angle = face_analyser.GetGazeAngle();
 
                 if (detectionSucceeding)
                 {
@@ -335,9 +327,9 @@ namespace OpenFaceDemo
                     headPosePlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = poseDict, Confidence = confidence });
 
                     Dictionary<int, double> gazeDict = new Dictionary<int, double>();
-                    gazeDict[0] = x_gaze;
+                    gazeDict[0] = gaze_angle.Item1 * (180.0 / Math.PI);
                     gazeDict[0] = 0.5 * old_gaze_x + 0.5 * gazeDict[0];
-                    gazeDict[1] = -y_gaze;
+                    gazeDict[1] = -gaze_angle.Item2 * (180.0 / Math.PI);
                     gazeDict[1] = 0.5 * old_gaze_y + 0.5 * gazeDict[1];
                     gazePlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = gazeDict, Confidence = confidence });
 

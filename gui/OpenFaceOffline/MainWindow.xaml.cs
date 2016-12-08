@@ -131,75 +131,61 @@ namespace OpenFaceOffline
         FaceAnalyserManaged face_analyser;
 
         // Recording parameters (default values)
-        bool record_HOG = false; // HOG features extracted from face images
-        bool record_aligned = false; // aligned face images
-        bool record_tracked_vid = false;
+        Recorder recorder;
 
-        // Check wich things need to be recorded
-        bool record_2D_landmarks = true;
-        bool record_3D_landmarks = false;
-        bool record_model_params = true;
-        bool record_pose = true;
-        bool record_AUs = true;
-        bool record_gaze = true;
+        public bool RecordAligned { get; set; } // Aligned face images
+        public bool RecordHOG { get; set; } // HOG features extracted from face images
+        public bool Record2DLandmarks { get; set; } // 2D locations of facial landmarks (in pixels)
+        public bool Record3DLandmarks { get; set; } // 3D locations of facial landmarks (in pixels)
+        public bool RecordModelParameters { get; set; } // Facial shape parameters (rigid and non-rigid geometry)
+        public bool RecordPose { get; set; } // Head pose (position and orientation)
+        public bool RecordAUs { get; set; } // Facial action units
+        public bool RecordGaze { get; set; } // Eye gaze
 
         // Visualisation options
-        bool show_tracked_video = true;
-        bool show_appearance = true;
-        bool show_geometry = true;
-        bool show_aus = true;
+        public bool ShowTrackedVideo { get; set; } // Eye gaze
+        public bool ShowAppearance { get; set; } // Eye gaze
+        public bool ShowGeometry { get; set; } // Eye gaze
+        public bool ShowAUs { get; set; } // Eye gaze
 
         int image_output_size = 112;
 
         // TODO classifiers converted to regressors
 
         // TODO indication that track is done        
-
-        // The recording managers, TODO they should be all one
-        StreamWriter output_features_file;
-
+        
         // Where the recording is done (by default in a record directory, from where the application executed), TODO maybe the same folder as iput?
         String record_root = "./record";
-
-        // For AU visualisation and output        
-        List<String> au_class_names;
-        List<String> au_reg_names;
-
+        
         // For AU prediction
-        bool dynamic_AU_shift = true;
-        bool dynamic_AU_scale = false;
-        bool use_dynamic_models = true;
+        public bool DynamicAUModels { get; set; }
 
         public MainWindow()
         {
             InitializeComponent();
+            this.DataContext = this; // For WPF data binding
 
             // Set the icon
             Uri iconUri = new Uri("logo1.ico", UriKind.RelativeOrAbsolute);
             this.Icon = BitmapFrame.Create(iconUri);
 
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
-            {
-                RecordAUCheckBox.IsChecked = record_AUs;
-                RecordAlignedCheckBox.IsChecked = record_aligned;
-                RecordTrackedVidCheckBox.IsChecked = record_tracked_vid;
-                RecordHOGCheckBox.IsChecked = record_HOG;
-                RecordGazeCheckBox.IsChecked = record_gaze;
-                RecordLandmarks2DCheckBox.IsChecked = record_2D_landmarks;
-                RecordLandmarks3DCheckBox.IsChecked = record_3D_landmarks;
-                RecordParamsCheckBox.IsChecked = record_model_params;
-                RecordPoseCheckBox.IsChecked = record_pose;
+            // Setup the default features that will be recorded
+            Record2DLandmarks = true; Record3DLandmarks = true; RecordModelParameters = true; RecordModelParameters = true; 
+            RecordGaze = true; RecordAUs = true; RecordPose = true;
+            RecordAligned = false; RecordHOG = false;
 
-                UseDynamicModelsCheckBox.IsChecked = use_dynamic_models;
-                UseDynamicScalingCheckBox.IsChecked = dynamic_AU_scale;
-                UseDynamicShiftingCheckBox.IsChecked = dynamic_AU_shift;
-            }));
+            ShowTrackedVideo = true;
+            ShowAppearance = true;
+            ShowGeometry = true;
+            ShowAUs = true;
+
+            DynamicAUModels = true;
 
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
             clnf_params = new FaceModelParameters(root, false);
             clnf_model = new CLNF(clnf_params);
-            face_analyser = new FaceAnalyserManaged(root, use_dynamic_models, image_output_size);
+            face_analyser = new FaceAnalyserManaged(root, DynamicAUModels, image_output_size);
 
         }
 
@@ -212,11 +198,13 @@ namespace OpenFaceOffline
 
             thread_running = true;
 
+            // Grab the boolean values of the check-boxes
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
             {
                 ResetButton.IsEnabled = true;
                 PauseButton.IsEnabled = true;
                 StopButton.IsEnabled = true;
+
             }));
 
             // Create the video capture and call the VideoLoop
@@ -234,17 +222,12 @@ namespace OpenFaceOffline
 
                     if (capture.isOpened())
                     {
-                        // Prepare recording if any based on the directory
+                        // Prepare recording if any based on the directory, TODO move this
                         String file_no_ext = System.IO.Path.GetDirectoryName(filenames[0]);
                         file_no_ext = System.IO.Path.GetFileName(file_no_ext);
 
-                        SetupRecording(record_root, file_no_ext, capture.width, capture.height, record_2D_landmarks, record_2D_landmarks, record_model_params, record_pose, record_AUs, record_gaze);
-
                         // Start the actual processing                        
-                        VideoLoop();
-
-                        // Clear up the recording
-                        StopRecording();
+                        VideoLoop();                        
 
                     }
                     else
@@ -305,16 +288,12 @@ namespace OpenFaceOffline
 
                         if (capture.isOpened())
                         {
-                            // Prepare recording if any
+                            // Prepare recording if any TODO move this
                             String file_no_ext = System.IO.Path.GetFileNameWithoutExtension(filename);
-
-                            SetupRecording(record_root, file_no_ext, capture.width, capture.height, record_2D_landmarks, record_3D_landmarks, record_model_params, record_pose, record_AUs, record_gaze);
-
+                            
                             // Start the actual processing                        
                             VideoLoop();
 
-                            // Clear up the recording
-                            StopRecording();
                         }
                         else
                         {
@@ -391,9 +370,9 @@ namespace OpenFaceOffline
             }
 
             // Visualisation
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
+            if (ShowTrackedVideo)
             {
-                if (show_tracked_video)
+                Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
                 {
                     if (latest_img == null)
                     {
@@ -410,10 +389,9 @@ namespace OpenFaceOffline
                     video.OverlayLines = new List<Tuple<Point, Point>>();
 
                     video.OverlayPoints = landmark_points;
-                }
 
-            }));
-
+                }));
+            }
             latest_img = null;
         }
 
@@ -421,6 +399,7 @@ namespace OpenFaceOffline
         // Capturing and processing the video frame by frame
         private void VideoLoop()
         {
+
             Thread.CurrentThread.IsBackground = true;
 
             DateTime? startTime = CurrentTime;
@@ -431,10 +410,18 @@ namespace OpenFaceOffline
             face_analyser.Reset();
 
             // TODO add an ability to change these through a calibration procedure or setting menu
-            double fx, fy, cx, cy;
-            fx = 500.0;
-            fy = 500.0;
-            cx = cy = -1;
+            double fx = 500.0 * (capture.width / 640.0);
+            double fy = 500.0 * (capture.height / 480.0);
+
+            fx = (fx + fy) / 2.0;
+            fy = fx;
+
+            double cx = capture.width / 2f;
+            double cy = capture.height / 2f;
+
+            // Setup the recorder first, TODO change
+            recorder = new Recorder(record_root, "test.txt", capture.width, capture.height, Record2DLandmarks, Record3DLandmarks, RecordModelParameters, RecordPose,
+                RecordAUs, RecordGaze, RecordAligned, RecordHOG, clnf_model, face_analyser, fx, fy, cx, cy);
 
             int frame_id = 0;
 
@@ -470,19 +457,6 @@ namespace OpenFaceOffline
                     continue;
                 }
 
-                // This is more ore less guess work, but seems to work well enough
-                if (cx == -1)
-                {
-                    fx = fx * (grayFrame.Width / 640.0);
-                    fy = fy * (grayFrame.Height / 480.0);
-
-                    fx = (fx + fy) / 2.0;
-                    fy = fx;
-
-                    cx = grayFrame.Width / 2f;
-                    cy = grayFrame.Height / 2f;
-                }
-
                 bool detectionSucceeding = ProcessFrame(clnf_model, clnf_params, frame, grayFrame, fx, fy, cx, cy);
 
                 double scale = clnf_model.GetRigidParams()[0];
@@ -498,12 +472,9 @@ namespace OpenFaceOffline
                 clnf_model.GetPose(pose, fx, fy, cx, cy);
                 List<double> non_rigid_params = clnf_model.GetNonRigidParams();
 
-                // The face analysis step (only done if recording AUs, HOGs or video)
-                if (record_AUs || record_HOG || record_aligned || show_aus || show_appearance || record_tracked_vid || record_gaze)
-                {
-                    face_analyser.AddNextFrame(frame, clnf_model, fx, fy, cx, cy, false, show_appearance, record_tracked_vid);
-                }
-
+                // The face analysis step (for AUs and eye gaze)
+                face_analyser.AddNextFrame(frame, clnf_model, fx, fy, cx, cy, false, ShowAppearance, false); // TODO change
+                
                 List<Tuple<Point, Point>> lines = null;
                 List<Tuple<double, double>> landmarks = null;
                 List<Tuple<double, double>> eye_landmarks = null;
@@ -522,7 +493,7 @@ namespace OpenFaceOffline
                 // Visualisation
                 Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
                 {
-                    if (show_aus)
+                    if (ShowAUs)
                     {
                         var au_classes = face_analyser.GetCurrentAUsClass();
                         var au_regs = face_analyser.GetCurrentAUsReg();
@@ -542,7 +513,7 @@ namespace OpenFaceOffline
                         auRegGraph.Update(au_regs_scaled);
                     }
 
-                    if (show_geometry)
+                    if (ShowGeometry)
                     {
                         int yaw = (int)(pose[4] * 180 / Math.PI + 0.5);
                         int roll = (int)(pose[5] * 180 / Math.PI + 0.5);
@@ -565,7 +536,7 @@ namespace OpenFaceOffline
                         GazeYLabel.Content = y_angle;
                     }
 
-                    if (show_tracked_video)
+                    if (ShowTrackedVideo)
                     {
                         if (latest_img == null)
                         {
@@ -609,7 +580,7 @@ namespace OpenFaceOffline
                         }
                     }
 
-                    if (show_appearance)
+                    if (ShowAppearance)
                     {
                         RawImage aligned_face = face_analyser.GetLatestAlignedFace();
                         RawImage hog_face = face_analyser.GetLatestHOGDescriptorVisualisation();
@@ -628,9 +599,7 @@ namespace OpenFaceOffline
                     }
                 }));
 
-                // Recording the tracked model
-                RecordFrame(clnf_model, detectionSucceeding, frame_id + 1, frame, grayFrame, ((double)frame_id) / fps,
-                    record_2D_landmarks, record_2D_landmarks, record_model_params, record_pose, record_AUs, record_gaze, fx, fy, cx, cy);
+                recorder.RecordFrame(clnf_model, face_analyser, detectionSucceeding, frame_id + 1, ((double)frame_id) / fps);
 
                 if (reset)
                 {
@@ -662,6 +631,8 @@ namespace OpenFaceOffline
                     PauseButton_Click(null, null);
                 }));
             }
+
+            recorder.FinishRecording(clnf_model, face_analyser);
         }
 
         private void StopTracking()
@@ -696,264 +667,24 @@ namespace OpenFaceOffline
 
 
         // ----------------------------------------------------------
-        // Recording helpers
-
-        private void SetupRecording(String root, String filename, int width, int height, bool output_2D_landmarks, bool output_3D_landmarks,
-                                    bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze)
-        {
-            // Disallow changing recording settings when the recording starts, TODO move this up a bit
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
-            {
-                RecordingMenu.IsEnabled = false;
-                UseDynamicModelsCheckBox.IsEnabled = false;
-            }));
-
-            if (!System.IO.Directory.Exists(root))
-            {
-                System.IO.Directory.CreateDirectory(root);
-            }
-
-            output_features_file = new StreamWriter(root + "/" + filename + ".txt");
-            output_features_file.Write("frame, timestamp, confidence, success");
-
-            if (output_gaze)
-                output_features_file.Write(", gaze_0_x, gaze_0_y, gaze_0_z, gaze_1_x, gaze_1_y, gaze_1_z");
-
-            if (output_pose)
-                output_features_file.Write(", pose_Tx, pose_Ty, pose_Tz, pose_Rx, pose_Ry, pose_Rz");
-
-            if (output_2D_landmarks)
-            {
-                for (int i = 0; i < clnf_model.GetNumPoints(); ++i)
-                {
-                    output_features_file.Write(", x_" + i);
-                }
-                for (int i = 0; i < clnf_model.GetNumPoints(); ++i)
-                {
-                    output_features_file.Write(", y_" + i);
-                }
-            }
-
-            if (output_3D_landmarks)
-            {
-
-                for (int i = 0; i < clnf_model.GetNumPoints(); ++i)
-                {
-                    output_features_file.Write(", X_" + i);
-                }
-                for (int i = 0; i < clnf_model.GetNumPoints(); ++i)
-                {
-                    output_features_file.Write(", Y_" + i);
-                }
-                for (int i = 0; i < clnf_model.GetNumPoints(); ++i)
-                {
-                    output_features_file.Write(", Z_" + i);
-                }
-            }
-
-            if (output_model_params)
-            {
-                output_features_file.Write(", p_scale, p_rx, p_ry, p_rz, p_tx, p_ty");
-                for (int i = 0; i < clnf_model.GetNumModes(); ++i)
-                {
-                    output_features_file.Write(", p_" + i);
-                }
-            }
-
-            if (output_AUs)
-            {
-
-                au_reg_names = face_analyser.GetRegActionUnitsNames();
-                au_reg_names.Sort();
-                foreach (var name in au_reg_names)
-                {
-                    output_features_file.Write(", " + name + "_r");
-                }
-
-                au_class_names = face_analyser.GetClassActionUnitsNames();
-                au_class_names.Sort();
-                foreach (var name in au_class_names)
-                {
-                    output_features_file.Write(", " + name + "_c");
-                }
-
-            }
-
-            output_features_file.WriteLine();
-
-
-            if (record_aligned)
-            {
-                String aligned_root = root + "/" + filename + "_aligned/";
-                System.IO.Directory.CreateDirectory(aligned_root);
-                face_analyser.SetupAlignedImageRecording(aligned_root);
-            }
-
-            if (record_tracked_vid)
-            {
-                String vid_loc = root + "/" + filename + ".avi";
-                System.IO.Directory.CreateDirectory(root);
-                face_analyser.SetupTrackingRecording(vid_loc, width, height, 30);
-            }
-
-            if (record_HOG)
-            {
-                String filename_HOG = root + "/" + filename + ".hog";
-                face_analyser.SetupHOGRecording(filename_HOG);
-            }
-
-        }
-
-        private void StopRecording()
-        {
-            if (output_features_file != null)
-                output_features_file.Close();
-
-            if (record_HOG)
-                face_analyser.StopHOGRecording();
-
-            if (record_tracked_vid)
-                face_analyser.StopTrackingRecording();
-
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
-            {
-                RecordingMenu.IsEnabled = true;
-                UseDynamicModelsCheckBox.IsEnabled = true;
-
-            }));
-
-        }
-
-        // Recording the relevant objects
-        private void RecordFrame(CLNF clnf_model, bool success, int frame_ind, RawImage frame, RawImage grayscale_frame, double time_stamp, bool output_2D_landmarks, bool output_3D_landmarks,
-                                    bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze, double fx, double fy, double cx, double cy)
-        {
-            // Making sure that full stop is used instead of a comma for data recording
-            System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
-            customCulture.NumberFormat.NumberDecimalSeparator = ".";
-
-            System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
-
-            double confidence = (-clnf_model.GetConfidence()) / 2.0 + 0.5;
-
-            List<double> pose = new List<double>();
-            clnf_model.GetPose(pose, fx, fy, cx, cy);
-
-            output_features_file.Write(String.Format("{0}, {1}, {2:F3}, {3}", frame_ind, time_stamp, confidence, success ? 1 : 0));
-
-            if (output_gaze)
-            {
-                var gaze = face_analyser.GetGazeCamera();
-                var gaze_angle = face_analyser.GetGazeAngle();
-
-                output_features_file.Write(String.Format(", {0:F5}, {1:F5}, {2:F5}, {3:F5}, {4:F5}, {5:F5}, {6:F5}, {7:F5}", gaze.Item1.Item1, gaze.Item1.Item2, gaze.Item1.Item3,
-                    gaze.Item2.Item1, gaze.Item2.Item2, gaze.Item2.Item3, gaze_angle.Item1, gaze_angle.Item2));
-            }
-
-            if (output_pose)
-                output_features_file.Write(String.Format(", {0:F3}, {1:F3}, {2:F3}, {3:F3}, {4:F3}, {5:F3}", pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]));
-
-            if (output_2D_landmarks)
-            {
-                List<Tuple<double, double>> landmarks_2d = clnf_model.CalculateLandmarks();
-
-                for (int i = 0; i < landmarks_2d.Count; ++i)
-                    output_features_file.Write(", {0:F2}", landmarks_2d[i].Item1);
-
-                for (int i = 0; i < landmarks_2d.Count; ++i)
-                    output_features_file.Write(", {0:F2}", landmarks_2d[i].Item2);
-            }
-
-            if (output_3D_landmarks)
-            {
-                List<System.Windows.Media.Media3D.Point3D> landmarks_3d = clnf_model.Calculate3DLandmarks(fx, fy, cx, cy);
-
-                for (int i = 0; i < landmarks_3d.Count; ++i)
-                    output_features_file.Write(", {0:F2}", landmarks_3d[i].X);
-
-                for (int i = 0; i < landmarks_3d.Count; ++i)
-                    output_features_file.Write(", {0:F2}", landmarks_3d[i].Y);
-
-                for (int i = 0; i < landmarks_3d.Count; ++i)
-                    output_features_file.Write(", {0:F2}", landmarks_3d[i].Z);
-            }
-
-            if (output_model_params)
-            {
-                List<double> all_params = clnf_model.GetParams();
-
-                for (int i = 0; i < all_params.Count; ++i)
-                    output_features_file.Write(String.Format(", {0,0:F5}", all_params[i]));
-            }
-
-            if (output_AUs)
-            {
-                var au_regs = face_analyser.GetCurrentAUsReg();
-
-                foreach (var name_reg in au_reg_names)
-                    output_features_file.Write(", {0:F2}", au_regs[name_reg]);
-
-                var au_classes = face_analyser.GetCurrentAUsClass();
-
-                foreach (var name_class in au_class_names)
-                    output_features_file.Write(", {0:F0}", au_classes[name_class]);
-
-            }
-
-            output_features_file.WriteLine();
-
-            if (record_aligned)
-            {
-                face_analyser.RecordAlignedFrame(frame_ind);
-            }
-
-            if (record_HOG)
-            {
-                face_analyser.RecordHOGFrame();
-            }
-
-            if (record_tracked_vid)
-            {
-                face_analyser.RecordTrackedFace();
-            }
-        }
-
-
-        // ----------------------------------------------------------
         // Mode handling (image, video)
         // ----------------------------------------------------------
         private void SetupImageMode()
         {
-            // Turn off recording
-            record_aligned = false;
-            record_HOG = false;
-            record_tracked_vid = false;
 
-            // Turn off unneeded visualisations
-            show_tracked_video = true;
-            show_appearance = false;
-            show_geometry = false;
-            show_aus = false;
+            // Turn off unneeded visualisations, TODO remove dispatch
+            ShowTrackedVideo = true;
+            ShowAppearance = false;
+            ShowGeometry = false;
+            ShowAUs = false;
+
+            RecordAligned = false;
+            RecordHOG = false;
 
             // Actually update the GUI accordingly
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
             {
-                RecordAUCheckBox.IsChecked = record_AUs;
-                RecordAlignedCheckBox.IsChecked = record_aligned;
-                RecordTrackedVidCheckBox.IsChecked = record_tracked_vid;
-                RecordHOGCheckBox.IsChecked = record_HOG;
-                RecordGazeCheckBox.IsChecked = record_gaze;
-                RecordLandmarks2DCheckBox.IsChecked = record_2D_landmarks;
-                RecordLandmarks3DCheckBox.IsChecked = record_3D_landmarks;
-                RecordParamsCheckBox.IsChecked = record_model_params;
-                RecordPoseCheckBox.IsChecked = record_pose;
-
-                ShowVideoCheckBox.IsChecked = true;
-                ShowAppearanceFeaturesCheckBox.IsChecked = false;
-                ShowGeometryFeaturesCheckBox.IsChecked = false;
-                ShowAUsCheckBox.IsChecked = false;
-
-                VisualisationCheckBox_Click(null, null);
+                VisualisationChange(null, null);
             }));
 
             // TODO change what next and back buttons do?
@@ -1081,7 +812,7 @@ namespace OpenFaceOffline
                 ResetButton.IsEnabled = false;
                 RecordingMenu.IsEnabled = true;
 
-                UseDynamicModelsCheckBox.IsEnabled = true;
+                AUSetting.IsEnabled = true;
             }
         }
 
@@ -1131,15 +862,10 @@ namespace OpenFaceOffline
         }
 
 
-        private void VisualisationCheckBox_Click(object sender, RoutedEventArgs e)
+        private void VisualisationChange(object sender, RoutedEventArgs e)
         {
-            show_tracked_video = ShowVideoCheckBox.IsChecked;
-            show_appearance = ShowAppearanceFeaturesCheckBox.IsChecked;
-            show_geometry = ShowGeometryFeaturesCheckBox.IsChecked;
-            show_aus = ShowAUsCheckBox.IsChecked;
-
             // Collapsing or restoring the windows here
-            if (!show_tracked_video)
+            if (!ShowTrackedVideo)
             {
                 VideoBorder.Visibility = System.Windows.Visibility.Collapsed;
                 MainGrid.ColumnDefinitions[0].Width = new GridLength(0, GridUnitType.Star);
@@ -1150,7 +876,7 @@ namespace OpenFaceOffline
                 MainGrid.ColumnDefinitions[0].Width = new GridLength(2.1, GridUnitType.Star);
             }
 
-            if (!show_appearance)
+            if (!ShowAppearance)
             {
                 AppearanceBorder.Visibility = System.Windows.Visibility.Collapsed;
                 MainGrid.ColumnDefinitions[1].Width = new GridLength(0, GridUnitType.Star);
@@ -1162,7 +888,7 @@ namespace OpenFaceOffline
             }
 
             // Collapsing or restoring the windows here
-            if (!show_geometry)
+            if (!ShowGeometry)
             {
                 GeometryBorder.Visibility = System.Windows.Visibility.Collapsed;
                 MainGrid.ColumnDefinitions[2].Width = new GridLength(0, GridUnitType.Star);
@@ -1174,7 +900,7 @@ namespace OpenFaceOffline
             }
 
             // Collapsing or restoring the windows here
-            if (!show_aus)
+            if (!ShowAUs)
             {
                 ActionUnitBorder.Visibility = System.Windows.Visibility.Collapsed;
                 MainGrid.ColumnDefinitions[3].Width = new GridLength(0, GridUnitType.Star);
@@ -1187,32 +913,11 @@ namespace OpenFaceOffline
 
         }
 
-
-        private void recordCheckBox_click(object sender, RoutedEventArgs e)
-        {
-            record_AUs = RecordAUCheckBox.IsChecked;
-            record_aligned = RecordAlignedCheckBox.IsChecked;
-            record_HOG = RecordHOGCheckBox.IsChecked;
-            record_gaze = RecordGazeCheckBox.IsChecked;
-            record_tracked_vid = RecordTrackedVidCheckBox.IsChecked;
-            record_2D_landmarks = RecordLandmarks2DCheckBox.IsChecked;
-            record_3D_landmarks = RecordLandmarks3DCheckBox.IsChecked;
-            record_model_params = RecordParamsCheckBox.IsChecked;
-            record_pose = RecordPoseCheckBox.IsChecked;
-        }
-
         private void UseDynamicModelsCheckBox_Click(object sender, RoutedEventArgs e)
         {
-            dynamic_AU_shift = UseDynamicShiftingCheckBox.IsChecked;
-            dynamic_AU_scale = UseDynamicScalingCheckBox.IsChecked;
-
-            if (use_dynamic_models != UseDynamicModelsCheckBox.IsChecked)
-            {
-                // Change the face analyser, this should be safe as the model is only allowed to change when not running
-                String root = AppDomain.CurrentDomain.BaseDirectory;
-                face_analyser = new FaceAnalyserManaged(root, UseDynamicModelsCheckBox.IsChecked, image_output_size);
-            }
-            use_dynamic_models = UseDynamicModelsCheckBox.IsChecked;
+            // Change the face analyser, this should be safe as the model is only allowed to change when not running
+            String root = AppDomain.CurrentDomain.BaseDirectory;
+            face_analyser = new FaceAnalyserManaged(root, DynamicAUModels, image_output_size);
         }
 
         private void setOutputImageSize_Click(object sender, RoutedEventArgs e)
@@ -1227,7 +932,7 @@ namespace OpenFaceOffline
             {
                 image_output_size = number_entry_window.OutputInt;
                 String root = AppDomain.CurrentDomain.BaseDirectory;
-                face_analyser = new FaceAnalyserManaged(root, use_dynamic_models, image_output_size);
+                face_analyser = new FaceAnalyserManaged(root, DynamicAUModels, image_output_size);
 
             }
         }

@@ -1,3 +1,4 @@
+clear
 executable = '"../../x64/Release/FeatureExtraction.exe"';
 
 output = './output_features_vid/';
@@ -6,7 +7,8 @@ if(~exist(output, 'file'))
     mkdir(output)
 end
     
-in_files = dir('../../videos/1815_01_008_tony_blair.avi');
+root_dir = '../../videos/';
+in_files = dir([root_dir, 'default.wmv']);
 % some parameters
 verbose = true;
 
@@ -19,7 +21,7 @@ command = cat(2, command, ' -verbose ');
 % for every video)
 for i=1:numel(in_files)
     
-    inputFile = ['../../videos/', in_files(i).name];
+    inputFile = [root_dir, in_files(i).name];
     [~, name, ~] = fileparts(inputFile);
     
     % where to output tracking results
@@ -69,13 +71,22 @@ xlabel('Time (s)');
 landmark_inds_x = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'x_'));
 landmark_inds_y = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'y_'));
 
+landmark_inds_x_eye = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'eye_lmk_x_'));
+landmark_inds_y_eye = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'eye_lmk_y_'));
+
 xs = all_params(valid_frames, landmark_inds_x);
 ys = all_params(valid_frames, landmark_inds_y);
+
+xs_eye = all_params(valid_frames, landmark_inds_x_eye);
+ys_eye = all_params(valid_frames, landmark_inds_y_eye);
 
 figure
 
 for j = 1:size(xs,1)
     plot(xs(j,:), -ys(j,:), '.');
+    hold on;
+    plot(xs_eye(j,:), -ys_eye(j,:), '.');
+    hold off;
     xlim([min(xs(1,:)) * 0.5, max(xs(2,:))*1.4]);
     ylim([min(-ys(1,:)) * 1.4, max(-ys(2,:))*0.5]);
     xlabel('x (px)');

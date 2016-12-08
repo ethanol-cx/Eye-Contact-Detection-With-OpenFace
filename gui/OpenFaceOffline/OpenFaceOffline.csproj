@@ -87,6 +87,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="FpsTracker.cs" />
+    <Compile Include="Recorder.cs" />
     <Compile Include="UI_items\BarGraph.xaml.cs">
       <DependentUpon>BarGraph.xaml</DependentUpon>
     </Compile>

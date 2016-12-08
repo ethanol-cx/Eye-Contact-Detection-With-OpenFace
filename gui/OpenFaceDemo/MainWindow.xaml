@@ -34,7 +34,7 @@
         <local:AxesTimeSeriesPlot NumVertGrid="5" x:Name="headPosePlot" ShowLegend="True" MinVal="-1" MaxVal="1" MinHeight="180" Grid.Row="4" Grid.Column="0" Padding="60 20 30 40" RangeLabel="Head pose" Orientation="Horizontal">
         </local:AxesTimeSeriesPlot>
 
-        <local:AxesTimeSeriesPlot MinHeight="180" Grid.Row="4" Grid.Column="1" Padding="60 20 30 40"  x:Name="gazePlot" ShowLegend="True" RangeLabel="Eye gaze" Orientation="Horizontal" MinVal="-1" MaxVal="1" NumVertGrid="5">
+        <local:AxesTimeSeriesPlot MinHeight="180" Grid.Row="4" Grid.Column="1" Padding="60 20 30 40"  x:Name="gazePlot" ShowLegend="True" RangeLabel="Eye gaze" Orientation="Horizontal" MinVal="-20" MaxVal="20" NumVertGrid="5">
         </local:AxesTimeSeriesPlot>
 
         <local:AxesTimeSeriesPlot Grid.Column="2" Grid.Row="1" MinHeight="130" ShowXLabel="False" Padding="60 20 30 10"  x:Name="smilePlot" ShowLegend="True" XTicks="False" RangeLabel="Lips" Orientation="Horizontal" MinVal="0" MaxVal="1" NumVertGrid="5">

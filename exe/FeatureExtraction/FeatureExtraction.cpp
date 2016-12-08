@@ -225,7 +225,7 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 
 void prepareOutputFile(std::ofstream* output_file, bool output_2D_landmarks, bool output_3D_landmarks,
 	bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
-	int num_landmarks, int num_model_modes, vector<string> au_names_class, vector<string> au_names_reg);
+	int num_landmarks, int num_eye_lmks, int num_model_modes, vector<string> au_names_class, vector<string> au_names_reg);
 
 // Output all of the information into one file in one go (quite a few parameters, but simplifies the flow)
 void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, bool output_3D_landmarks,
@@ -476,7 +476,8 @@ int main (int argc, char **argv)
 		if (!output_files.empty())
 		{
 			output_file.open(output_files[f_n], ios_base::out);
-			prepareOutputFile(&output_file, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, face_model.pdm.NumberOfPoints(), face_model.pdm.NumberOfModes(), face_analyser.GetAUClassNames(), face_analyser.GetAURegNames());
+			prepareOutputFile(&output_file, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, face_model.pdm.NumberOfPoints(), 
+				LandmarkDetector::CalculateEyeLandmarks(face_model).size(), face_model.pdm.NumberOfModes(), face_analyser.GetAUClassNames(), face_analyser.GetAURegNames());
 		}
 
 		// Saving the HOG features
@@ -556,6 +557,7 @@ int main (int argc, char **argv)
 			{
 				detection_success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_model, det_parameters);
 			}
+			
 
 			// Work out the pose of the head from the tracked model
 			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
@@ -842,7 +844,7 @@ void post_process_output_file(FaceAnalysis::FaceAnalyser& face_analyser, string 
 
 void prepareOutputFile(std::ofstream* output_file, bool output_2D_landmarks, bool output_3D_landmarks,
 	bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
-	int num_landmarks, int num_model_modes, vector<string> au_names_class, vector<string> au_names_reg)
+	int num_landmarks, int num_eye_lmks, int num_model_modes, vector<string> au_names_class, vector<string> au_names_reg)
 {
 
 	*output_file << "frame, timestamp, confidence, success";
@@ -850,6 +852,16 @@ void prepareOutputFile(std::ofstream* output_file, bool output_2D_landmarks, boo
 	if (output_gaze)
 	{
 		*output_file << ", gaze_0_x, gaze_0_y, gaze_0_z, gaze_1_x, gaze_1_y, gaze_1_z, gaze_angle_x, gaze_angle_y";
+
+		// Also output eye-landmarks as they are needed for gaze visualization etc.
+		for (int i = 0; i < num_eye_lmks; ++i)
+		{
+			*output_file << ", eye_lmk_x_" << i;
+		}
+		for (int i = 0; i < num_eye_lmks; ++i)
+		{
+			*output_file << ", eye_lmk_y_" << i;
+		}
 	}
 
 	if (output_pose)
@@ -938,6 +950,31 @@ void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, boo
 		*output_file << ", " << gazeDirection0.x << ", " << gazeDirection0.y << ", " << gazeDirection0.z
 			<< ", " << gazeDirection1.x << ", " << gazeDirection1.y << ", " << gazeDirection1.z
 			<< ", " << gaze_angle[0] << ", " << gaze_angle[1];
+
+		// Output gaze landmarks
+		vector<cv::Point2d> eye_lmks = LandmarkDetector::CalculateEyeLandmarks(face_model);
+		for (size_t i = 0; i < eye_lmks.size(); ++i)
+		{
+			if (face_model.tracking_initialised)
+			{
+				*output_file << ", " << eye_lmks[i].x;
+			}
+			else
+			{
+				*output_file << ", 0";
+			}
+		}
+		for (size_t i = 0; i < eye_lmks.size(); ++i)
+		{
+			if (face_model.tracking_initialised)
+			{
+				*output_file << ", " << eye_lmks[i].y;
+			}
+			else
+			{
+				*output_file << ", 0";
+			}
+		}
 	}
 
 	*output_file << std::setprecision(4);
