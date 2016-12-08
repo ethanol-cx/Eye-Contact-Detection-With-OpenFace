@@ -29,7 +29,7 @@
                 <MenuItem Header="Open image sequence" Click="imageSequenceFileOpenClick">
                 </MenuItem>
             </MenuItem>
-            <MenuItem Name="RecordingMenu"  Header="Record">
+            <MenuItem Name="RecordingMenu" Header="Record" >
                 <MenuItem IsCheckable="True" Header="Record AUs" IsChecked="{Binding RecordAUs}"/>
                 <MenuItem IsCheckable="True" Header="Record pose"  IsChecked="{Binding RecordPose}"/>
                 <MenuItem IsCheckable="True" Header="Record 2D landmarks" IsChecked="{Binding Record2DLandmarks}" />
@@ -39,15 +39,15 @@
                 <MenuItem IsCheckable="True" Header="Record model parameters" IsChecked="{Binding RecordModelParameters}" />
                 <MenuItem IsCheckable="True" Header="Record aligned faces" IsChecked="{Binding RecordAligned}"/>
             </MenuItem>
-            <MenuItem Name="SettingsMenu"  Header="Recording settings">
+            <MenuItem Name="SettingsMenu"  Header="Recording settings" >
                 <MenuItem Name="OutputLocationItem" Header="Set output location..." Click="OutputLocationItem_Click" ></MenuItem>
                 <MenuItem Header="Set output image size..." Click="setOutputImageSize_Click"></MenuItem>
             </MenuItem>
-            <MenuItem Name="AUSetting" Header="AU settings">
+            <MenuItem Name="AUSetting" Header="AU settings" >
                 <MenuItem IsCheckable="True" Header="Use dynamic models" Click="UseDynamicModelsCheckBox_Click" IsChecked="{Binding DynamicAUModels}"/>
             </MenuItem>
             <MenuItem Header="View">
-                <MenuItem IsCheckable="True" Header="Show Video" Click="VisualisationChange" IsChecked="{Binding ShowVideo}"/>
+                <MenuItem IsCheckable="True" Header="Show Video" Click="VisualisationChange" IsChecked="{Binding ShowTrackedVideo}"/>
                 <MenuItem IsCheckable="True" Header="Show Appearance" Click="VisualisationChange" IsChecked="{Binding ShowAppearance}"/>
                 <MenuItem IsCheckable="True" Header="Show Geometry" Click="VisualisationChange" IsChecked="{Binding ShowGeometry}"/>
                 <MenuItem IsCheckable="True" Header="Show AUs" Click="VisualisationChange" IsChecked="{Binding ShowAUs}"/>

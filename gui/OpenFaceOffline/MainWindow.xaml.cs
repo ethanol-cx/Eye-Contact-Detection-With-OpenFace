@@ -147,7 +147,7 @@ namespace OpenFaceOffline
         public bool ShowAppearance { get; set; } // Eye gaze
         public bool ShowGeometry { get; set; } // Eye gaze
         public bool ShowAUs { get; set; } // Eye gaze
-
+                
         int image_output_size = 112;
 
         // TODO classifiers converted to regressors
@@ -180,7 +180,7 @@ namespace OpenFaceOffline
             ShowAUs = true;
 
             DynamicAUModels = true;
-
+            
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
             clnf_params = new FaceModelParameters(root, false);
@@ -222,12 +222,12 @@ namespace OpenFaceOffline
 
                     if (capture.isOpened())
                     {
-                        // Prepare recording if any based on the directory, TODO move this
+                        // Prepare recording if any based on the directory
                         String file_no_ext = System.IO.Path.GetDirectoryName(filenames[0]);
                         file_no_ext = System.IO.Path.GetFileName(file_no_ext);
 
-                        // Start the actual processing                        
-                        VideoLoop();                        
+                        // Start the actual processing and recording
+                        VideoLoop(file_no_ext);                        
 
                     }
                     else
@@ -288,11 +288,10 @@ namespace OpenFaceOffline
 
                         if (capture.isOpened())
                         {
-                            // Prepare recording if any TODO move this
                             String file_no_ext = System.IO.Path.GetFileNameWithoutExtension(filename);
                             
                             // Start the actual processing                        
-                            VideoLoop();
+                            VideoLoop(file_no_ext);
 
                         }
                         else
@@ -397,7 +396,7 @@ namespace OpenFaceOffline
 
 
         // Capturing and processing the video frame by frame
-        private void VideoLoop()
+        private void VideoLoop(string output_file_name)
         {
 
             Thread.CurrentThread.IsBackground = true;
@@ -419,8 +418,8 @@ namespace OpenFaceOffline
             double cx = capture.width / 2f;
             double cy = capture.height / 2f;
 
-            // Setup the recorder first, TODO change
-            recorder = new Recorder(record_root, "test.txt", capture.width, capture.height, Record2DLandmarks, Record3DLandmarks, RecordModelParameters, RecordPose,
+            // Setup the recorder first
+            recorder = new Recorder(record_root, output_file_name, capture.width, capture.height, Record2DLandmarks, Record3DLandmarks, RecordModelParameters, RecordPose,
                 RecordAUs, RecordGaze, RecordAligned, RecordHOG, clnf_model, face_analyser, fx, fy, cx, cy);
 
             int frame_id = 0;
@@ -633,6 +632,7 @@ namespace OpenFaceOffline
             }
 
             recorder.FinishRecording(clnf_model, face_analyser);
+
         }
 
         private void StopTracking()
@@ -672,7 +672,7 @@ namespace OpenFaceOffline
         private void SetupImageMode()
         {
 
-            // Turn off unneeded visualisations, TODO remove dispatch
+            // Turn off unneeded visualisations
             ShowTrackedVideo = true;
             ShowAppearance = false;
             ShowGeometry = false;
@@ -810,9 +810,6 @@ namespace OpenFaceOffline
                 NextFiveFramesButton.IsEnabled = false;
                 StopButton.IsEnabled = false;
                 ResetButton.IsEnabled = false;
-                RecordingMenu.IsEnabled = true;
-
-                AUSetting.IsEnabled = true;
             }
         }
 
