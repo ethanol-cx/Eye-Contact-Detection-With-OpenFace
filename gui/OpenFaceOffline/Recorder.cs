@@ -48,7 +48,18 @@ namespace OpenFaceOffline
 
             if (output_gaze)
             {
-                output_features_file.Write(", gaze_0_x, gaze_0_y, gaze_0_z, gaze_1_x, gaze_1_y, gaze_1_z");
+                output_features_file.Write(", gaze_0_x, gaze_0_y, gaze_0_z, gaze_1_x, gaze_1_y, gaze_1_z, gaze_angle_x, gaze_angle_y");
+
+                // Output gaze eye landmarks
+                int gaze_num_lmks = clnf_model.CalculateEyeLandmarks().Count;
+                for (int i = 0; i < gaze_num_lmks; ++i)
+                {
+                    output_features_file.Write(", eye_lmk_x_" + i);
+                }
+                for (int i = 0; i < gaze_num_lmks; ++i)
+                {
+                    output_features_file.Write(", eye_lmk_y_" + i);
+                }
             }
 
             if (output_pose)
@@ -149,6 +160,15 @@ namespace OpenFaceOffline
 
                 output_features_file.Write(String.Format(", {0:F5}, {1:F5}, {2:F5}, {3:F5}, {4:F5}, {5:F5}, {6:F5}, {7:F5}", gaze.Item1.Item1, gaze.Item1.Item2, gaze.Item1.Item3,
                     gaze.Item2.Item1, gaze.Item2.Item2, gaze.Item2.Item3, gaze_angle.Item1, gaze_angle.Item2));
+
+                List<Tuple<double, double>> landmarks_2d = clnf_model.CalculateEyeLandmarks();
+
+                for (int i = 0; i < landmarks_2d.Count; ++i)
+                    output_features_file.Write(", {0:F2}", landmarks_2d[i].Item1);
+
+                for (int i = 0; i < landmarks_2d.Count; ++i)
+                    output_features_file.Write(", {0:F2}", landmarks_2d[i].Item2);
+
             }
 
             if (output_pose)

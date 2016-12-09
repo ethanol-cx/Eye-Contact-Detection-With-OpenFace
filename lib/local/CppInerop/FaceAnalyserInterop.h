@@ -214,7 +214,7 @@ public:
 		char name[100];
 					
 		// output the frame number
-		sprintf(name, "frame_det_%06d.png", frame_num);
+		sprintf(name, "frame_det_%06d.bmp", frame_num);
 				
 		string out_file = (boost::filesystem::path(*align_output_dir) / boost::filesystem::path(name)).string();
 		imwrite(out_file, *aligned_face);

@@ -613,8 +613,8 @@ int main (int argc, char **argv)
 
 				char name[100];
 					
-				// output the frame number
-				std::sprintf(name, "frame_det_%06d.bmp", frame_count);
+				// Filename is based on frame number
+				std::sprintf(name, "frame_det_%06d.bmp", frame_count + 1);
 
 				// Construct the output filename
 				boost::filesystem::path slash("/");

@@ -25,7 +25,7 @@ for i=1:numel(in_files)
     [~, name, ~] = fileparts(inputFile);
     
     % where to output tracking results
-    outputFile = [output name '.txt'];
+    outputFile = [output name '.csv'];
             
     if(~exist([output name], 'file'))
         mkdir([output name]);
@@ -34,11 +34,9 @@ for i=1:numel(in_files)
     outputDir_aligned = [output name];
     
     outputHOG_aligned = [output name '.hog'];
-    
-    output_shape_params = [output name '.params.txt'];
-    
+        
     command = cat(2, command, [' -f "' inputFile '" -of "' outputFile '"']);        
-    command = cat(2, command, [' -simsize 224 -simalign "' outputDir_aligned '" -hogalign "' outputHOG_aligned '"' ]);    
+    command = cat(2, command, [' -au_static -simsize 224 -simalign "' outputDir_aligned '" -hogalign "' outputHOG_aligned '"' ]);    
                  
 end
 
@@ -161,7 +159,7 @@ legend('show');
 hold off;
 
 %% Output HOG files
-[hog_data, valid_inds, vid_id] = Read_HOG_files({name}, output);
+[hog_data, valid_inds] = Read_HOG_file(outputHOG_aligned);
 
 %% Output aligned images
 img_files = dir([outputDir_aligned, '/*.bmp']);
