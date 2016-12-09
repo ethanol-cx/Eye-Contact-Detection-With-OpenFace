@@ -260,6 +260,11 @@ public:
 		tracked_vid_writer->write(*tracked_face);
 	}
 
+	void PostProcessOutputFile(System::String^ file, bool dynamic)
+	{		
+		face_analyser->PostprocessOutputFile(msclr::interop::marshal_as<std::string>(file), dynamic);
+	}
+
 	void AddNextFrame(OpenCVWrappers::RawImage^ frame, CppInterop::LandmarkDetector::CLNF^ clnf, double fx, double fy, double cx, double cy, bool online, bool vis_hog, bool vis_tracked) {
 			
 		face_analyser->AddNextFrame(frame->Mat, *clnf->getCLNF(), 0, online, vis_hog);

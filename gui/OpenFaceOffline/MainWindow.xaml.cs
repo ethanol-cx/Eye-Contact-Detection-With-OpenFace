@@ -420,7 +420,7 @@ namespace OpenFaceOffline
 
             // Setup the recorder first
             recorder = new Recorder(record_root, output_file_name, capture.width, capture.height, Record2DLandmarks, Record3DLandmarks, RecordModelParameters, RecordPose,
-                RecordAUs, RecordGaze, RecordAligned, RecordHOG, clnf_model, face_analyser, fx, fy, cx, cy);
+                RecordAUs, RecordGaze, RecordAligned, RecordHOG, clnf_model, face_analyser, fx, fy, cx, cy, DynamicAUModels);
 
             int frame_id = 0;
 

@@ -20,9 +20,13 @@ namespace OpenFaceOffline
         List<string> au_reg_names;
         List<string> au_class_names;
 
+        String out_filename;
+
+        bool dynamic_AU_model;
+
         public Recorder(string root, string filename, int width, int height, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, 
             bool output_pose, bool output_AUs, bool output_gaze, bool record_aligned, bool record_HOG,
-            CLNF clnf_model, FaceAnalyserManaged face_analyser, double fx, double fy, double cx, double cy)
+            CLNF clnf_model, FaceAnalyserManaged face_analyser, double fx, double fy, double cx, double cy, bool dynamic_AU_model)
         {
 
             this.output_2D_landmarks = output_2D_landmarks; this.output_3D_landmarks = output_3D_landmarks;
@@ -32,12 +36,14 @@ namespace OpenFaceOffline
 
             this.fx = fx; this.fy = fy; this.cx = cx; this.cy = cy;
 
+            this.dynamic_AU_model = dynamic_AU_model;
+
             if (!System.IO.Directory.Exists(root))
             {
                 System.IO.Directory.CreateDirectory(root);
             }
-
-            output_features_file = new StreamWriter(root + "/" + filename + ".txt");
+            out_filename = root + "/" + filename + ".csv";
+            output_features_file = new StreamWriter(out_filename);
             output_features_file.Write("frame, timestamp, confidence, success");
 
             if (output_gaze)
@@ -216,7 +222,8 @@ namespace OpenFaceOffline
 
             if (record_HOG)
                 face_analyser.StopHOGRecording();
-            
+
+            face_analyser.PostProcessOutputFile(out_filename, dynamic_AU_model);
         }
 
     }
