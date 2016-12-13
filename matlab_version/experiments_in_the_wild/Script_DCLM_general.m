@@ -22,7 +22,7 @@ clmParams = struct;
 clmParams.window_size = [25,25; 23,23; 21,21; 21,21];
 clmParams.numPatchIters = size(clmParams.window_size,1);
 
-[patches] = Load_DCLM_Patch_Experts( '../models/general/', 'dccnf_patches_*_general.mat', [], [], clmParams);
+[patches] = Load_DCLM_Patch_Experts( '../models/dpn/', 'dpn_patches_*_general.mat', [], [], clmParams);
 
 %% Fitting the model to the provided image
 

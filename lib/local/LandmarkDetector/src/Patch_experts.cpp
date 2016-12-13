@@ -160,6 +160,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 	
 
 	bool use_ccnf = !this->ccnf_expert_intensity.empty();
+	bool use_dpn = !this->dpn_expert_intensity.empty();
 
 	// If using CCNF patch experts might need to precalculate Sigmas
 	if(use_ccnf)
@@ -197,31 +198,36 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 #pragma omp parallel for
 #endif
 	tbb::parallel_for(0, (int)n, [&](int i){
-	//for(int i = 0; i < n; i++)
+//	for(int i = 0; i < n; i++)
 	{
-			
-		if(visibilities[scale][view_id].rows == n)
+
+		if (visibilities[scale][view_id].rows == n)
 		{
-			if(visibilities[scale][view_id].at<int>(i,0) != 0)
+			if (visibilities[scale][view_id].at<int>(i, 0) != 0)
 			{
 
 				// Work out how big the area of interest has to be to get a response of window size
 				int area_of_interest_width;
 				int area_of_interest_height;
 
-				if(use_ccnf)
+				if (use_dpn)
 				{
-					area_of_interest_width = window_size + ccnf_expert_intensity[scale][view_id][i].width - 1; 
-					area_of_interest_height = window_size + ccnf_expert_intensity[scale][view_id][i].height - 1;				
+					area_of_interest_width = window_size + dpn_expert_intensity[scale][view_id][i].width - 1;
+					area_of_interest_height = window_size + dpn_expert_intensity[scale][view_id][i].height - 1;
+				}
+				else if (use_ccnf)
+				{
+					area_of_interest_width = window_size + ccnf_expert_intensity[scale][view_id][i].width - 1;
+					area_of_interest_height = window_size + ccnf_expert_intensity[scale][view_id][i].height - 1;
 				}
 				else
 				{
-					area_of_interest_width = window_size + svr_expert_intensity[scale][view_id][i].width - 1; 
+					area_of_interest_width = window_size + svr_expert_intensity[scale][view_id][i].width - 1;
 					area_of_interest_height = window_size + svr_expert_intensity[scale][view_id][i].height - 1;
 				}
-			
+
 				// scale and rotate to mean shape to reference frame
-				cv::Mat sim = (cv::Mat_<float>(2,3) << a1, -b1, landmark_locations.at<double>(i,0), b1, a1, landmark_locations.at<double>(i+n,0));
+				cv::Mat sim = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<double>(i, 0), b1, a1, landmark_locations.at<double>(i + n, 0));
 
 				// Extract the region of interest around the current landmark location
 				cv::Mat_<float> area_of_interest(area_of_interest_height, area_of_interest_width);
@@ -229,15 +235,19 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				// Using C style openCV as it does what we need
 				CvMat area_of_interest_o = area_of_interest;
 				CvMat sim_o = sim;
-				IplImage im_o = grayscale_image;			
+				IplImage im_o = grayscale_image;
 				cvGetQuadrangleSubPix(&im_o, &area_of_interest_o, &sim_o);
-			
+
 				// get the correct size response window			
 				patch_expert_responses[i] = cv::Mat_<float>(window_size, window_size);
 
-				// Get intensity response either from the SVR or CCNF patch experts (prefer CCNF)
-				if(!ccnf_expert_intensity.empty())
-				{				
+				// Get intensity response either from the SVR, CCNF, or DPN patch experts (prefer DPN as they are the most accurate so far)
+				if (!dpn_expert_intensity.empty())
+				{
+					dpn_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
+				}
+				else if (!ccnf_expert_intensity.empty())
+				{
 
 					ccnf_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
 				}
@@ -245,14 +255,14 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				{
 					svr_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
 				}
-			
+
 				// if we have a corresponding depth patch and it is visible		
-				if(!svr_expert_depth.empty() && !depth_image.empty() && visibilities[scale][view_id].at<int>(i,0))
+				if (!svr_expert_depth.empty() && !depth_image.empty() && visibilities[scale][view_id].at<int>(i, 0))
 				{
 
 					cv::Mat_<float> dProb = patch_expert_responses[i].clone();
 					cv::Mat_<float> depthWindow(area_of_interest_height, area_of_interest_width);
-			
+
 
 					CvMat dimg_o = depthWindow;
 					cv::Mat maskWindow(area_of_interest_height, area_of_interest_width, CV_32F);
@@ -261,19 +271,19 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 					IplImage d_o = depth_image;
 					IplImage m_o = mask;
 
-					cvGetQuadrangleSubPix(&d_o,&dimg_o,&sim_o);
-				
-					cvGetQuadrangleSubPix(&m_o,&mimg_o,&sim_o);
+					cvGetQuadrangleSubPix(&d_o, &dimg_o, &sim_o);
+
+					cvGetQuadrangleSubPix(&m_o, &mimg_o, &sim_o);
 
 					depthWindow.setTo(0, maskWindow < 1);
 
 					svr_expert_depth[scale][view_id][i].ResponseDepth(depthWindow, dProb);
-							
+
 					// Sum to one
 					double sum = cv::sum(patch_expert_responses[i])[0];
 
 					// To avoid division by 0 issues
-					if(sum == 0)
+					if (sum == 0)
 					{
 						sum = 1;
 					}
@@ -283,7 +293,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 					// Sum to one
 					sum = cv::sum(dProb)[0];
 					// To avoid division by 0 issues
-					if(sum == 0)
+					if (sum == 0)
 					{
 						sum = 1;
 					}
@@ -295,6 +305,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				}
 			}
 		}
+		//}
 	}
 	});
 
@@ -327,7 +338,7 @@ int Patch_experts::GetViewIdx(const cv::Vec6d& params_global, int scale) const
 
 
 //===========================================================================
-void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<string> depth_svr_expert_locations, vector<string> intensity_ccnf_expert_locations)
+void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<string> depth_svr_expert_locations, vector<string> intensity_ccnf_expert_locations, vector<string> intensity_dpn_expert_locations)
 {
 
 	// initialise the SVR intensity patch expert parameters
@@ -365,6 +376,24 @@ void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 		Read_CCNF_patch_experts(location,  centers[scale], visibilities[scale], ccnf_expert_intensity[scale], patch_scaling[scale]);
 	}
 
+	// Initialise and read CCNF patch experts (currently only intensity based), 
+	int num_intensity_dpn = intensity_dpn_expert_locations.size();
+
+	// CCNF experts override the SVR ones
+	if (num_intensity_dpn > 0)
+	{
+		centers.resize(num_intensity_dpn);
+		visibilities.resize(num_intensity_dpn);
+		patch_scaling.resize(num_intensity_dpn);
+		dpn_expert_intensity.resize(num_intensity_dpn);
+	}
+
+	for (int scale = 0; scale < num_intensity_dpn; ++scale)
+	{
+		string location = intensity_dpn_expert_locations[scale];
+		cout << "Reading the intensity DPN patch experts from: " << location << "....";
+		Read_DPN_patch_experts(location, centers[scale], visibilities[scale], dpn_expert_intensity[scale], patch_scaling[scale]);
+	}
 
 	// initialise the SVR depth patch expert parameters
 	int num_depth_scales = depth_svr_expert_locations.size();
@@ -569,3 +598,56 @@ void Patch_experts::Read_CCNF_patch_experts(string patchesFileLocation, std::vec
 	}
 }
 
+//======================= Reading the DPN patch experts =========================================//
+void Patch_experts::Read_DPN_patch_experts(string expert_location, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<DPN_patch_expert> >& patches, double& scale)
+{
+
+	ifstream patchesFile(expert_location.c_str(), ios::in | ios::binary);
+
+	if (patchesFile.is_open())
+	{
+		patchesFile.read((char*)&scale, 8);
+
+		int numberViews;
+		patchesFile.read((char*)&numberViews, 4);
+
+		// read the visibility
+		centers.resize(numberViews);
+		visibility.resize(numberViews);
+
+		patches.resize(numberViews);
+
+		// centers of each view (which view corresponds to which orientation)
+		for (size_t i = 0; i < centers.size(); i++)
+		{
+			cv::Mat center;
+			LandmarkDetector::ReadMatBin(patchesFile, center);
+			center.copyTo(centers[i]);
+			centers[i] = centers[i] * M_PI / 180.0;
+		}
+
+		// the visibility of points for each of the views (which verts are visible at a specific view
+		for (size_t i = 0; i < visibility.size(); i++)
+		{
+			LandmarkDetector::ReadMatBin(patchesFile, visibility[i]);
+		}
+		int numberOfPoints = visibility[0].rows;
+		
+		// read the patches themselves
+		for (size_t i = 0; i < patches.size(); i++)
+		{
+			// number of patches for each view
+			patches[i].resize(numberOfPoints);
+			// read in each patch
+			for (int j = 0; j < numberOfPoints; j++)
+			{
+				patches[i][j].Read(patchesFile);
+			}
+		}
+		cout << "Done" << endl;
+	}
+	else
+	{
+		cout << "Can't find/open the patches file" << endl;
+	}
+}

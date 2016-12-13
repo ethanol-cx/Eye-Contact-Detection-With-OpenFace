@@ -34,6 +34,9 @@
     <ClCompile Include="src\LandmarkDetectorParameters.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="src\DPN_patch_expert.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\CCNF_patch_expert.h">
@@ -70,6 +73,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="include\LandmarkDetectorFunc.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DPN_patch_expert.h">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

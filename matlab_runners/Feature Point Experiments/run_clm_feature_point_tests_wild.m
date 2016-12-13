@@ -9,6 +9,14 @@ else
     database_root = 'D:/Dropbox/Dropbox/AAM/test data/';
 end
 
+%% Run using DPN generak model
+out_clnf = [curr_dir '/out_dclm/'];
+if(~exist(out_clnf, 'file'))
+   mkdir(out_clnf); 
+end
+
+[err_dclm, err_no_out_dclm] = Run_CLM_fitting_on_images(out_clnf, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_dclm_general.txt', 'multi_view', 1);
+
 %% Run using CLNF in the wild model
 out_clnf = [curr_dir '/out_wild_clnf_wild/'];
 if(~exist(out_clnf, 'file'))
@@ -46,6 +54,8 @@ save('results/landmark_detections.mat');
 
 f = fopen('results/landmark_detections.txt', 'w');
 fprintf(f, 'Type, mean, median\n');
+fprintf(f, 'err dclm: %f, %f\n', mean(err_dclm), median(err_dclm));
+
 fprintf(f, 'err clnf: %f, %f\n', mean(err_clnf), median(err_clnf));
 fprintf(f, 'err clnf wild: %f, %f\n', mean(err_clnf_wild), median(err_clnf_wild));
 

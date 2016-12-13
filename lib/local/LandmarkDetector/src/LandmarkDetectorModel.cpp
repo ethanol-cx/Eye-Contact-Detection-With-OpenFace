@@ -269,6 +269,7 @@ void CLNF::Read_CLNF(string clnf_location)
 	vector<string> intensity_expert_locations;
 	vector<string> depth_expert_locations;
 	vector<string> ccnf_expert_locations;
+	vector<string> dpn_expert_locations;
 
 	// The other module locations should be defined as relative paths from the main model
 	boost::filesystem::path root = boost::filesystem::path(clnf_location).parent_path();
@@ -340,10 +341,14 @@ void CLNF::Read_CLNF(string clnf_location)
 		{
 			ccnf_expert_locations.push_back(location);
 		}
-	}
+		else if (module.compare("PatchesDPN") == 0)
+		{
+			dpn_expert_locations.push_back(location);
+		}
+	} 
   
 	// Initialise the patch experts
-	patch_experts.Read(intensity_expert_locations, depth_expert_locations, ccnf_expert_locations);
+	patch_experts.Read(intensity_expert_locations, depth_expert_locations, ccnf_expert_locations, dpn_expert_locations);
 
 	// Read in a face detector
 	face_detector_HOG = dlib::get_frontal_face_detector();
@@ -910,7 +915,17 @@ void CLNF::GetWeightMatrix(cv::Mat_<float>& WeightMatrix, int scale, int view_id
 
 		for (int p=0; p < n; p++)
 		{
-			if(!patch_experts.ccnf_expert_intensity.empty())
+			if (!patch_experts.dpn_expert_intensity.empty())
+			{
+
+				// for the x dimension
+				WeightMatrix.at<float>(p, p) = WeightMatrix.at<float>(p, p) + patch_experts.dpn_expert_intensity[scale][view_id][p].confidence;
+
+				// for they y dimension
+				WeightMatrix.at<float>(p + n, p + n) = WeightMatrix.at<float>(p, p);
+
+			}
+			else if(!patch_experts.ccnf_expert_intensity.empty())
 			{
 
 				// for the x dimension
