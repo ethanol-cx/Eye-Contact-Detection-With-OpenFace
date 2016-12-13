@@ -70,7 +70,7 @@ fprintf(f, 'err svr wild no out: %f, %f\n', mean(err_no_out_svr_wild), median(er
 
 fclose(f);
 
-%% Draw the corresponding error graphs comparing CLNF and SVR
+%% Draw the corresponding error graphs comparing DCLM, CLNF and SVR
 
 % set up the canvas
 line_width = 6;
@@ -115,6 +115,18 @@ intraface_error = compute_error( labels - 0.5,  shapes);
 plot(error_x, error_y, 'g--','DisplayName', 'SDM', 'LineWidth',line_width);
 hold on;
 
+% load DCLM errors
+load('out_dclm/res.mat');
+labels = labels([1:60,62:64,66:end],:, detected_cpp);
+shapes = shapes([1:60,62:64,66:end],:, detected_cpp);
+labels = labels(18:end,:,:);
+shapes = shapes(18:end,:,:);
+
+clnf_error_cpp = compute_error( labels,  shapes);
+[error_x, error_y] = cummErrorCurve(clnf_error_cpp);
+plot(error_x, error_y, 'r','DisplayName', 'DCLM', 'LineWidth',line_width);
+hold on;
+
 % load clnf errors
 load('out_wild_clnf_wild/res.mat');
 labels = labels([1:60,62:64,66:end],:, detected_cpp);
@@ -124,7 +136,7 @@ shapes = shapes(18:end,:,:);
 
 clnf_error_cpp = compute_error( labels,  shapes);
 [error_x, error_y] = cummErrorCurve(clnf_error_cpp);
-plot(error_x, error_y, 'r','DisplayName', 'CLM+CLNF', 'LineWidth',line_width);
+plot(error_x, error_y, 'DisplayName', 'CLM+CLNF', 'LineWidth',line_width);
 hold on;
 
 % load svr errors
@@ -157,8 +169,8 @@ plot(error_x, error_y, 'kx','DisplayName', 'DRMF', 'LineWidth',line_width);
 hold on;
 
 % Make it look nice and print to a pdf
-set(gca,'xtick',[0:0.05:0.15])
-xlim([0,0.15]);
+set(gca,'xtick',[0:0.025:0.1])
+xlim([0,0.1]);
 xlabel('Size normalised shape RMS error','FontName','Helvetica');
 ylabel('Proportion of images','FontName','Helvetica');
 grid on
