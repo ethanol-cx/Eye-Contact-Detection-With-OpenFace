@@ -52,3 +52,4 @@ matlab_version/experiments_iccv_300w/wild_fit_dclm/
 matlab_version/experiments_JANUS/all_fit_cvpr/
 matlab_version/experiments_JANUS/cfss_fit/
 matlab_runners/Feature Point Experiments/out_dclm/
+matlab_runners/Feature Point Experiments/300VW_features_dclm/
