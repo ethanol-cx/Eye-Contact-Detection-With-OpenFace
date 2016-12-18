@@ -3,6 +3,13 @@ include_directories(${TBB_ROOT_DIR}/include)
 
 include_directories(${BOOST_INCLUDE_DIR})
 
+set(CONFIG_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_CONFIG_DIR}")
+configure_file(
+	${CMAKE_CURRENT_SOURCE_DIR}/include/PathConfig.h.in
+	${CMAKE_CURRENT_SOURCE_DIR}/include/PathConfig.h
+	NEWLINE_STYLE WIN32
+)
+
 SET(SOURCE
     src/CCNF_patch_expert.cpp
 	src/LandmarkDetectionValidator.cpp
@@ -32,10 +39,14 @@ SET(HEADERS
 	include/stdafx.h
 )
 
+SET(EXTRA_HEADERS
+	include/PathConfig.h
+)
+
 include_directories(./include)
 include_directories(${LandmarkDetector_SOURCE_DIR}/include)
 
-add_library( LandmarkDetector ${SOURCE} ${HEADERS})
+add_library( LandmarkDetector ${SOURCE} ${HEADERS} ${EXTRA_HEADERS})
 
-install (TARGETS LandmarkDetector DESTINATION bin)
-install (FILES ${HEADERS} DESTINATION include)
+install (TARGETS LandmarkDetector DESTINATION lib)
+install (FILES ${HEADERS} DESTINATION include/OpenFace)

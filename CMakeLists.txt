@@ -5,6 +5,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
+set(CMAKE_CONFIG_DIR etc/OpenFace)
+
 find_package( OpenCV REQUIRED )
 MESSAGE("OpenCV information:") 
 MESSAGE("  OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}") 
@@ -33,6 +35,8 @@ foreach(file ${files})
 	else(MSVC)
 		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/model)
 	endif(MSVC)
+
+	install(FILES ${file} DESTINATION ${CMAKE_CONFIG_DIR}/model)
 endforeach()
 
 # Move the hierarchical LandmarkDetector models
@@ -44,6 +48,8 @@ foreach(file ${files})
 	else(MSVC)
 		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/model)
 	endif(MSVC)
+
+	install(DIRECTORY ${file} DESTINATION ${CMAKE_CONFIG_DIR}/model)
 endforeach()
 
 file(GLOB files "lib/local/LandmarkDetector/model/detection_validation/*.txt")
@@ -54,6 +60,8 @@ foreach(file ${files})
 	else(MSVC)
 		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/model/detection_validation)
 	endif(MSVC)
+
+	install(FILES ${file} DESTINATION ${CMAKE_CONFIG_DIR}/model/detection_validation)
 endforeach()
 
 file(GLOB files "lib/local/LandmarkDetector/model/patch_experts/*.txt")
@@ -64,6 +72,8 @@ foreach(file ${files})
 	else(MSVC)
 		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/model/patch_experts)
 	endif(MSVC)
+
+	install(FILES ${file} DESTINATION ${CMAKE_CONFIG_DIR}/model/patch_experts)
 endforeach()
 
 file(GLOB files "lib/local/LandmarkDetector/model/pdms/*.txt")
@@ -74,6 +84,8 @@ foreach(file ${files})
 	else(MSVC)
 		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/model/pdms)
 	endif(MSVC)
+
+	install(FILES ${file} DESTINATION ${CMAKE_CONFIG_DIR}/model/pdms)
 endforeach()
 
 # Move OpenCV classifiers
@@ -85,6 +97,8 @@ foreach(file ${files})
 	else(MSVC)
 		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/classifiers)
 	endif(MSVC)
+
+	install(FILES ${file} DESTINATION ${CMAKE_CONFIG_DIR}/classifiers)
 endforeach()
 
 # Move AU prediction modules
@@ -96,6 +110,8 @@ foreach(file ${files})
 	else(MSVC)
 		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/AU_predictors)
 	endif(MSVC)
+
+	install(FILES ${file} DESTINATION ${CMAKE_CONFIG_DIR}/AU_predictors)
 endforeach()
 
 # Move AU prediction modules
@@ -107,6 +123,8 @@ foreach(file ${files})
 	else(MSVC)
 		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/AU_predictors)
 	endif(MSVC)
+
+	install(DIRECTORY ${file} DESTINATION ${CMAKE_CONFIG_DIR}/AU_predictors)
 endforeach()
 
 # Move AU prediction modules
@@ -118,6 +136,8 @@ foreach(file ${files})
 	else(MSVC)
 		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/AU_predictors)
 	endif(MSVC)
+
+	install(DIRECTORY ${file} DESTINATION ${CMAKE_CONFIG_DIR}/AU_predictors)
 endforeach()
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
