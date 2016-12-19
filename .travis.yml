@@ -58,7 +58,7 @@ before_script:
   - cmake -D CMAKE_BUILD_TYPE=RELEASE -D BUILD_SHARED_LIBS=OFF ..
   - make -j4
   - sudo make -j2 install
-  - then cd ../..
+  - cd ../..
   - if [[ ${TRAVIS_OS_NAME} = linux ]]; then  sudo ln /dev/null /dev/raw1394; fi
  
 
