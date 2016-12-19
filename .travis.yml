@@ -31,10 +31,10 @@ before_install:
   - if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get update -qq; fi
   
 install:
-  - if [ "$CXX" == "g++" ]; then if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get install -qq g++-4.8; fi fi
-  - if [ "$CXX" == "g++" ]; then if [[ ${TRAVIS_OS_NAME} = linux ]]; then export CXX="g++-4.8"; fi fi 
-  - if [ "$CXX" == "clang++" ]; then if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get install -qq clang-3.4; fi fi
-  - if [ "$CXX" == "clang++" ]; then if [[ ${TRAVIS_OS_NAME} = linux ]]; then export CXX="clang++-3.4"; fi fi
+  - if [ "$CXX" = "g++" ]; then if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get install -qq g++-4.8; fi fi
+  - if [ "$CXX" = "g++" ]; then if [[ ${TRAVIS_OS_NAME} = linux ]]; then export CXX="g++-4.8"; fi fi 
+  - if [ "$CXX" = "clang++" ]; then if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get install -qq clang-3.4; fi fi
+  - if [ "$CXX" = "clang++" ]; then if [[ ${TRAVIS_OS_NAME} = linux ]]; then export CXX="clang++-3.4"; fi fi
 
   - if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get install git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev; fi
   - if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev checkinstall; fi
@@ -50,14 +50,15 @@ install:
   - if [[ ${TRAVIS_OS_NAME} = osx ]]; then brew install tbb opencv3; fi
     
 before_script:
-  - git clone https://github.com/Itseez/opencv.git
-  - cd opencv
-  - mkdir build
-  - cd build
-  - cmake ..
-  - make -j2
-  - sudo make -j2 install
-  - cd ../..
+  # OpenCV install for linux
+  - if [[ ${TRAVIS_OS_NAME} = linux ]]; then git clone https://github.com/Itseez/opencv.git; fi
+  - if [[ ${TRAVIS_OS_NAME} = linux ]]; then cd opencv; fi
+  - if [[ ${TRAVIS_OS_NAME} = linux ]]; then mkdir build; fi
+  - if [[ ${TRAVIS_OS_NAME} = linux ]]; then cd build; fi
+  - if [[ ${TRAVIS_OS_NAME} = linux ]]; then cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D BUILD_SHARED_LIBS=OFF ..; fi
+  - if [[ ${TRAVIS_OS_NAME} = linux ]]; then make -j2; fi
+  - if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo make -j2 install; fi
+  - if [[ ${TRAVIS_OS_NAME} = linux ]]; then cd ../..; fi
 
 script:
   - $CXX --version
