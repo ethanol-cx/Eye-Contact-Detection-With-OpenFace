@@ -55,13 +55,10 @@ before_script:
   - cd opencv
   - mkdir build
   - cd build
-  - cmake -D CMAKE_BUILD_TYPE=RELEASE -D BUILD_SHARED_LIBS=OFF ..
+  - cmake -D CMAKE_BUILD_TYPE=RELEASE ..
   - make -j4
   - sudo make -j2 install
   - cd ../..
-  - if [[ ${TRAVIS_OS_NAME} = linux ]]; then  sudo ln /dev/null /dev/raw1394; fi
- 
-
 
 script:
   - $CXX --version
