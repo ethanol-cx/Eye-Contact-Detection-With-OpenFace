@@ -18,6 +18,7 @@ before_install:
   - if [ "$CXX" = "g++" ]; then
       if [[ ${TRAVIS_OS_NAME} = linux ]]; then
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; 
+        sudo apt-get update -qq;
         sudo apt-get install -qq g++-4.8; 
         export CXX="g++-4.8";		
       fi 
@@ -27,12 +28,11 @@ before_install:
   - if [ "$CXX" = "clang++" ]; then
       if [[ ${TRAVIS_OS_NAME} = linux ]]; then  
         sudo add-apt-repository -y ppa:h-rayflood/llvm;
+        sudo apt-get update -qq;
         sudo apt-get install -qq clang-3.4;
         export CXX="clang++-3.4";
       fi
     fi
-
-  - if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get update -qq; fi
   
 install:
 
@@ -50,7 +50,8 @@ install:
       brew install tbb
     fi'
       
-  # Installing openCV 3.1
+before_script:  
+   # Installing openCV 3.1
   - wget https://github.com/Itseez/opencv/archive/3.1.0.zip
   - sudo unzip 3.1.0.zip
   - cd opencv-3.1.0
@@ -60,8 +61,8 @@ install:
   - if [ "$CXX" = "clang++" ]; then sudo cmake -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_CXX_FLAGS="-std=c++11 -stdlib=libc++ -I/usr/include/libcxxabi" -D CMAKE_EXE_LINKER_FLAGS="-std=c++11 -stdlib=libc++ -lc++abi" -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF .. ; fi  
   - sudo make -j4
   - sudo make install
-  - cd ../..
-
+  - cd ../.. 
+  
 script:
   - $CXX --version
   - mkdir build
