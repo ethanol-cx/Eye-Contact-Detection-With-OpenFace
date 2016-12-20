@@ -36,6 +36,7 @@ install:
   - if [ "$CXX" = "clang++" ]; then if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get install -qq clang-3.4; fi fi
   - if [ "$CXX" = "clang++" ]; then if [[ ${TRAVIS_OS_NAME} = linux ]]; then export CXX="clang++-3.4"; fi fi
 
+  - if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get -qq remove ffmpeg x264 libx264-dev; fi
   - if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get install git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev; fi
   - if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev checkinstall; fi
   - if [[ ${TRAVIS_OS_NAME} = linux ]]; then sudo apt-get install libv4l-dev libxvidcore-dev libx264-dev; fi
@@ -56,7 +57,7 @@ before_script:
   - cd opencv
   - mkdir build
   - cd build
-  - cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF ..
+  - cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF ..
   - make -j4
   - sudo make install
   - sudo ldconfig
