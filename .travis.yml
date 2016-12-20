@@ -46,7 +46,7 @@ install:
   
   - if [[ ${TRAVIS_OS_NAME} = osx ]]; then brew update; fi
   - if [[ ${TRAVIS_OS_NAME} = osx ]]; then brew tap homebrew/science; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then /usr/bin/yes | pip uninstall numpy; fi
+  - if [[ ${TRAVIS_OS_NAME} = osx ]]; then /usr/bin/yes | pip uninstall numpy; fi
   - if [[ ${TRAVIS_OS_NAME} = osx ]]; then brew install tbb opencv3; fi
 
   # Installing openCV 3.1
@@ -55,11 +55,10 @@ install:
   - cd opencv-3.1.0
   - sudo mkdir build
   - cd build
-  - if [ "$CXX" = "g++" ]; then sudo cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF .. ;fi
-  - if [ "$CXX" = "clang++" ]; then sudo cmake -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_CXX_FLAGS="-std=c++11 -stdlib=libc++ -I/usr/include/libcxxabi" -D CMAKE_EXE_LINKER_FLAGS="-std=c++11 -stdlib=libc++ -lc++abi" -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF .. ;fi  
+  - if [ "$CXX" = "g++" ]; then sudo cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF .. ; fi
+  - if [ "$CXX" = "clang++" ]; then sudo cmake -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_CXX_FLAGS="-std=c++11 -stdlib=libc++ -I/usr/include/libcxxabi" -D CMAKE_EXE_LINKER_FLAGS="-std=c++11 -stdlib=libc++ -lc++abi" -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF .. ; fi  
   - sudo make -j4
   - sudo make install
-  - sudo ldconfig
   - cd ../..
 
 script:
