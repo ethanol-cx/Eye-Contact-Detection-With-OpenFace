@@ -47,6 +47,7 @@ before_install:
         sudo apt-get update -qq;
         sudo apt-get install -qq clang-3.4;
         export CXX="clang++-3.4";
+        sudo -i
         sudo cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF ..;
       fi
     fi
