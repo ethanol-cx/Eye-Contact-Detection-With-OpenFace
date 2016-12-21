@@ -46,9 +46,6 @@ before_install:
 
   - if ["{TRAVIS_OS_NAME}" = osx]; then
       brew update;
-      brew tap homebrew/science;
-      /usr/bin/yes | pip uninstall numpy;
-      brew install tbb;
     fi
 
     - wget https://github.com/Itseez/opencv/archive/3.1.0.zip 
