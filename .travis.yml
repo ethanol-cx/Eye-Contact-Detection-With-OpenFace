@@ -16,7 +16,7 @@ os:
 before_install:
   # g++4.8.1
   - if [ "$CXX" = "g++" ]; then
-      if [ ${TRAVIS_OS_NAME} = linux ]; then
+      if [[ ${TRAVIS_OS_NAME} = linux ]]; then
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; 
         sudo apt-get update -qq;
         sudo apt-get install -qq g++-4.8; 
@@ -26,16 +26,17 @@ before_install:
 
   # clang 3.4
   - if [ "$CXX" = "clang++" ]; then
-      if [ ${TRAVIS_OS_NAME} = linux ]; then  
+      if [[ ${TRAVIS_OS_NAME} = linux ]]; then  
         sudo add-apt-repository -y ppa:h-rayflood/llvm;
         sudo apt-get update -qq;
         sudo apt-get install -qq clang-3.4;
         export CXX="clang++-3.4";
       fi
     fi
+  
+install:
 
-  # Dependencies for OpenCV 3.1
-  - if [ ${TRAVIS_OS_NAME} = linux ]; then
+  - 'if [ ${TRAVIS_OS_NAME} = linux ]; then
       sudo apt-get install git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev;
       sudo apt-get install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev checkinstall;
       # Getting newest boost
@@ -47,8 +48,8 @@ before_install:
       brew tap homebrew/science;
       /usr/bin/yes | pip uninstall numpy;
       brew install tbb
-    fi
-	     
+    fi'
+      
 before_script:  
    # Installing openCV 3.1
   - wget https://github.com/Itseez/opencv/archive/3.1.0.zip
@@ -56,7 +57,6 @@ before_script:
   - cd opencv-3.1.0
   - sudo mkdir build
   - cd build
-  - $CXX --version
   - if [ "$CXX" = "g++" ]; then sudo cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF .. ; fi
   - if [ "$CXX" = "clang++" ]; then sudo cmake -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_CXX_FLAGS="-std=c++11 -stdlib=libc++ -I/usr/include/libcxxabi" -D CMAKE_EXE_LINKER_FLAGS="-std=c++11 -stdlib=libc++ -lc++abi" -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF .. ; fi  
   - sudo make -j4
@@ -65,7 +65,6 @@ before_script:
   
 script:
   - $CXX --version
-  - echo $CXX
   - mkdir build
   - cd build
   - cmake -D CMAKE_BUILD_TYPE=RELEASE .. 
