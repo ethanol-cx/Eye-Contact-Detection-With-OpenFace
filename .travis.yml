@@ -47,7 +47,7 @@ before_install:
         sudo apt-get update -qq;
         sudo apt-get install -qq clang-3.4;
         export CXX="clang++-3.4";
-        sudo cmake -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_CXX_FLAGS="-std=c++11 -stdlib=libc++ -I/usr/include/libcxxabi" -D CMAKE_EXE_LINKER_FLAGS="-std=c++11 -stdlib=libc++ -lc++abi" -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF ..;
+        sudo cmake -D CMAKE_CXX_COMPILER=clang++-3.4 -D CMAKE_CXX_FLAGS="-std=c++11 -stdlib=libc++ -I/usr/include/libcxxabi" -D CMAKE_EXE_LINKER_FLAGS="-std=c++11 -stdlib=libc++ -lc++abi" -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF ..;
       fi
     fi
 
@@ -55,6 +55,9 @@ before_install:
       brew update;
       wget https://github.com/Itseez/opencv/archive/3.1.0.zip;
       sudo unzip 3.1.0.zip;
+      cd opencv-3.1.0;
+      sudo mkdir build;
+      cd build;
       sudo cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON ..;
     fi
 
