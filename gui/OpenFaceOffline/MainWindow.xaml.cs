@@ -227,7 +227,7 @@ namespace OpenFaceOffline
                         file_no_ext = System.IO.Path.GetFileName(file_no_ext);
 
                         // Start the actual processing and recording
-                        VideoLoop(file_no_ext);                        
+                        FeatureExtractionLoop(file_no_ext);                        
 
                     }
                     else
@@ -291,7 +291,7 @@ namespace OpenFaceOffline
                             String file_no_ext = System.IO.Path.GetFileNameWithoutExtension(filename);
                             
                             // Start the actual processing                        
-                            VideoLoop(file_no_ext);
+                            FeatureExtractionLoop(file_no_ext);
 
                         }
                         else
@@ -396,10 +396,8 @@ namespace OpenFaceOffline
 
 
         // Capturing and processing the video frame by frame
-        private void VideoLoop(string output_file_name)
+        private void FeatureExtractionLoop(string output_file_name)
         {
-
-            Thread.CurrentThread.IsBackground = true;
 
             DateTime? startTime = CurrentTime;
 
@@ -456,149 +454,16 @@ namespace OpenFaceOffline
                     continue;
                 }
 
-                bool detectionSucceeding = ProcessFrame(clnf_model, clnf_params, frame, grayFrame, fx, fy, cx, cy);
-
-                double scale = clnf_model.GetRigidParams()[0];
-
-                double confidence = (-clnf_model.GetConfidence()) / 2.0 + 0.5;
-
-                if (confidence < 0)
-                    confidence = 0;
-                else if (confidence > 1)
-                    confidence = 1;
-
-                List<double> pose = new List<double>();
-                clnf_model.GetPose(pose, fx, fy, cx, cy);
-                List<double> non_rigid_params = clnf_model.GetNonRigidParams();
+                detectionSucceeding = ProcessFrame(clnf_model, clnf_params, frame, grayFrame, fx, fy, cx, cy);
 
                 // The face analysis step (for AUs and eye gaze)
                 face_analyser.AddNextFrame(frame, clnf_model, fx, fy, cx, cy, false, ShowAppearance, false); // TODO change
                 
-                List<Tuple<Point, Point>> lines = null;
-                List<Tuple<double, double>> landmarks = null;
-                List<Tuple<double, double>> eye_landmarks = null;
-                List<Tuple<Point, Point>> gaze_lines = null;
-                Tuple<double, double> gaze_angle = new Tuple<double, double>(0, 0);
-
-                if (detectionSucceeding)
-                {
-                    landmarks = clnf_model.CalculateLandmarks();
-                    eye_landmarks = clnf_model.CalculateEyeLandmarks();
-                    lines = clnf_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
-                    gaze_lines = face_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
-                    gaze_angle = face_analyser.GetGazeAngle();
-                }
-
-                // Visualisation
-                Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
-                {
-                    if (ShowAUs)
-                    {
-                        var au_classes = face_analyser.GetCurrentAUsClass();
-                        var au_regs = face_analyser.GetCurrentAUsReg();
-
-                        auClassGraph.Update(au_classes);
-
-                        var au_regs_scaled = new Dictionary<String, double>();
-                        foreach (var au_reg in au_regs)
-                        {
-                            au_regs_scaled[au_reg.Key] = au_reg.Value / 5.0;
-                            if (au_regs_scaled[au_reg.Key] < 0)
-                                au_regs_scaled[au_reg.Key] = 0;
-
-                            if (au_regs_scaled[au_reg.Key] > 1)
-                                au_regs_scaled[au_reg.Key] = 1;
-                        }
-                        auRegGraph.Update(au_regs_scaled);
-                    }
-
-                    if (ShowGeometry)
-                    {
-                        int yaw = (int)(pose[4] * 180 / Math.PI + 0.5);
-                        int roll = (int)(pose[5] * 180 / Math.PI + 0.5);
-                        int pitch = (int)(pose[3] * 180 / Math.PI + 0.5);
-
-                        YawLabel.Content = yaw + "°";
-                        RollLabel.Content = roll + "°";
-                        PitchLabel.Content = pitch + "°";
-
-                        XPoseLabel.Content = (int)pose[0] + " mm";
-                        YPoseLabel.Content = (int)pose[1] + " mm";
-                        ZPoseLabel.Content = (int)pose[2] + " mm";
-
-                        nonRigidGraph.Update(non_rigid_params);
-
-                        // Update eye gaze
-                        String x_angle = String.Format("{0:F0}°", gaze_angle.Item1 * (180.0 / Math.PI));
-                        String y_angle = String.Format("{0:F0}°", gaze_angle.Item2 * (180.0 / Math.PI));
-                        GazeXLabel.Content = x_angle;
-                        GazeYLabel.Content = y_angle;
-                    }
-
-                    if (ShowTrackedVideo)
-                    {
-                        if (latest_img == null)
-                        {
-                            latest_img = frame.CreateWriteableBitmap();
-                        }
-
-                        frame.UpdateWriteableBitmap(latest_img);
-
-                        video.Source = latest_img;
-                        video.Confidence = confidence;
-                        video.FPS = processing_fps.GetFPS();
-                        video.Progress = progress;
-
-                        if (!detectionSucceeding)
-                        {
-                            video.OverlayLines.Clear();
-                            video.OverlayPoints.Clear();
-                            video.OverlayEyePoints.Clear();
-                            video.GazeLines.Clear();
-                        }
-                        else
-                        {
-                            video.OverlayLines = lines;
-
-                            List<Point> landmark_points = new List<Point>();
-                            foreach (var p in landmarks)
-                            {
-                                landmark_points.Add(new Point(p.Item1, p.Item2));
-                            }
-
-                            List<Point> eye_landmark_points = new List<Point>();
-                            foreach (var p in eye_landmarks)
-                            {
-                                eye_landmark_points.Add(new Point(p.Item1, p.Item2));
-                            }
-
-
-                            video.OverlayPoints = landmark_points;
-                            video.OverlayEyePoints = eye_landmark_points;
-                            video.GazeLines = gaze_lines;
-                        }
-                    }
-
-                    if (ShowAppearance)
-                    {
-                        RawImage aligned_face = face_analyser.GetLatestAlignedFace();
-                        RawImage hog_face = face_analyser.GetLatestHOGDescriptorVisualisation();
-
-                        if (latest_aligned_face == null)
-                        {
-                            latest_aligned_face = aligned_face.CreateWriteableBitmap();
-                            latest_HOG_descriptor = hog_face.CreateWriteableBitmap();
-                        }
-
-                        aligned_face.UpdateWriteableBitmap(latest_aligned_face);
-                        hog_face.UpdateWriteableBitmap(latest_HOG_descriptor);
-
-                        AlignedFace.Source = latest_aligned_face;
-                        AlignedHOG.Source = latest_HOG_descriptor;
-                    }
-                }));
-
                 recorder.RecordFrame(clnf_model, face_analyser, detectionSucceeding, frame_id + 1, ((double)frame_id) / fps);
+
+                List<Tuple<double, double>> landmarks = clnf_model.CalculateLandmarks();
+
+                VisualizeFeatures(frame, landmarks, fx, fy, cx, cy, progress);
 
                 if (reset)
                 {
@@ -632,6 +497,250 @@ namespace OpenFaceOffline
             }
 
             recorder.FinishRecording(clnf_model, face_analyser);
+
+        }
+
+        // Replaying the features frame by frame
+        private void FeatureVisualizationLoop(string input_feature_file, string input_video_file)
+        {
+
+            DateTime? startTime = CurrentTime;
+
+            var lastFrameTime = CurrentTime;
+
+            clnf_model.Reset();
+            face_analyser.Reset();
+
+            // TODO these need to be stored so that they could be loaded somewhere
+            double fx = 500.0 * (capture.width / 640.0);
+            double fy = 500.0 * (capture.height / 480.0);
+
+            fx = (fx + fy) / 2.0;
+            fy = fx;
+
+            double cx = capture.width / 2f;
+            double cy = capture.height / 2f;
+
+            int frame_id = 0;
+
+            double fps = capture.GetFPS();
+            if (fps <= 0) fps = 30;
+
+            while (thread_running)
+            {
+                //////////////////////////////////////////////
+                // CAPTURE FRAME AND DETECT LANDMARKS FOLLOWED BY THE REQUIRED IMAGE PROCESSING
+                //////////////////////////////////////////////
+                RawImage frame = null;
+                double progress = -1;
+
+                frame = new RawImage(capture.GetNextFrame(false));
+                progress = capture.GetProgress();
+
+                if (frame.Width == 0)
+                {
+                    // This indicates that we reached the end of the video file
+                    break;
+                }
+
+                // TODO stop button should actually clear the video
+                lastFrameTime = CurrentTime;
+                processing_fps.AddFrame();
+
+                var grayFrame = new RawImage(capture.GetCurrentFrameGray());
+
+                if (grayFrame == null)
+                {
+                    Console.WriteLine("Gray is empty");
+                    continue;
+                }
+
+                detectionSucceeding = ProcessFrame(clnf_model, clnf_params, frame, grayFrame, fx, fy, cx, cy);
+
+                // The face analysis step (for AUs and eye gaze)
+                face_analyser.AddNextFrame(frame, clnf_model, fx, fy, cx, cy, false, ShowAppearance, false); // TODO change
+
+                recorder.RecordFrame(clnf_model, face_analyser, detectionSucceeding, frame_id + 1, ((double)frame_id) / fps);
+
+                List<Tuple<double, double>> landmarks = clnf_model.CalculateLandmarks();
+
+                VisualizeFeatures(frame, landmarks, fx, fy, cx, cy, progress);
+
+                if (reset)
+                {
+                    clnf_model.Reset();
+                    face_analyser.Reset();
+                    reset = false;
+                }
+
+                while (thread_running & thread_paused && skip_frames == 0)
+                {
+                    Thread.Sleep(10);
+                }
+
+                frame_id++;
+
+                if (skip_frames > 0)
+                    skip_frames--;
+
+            }
+
+            latest_img = null;
+            skip_frames = 0;
+
+            // Unpause if it's paused
+            if (thread_paused)
+            {
+                Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
+                {
+                    PauseButton_Click(null, null);
+                }));
+            }
+
+            recorder.FinishRecording(clnf_model, face_analyser);
+
+        }
+
+
+        private void VisualizeFeatures(RawImage frame, List<Tuple<double, double>> landmarks, double fx, double fy, double cx, double cy, double progress)
+        {
+            List<Tuple<Point, Point>> lines = null;
+            List<Tuple<double, double>> eye_landmarks = null;
+            List<Tuple<Point, Point>> gaze_lines = null;
+            Tuple<double, double> gaze_angle = new Tuple<double, double>(0, 0);
+
+            List<double> pose = new List<double>();
+            clnf_model.GetPose(pose, fx, fy, cx, cy);
+            List<double> non_rigid_params = clnf_model.GetNonRigidParams();
+
+            double confidence = (-clnf_model.GetConfidence()) / 2.0 + 0.5;
+
+            if (confidence < 0)
+                confidence = 0;
+            else if (confidence > 1)
+                confidence = 1;
+
+            if (detectionSucceeding)
+            {
+                
+                eye_landmarks = clnf_model.CalculateEyeLandmarks();
+                lines = clnf_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
+
+                double scale = clnf_model.GetRigidParams()[0];
+
+                gaze_lines = face_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
+                gaze_angle = face_analyser.GetGazeAngle();
+            }
+
+            // Visualisation (as a separate function)
+            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
+            {
+                if (ShowAUs)
+                {
+                    var au_classes = face_analyser.GetCurrentAUsClass();
+                    var au_regs = face_analyser.GetCurrentAUsReg();
+
+                    auClassGraph.Update(au_classes);
+
+                    var au_regs_scaled = new Dictionary<String, double>();
+                    foreach (var au_reg in au_regs)
+                    {
+                        au_regs_scaled[au_reg.Key] = au_reg.Value / 5.0;
+                        if (au_regs_scaled[au_reg.Key] < 0)
+                            au_regs_scaled[au_reg.Key] = 0;
+
+                        if (au_regs_scaled[au_reg.Key] > 1)
+                            au_regs_scaled[au_reg.Key] = 1;
+                    }
+                    auRegGraph.Update(au_regs_scaled);
+                }
+
+                if (ShowGeometry)
+                {
+                    int yaw = (int)(pose[4] * 180 / Math.PI + 0.5);
+                    int roll = (int)(pose[5] * 180 / Math.PI + 0.5);
+                    int pitch = (int)(pose[3] * 180 / Math.PI + 0.5);
+
+                    YawLabel.Content = yaw + "°";
+                    RollLabel.Content = roll + "°";
+                    PitchLabel.Content = pitch + "°";
+
+                    XPoseLabel.Content = (int)pose[0] + " mm";
+                    YPoseLabel.Content = (int)pose[1] + " mm";
+                    ZPoseLabel.Content = (int)pose[2] + " mm";
+
+                    nonRigidGraph.Update(non_rigid_params);
+
+                    // Update eye gaze
+                    String x_angle = String.Format("{0:F0}°", gaze_angle.Item1 * (180.0 / Math.PI));
+                    String y_angle = String.Format("{0:F0}°", gaze_angle.Item2 * (180.0 / Math.PI));
+                    GazeXLabel.Content = x_angle;
+                    GazeYLabel.Content = y_angle;
+                }
+
+                if (ShowTrackedVideo)
+                {
+                    if (latest_img == null)
+                    {
+                        latest_img = frame.CreateWriteableBitmap();
+                    }
+
+                    frame.UpdateWriteableBitmap(latest_img);
+
+                    video.Source = latest_img;
+                    video.Confidence = confidence;
+                    video.FPS = processing_fps.GetFPS();
+                    video.Progress = progress;
+
+                    if (!detectionSucceeding)
+                    {
+                        video.OverlayLines.Clear();
+                        video.OverlayPoints.Clear();
+                        video.OverlayEyePoints.Clear();
+                        video.GazeLines.Clear();
+                    }
+                    else
+                    {
+                        video.OverlayLines = lines;
+
+                        List<Point> landmark_points = new List<Point>();
+                        foreach (var p in landmarks)
+                        {
+                            landmark_points.Add(new Point(p.Item1, p.Item2));
+                        }
+
+                        List<Point> eye_landmark_points = new List<Point>();
+                        foreach (var p in eye_landmarks)
+                        {
+                            eye_landmark_points.Add(new Point(p.Item1, p.Item2));
+                        }
+
+
+                        video.OverlayPoints = landmark_points;
+                        video.OverlayEyePoints = eye_landmark_points;
+                        video.GazeLines = gaze_lines;
+                    }
+                }
+
+                if (ShowAppearance)
+                {
+                    RawImage aligned_face = face_analyser.GetLatestAlignedFace();
+                    RawImage hog_face = face_analyser.GetLatestHOGDescriptorVisualisation();
+
+                    if (latest_aligned_face == null)
+                    {
+                        latest_aligned_face = aligned_face.CreateWriteableBitmap();
+                        latest_HOG_descriptor = hog_face.CreateWriteableBitmap();
+                    }
+
+                    aligned_face.UpdateWriteableBitmap(latest_aligned_face);
+                    hog_face.UpdateWriteableBitmap(latest_HOG_descriptor);
+
+                    AlignedFace.Source = latest_aligned_face;
+                    AlignedHOG.Source = latest_HOG_descriptor;
+                }
+            }));
+
 
         }
 

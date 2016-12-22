@@ -42,6 +42,21 @@ namespace OpenFaceOffline
             {
                 System.IO.Directory.CreateDirectory(root);
             }
+
+            // Write out the OF file which tells where all the relevant data is
+            StreamWriter out_of_file = new StreamWriter(root + "/" + filename + ".of");
+
+            //out_of_file.WriteLine("Video_file:" + )
+            out_of_file.WriteLine("CSV file: " + root + "/" + filename + ".csv");
+            if(record_HOG)
+            { 
+                out_of_file.WriteLine("HOG file: " + root + "/" + filename + ".hog");
+            }
+            if(record_aligned)
+            {
+                out_of_file.WriteLine("Aligned dir: " + root + "/" + filename + "/");
+            }
+
             out_filename = root + "/" + filename + ".csv";
             output_features_file = new StreamWriter(out_filename);
             output_features_file.Write("frame, timestamp, confidence, success");
