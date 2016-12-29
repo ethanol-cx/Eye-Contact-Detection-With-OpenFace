@@ -6,6 +6,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
 set(CMAKE_CONFIG_DIR etc/OpenFace)
+set(CONFIG_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_CONFIG_DIR}")
+add_definitions(-DCONFIG_DIR="${CONFIG_DIR}")
 
 find_package( OpenCV REQUIRED )
 MESSAGE("OpenCV information:") 

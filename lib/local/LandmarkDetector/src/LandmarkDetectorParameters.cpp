@@ -59,7 +59,6 @@
 #include "stdafx.h"
 
 #include "LandmarkDetectorParameters.h"
-#include "PathConfig.h"
 
 // Boost includes
 #include <filesystem.hpp>
@@ -69,6 +68,10 @@
 #include <sstream>
 #include <iostream>
 #include <cstdlib>
+
+#ifndef CONFIG_DIR
+#define CONFIG_DIR "~"
+#endif
 
 using namespace std;
 
