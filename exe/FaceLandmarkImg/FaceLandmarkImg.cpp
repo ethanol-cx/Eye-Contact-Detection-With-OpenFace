@@ -78,6 +78,10 @@
 #include <FaceAnalyser.h>
 #include <GazeEstimation.h>
 
+#ifndef CONFIG_DIR
+#define CONFIG_DIR "~"
+#endif
+
 using namespace std;
 
 vector<string> get_arguments(int argc, char **argv)
