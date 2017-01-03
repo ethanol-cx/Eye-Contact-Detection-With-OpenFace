@@ -81,6 +81,9 @@
 #include <FaceAnalyser.h>
 #include <GazeEstimation.h>
 
+#ifndef CONFIG_DIR
+#define CONFIG_DIR "~"
+#endif
 
 #define INFO_STREAM( stream ) \
 std::cout << stream << std::endl
@@ -242,6 +245,10 @@ int main (int argc, char **argv)
 
 	vector<string> arguments = get_arguments(argc, argv);
 
+	// Search paths
+	boost::filesystem::path config_path = boost::filesystem::path(CONFIG_DIR);
+	boost::filesystem::path parent_path = boost::filesystem::path(arguments[0]).parent_path();
+
 	// Some initial parameters that can be overriden from command line	
 	vector<string> input_files, depth_directories, output_files, tracked_videos_output;
 	
@@ -322,23 +329,25 @@ int main (int argc, char **argv)
 		output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, arguments);
 	
 	// Used for image masking
-
 	string tri_loc;
-	if(boost::filesystem::exists(path("model/tris_68_full.txt")))
+	boost::filesystem::path tri_loc_path = boost::filesystem::path("model/tris_68_full.txt");
+	if (boost::filesystem::exists(tri_loc_path))
 	{
-		tri_loc = "model/tris_68_full.txt";
+		tri_loc = tri_loc_path.string();
+	}
+	else if (boost::filesystem::exists(parent_path/tri_loc_path))
+	{
+		tri_loc = (parent_path/tri_loc_path).string();
+	}
+	else if (boost::filesystem::exists(config_path/tri_loc_path))
+	{
+		tri_loc = (config_path/tri_loc_path).string();
 	}
 	else
 	{
-		path loc = path(arguments[0]).parent_path() / "model/tris_68_full.txt";
-		tri_loc = loc.string();
-
-		if(!exists(loc))
-		{
-			cout << "Can't find triangulation files, exiting" << endl;
-			return 1;
-		}
-	}	
+		cout << "Can't find triangulation files, exiting" << endl;
+		return 1;
+	}
 
 	// Will warp to scaled mean shape
 	cv::Mat_<double> similarity_normalised_shape = face_model.pdm.mean_shape * sim_scale;
@@ -362,24 +371,24 @@ int main (int argc, char **argv)
 		au_loc_local = "AU_predictors/AU_all_static.txt";
 	}
 
-	if(boost::filesystem::exists(path(au_loc_local)))
+	boost::filesystem::path au_loc_path = boost::filesystem::path(au_loc_local);
+	if (boost::filesystem::exists(au_loc_path))
 	{
-		au_loc = au_loc_local;
+		au_loc = au_loc_path.string();
+	}
+	else if (boost::filesystem::exists(parent_path/au_loc_path))
+	{
+		au_loc = (parent_path/au_loc_path).string();
+	}
+	else if (boost::filesystem::exists(config_path/au_loc_path))
+	{
+		au_loc = (config_path/au_loc_path).string();
 	}
 	else
 	{
-		path loc = path(arguments[0]).parent_path() / au_loc_local;
-
-		if(exists(loc))
-		{
-			au_loc = loc.string();
-		}
-		else
-		{
-			cout << "Can't find AU prediction files, exiting" << endl;
-			return 1;
-		}
-	}	
+		cout << "Can't find AU prediction files, exiting" << endl;
+		return 1;
+	}
 
 	// Creating a  face analyser that will be used for AU extraction
 	FaceAnalysis::FaceAnalyser face_analyser(vector<cv::Vec3d>(), 0.7, 112, 112, au_loc, tri_loc);
