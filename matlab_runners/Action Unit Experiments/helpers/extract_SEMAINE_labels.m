@@ -26,14 +26,9 @@ function [ labels, valid_ids, vid_ids  ] = extract_SEMAINE_labels( SEMAINE_dir, 
         
         xml_file = [SEMAINE_dir, recs{i}, '\' file.name];
         [root_xml, name_xml, ~] = fileparts(xml_file);
-        m_file = [root_xml, name_xml, '.mat'];
             
-        if(~exist(m_file, 'file'))            
-            activations = ParseSEMAINEAnnotations([SEMAINE_dir, recs{i}, '\' file.name]);
-            save(m_file, 'activations');
-        else
-            load(m_file);
-        end
+        activations = ParseSEMAINEAnnotations([SEMAINE_dir, recs{i}, '/' file.name]);
+            
         if(size(activations,1) < vid_ids(i,2))
             vid_ids(i,2) = size(activations,1);
             if(vid_ids(i,2) > 2999)

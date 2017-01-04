@@ -10,8 +10,10 @@ elseif(exist('D:\Datasets\FERA_2015\semaine\SEMAINE-Sessions/', 'file'))
     SEMAINE_dir = 'D:\Datasets\FERA_2015\semaine\SEMAINE-Sessions/';    
 elseif(exist('D:/fera_2015/semaine/SEMAINE-Sessions/', 'file'))
     SEMAINE_dir = 'D:/fera_2015/semaine/SEMAINE-Sessions/';
+elseif(exist('/multicomp/datasets/face_datasets/FERA_2015/Semaine/SEMAINE-Sessions/', 'file'))
+    SEMAINE_dir = '/multicomp/datasets/face_datasets/FERA_2015/Semaine/SEMAINE-Sessions/';
 else
-    fprintf('DISFA location not found (or not defined)\n'); 
+    fprintf('SEMAINE location not found (or not defined)\n'); 
 end
 
 if(exist('SEMAINE_dir', 'var'))

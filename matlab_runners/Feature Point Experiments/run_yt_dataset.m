@@ -1,6 +1,10 @@
 clear
 
-executable = '"../../x64/Release/FeatureExtraction.exe"';
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
+end
 
 output = 'yt_features/';
 
@@ -10,11 +14,13 @@ end
     
 if(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
     database_root = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
-else
+elseif(exist([getenv('USERPROFILE') 'D:/Dropbox/Dropbox/AAM/test data/'], 'file'))
     database_root = 'D:/Dropbox/Dropbox/AAM/test data/';
+else
+    database_root = '/multicomp/datasets/';
 end
 
-database_root = [database_root, '/ytceleb_annotations_CVPR2014/'];
+database_root = [database_root, '/ytceleb/'];
 
 in_vids = dir([database_root '/*.avi']);
 
@@ -33,7 +39,11 @@ for i=1:numel(in_vids)
     command = cat(2, command, [' -f "' in_file_name '" -of "' outputFile_fp '"']);                     
 end
 
-dos(command);
+if(isunix)
+    unix(command, '-echo')
+else
+    dos(command);
+end
 
 %%
 output = 'yt_features_clm/';
@@ -59,7 +69,11 @@ for i=1:numel(in_vids)
     command = cat(2, command, [' -f "' in_file_name '" -of "' outputFile_fp '"']);                     
 end
 
-dos(command);
+if(isunix)
+    unix(command, '-echo')
+else
+    dos(command);
+end
 %% evaluating yt datasets
 d_loc = 'yt_features/';
 d_loc_clm = 'yt_features_clm/';

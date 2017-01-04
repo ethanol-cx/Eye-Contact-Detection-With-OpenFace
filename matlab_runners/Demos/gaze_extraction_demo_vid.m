@@ -1,4 +1,10 @@
-exe = '"../../x64/Release/FeatureExtraction.exe"';
+clear
+
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
+end
 
 output = './output_features_vid/';
 
@@ -10,7 +16,7 @@ in_files = dir('../../videos/2015-10-15-15-14.avi');
 % some parameters
 verbose = true;
 
-command = exe;
+command = executable;
 command = cat(2, command, ' -verbose  -no2Dfp -no3Dfp -noMparams -noPose -noAUs ');
 
 % add all videos to single argument list (so as not to load the model anew
@@ -31,7 +37,11 @@ for i=1:numel(in_files)
                
 end
 
-dos(command);
+if(isunix)
+    unix(command);
+else
+    dos(command);
+end
 
 %% Demonstrating reading the output files
 filename = [output name];

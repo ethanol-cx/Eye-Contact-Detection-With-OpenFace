@@ -1,6 +1,17 @@
 clear
-DISFA_dir = 'D:/Datasets/DISFA/Videos_LeftCamera/';
-executable = '"../../x64/Release/FeatureExtraction.exe"';
+
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
+end
+
+if(exist('D:/Datasets/DISFA/Videos_LeftCamera/', 'file'))   
+    DISFA_dir = 'D:/Datasets/DISFA/Videos_LeftCamera/';  
+else
+    DISFA_dir = '/multicomp/datasets/face_datasets/DISFA/Videos_LeftCamera/';
+end
+
 
 videos = dir([DISFA_dir, '*.avi']);
 
@@ -22,7 +33,11 @@ parfor v = 1:numel(videos)
     output_file = [output name '_au.txt'];
     command = [executable ' -f "' vid_file '" -of "' output_file '" -q -no2Dfp -no3Dfp -noMparams -noPose -noGaze'];
         
-    dos(command);
+    if(isunix)
+        unix(command, '-echo');
+    else
+        dos(command);
+    end
     
 end
 
@@ -31,8 +46,7 @@ end
 % Note that DISFA was used in training, this is not meant for experimental
 % results but rather to show how to do AU prediction and how to interpret
 % the results
-
-Label_dir = 'D:/Datasets/DISFA/ActionUnit_Labels/';
+Label_dir = [DISFA_dir, '/../ActionUnit_Labels/'];
 prediction_dir = 'out_DISFA/';
 
 label_folders = dir([Label_dir, 'SN*']);

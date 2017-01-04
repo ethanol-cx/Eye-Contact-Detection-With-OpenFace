@@ -7,9 +7,12 @@ if(exist([getenv('USERPROFILE') '/Dropbox/AAM/eye_clm/mpii_data/'], 'file'))
     database_root = [getenv('USERPROFILE') '/Dropbox/AAM/eye_clm/mpii_data/'];    
 elseif(exist('D:\Dropbox/Dropbox/AAM/eye_clm/mpii_data/', 'file'))
     database_root = 'D:\Dropbox/Dropbox/AAM/eye_clm/mpii_data/';    
+elseif(exist('/multicomp/datasets/mpii_gaze/mpii_data/', 'file'))
+    database_root = '/multicomp/datasets/mpii_gaze/mpii_data/';    
 else
     fprintf('MPII gaze dataset not found\n');
 end
+
 output_loc = './gaze_estimates_MPII/';
 if(~exist(output_loc, 'dir'))
     mkdir(output_loc);
@@ -18,7 +21,13 @@ end
 output = './mpii_out/';
 
 %% Perform actual gaze predictions
-command = sprintf('"../../x64/Release/FaceLandmarkImg.exe" -fx 1028 -fy 1028 -gaze ');
+if(isunix)
+    executable = '"../../build/bin/FaceLandmarkImg"';
+else
+    executable = '"../../x64/Release/FaceLandmarkImg.exe"';
+end
+
+command = sprintf('%s -fx 1028 -fy 1028 -gaze ', executable);
 p_dirs = dir([database_root, 'p*']);
 
 parfor p=1:numel(p_dirs)
@@ -30,7 +39,11 @@ parfor p=1:numel(p_dirs)
     command_c = cat(2, command, input_loc, out_img_loc, out_p_loc);
 
     command_c = cat(2, command_c, ' -wild');
-    dos(command_c);
+    if(isunix)
+        unix(command_c, '-echo');
+    else
+        dos(command_c);
+    end;
 
 end
 %%

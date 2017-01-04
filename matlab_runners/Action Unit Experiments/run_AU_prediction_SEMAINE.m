@@ -9,7 +9,11 @@ if(~exist(out_loc, 'dir'))
     mkdir(out_loc);
 end
 
-executable = '"../../x64/Release/FeatureExtraction.exe"';
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
+end
 %%
 parfor f1=1:numel(devel_recs)
 
@@ -27,8 +31,13 @@ parfor f1=1:numel(devel_recs)
         name = f1_dir;
         output_aus = [out_loc name '.au.txt'];
 
-        command = cat(2, command, [' -f "' curr_vid '" -of "' output_aus]);
-        dos(command);
+        command = cat(2, command, [' -f "' curr_vid '" -of "' output_aus, '"']);
+        
+        if(isunix)
+            unix(command, '-echo');
+        else
+            dos(command);
+        end
 
     end
 end
