@@ -286,7 +286,7 @@ namespace OpenFaceOffline
                 }
             }
 
-            EndFeatureExtractionMode();
+            EndMode();
 
         }
 
@@ -771,11 +771,11 @@ namespace OpenFaceOffline
         }
 
         // When the processing is done re-enable the components
-        private void EndFeatureExtractionMode()
+        private void EndMode()
         {
-
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
+            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 1, 0), (Action)(() =>
             {
+
                 SettingsMenu.IsEnabled = true;
                 RecordingMenu.IsEnabled = true;
                 AUSetting.IsEnabled = true;
@@ -784,6 +784,27 @@ namespace OpenFaceOffline
                 StopButton.IsEnabled = false;
                 NextFiveFramesButton.IsEnabled = false;
                 NextFrameButton.IsEnabled = false;
+
+                // Clean up the interface itself
+                video.Source = null;
+                
+                auClassGraph.Update(new Dictionary<string, double>());
+                auRegGraph.Update(new Dictionary<string, double>());
+                YawLabel.Content = "0°";
+                RollLabel.Content = "0°";
+                PitchLabel.Content = "0°";
+
+                XPoseLabel.Content = "0 mm";
+                YPoseLabel.Content = "0 mm";
+                ZPoseLabel.Content = "0 mm";
+
+                nonRigidGraph.Update(new List<double>());
+
+                GazeXLabel.Content = "0°";
+                GazeYLabel.Content = "0°";
+                
+                AlignedFace.Source = null;
+                AlignedHOG.Source = null;
 
             }));
         }
@@ -900,12 +921,11 @@ namespace OpenFaceOffline
                 // Stop capture and tracking
                 thread_paused = false;
                 thread_running = false;
+                // Let the processing thread finish
                 processing_thread.Join();
 
-                PauseButton.IsEnabled = false;
-                NextFrameButton.IsEnabled = false;
-                NextFiveFramesButton.IsEnabled = false;
-                StopButton.IsEnabled = false;
+                // Clean up the interface
+                EndMode();
             }
         }
 
