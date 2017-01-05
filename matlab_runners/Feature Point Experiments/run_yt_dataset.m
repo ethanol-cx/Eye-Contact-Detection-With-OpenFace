@@ -14,7 +14,7 @@ end
     
 if(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
     database_root = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
-elseif(exist([getenv('USERPROFILE') 'D:/Dropbox/Dropbox/AAM/test data/'], 'file'))
+elseif(exist('D:/Dropbox/Dropbox/AAM/test data/', 'file'))
     database_root = 'D:/Dropbox/Dropbox/AAM/test data/';
 else
     database_root = '/multicomp/datasets/';

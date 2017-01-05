@@ -1,6 +1,6 @@
 --------------------------------------- OpenFace Matlab runners -----------------------------------------------------------------------------	
 
-These are provided for recreation of some of the experiments described in the publications and to demonstrate the command line interface by calling the C++ executables from matlab. This is intended to test the Windows version of the code.
+These are provided for recreation of some of the experiments described in the publications and to demonstrate the command line interface by calling the C++ executables from Matlab.
 
 ======================== Demos ==================================
 
