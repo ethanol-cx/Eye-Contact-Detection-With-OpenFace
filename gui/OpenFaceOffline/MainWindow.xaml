@@ -39,7 +39,7 @@
                 <MenuItem IsCheckable="True" Header="Record model parameters" IsChecked="{Binding RecordModelParameters}" />
                 <MenuItem IsCheckable="True" Header="Record aligned faces" IsChecked="{Binding RecordAligned}"/>
             </MenuItem>
-            <MenuItem Name="SettingsMenu"  Header="Recording settings" >
+            <MenuItem Name="SettingsMenu"  Header="Recording settings">
                 <MenuItem Name="OutputLocationItem" Header="Set output location..." Click="OutputLocationItem_Click" ></MenuItem>
                 <MenuItem Header="Set output image size..." Click="setOutputImageSize_Click"></MenuItem>
             </MenuItem>
@@ -166,7 +166,6 @@
         <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button VerticalAlignment="Top" IsEnabled="False" Click="PauseButton_Click" Name="PauseButton">Pause</Button>
             <Button VerticalAlignment="Top" IsEnabled="False" Click="StopButton_Click" Name="StopButton">Stop</Button>
-            <Button VerticalAlignment="Top" IsEnabled="False" Click="ResetButton_Click" Name="ResetButton">Reset</Button>
             <Button VerticalAlignment="Top" IsEnabled="False" Click="SkipButton_Click" Name="NextFrameButton">>> 1</Button>
             <Button VerticalAlignment="Top" IsEnabled="False" Click="SkipButton_Click" Name="NextFiveFramesButton">>> 5</Button>
         </StackPanel>

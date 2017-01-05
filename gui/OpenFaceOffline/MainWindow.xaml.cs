@@ -122,9 +122,7 @@ namespace OpenFaceOffline
         FpsTracker processing_fps = new FpsTracker();
 
         volatile bool detectionSucceeding = false;
-
-        volatile bool reset = false;
-
+        
         // For tracking
         FaceModelParameters clnf_params;
         CLNF clnf_model;
@@ -133,32 +131,32 @@ namespace OpenFaceOffline
         // Recording parameters (default values)
         Recorder recorder;
 
-        public bool RecordAligned { get; set; } // Aligned face images
-        public bool RecordHOG { get; set; } // HOG features extracted from face images
-        public bool Record2DLandmarks { get; set; } // 2D locations of facial landmarks (in pixels)
-        public bool Record3DLandmarks { get; set; } // 3D locations of facial landmarks (in pixels)
-        public bool RecordModelParameters { get; set; } // Facial shape parameters (rigid and non-rigid geometry)
-        public bool RecordPose { get; set; } // Head pose (position and orientation)
-        public bool RecordAUs { get; set; } // Facial action units
-        public bool RecordGaze { get; set; } // Eye gaze
+        public bool RecordAligned { get; set; } = false; // Aligned face images
+        public bool RecordHOG { get; set; } = false; // HOG features extracted from face images
+        public bool Record2DLandmarks { get; set; } = true; // 2D locations of facial landmarks (in pixels)
+        public bool Record3DLandmarks { get; set; } = true; // 3D locations of facial landmarks (in pixels)
+        public bool RecordModelParameters { get; set; } = true; // Facial shape parameters (rigid and non-rigid geometry)
+        public bool RecordPose { get; set; } = true; // Head pose (position and orientation)
+        public bool RecordAUs { get; set; } = true; // Facial action units
+        public bool RecordGaze { get; set; } = true; // Eye gaze
 
         // Visualisation options
-        public bool ShowTrackedVideo { get; set; } // Eye gaze
-        public bool ShowAppearance { get; set; } // Eye gaze
-        public bool ShowGeometry { get; set; } // Eye gaze
-        public bool ShowAUs { get; set; } // Eye gaze
-                
+        public bool ShowTrackedVideo { get; set; } = true; // Showing the actual tracking
+        public bool ShowAppearance { get; set; } = true; // Showing appeaance features like HOG
+        public bool ShowGeometry { get; set; } = true; // Showing geometry features, pose, gaze, and non-rigid
+        public bool ShowAUs { get; set; } = true; // Showing Facial Action Units
+
         int image_output_size = 112;
 
         // TODO classifiers converted to regressors
 
         // TODO indication that track is done        
         
-        // Where the recording is done (by default in a record directory, from where the application executed), TODO maybe the same folder as iput?
+        // Where the recording is done (by default in a record directory, from where the application executed)
         String record_root = "./record";
-        
-        // For AU prediction
-        public bool DynamicAUModels { get; set; }
+
+        // For AU prediction, if videos are long dynamic models should be used
+        public bool DynamicAUModels { get; set; } = true;
 
         public MainWindow()
         {
@@ -168,18 +166,6 @@ namespace OpenFaceOffline
             // Set the icon
             Uri iconUri = new Uri("logo1.ico", UriKind.RelativeOrAbsolute);
             this.Icon = BitmapFrame.Create(iconUri);
-
-            // Setup the default features that will be recorded
-            Record2DLandmarks = true; Record3DLandmarks = true; RecordModelParameters = true; RecordModelParameters = true; 
-            RecordGaze = true; RecordAUs = true; RecordPose = true;
-            RecordAligned = false; RecordHOG = false;
-
-            ShowTrackedVideo = true;
-            ShowAppearance = true;
-            ShowGeometry = true;
-            ShowAUs = true;
-
-            DynamicAUModels = true;
             
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
@@ -192,20 +178,12 @@ namespace OpenFaceOffline
         // ----------------------------------------------------------
         // Actual work gets done here
 
-        // The main function call for processing images or video files
+        // The main function call for processing images or video files, TODO rename this as it is not a loop
         private void ProcessingLoop(String[] filenames, int cam_id = -1, int width = -1, int height = -1, bool multi_face = false)
         {
+            SetupFeatureExtractionMode();
 
             thread_running = true;
-
-            // Grab the boolean values of the check-boxes
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
-            {
-                ResetButton.IsEnabled = true;
-                PauseButton.IsEnabled = true;
-                StopButton.IsEnabled = true;
-
-            }));
 
             // Create the video capture and call the VideoLoop
             if (filenames != null)
@@ -308,17 +286,7 @@ namespace OpenFaceOffline
                 }
             }
 
-            // TODO this should be up a level
-            // Some GUI clean up
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
-            {
-                Console.WriteLine("Cleaning up after processing is done");
-                PauseButton.IsEnabled = false;
-                StopButton.IsEnabled = false;
-                ResetButton.IsEnabled = false;
-                NextFiveFramesButton.IsEnabled = false;
-                NextFrameButton.IsEnabled = false;
-            }));
+            EndFeatureExtractionMode();
 
         }
 
@@ -465,13 +433,6 @@ namespace OpenFaceOffline
 
                 VisualizeFeatures(frame, landmarks, fx, fy, cx, cy, progress);
 
-                if (reset)
-                {
-                    clnf_model.Reset();
-                    face_analyser.Reset();
-                    reset = false;
-                }
-
                 while (thread_running & thread_paused && skip_frames == 0)
                 {
                     Thread.Sleep(10);
@@ -565,13 +526,7 @@ namespace OpenFaceOffline
                 List<Tuple<double, double>> landmarks = clnf_model.CalculateLandmarks();
 
                 VisualizeFeatures(frame, landmarks, fx, fy, cx, cy, progress);
-
-                if (reset)
-                {
-                    clnf_model.Reset();
-                    face_analyser.Reset();
-                    reset = false;
-                }
+                
 
                 while (thread_running & thread_paused && skip_frames == 0)
                 {
@@ -799,6 +754,39 @@ namespace OpenFaceOffline
             // TODO change what next and back buttons do?
         }
 
+        // Disable GUI components that should not be active during processing
+        private void SetupFeatureExtractionMode()
+        {
+            Dispatcher.Invoke((Action)(() =>
+            {
+                SettingsMenu.IsEnabled = false;
+                RecordingMenu.IsEnabled = false;
+                AUSetting.IsEnabled = false;
+
+                PauseButton.IsEnabled = true;
+                StopButton.IsEnabled = true;
+                NextFiveFramesButton.IsEnabled = false;
+                NextFrameButton.IsEnabled = false;
+            }));
+        }
+
+        // When the processing is done re-enable the components
+        private void EndFeatureExtractionMode()
+        {
+
+            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
+            {
+                SettingsMenu.IsEnabled = true;
+                RecordingMenu.IsEnabled = true;
+                AUSetting.IsEnabled = true;
+
+                PauseButton.IsEnabled = false;
+                StopButton.IsEnabled = false;
+                NextFiveFramesButton.IsEnabled = false;
+                NextFrameButton.IsEnabled = false;
+
+            }));
+        }
 
         // ----------------------------------------------------------
         // Opening Videos/Images
@@ -918,17 +906,6 @@ namespace OpenFaceOffline
                 NextFrameButton.IsEnabled = false;
                 NextFiveFramesButton.IsEnabled = false;
                 StopButton.IsEnabled = false;
-                ResetButton.IsEnabled = false;
-            }
-        }
-
-        // Resetting the tracker
-        private void ResetButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (processing_thread != null)
-            {
-                // Stop capture and tracking
-                reset = true;
             }
         }
 
@@ -938,8 +915,6 @@ namespace OpenFaceOffline
             {
                 // Stop capture and tracking                
                 thread_paused = !thread_paused;
-
-                ResetButton.IsEnabled = !thread_paused;
 
                 NextFrameButton.IsEnabled = thread_paused;
                 NextFiveFramesButton.IsEnabled = thread_paused;
