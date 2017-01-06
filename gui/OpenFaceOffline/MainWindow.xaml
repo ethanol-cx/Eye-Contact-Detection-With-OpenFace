@@ -13,6 +13,7 @@
             <ColumnDefinition Width="0.8*"/>
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="1.6*"/>
+            <ColumnDefinition Width="0.01*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>
@@ -20,7 +21,7 @@
             <RowDefinition Height="0.4*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <Menu IsMainMenu="True" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4">
+        <Menu IsMainMenu="True" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="5">
             <MenuItem Header="File">
                 <MenuItem Header="Open video(s)" Click="videoFileOpenClick">
                 </MenuItem>
@@ -53,7 +54,9 @@
                 <MenuItem IsCheckable="True" Header="Show AUs" Click="VisualisationChange" IsChecked="{Binding ShowAUs}"/>
             </MenuItem>
         </Menu>
-
+        <Border Grid.Row="1" Grid.Column="4">
+            <Label></Label>
+        </Border>
         <Border Name="VideoBorder" Grid.Row="1" Grid.Column="0" BorderBrush="Black" BorderThickness="1" Background="LightGray" Margin="5,5,0,0">
             <OpenFaceOffline:OverlayImage x:Name="video" />
         </Border>
