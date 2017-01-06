@@ -76,30 +76,38 @@ namespace OpenFaceOffline
     /// <summary>
     /// Interaction logic for TextEntryWindow.xaml
     /// </summary>
-    public partial class NumberEntryWindow : Window
+    public partial class CameraParametersEntry : Window
     {
-        public NumberEntryWindow(int initValue)
+        public CameraParametersEntry(double fx, double fy, double cx, double cy)
         {
             InitializeComponent();
-            ResponseTextBox_x.Text = initValue.ToString();
-            ResponseTextBox_y.Text = initValue.ToString();
-            OutputInt = initValue;
             this.KeyDown += new KeyEventHandler(TextEntry_KeyDown);
 
+            if(fx == -1 || fy == -1 || cx == -1 || cy == -1)
+            {
+                this.fx = 500; this.fy = 500; this.cx = 320; this.cy = 240;
+            }
+            else
+            {
+                this.fx = fx; this.fy = fy; this.cx = cx; this.cy = cy;
+                automaticCheckBox.IsChecked = false;
+                fxTextBox.IsEnabled = true;
+                fyTextBox.IsEnabled = true;
+                cxTextBox.IsEnabled = true;
+                cyTextBox.IsEnabled = true;
+            }
+
+            fxTextBox.Text = this.fx.ToString();
+            fyTextBox.Text = this.fy.ToString();
+            cxTextBox.Text = this.cx.ToString();
+            cyTextBox.Text = this.cy.ToString();
+
+            fxTextBox.TextChanged += ResponseTextBox_TextChanged;
+            fyTextBox.TextChanged += ResponseTextBox_TextChanged;
+            cxTextBox.TextChanged += ResponseTextBox_TextChanged;
+            cyTextBox.TextChanged += ResponseTextBox_TextChanged;
+
         }
-
-        //private string ResponseText_x
-        //{
-        //    get { return ResponseTextBox_x.Text; }
-        //    set { ResponseTextBox_x.Text = value; }
-        //}
-        //private string ResponseText_y
-        //{
-        //    get { return ResponseTextBox_y.Text; }
-        //    set { ResponseTextBox_y.Text = value; }
-        //}
-
-        public int OutputInt;
 
         private void OKButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
@@ -114,34 +122,96 @@ namespace OpenFaceOffline
             }
         }
 
+        private double fx = -1, fy = -1, cx = -1, cy = -1;
+
+        public bool IsAutomatic
+        {
+            get { return automaticCheckBox.IsChecked == true; }
+        }
+        public double Fx
+        {
+            get { return automaticCheckBox.IsChecked == true ? -1 : fx; }
+        }
+
+        public double Fy
+        {
+            get { return automaticCheckBox.IsChecked == true ? -1 : fy; }
+        }
+        public double Cx
+        {
+            get { return automaticCheckBox.IsChecked == true ? -1 : cx; }
+        }
+        public double Cy
+        {
+            get { return automaticCheckBox.IsChecked == true ? -1 : cy; }
+        }
+
+        private void CheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            if(automaticCheckBox.IsChecked == true)
+            {
+                fxTextBox.IsEnabled = false;
+                fyTextBox.IsEnabled = false;
+                cxTextBox.IsEnabled = false;
+                cyTextBox.IsEnabled = false;
+            }
+            else
+            {
+                fxTextBox.IsEnabled = true;
+                fyTextBox.IsEnabled = true;
+                cxTextBox.IsEnabled = true;
+                cyTextBox.IsEnabled = true;
+            }
+        }
+
         // Do not allow illegal characters like
         private void ResponseTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-
             try
             {
-                int OutputIntNew = Int32.Parse(ResponseTextBox_x.Text);
-                if(OutputIntNew > 0)
+                double fx_n = Double.Parse(fxTextBox.Text);
+                double fy_n = Double.Parse(fyTextBox.Text);
+                double cx_n = Double.Parse(cxTextBox.Text);
+                double cy_n = Double.Parse(cyTextBox.Text);
+
+                if (fx_n > 0 && fy_n > 0 && cx_n > 0 && cy_n > 0)
                 {
-                    OutputInt = OutputIntNew;
+                    fx = fx_n;
+                    fy = fy_n;
+                    cx = cx_n;
+                    cy = cy_n;
                     warningLabel.Visibility = System.Windows.Visibility.Hidden;
                 }
                 else
                 {
                     warningLabel.Visibility = System.Windows.Visibility.Visible;
-                    ResponseTextBox_x.Text = OutputInt.ToString();
-                    ResponseTextBox_x.SelectionStart = ResponseTextBox_x.Text.Length;
+
+                    fxTextBox.Text = fx.ToString();
+                    fyTextBox.Text = fy.ToString();
+                    cxTextBox.Text = cx.ToString();
+                    cyTextBox.Text = cy.ToString();
+
+                    fxTextBox.SelectionStart = fxTextBox.Text.Length;
+                    fyTextBox.SelectionStart = fyTextBox.Text.Length;
+                    cxTextBox.SelectionStart = cxTextBox.Text.Length;
+                    cyTextBox.SelectionStart = cyTextBox.Text.Length;
 
                 }
             }
             catch (FormatException except)
             {
-                ResponseTextBox_x.Text = OutputInt.ToString();
-                ResponseTextBox_x.SelectionStart = ResponseTextBox_x.Text.Length;
+                fxTextBox.Text = fx.ToString();
+                fyTextBox.Text = fy.ToString();
+                cxTextBox.Text = cx.ToString();
+                cyTextBox.Text = cy.ToString();
+
+                fxTextBox.SelectionStart = fxTextBox.Text.Length;
+                fyTextBox.SelectionStart = fyTextBox.Text.Length;
+                cxTextBox.SelectionStart = cxTextBox.Text.Length;
+                cyTextBox.SelectionStart = cyTextBox.Text.Length;
+
                 warningLabel.Visibility = System.Windows.Visibility.Visible;
             }
-
-            ResponseTextBox_y.Text = OutputInt.ToString();
 
         }
 

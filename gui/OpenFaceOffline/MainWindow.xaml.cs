@@ -147,16 +147,15 @@ namespace OpenFaceOffline
         public bool ShowAUs { get; set; } = true; // Showing Facial Action Units
 
         int image_output_size = 112;
-
-        // TODO classifiers converted to regressors
-
-        // TODO indication that track is done        
         
         // Where the recording is done (by default in a record directory, from where the application executed)
         String record_root = "./record";
 
         // For AU prediction, if videos are long dynamic models should be used
         public bool DynamicAUModels { get; set; } = true;
+
+        // Camera calibration parameters
+        public double fx = -1, fy = -1, cx = -1, cy = -1;
 
         public MainWindow()
         {
@@ -374,15 +373,18 @@ namespace OpenFaceOffline
             clnf_model.Reset();
             face_analyser.Reset();
 
-            // TODO add an ability to change these through a calibration procedure or setting menu
-            double fx = 500.0 * (capture.width / 640.0);
-            double fy = 500.0 * (capture.height / 480.0);
+            // If the camera calibration parameters are not set (indicated by -1), guesstimate them
+            if(fx == -1 || fy == -1 || cx == -1 || cy == -1)
+            { 
+                fx = 500.0 * (capture.width / 640.0);
+                fy = 500.0 * (capture.height / 480.0);
 
-            fx = (fx + fy) / 2.0;
-            fy = fx;
+                fx = (fx + fy) / 2.0;
+                fy = fx;
 
-            double cx = capture.width / 2f;
-            double cy = capture.height / 2f;
+                cx = capture.width / 2f;
+                cy = capture.height / 2f;
+            }
 
             // Setup the recorder first
             recorder = new Recorder(record_root, output_file_name, capture.width, capture.height, Record2DLandmarks, Record3DLandmarks, RecordModelParameters, RecordPose,
@@ -410,7 +412,6 @@ namespace OpenFaceOffline
                     break;
                 }
 
-                // TODO stop button should actually clear the video
                 lastFrameTime = CurrentTime;
                 processing_fps.AddFrame();
 
@@ -468,20 +469,7 @@ namespace OpenFaceOffline
             DateTime? startTime = CurrentTime;
 
             var lastFrameTime = CurrentTime;
-
-            clnf_model.Reset();
-            face_analyser.Reset();
-
-            // TODO these need to be stored so that they could be loaded somewhere
-            double fx = 500.0 * (capture.width / 640.0);
-            double fy = 500.0 * (capture.height / 480.0);
-
-            fx = (fx + fy) / 2.0;
-            fy = fx;
-
-            double cx = capture.width / 2f;
-            double cy = capture.height / 2f;
-
+           
             int frame_id = 0;
 
             double fps = capture.GetFPS();
@@ -1024,7 +1012,7 @@ namespace OpenFaceOffline
         private void setOutputImageSize_Click(object sender, RoutedEventArgs e)
         {
 
-            NumberEntryWindow number_entry_window = new NumberEntryWindow();
+            NumberEntryWindow number_entry_window = new NumberEntryWindow(image_output_size);
             number_entry_window.Icon = this.Icon;
 
             number_entry_window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -1035,6 +1023,22 @@ namespace OpenFaceOffline
                 String root = AppDomain.CurrentDomain.BaseDirectory;
                 face_analyser = new FaceAnalyserManaged(root, DynamicAUModels, image_output_size);
 
+            }
+        }
+
+        private void setCameraParameters_Click(object sender, RoutedEventArgs e)
+        {
+            CameraParametersEntry camera_params_entry_window = new CameraParametersEntry(fx, fy, cx, cy);
+            camera_params_entry_window.Icon = this.Icon;
+
+            camera_params_entry_window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+
+            if (camera_params_entry_window.ShowDialog() == true)
+            {
+                fx = camera_params_entry_window.Fx;
+                fy = camera_params_entry_window.Fy;
+                cx = camera_params_entry_window.Cx;
+                cy = camera_params_entry_window.Cy;
             }
         }
 
@@ -1057,5 +1061,6 @@ namespace OpenFaceOffline
                 record_root = folder;
             }
         }
+
     }
 }
