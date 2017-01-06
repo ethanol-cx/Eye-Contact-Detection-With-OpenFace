@@ -121,6 +121,7 @@ namespace OpenFaceOffline
             {
                 num_bars = data.Count;
                 barGrid.Children.Clear();
+                barGrid.RowDefinitions.Clear();
                 graphs.Clear();
 
                 // Make sure AUs are sorted

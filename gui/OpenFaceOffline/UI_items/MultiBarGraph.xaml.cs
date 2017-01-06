@@ -94,8 +94,10 @@ namespace OpenFaceOffline
             // Create new bars if necessary
             if (num_bars != data.Count)
             {
+                graphs = new List<BarGraph>();
                 num_bars = data.Count;
                 barGrid.Children.Clear();
+                barGrid.ColumnDefinitions.Clear();
                 foreach (var value in data)
                 {
                     BarGraph newBar = new BarGraph();
