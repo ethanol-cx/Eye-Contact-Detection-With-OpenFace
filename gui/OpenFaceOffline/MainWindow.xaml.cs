@@ -156,6 +156,7 @@ namespace OpenFaceOffline
 
         // Camera calibration parameters
         public double fx = -1, fy = -1, cx = -1, cy = -1;
+        bool estimate_camera_parameters = true;
 
         public MainWindow()
         {
@@ -374,7 +375,7 @@ namespace OpenFaceOffline
             face_analyser.Reset();
 
             // If the camera calibration parameters are not set (indicated by -1), guesstimate them
-            if(fx == -1 || fy == -1 || cx == -1 || cy == -1)
+            if(estimate_camera_parameters || fx == -1 || fy == -1 || cx == -1 || cy == -1)
             { 
                 fx = 500.0 * (capture.width / 640.0);
                 fy = 500.0 * (capture.height / 480.0);
@@ -563,13 +564,15 @@ namespace OpenFaceOffline
             else if (confidence > 1)
                 confidence = 1;
 
+            double scale = 0;
+
             if (detectionSucceeding)
             {
                 
                 eye_landmarks = clnf_model.CalculateEyeLandmarks();
                 lines = clnf_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
 
-                double scale = clnf_model.GetRigidParams()[0];
+                scale = clnf_model.GetRigidParams()[0];
 
                 gaze_lines = face_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
                 gaze_angle = face_analyser.GetGazeAngle();
@@ -634,6 +637,7 @@ namespace OpenFaceOffline
                     video.Confidence = confidence;
                     video.FPS = processing_fps.GetFPS();
                     video.Progress = progress;
+                    video.FaceScale = scale;
 
                     if (!detectionSucceeding)
                     {
@@ -1039,6 +1043,14 @@ namespace OpenFaceOffline
                 fy = camera_params_entry_window.Fy;
                 cx = camera_params_entry_window.Cx;
                 cy = camera_params_entry_window.Cy;
+                if(fx == -1 || fy == -1 || cx == -1 || cy == -1)
+                {
+                    estimate_camera_parameters = true;
+                }
+                else
+                {
+                    estimate_camera_parameters = false;
+                }
             }
         }
 
