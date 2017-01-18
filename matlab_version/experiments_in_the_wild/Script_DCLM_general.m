@@ -64,7 +64,7 @@ all_views_used = zeros(numel(images),1);
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
 multi_view = true;
-verbose = true;
+verbose = false;
 tic
 for i=1:numel(images)
 

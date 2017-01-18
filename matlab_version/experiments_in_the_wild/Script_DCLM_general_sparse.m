@@ -1,4 +1,4 @@
-function Script_DCLM_general_corrs()
+function Script_DCLM_general_sparse()
 
 addpath('../PDM_helpers/');
 addpath('../fitting/normxcorr2_mex_ALL');
@@ -22,11 +22,11 @@ clmParams = struct;
 clmParams.window_size = [25,25; 23,23; 21,21; 21,21];
 clmParams.numPatchIters = size(clmParams.window_size,1);
 
-[patches] = Load_DCLM_Patch_Experts( '../models/general/', 'dccnf_patches_*_general_corrs.mat', [], [], clmParams);
+[patches] = Load_DCLM_Patch_Experts( '../models/dpn/', 'dpn_patches_*_general.mat', [], [], clmParams);
 
 %% Fitting the model to the provided image
 
-output_root = './wild_fit_dclm/';
+output_root = './wild_fit_dclm_sparse/';
 
 % the default PDM to use
 pdmLoc = ['../models/pdm/pdm_68_aligned_wild.mat'];
@@ -63,9 +63,24 @@ all_views_used = zeros(numel(images),1);
 
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
-multi_view = false;
+multi_view = true;
 verbose = false;
 tic
+
+
+% for recording purposes
+experiment.params = clmParams;
+
+% Turn off the visibilities for scale 0, as we do not need to detect all
+% landmarks in the first scale
+to_rem_from = [1,2,3,6,7];
+to_rem_init = [68;56;4;34;29;39;19;62;59;18;54;14;11;61;30;42;48;41;52;51;44;33;9;63;2;16;58;25;28;67];%;23;35;26;7;];
+to_rem_2 = [2;31;66;57;35;41;68;60;52;40;29;64;59;32;6;48;38;53;50;20;27;25;21;12];
+patches(1).visibilities(to_rem_from, to_rem_init) = 0;
+patches(2).visibilities(to_rem_from, to_rem_2) = 0;
+% patches(3).visibilities(to_rem_from, to_rem_init) = 0;
+% patches(4).visibilities(to_rem_from, to_rem_2) = 0;
+
 for i=1:numel(images)
 
     image = imread(images(i).img);
@@ -109,7 +124,7 @@ for i=1:numel(images)
     shapes_all(:,:,i) = shape;
     labels_all(:,:,i) = labels(i,:,:);
 
-    if(mod(i, 50)==0)
+    if(mod(i, 200)==0)
         fprintf('%d done\n', i );
     end
 
@@ -180,7 +195,7 @@ fprintf('experiment %d done: mean normed error %.3f median normed error %.4f\n',
     numel(experiments), mean(experiment.errors_normed), median(experiment.errors_normed));
 
 %%
-output_results = 'results/results_wild_dclm_general_corr.mat';
+output_results = 'results/results_wild_dclm_general_sparse_h.mat';
 save(output_results, 'experiments');
     
 end
