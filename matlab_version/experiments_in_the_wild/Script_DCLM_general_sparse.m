@@ -74,8 +74,13 @@ experiment.params = clmParams;
 % Turn off the visibilities for scale 0, as we do not need to detect all
 % landmarks in the first scale
 to_rem_from = [1,2,3,6,7];
-to_rem_init = [68;56;4;34;29;39;19;62;59;18;54;14;11;61;30;42;48;41;52;51;44;33;9;63;2;16;58;25;28;67];%;23;35;26;7;];
-to_rem_2 = [2;31;66;57;35;41;68;60;52;40;29;64;59;32;6;48;38;53;50;20;27;25;21;12];
+% Median based
+%to_rem_init = [68;56;4;34;29;39;19;62;59;18;54;14;11;61;30;42;48;41;52;51;44;33;9;63;2;16;58;25;28;67];%;23;35;26;7;];
+% Mean based
+to_rem_init = [4;68;58;62;51;6;59;20;63;53;25;56;14;64;9;67;2;33;11;37;17;52;26;60;28;34;44;38;29;8;21;15;12;18];
+
+%to_rem_2 = [2;31;66;57;35;41;68;60;52;40;29;64;59;32;6;48;38;53;50;20;27;25;21;12];
+to_rem_2 = [6;62;50;25;59;20;17;66;64;57;39;14;12;68;41;45;34;43;30;60];
 patches(1).visibilities(to_rem_from, to_rem_init) = 0;
 patches(2).visibilities(to_rem_from, to_rem_2) = 0;
 % patches(3).visibilities(to_rem_from, to_rem_init) = 0;
