@@ -10,14 +10,14 @@ addpath('../models/');
 if(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
     root_test_data = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
 else
-    root_test_data = 'D:/Dropbox/Dropbox/AAM/test data/';
+    root_test_data = 'C:\Users\tbaltrus\Documents\DATA/300-W/';
 end
 
 [images, detections, labels] = Collect_wild_imgs_train(root_test_data);
 
 % Only use a subset of images as otherwise it will take a bit too long
 rng(0);
-subset = randperm(numel(images), 500);
+subset = randperm(numel(images), 750);
 images = images(subset);
 detections = detections(subset,:);
 labels = labels(subset,:,:);
@@ -55,7 +55,7 @@ clmParams.fTol = 0.01;
 clmParams.useMultiScale = true;
 clmParams.use_multi_modal = 1;
 clmParams.multi_modal_types  = patches(1).multi_modal_types;
-clmParams.numPatchIters = 2;
+clmParams.numPatchIters = 3;
 
 num_points = numel(M)/3;
 
@@ -73,30 +73,34 @@ tic
 
 experiments_full = struct;
 
-best_so_far = [];
+best_so_far = [66;62;54;60;38;5;30;13;28;59;44];
 
 % The first patch removal
-to_rem_init = [68;56;4;34;29;39;19;62;59;18;54;14;11;61;30;42;48;41;52;51;44;33;9;63;2;16;58;25;28;67;23;35;26;7;];
-to_rem_init = [68;56;4;34;29;39;19;62;59;18;54;14;11;61;30;42;48;41;52;51;44;33;9;63;2;16;58;25;28;67;23;35;26;7;];
+to_rem_1 = [4;68;58;62;51;6;59;20;63;53;25;56;14;64;9;67;2;33;11;37;17;52;26;60;28;34;44;38;29;8;21;15;12;18];
+to_rem_2 = [6;62;50;25;59;20;17;66;64;57;39;14;12;68;41;45;34;43;30;60;4;29;1;61;47;9;65;52;37;22;15;35;54;58];
 to_rem_from = [1,2,3,6,7];
-patches(1).visibilities(to_rem_from,to_rem_init) = 0;
+% patches(1).visibilities(to_rem_from,to_rem_init) = 0;
 
 % A greedy method for removing visibilities
-for to_rem = 1:30
+for to_rem = 1:23
 
-    visibility_off = 1:1:68;
-    visibility_off = setdiff(visibility_off, best_so_far);
+    % Not ideal ones to turn off, but a much faster version
+    all_ids = 1:68;
+    visibility_off = setdiff(all_ids, best_so_far);
+    inds = randperm(numel(visibility_off), 20);
+    visibility_off = visibility_off(inds);
     
     % for recording purposes
     experiment.params = clmParams;
 
     for w=visibility_off
 
-
-        patches(2).visibilities(to_rem_from,:) = 1;
+        patches(1).visibilities(to_rem_from,to_rem_1) = 0;
+        patches(2).visibilities(to_rem_from,to_rem_2) = 0;
+        patches(3).visibilities(to_rem_from,:) = 1;
         to_rem_c = cat(1, best_so_far, w);
         if(w > 0)
-            patches(2).visibilities(to_rem_from,to_rem_c) = 0;
+            patches(3).visibilities(to_rem_from,to_rem_c) = 0;
         end
         for i=1:numel(images)
 
@@ -197,14 +201,9 @@ for to_rem = 1:30
         toc
 
         experiment.errors_normed = compute_error(labels_all - 0.5, shapes_all);
-        experiment.lhoods = lhoods;
-        experiment.shapes = shapes_all;
-        experiment.labels = labels_all;
-        experiment.all_lmark_lhoods = all_lmark_lhoods;
-        experiment.all_views_used = all_views_used;
-        experiment.visibilities = patches(1).visibilities;
         experiment.v_off = w;
-        experiment.err = median(experiment.errors_normed);
+        experiment.err = mean(experiment.errors_normed);
+        experiment.err_med = median(experiment.errors_normed);
         % save the experiment
         if(~exist('experiments', 'var'))
             experiments = experiment;
@@ -220,8 +219,9 @@ for to_rem = 1:30
     [~,id] = min(cat(1, experiments.err));
     best_so_far = cat(1, best_so_far, experiments(id).v_off);
     experiments_full(numel(best_so_far)).best_so_far = best_so_far;
-    experiments_full(numel(best_so_far)).error = experiments(id).err;
-    output_results = 'results/results_wild_dclm_vis_off_scale2.mat';
+    experiments_full(numel(best_so_far)).error_mean = experiments(id).err;
+    experiments_full(numel(best_so_far)).error_med = experiments(id).err_med;
+    output_results = 'results/results_wild_dclm_vis_off_scale3.mat';
     save(output_results, 'experiments_full'); 
     clear experiments
     clear experiment
