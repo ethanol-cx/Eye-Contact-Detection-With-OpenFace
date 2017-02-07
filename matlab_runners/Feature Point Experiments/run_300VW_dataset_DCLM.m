@@ -8,13 +8,13 @@ if(~exist(output, 'file'))
     mkdir(output)
 end
     
-database_root = 'D:\Datasets\300VW_Dataset_2015_12_14\300VW_Dataset_2015_12_14/';
+database_root = 'C:\300VW/';
 
 %%
 in_dirs = dir(database_root);
 in_dirs = in_dirs(3:end);
 
-for i=1:numel(in_dirs)and can only be charged through USB which is quite slow
+for i=1:numel(in_dirs)
     command = executable;
 
     command = cat(2, command, ' -no3Dfp -noMparams -noPose -noGaze -noAUs ');
@@ -33,7 +33,7 @@ end
 
 %% Gather predictions and ground truth
 d_loc = '300VW_features_dclm/';
-extra_dir = 'D:\Datasets\300VW_Dataset_2015_12_14\extra';
+extra_dir = 'C:\300VW\extra/';
 
 files_yt = dir([d_loc, '/*.txt']);
 preds_all = [];
@@ -101,7 +101,7 @@ plot(error_x, error_y, 'DisplayName', 'OpenFace-49 DCLM', 'LineWidth',line_width
 hold on;
 
 load('results/300VW_CLNF.mat');
-[error_x, error_y] = cummErrorCurve(dlnf_error49);
+[error_x, error_y] = cummErrorCurve(clnf_error49);
 plot(error_x, error_y, 'DisplayName', 'OpenFace-49 CLNF', 'LineWidth',line_width);
 
 load('results/300VW_SDM.mat');

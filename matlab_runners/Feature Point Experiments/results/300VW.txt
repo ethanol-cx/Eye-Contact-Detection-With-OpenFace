@@ -1,7 +1,9 @@
 Model 68, mean,  median
+OpenFace (DCLM):  0.1140,   0.0341
 OpenFace (CLNF):  0.1218,   0.0380
 --------------------------------
 Model 49/51, mean,  median
+OpenFace (DCLM):  0.1049,   0.0261
 OpenFace (CLNF):  0.1116,   0.0292
 Intraface (SDM):  0.0956,   0.0383
 Chehra (DRMF):  0.1235,   0.0365

@@ -6,7 +6,7 @@ curr_dir = cd('.');
 if(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
     database_root = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
 else
-    database_root = 'D:/Dropbox/Dropbox/AAM/test data/';
+    database_root = 'C:\300W/';
 end
 
 %% Run using DPN generak model
@@ -33,22 +33,6 @@ end
 
 [err_svr_wild, err_no_out_svr_wild] = Run_CLM_fitting_on_images(out_svr, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_clm_wild.txt', 'multi_view', 1);                
 
-%% Run using general CLNF model
-out_clnf = [curr_dir '/out_wild_clnf/'];
-if(~exist(out_clnf, 'file'))
-   mkdir(out_clnf); 
-end
-
-[err_clnf, err_no_out_clnf] = Run_CLM_fitting_on_images(out_clnf, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_clnf_general.txt', 'multi_view', 1);
-
-%% Run using SVR model
-out_svr = [curr_dir '/out_wild_svr/'];
-if(~exist(out_svr, 'file'))
-   mkdir(out_svr); 
-end
-
-[err_svr, err_no_out_svr] = Run_CLM_fitting_on_images(out_svr, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_clm_general.txt', 'multi_view', 1);                
-
 %%
 save('results/landmark_detections.mat');
 
@@ -56,16 +40,12 @@ f = fopen('results/landmark_detections.txt', 'w');
 fprintf(f, 'Type, mean, median\n');
 fprintf(f, 'err dclm: %f, %f\n', mean(err_dclm), median(err_dclm));
 
-fprintf(f, 'err clnf: %f, %f\n', mean(err_clnf), median(err_clnf));
 fprintf(f, 'err clnf wild: %f, %f\n', mean(err_clnf_wild), median(err_clnf_wild));
 
-fprintf(f, 'err svr: %f, %f\n', mean(err_svr), median(err_svr));
 fprintf(f, 'err svr wild: %f, %f\n', mean(err_svr_wild), median(err_svr_wild));
 
-fprintf(f, 'err clnf no out: %f, %f\n', mean(err_no_out_clnf), median(err_no_out_clnf));
 fprintf(f, 'err clnf wild no out: %f, %f\n', mean(err_no_out_clnf_wild), median(err_no_out_clnf_wild));
 
-fprintf(f, 'err svr no out: %f, %f\n', mean(err_no_out_svr), median(err_no_out_svr));
 fprintf(f, 'err svr wild no out: %f, %f\n', mean(err_no_out_svr_wild), median(err_no_out_svr_wild));
 
 fclose(f);
