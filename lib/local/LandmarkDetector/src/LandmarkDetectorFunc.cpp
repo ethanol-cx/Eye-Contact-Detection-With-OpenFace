@@ -469,8 +469,13 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 		rotation_hypotheses.push_back(cv::Vec3d(0,0,0));
 		rotation_hypotheses.push_back(cv::Vec3d(0,0.5236,0));
 		rotation_hypotheses.push_back(cv::Vec3d(0,-0.5236,0));
-		rotation_hypotheses.push_back(cv::Vec3d(0.5236,0,0));
-		rotation_hypotheses.push_back(cv::Vec3d(-0.5236,0,0));
+
+		// If not using DPN patch experts add additional hypotheses
+		if(clnf_model.patch_experts.dpn_expert_intensity.size() == 0)
+		{
+			rotation_hypotheses.push_back(cv::Vec3d(0.5236,0,0));
+			rotation_hypotheses.push_back(cv::Vec3d(-0.5236,0,0));
+		}
 	}
 	else
 	{
