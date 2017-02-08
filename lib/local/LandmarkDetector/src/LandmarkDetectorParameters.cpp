@@ -233,7 +233,7 @@ void FaceModelParameters::init()
 	window_sizes_small[0] = 0;
 	window_sizes_small[1] = 9;
 	window_sizes_small[2] = 7;
-	window_sizes_small[3] = 5;
+	window_sizes_small[3] = 0;
 
 	// Just for initialisation
 	window_sizes_init.at(0) = 11;
