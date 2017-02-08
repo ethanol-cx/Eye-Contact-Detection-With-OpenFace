@@ -1064,6 +1064,12 @@ double CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, con
 				Jx = cvScalar(0);
 				cv::Mat Jy = J.row(i+n);
 				Jy = cvScalar(0);
+
+				Jx = J_w_t.col(i);
+				Jx = cvScalar(0);
+				Jy = J_w_t.col(i + n);
+				Jy = cvScalar(0);
+
 				mean_shifts.at<float>(i,0) = 0.0f;
 				mean_shifts.at<float>(i+n,0) = 0.0f;
 			}
