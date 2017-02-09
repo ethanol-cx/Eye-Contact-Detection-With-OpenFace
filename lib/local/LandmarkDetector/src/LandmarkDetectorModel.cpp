@@ -741,8 +741,8 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const cv::Mat_<float>& depthImg, const
 
 		int window_size = window_sizes[scale];
 
-		if(window_size == 0 ||  0.9 * patch_experts.patch_scaling[scale] > params_global[0])
-			continue;
+		//if(window_size == 0 ||  0.9 * patch_experts.patch_scaling[scale] > params_global[0])
+		//	continue;
 
 		// The patch expert response computation
 		if(scale != window_sizes.size() - 1)

@@ -1,6 +1,6 @@
 Type, mean, median
-err dclm: 0.047156, 0.035186
-err clnf wild: 0.053107, 0.038525
-err svr wild: 0.067535, 0.048706
-err clnf wild no out: 0.041386, 0.027463
-err svr wild no out: 0.054166, 0.036251
+err dclm: 0.048897, 0.035614
+err clnf wild: 0.052491, 0.038366
+err svr wild: 0.067536, 0.048706
+err clnf wild no out: 0.040839, 0.027199
+err svr wild no out: 0.054218, 0.036251
