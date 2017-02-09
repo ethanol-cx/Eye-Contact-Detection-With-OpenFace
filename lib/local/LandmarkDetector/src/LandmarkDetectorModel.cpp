@@ -735,14 +735,17 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const cv::Mat_<float>& depthImg, const
 
 	FaceModelParameters tmp_parameters = parameters;
 
+	// Active scale is there in case we need to upsample too much
+	int active_scale = 0;
+
 	// Optimise the model across a number of areas of interest (usually in descending window size and ascending scale size)
 	for(int scale = 0; scale < num_scales; scale++)
 	{
+		// Control the number of iterations through window size
+		if (window_sizes[scale] == 0)
+			continue;
 
 		int window_size = window_sizes[scale];
-
-		//if(window_size == 0 ||  0.9 * patch_experts.patch_scaling[scale] > params_global[0])
-		//	continue;
 
 		// The patch expert response computation
 		if(scale != window_sizes.size() - 1)
@@ -785,6 +788,11 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const cv::Mat_<float>& depthImg, const
 			cout << "Face too small for landmark detection" << endl;
 			return false;
 		}
+
+		// Making sure we do not upsample too much
+		if (active_scale < num_scales - 1 && 0.9 * patch_experts.patch_scaling[active_scale + 1] < params_global[0])
+			active_scale = active_scale + 1;
+
 	}
 
 	return true;
