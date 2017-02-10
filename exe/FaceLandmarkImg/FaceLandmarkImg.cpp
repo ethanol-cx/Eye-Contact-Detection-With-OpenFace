@@ -78,6 +78,9 @@
 #include <FaceAnalyser.h>
 #include <GazeEstimation.h>
 
+// OpenBLAS
+#include <cblas.h>
+
 using namespace std;
 
 vector<string> get_arguments(int argc, char **argv)
@@ -313,7 +316,8 @@ void create_display_image(const cv::Mat& orig, cv::Mat& display_image, LandmarkD
 
 int main (int argc, char **argv)
 {
-		
+	openblas_set_num_threads(1);
+
 	//Convert arguments to more convenient vector form
 	vector<string> arguments = get_arguments(argc, argv);
 

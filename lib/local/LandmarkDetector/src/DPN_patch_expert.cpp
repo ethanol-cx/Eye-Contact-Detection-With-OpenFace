@@ -67,6 +67,9 @@
 // Local includes
 #include "LandmarkDetectorUtils.h"
 
+// OpenBLAS
+#include <cblas.h>
+
 using namespace LandmarkDetector;
 
 // Copy constructor		
@@ -222,10 +225,23 @@ void DPN_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat
 
 	// Mean and standard deviation normalization
 	contrastNorm(input_col, response);
+	cv::Mat_<float> response_blas = response.clone();
 
 	for (size_t layer = 0; layer < activation_function.size(); ++layer)
 	{
-		response = response * weights[layer];
+
+		// We are performing response = response * weights[layers], but in OpenBLAS as that is significantly quicker than OpenCV
+		response_blas = response.clone();
+
+		float* m1 = (float*)response_blas.data;
+		float* m2 = (float*)weights[layer].data;
+		
+		cv::Mat_<float> resp_blas(response_blas.rows, weights[layer].cols, 1.0);
+		float* m3 = (float*)resp_blas.data;
+
+		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, weights[layer].cols, response.rows, response.cols, 1, m2, weights[layer].cols, m1, response.cols, 0.0, m3, weights[layer].cols);
+
+		response = resp_blas;
 
 		// TODO bias could be pre-allocated to the window size so that addition could be quicker
 		for (size_t y = 0; y < response.rows; ++y)
@@ -233,8 +249,7 @@ void DPN_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat
 			response(cv::Rect(0, y, response.cols, 1)) = response(cv::Rect(0, y, response.cols, 1)) + biases[layer];
 		}
 
-		// Perform activation
-		
+		// Perform activation		
 		if (activation_function[layer] == 0) // Sigmoid
 		{			
 			for (cv::MatIterator_<float> p = response.begin(); p != response.end(); p++)
@@ -244,13 +259,7 @@ void DPN_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat
 		}
 		else if(activation_function[layer] == 2)// ReLU
 		{
-			for (cv::MatIterator_<float> p = response.begin(); p != response.end(); p++)
-			{
-				if (*p < 0)
-				{
-					*p = 0;
-				}
-			}
+			cv::threshold(response, response, 0, 0, cv::THRESH_TOZERO);
 		}
 
 	}

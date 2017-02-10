@@ -68,6 +68,8 @@
 #include <opencv2/videoio/videoio_c.h>  // Video write
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+// OpenBLAS
+#include <cblas.h>
 
 #define INFO_STREAM( stream ) \
 std::cout << stream << std::endl
@@ -127,6 +129,7 @@ void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, 
 
 int main (int argc, char **argv)
 {
+	openblas_set_num_threads(1);
 
 	vector<string> arguments = get_arguments(argc, argv);
 

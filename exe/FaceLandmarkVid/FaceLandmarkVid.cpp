@@ -74,6 +74,9 @@
 #include <filesystem.hpp>
 #include <filesystem/fstream.hpp>
 
+// OpenBLAS
+#include <cblas.h>
+
 #define INFO_STREAM( stream ) \
 std::cout << stream << std::endl
 
@@ -178,6 +181,8 @@ void visualise_tracking(cv::Mat& captured_image, cv::Mat_<float>& depth_image, c
 
 int main (int argc, char **argv)
 {
+
+	openblas_set_num_threads(1);
 
 	vector<string> arguments = get_arguments(argc, argv);
 
