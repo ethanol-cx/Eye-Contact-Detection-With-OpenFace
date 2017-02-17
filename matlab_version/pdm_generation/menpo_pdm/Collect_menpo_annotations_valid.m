@@ -16,17 +16,23 @@ right_to_frontal_map = [17,28; 18,29; 19,30; 20,31;
                        35,63; 36,64; 37,65; 38,66; 39,67];
             
 all_pts = [];
+ps = [248	523	604	800	840	901	938	944	947	1383	1413	1533	1562	1637	1770	2164	2400	2688	2775	2838	2849];
 for i=1:numel(dataset_locs)
     landmarkLabels = dir([dataset_locs{i} '\*.pts']);
     landmarkImgs = dir([dataset_locs{i} '\*.jpg']);
 
-    for p=1:numel(landmarkLabels)
+%     for p=604:numel(landmarkLabels)
+    for p=ps
         landmarks = importdata([dataset_locs{i}, landmarkLabels(p).name], ' ', 3);
         img = imread([dataset_locs{i}, landmarkImgs(p).name]);
         landmarks = landmarks.data;
         landmark_labels = -ones(68,2); 
         
-        % Problem with the labels
+        if(strcmp(landmarkImgs(p).name, 'aflw__face_43770.jpg'))
+            landmarks(13:16,:) = landmarks(16:-1:13,:);
+        end
+                
+                % Problem with the labels
         if(strcmp(landmarkImgs(p).name, 'aflw__face_63080.jpg'))
             landmarks(1:12,:) = landmarks(12:-1:1,:);
             landmarks(13:16,:) = landmarks(16:-1:13,:);

@@ -1,5 +1,5 @@
 clear
-load('menpo_68_pts.mat');
+load('menpo_68_pts_valid.mat');
 
 xs = all_pts(1:end/2,:);
 ys = all_pts(end/2+1:end,:);
@@ -16,7 +16,7 @@ pdm = struct;
 pdm.M = double(M);
 pdm.E = double(E);
 pdm.V = double(V);
-
+errs_poss = [];
 for i=1:num_imgs
     
     
@@ -28,7 +28,8 @@ for i=1:num_imgs
     rots(:,i) = Rot2Euler(R);
     
     if(errs(i) < 0 || errs(i) > 4)
-       a = 2; 
+       fprintf('i - %d, err - %.3f\n', i, errs(i));
+       errs_poss = cat(1, errs_poss, i);
     end       
 end
 
