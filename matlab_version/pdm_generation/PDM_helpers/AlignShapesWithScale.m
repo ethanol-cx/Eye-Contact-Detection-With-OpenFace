@@ -1,4 +1,4 @@
-function [ A, T, error, alignedShape ] = AlignShapesWithScale( alignFrom, alignTo )
+function [ A, T, error, alignedShape, s ] = AlignShapesWithScale( alignFrom, alignTo )
 %ALIGNSHAPESWITHSCALE Summary of this function goes here
 %   Detailed explanation goes here
 

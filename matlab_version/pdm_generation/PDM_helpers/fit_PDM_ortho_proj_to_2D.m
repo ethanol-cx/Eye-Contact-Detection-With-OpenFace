@@ -45,7 +45,13 @@ function [ a, R, T, T3D, params, error, shapeOrtho ] = fit_PDM_ortho_proj_to_2D(
     tx = tx - a*(min(m(1,:)) + max(m(1,:)))/2;
     ty = ty - a*(min(m(2,:)) + max(m(2,:)))/2;    
     
-    R = eye(3); 
+    % To deal with really extreme cases of roll
+    M3D = cat(2, M(1:end/3), M(end/3+1:2*end/3), zeros(numel(M(1:end/3)),1));
+    shape3D = cat(2, shape2D, zeros(numel(M(1:end/3)),1));
+    [ A, T, error, alignedShape, s ] = AlignShapesWithScale(M3D, shape3D);
+    R = A/s;
+%     R = eye(3); 
+    
     T = [tx; ty];
     
     currShape = getShapeOrtho(M, V, params, R, T, a);
@@ -81,6 +87,9 @@ function [ a, R, T, T3D, params, error, shapeOrtho ] = fit_PDM_ortho_proj_to_2D(
         p_delta = (J'*J + regularisations) \ (J'*error_res(:) - regularisations*[p_global;params]);
                                 
         [params, p_global] = CalcReferenceUpdate(p_delta, params, p_global);
+        
+        % Make sure the params do not get out of hand
+        params = ClampPDM(params, E);
         
         a = p_global(1);
         R = Euler2Rot(p_global(2:4));
@@ -342,4 +351,20 @@ function R_ortho = OrthonormaliseRotation(R)
     W = eye(3);
     W(3,3) = det(X);
     R_ortho = U*W*V';
+end
+
+% This clamps the non-rigid parameters to stay within +- 3 standard
+% deviations
+function [non_rigid_params] = ClampPDM(non_rigid, E)
+
+    stds = sqrt(E);
+    
+    non_rigid_params = non_rigid;
+    
+    lower = non_rigid_params < -3 * stds;
+    non_rigid_params(lower) = -3*stds(lower);
+    
+    higher = non_rigid_params > 3 * stds;
+    non_rigid_params(higher) = 3*stds(higher);
+
 end
