@@ -8,7 +8,7 @@ addpath('../PDM_helpers/');
 
 %% Create the PDM using PCA, from the recovered 3D data
 clear
-load('Torr_wild_200');
+load('Torr_wild_200_no_rem_wild_menpo.mat');
 
 % need to still perform procrustes though
 
@@ -16,7 +16,7 @@ x = P3(1:end/3,:);
 y = P3(end/3+1:2*end/3,:);
 
 % To make sure that PDM faces the right way (positive Z towards the screen)
-z = -P3(2*end/3+1:end,:);
+z = P3(2*end/3+1:end,:);
 
 [ normX, normY, normZ, meanShape, Transform ] = ProcrustesAnalysis3D(x,y,z, true);
 observations = [normX normY normZ];
@@ -94,7 +94,7 @@ end
 V = V_aligned;
 M = M_aligned;
 
-save('pdm_68_aligned_wild.mat', 'E', 'M', 'V');
+save('pdm_68_aligned_menpo_v5.mat', 'E', 'M', 'V');
 
 writePDM(V, E, M, 'pdm_68_aligned_wild.txt');
 

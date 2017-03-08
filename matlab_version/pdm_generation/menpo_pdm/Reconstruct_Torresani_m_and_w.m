@@ -1,6 +1,19 @@
+% This is the final model used for 3D PDM, it contains both Menpo and 300W
+% data
 clear
 
+% Combining 300W and Menpo data for PDM
 load('menpo_68_pts_flip');
+num_pts = size(all_pts,1)/2;
+xs_m = all_pts(1:num_pts,:);
+ys_m = all_pts(num_pts+1:end,:);
+
+load('wild_68_pts');
+num_pts = size(all_pts,1)/2;
+xs_w= all_pts(1:num_pts,:);
+ys_w = all_pts(num_pts+1:end,:);
+
+all_pts = cat(1, xs_m, xs_w, ys_m, ys_w);
 
 pdmLoc = ['../../models/pdm/pdm_68_aligned_wild.mat'];
 load(pdmLoc);
@@ -64,9 +77,9 @@ ys = all_pts(num_pts+1:end,:);
 
 % Randperm the data, as a test
 
-% xs_f = xs(frontal,:);
-% ys_f = ys(frontal,:);
-% scatter(xs_f(:), -ys_f(:));
+xs_f = xs(frontal,:);
+ys_f = ys(frontal,:);
+scatter(xs_f(:), -ys_f(:));
 
 %% Perform NRSFM by Torresani 
 addpath('../nrsfm-em');
@@ -84,7 +97,7 @@ MD = all_pts(1:end/2,:)==-1;
 
 [P3, S_hat, V, RO, Tr, Z] = em_sfm(all_pts, MD, K, use_lds, tol, max_em_iter);
 
-save('Torr_wild_100_no_rem', 'P3', 'S_hat', 'V', 'RO', 'Tr', 'Z');
+save('Torr_wild_200_no_rem_wild_menpo', 'P3', 'S_hat', 'V', 'RO', 'Tr', 'Z');
 
 %%
 % xs = P3(1:num_pts,:);

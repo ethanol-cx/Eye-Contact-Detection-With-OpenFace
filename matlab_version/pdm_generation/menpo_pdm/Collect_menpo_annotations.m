@@ -16,6 +16,14 @@ right_to_frontal_map = [17,28; 18,29; 19,30; 20,31;
                        35,63; 36,64; 37,65; 38,66; 39,67];
             
 all_pts = [];
+mirr_pts = [];
+
+add_flip = true;
+
+mirror_inds = [1,17;2,16;3,15;4,14;5,13;6,12;7,11;8,10;18,27;19,26;20,25;21,24;22,23;...
+              32,36;33,35;37,46;38,45;39,44;40,43;41,48;42,47;49,55;50,54;51,53;60,56;59,57;...
+              61,65;62,64;68,66];
+ps = [401;407;650;862;870;890;1274;1298;1347;1962;2058;2390;2996;3012;3410;4534;4767;5053;5911];
 for i=1:numel(dataset_locs)
     landmarkLabels = dir([dataset_locs{i} '\*.pts']);
     landmarkImgs = dir([dataset_locs{i} '\*.jpg']);
@@ -25,6 +33,10 @@ for i=1:numel(dataset_locs)
         img = imread([dataset_locs{i}, landmarkImgs(p).name]);
         landmarks = landmarks.data;
         landmark_labels = -ones(68,2); 
+        
+        if(strcmp(landmarkImgs(p).name, 'aflw__face_42138.jpg'))
+            landmarks(23:27,:) = landmarks(27:-1:23,:);
+        end
         
         if(strcmp(landmarkImgs(p).name, 'aflw__face_65193.jpg'))
             landmarks(1:12,:) = landmarks(12:-1:1,:);
@@ -175,14 +187,31 @@ for i=1:numel(dataset_locs)
         end
         
         all_pts = cat(3, all_pts, landmark_labels);
+
+        if(add_flip)
+            
+            mirror_lbls = landmark_labels;
+            mirror_lbls(mirror_lbls ==-1) = nan;
+            mirror_lbls(:,1) = -mirror_lbls(:,1);
+            tmp1 = mirror_lbls(mirror_inds(:,1),:);
+            tmp2 = mirror_lbls(mirror_inds(:,2),:);            
+            mirror_lbls(mirror_inds(:,2),:) = tmp1;
+            mirror_lbls(mirror_inds(:,1),:) = tmp2;    
+            
+            mirror_lbls(isnan(mirror_lbls)) = -1;
+            
+            mirr_pts = cat(3, mirr_pts, mirror_lbls);
+        end
+    
     end
 end
 
 %%
+all_pts = cat(3, all_pts, mirr_pts);
 
 xs = squeeze(all_pts(:,1,:));
 ys = squeeze(all_pts(:,2,:));
 
 all_pts = cat(2,xs,ys)';
 
-save('menpo_68_pts', 'all_pts');
+save('menpo_68_pts_flip', 'all_pts');
