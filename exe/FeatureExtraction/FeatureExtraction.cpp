@@ -717,10 +717,10 @@ int main (int argc, char **argv)
 		
 		output_file.close();
 
-		if(output_files.size() > 0 && output_AUs)
+		if (output_files.size() > 0 && output_AUs)
 		{
 			cout << "Postprocessing the Action Unit predictions" << endl;
-			post_process_output_file(face_analyser, output_files[f_n], dynamic);
+			face_analyser.PostprocessOutputFile(output_files[f_n], dynamic);
 		}
 		// Reset the models for the next video
 		face_analyser.Reset();
@@ -742,121 +742,6 @@ int main (int argc, char **argv)
 	}
 
 	return 0;
-}
-
-// Allows for post processing of the AU signal
-void post_process_output_file(FaceAnalysis::FaceAnalyser& face_analyser, string output_file, bool dynamic)
-{
-
-	vector<double> certainties;
-	vector<bool> successes;
-	vector<double> timestamps;
-	vector<std::pair<std::string, vector<double>>> predictions_reg;
-	vector<std::pair<std::string, vector<double>>> predictions_class;
-
-	// Construct the new values to overwrite the output file with
-	face_analyser.ExtractAllPredictionsOfflineReg(predictions_reg, certainties, successes, timestamps, dynamic);
-	face_analyser.ExtractAllPredictionsOfflineClass(predictions_class, certainties, successes, timestamps, dynamic);
-
-	int num_class = predictions_class.size();
-	int num_reg = predictions_reg.size();
-
-	// Extract the indices of writing out first
-	vector<string> au_reg_names = face_analyser.GetAURegNames();
-	std::sort(au_reg_names.begin(), au_reg_names.end());
-	vector<int> inds_reg;
-
-	// write out ar the correct index
-	for (string au_name : au_reg_names)
-	{
-		for (int i = 0; i < num_reg; ++i)
-		{
-			if (au_name.compare(predictions_reg[i].first) == 0)
-			{
-				inds_reg.push_back(i);
-				break;
-			}
-		}
-	}
-
-	vector<string> au_class_names = face_analyser.GetAUClassNames();
-	std::sort(au_class_names.begin(), au_class_names.end());
-	vector<int> inds_class;
-
-	// write out ar the correct index
-	for (string au_name : au_class_names)
-	{
-		for (int i = 0; i < num_class; ++i)
-		{
-			if (au_name.compare(predictions_class[i].first) == 0)
-			{
-				inds_class.push_back(i);
-				break;
-			}
-		}
-	}
-	// Read all of the output file in
-	vector<string> output_file_contents;
-
-	std::ifstream infile(output_file);
-	string line;
-
-	while (std::getline(infile, line))
-		output_file_contents.push_back(line);
-
-	infile.close();
-
-	// Read the header and find all _r and _c parts in a file and use their indices
-	std::vector<std::string> tokens;
-	boost::split(tokens, output_file_contents[0], boost::is_any_of(","));
-
-	int begin_ind = -1;
-	
-	for (size_t i = 0; i < tokens.size(); ++i)
-	{
-		if (tokens[i].find("AU") != string::npos && begin_ind == -1)
-		{
-			begin_ind = i;
-			break;
-		}
-	}
-	int end_ind = begin_ind + num_class + num_reg;
-
-	// Now overwrite the whole file
-	std::ofstream outfile(output_file, ios_base::out);
-	// Write the header
-	outfile << output_file_contents[0].c_str() << endl;
-	
-	// Write the contents
-	for (int i = 1; i < (int)output_file_contents.size(); ++i)
-	{
-		std::vector<std::string> tokens;
-		boost::split(tokens, output_file_contents[i], boost::is_any_of(","));
-
-		outfile << tokens[0];
-
-		for (int t = 1; t < (int)tokens.size(); ++t)
-		{
-			if (t >= begin_ind && t < end_ind)
-			{
-				if(t - begin_ind < num_reg)
-				{
-					outfile << ", " << predictions_reg[inds_reg[t - begin_ind]].second[i - 1];
-				}
-				else
-				{
-					outfile << ", " << predictions_class[inds_class[t - begin_ind - num_reg]].second[i - 1];
-				}
-			}
-			else
-			{
-				outfile << ", " << tokens[t];
-			}
-		}
-		outfile << endl;
-	}
-		
-
 }
 
 void prepareOutputFile(std::ofstream* output_file, bool output_2D_landmarks, bool output_3D_landmarks,

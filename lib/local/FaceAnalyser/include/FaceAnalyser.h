@@ -127,7 +127,7 @@ namespace FaceAnalysis
 		void ExtractAllPredictionsOfflineClass(vector<std::pair<std::string, vector<double>>>& au_predictions, vector<double>& confidences, vector<bool>& successes, vector<double>& timestamps, bool dynamic);
 
 		// Helper function for post-processing AU output files
-		void FaceAnalyser::PostprocessOutputFile(string output_file, bool dynamic);
+		void PostprocessOutputFile(string output_file, bool dynamic);
 
 	private:
 
