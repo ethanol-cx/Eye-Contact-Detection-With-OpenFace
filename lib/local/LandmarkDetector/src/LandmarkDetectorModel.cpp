@@ -366,6 +366,9 @@ void CLNF::Read(string main_location)
 	// The other module locations should be defined as relative paths from the main model
 	boost::filesystem::path root = boost::filesystem::path(main_location).parent_path();	
 
+	// Assume no eye model, unless read-in
+	eye_model = false;
+
 	// The main file contains the references to other files
 	while (!locations.eof())
 	{ 
@@ -386,6 +389,7 @@ void CLNF::Read(string main_location)
 		{
 			location = location.substr(0, location.size()-1);
 		}
+
 
 		// append to root
 		location = (root / location).string();
@@ -536,7 +540,6 @@ void CLNF::Read(string main_location)
 	tracking_initialised = false;
 	model_likelihood = -10; // very low
 	detection_certainty = 1; // very uncertain
-	eye_model = false;
 
 	// Initialising default values for the rest of the variables
 

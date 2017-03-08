@@ -44,3 +44,6 @@ exe/Recording/Debug/
 lib/3rdParty/dlib/Debug/
 lib/local/FaceAnalyser/Debug/
 lib/local/LandmarkDetector/Debug/
+matlab_runners/Head Pose Experiments/experiments/biwi_out/
+matlab_runners/Head Pose Experiments/experiments/bu_out/
+matlab_runners/Head Pose Experiments/experiments/ict_out/

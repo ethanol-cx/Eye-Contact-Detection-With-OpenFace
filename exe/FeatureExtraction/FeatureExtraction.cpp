@@ -308,9 +308,9 @@ int main (int argc, char **argv)
 	vector<string> output_similarity_align;
 	vector<string> output_hog_align_files;
 
-	double sim_scale = 0.7;
+	double sim_scale = -1;
 	int sim_size = 112;
-	bool grayscale = false;	
+	bool grayscale = false;
 	bool video_output = false;
 	bool dynamic = true; // Indicates if a dynamic AU model should be used (dynamic is useful if the video is long enough to include neutral expressions)
 	int num_hog_rows;
@@ -321,13 +321,13 @@ int main (int argc, char **argv)
 	bool output_2D_landmarks = true;
 	bool output_3D_landmarks = true;
 	bool output_model_params = true;
-	bool output_pose = true; 
+	bool output_pose = true;
 	bool output_AUs = true;
 	bool output_gaze = true;
 
 	get_output_feature_params(output_similarity_align, output_hog_align_files, sim_scale, sim_size, grayscale, verbose, dynamic,
 		output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, arguments);
-	
+
 	// Used for image masking
 	string tri_loc;
 	boost::filesystem::path tri_loc_path = boost::filesystem::path("model/tris_68_full.txt");
@@ -391,7 +391,10 @@ int main (int argc, char **argv)
 	}
 
 	// Creating a  face analyser that will be used for AU extraction
-	FaceAnalysis::FaceAnalyser face_analyser(vector<cv::Vec3d>(), 0.7, 112, 112, au_loc, tri_loc);
+	// Make sure sim_scale is proportional to sim_size if not set
+	if (sim_scale == -1) sim_scale = sim_size * (0.7 / 112.0);
+
+	FaceAnalysis::FaceAnalyser face_analyser(vector<cv::Vec3d>(), sim_scale, sim_size, sim_size, au_loc, tri_loc);
 		
 	while(!done) // this is not a for loop as we might also be reading from a webcam
 	{
@@ -593,7 +596,7 @@ int main (int argc, char **argv)
 				}
 				if(hog_output_file.is_open())
 				{
-					FaceAnalysis::Extract_FHOG_descriptor(hog_descriptor, sim_warped_img, num_hog_rows, num_hog_cols);						
+					face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 
 					if(visualise_hog && !det_parameters.quiet_mode)
 					{
@@ -615,13 +618,13 @@ int main (int argc, char **argv)
 				pose_estimate = LandmarkDetector::GetCorrectedPoseCamera(face_model, fx, fy, cx, cy);
 			}
 
-			if(hog_output_file.is_open())
+			if (hog_output_file.is_open())
 			{
 				output_HOG_frame(&hog_output_file, detection_success, hog_descriptor, num_hog_rows, num_hog_cols);
 			}
 
 			// Write the similarity normalised output
-			if(!output_similarity_align.empty())
+			if (!output_similarity_align.empty())
 			{
 
 				if (sim_warped_img.channels() == 3 && grayscale)
@@ -630,18 +633,18 @@ int main (int argc, char **argv)
 				}
 
 				char name[100];
-					
-				// output the frame number
-				std::sprintf(name, "frame_det_%06d.bmp", frame_count);
+
+				// Filename is based on frame number
+				std::sprintf(name, "frame_det_%06d.bmp", frame_count + 1);
 
 				// Construct the output filename
 				boost::filesystem::path slash("/");
-					
+
 				std::string preferredSlash = slash.make_preferred().string();
-				
+
 				string out_file = output_similarity_align[f_n] + preferredSlash + string(name);
 				bool write_success = imwrite(out_file, sim_warped_img);
-				
+
 				if (!write_success)
 				{
 					cout << "Could not output similarity aligned image image" << endl;
@@ -1205,6 +1208,7 @@ void get_output_feature_params(vector<string> &output_similarity_aligned, vector
 	}
 
 }
+
 
 // Can process images via directories creating a separate output file per directory
 void get_image_input_output_params_feats(vector<vector<string> > &input_image_files, bool& as_video, vector<string> &arguments)
