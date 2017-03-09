@@ -35,7 +35,7 @@ for i=1:numel(in_dirs)
     
     command = cat(2, command, ['-asvid -fdir "' in_dirs{i} '" -of "' outputFile '" ']);
         
-    command = cat(2, command, [' -simalign "' outputDir_aligned '" -hogalign "' outputHOG_aligned '"']);    
+    command = cat(2, command, [' -simalign "' outputDir_aligned '" -simsize 200 -hogalign "' outputHOG_aligned '"']);    
                  
 end
 
