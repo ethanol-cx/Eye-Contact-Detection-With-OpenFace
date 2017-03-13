@@ -5,7 +5,7 @@
 # Author: Daniyal Shahrokhian <daniyal@kth.se>
 # Date: 20170310
 # Version : 1.0
-# Usage: bash install.sh
+# Usage: bash install.sh <directory in which you want the project to be installed>
 # NOTES: There are certain steps to be taken in the system before installing 
 #        via this script (refer to README): Run 
 #        `sudo gedit /etc/apt/sources.list` and change the line 
