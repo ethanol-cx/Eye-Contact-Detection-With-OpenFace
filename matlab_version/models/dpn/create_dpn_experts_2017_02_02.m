@@ -50,15 +50,14 @@ for s=scales
                            rel_id = mirrorInds(mirrorInds(:,1)==i,2);
                        end
                        if(~visiIndex(c, rel_id))
-                           break;
+                           continue;
                        end
                        if(c == frontalView)
                            rel_file = sprintf('D:/deep_experts/2017-02-02/rmses/MultiGeneral_arch4general_%s_frontal_%d_512.mat', s{1}, rel_id);
-                       else
-                           rel_file = sprintf('D:/deep_experts/2017-02-02/rmses/MultiGeneral_arch4general_%s_profile%d_%d_512.mat', s{1}, c-1, rel_id);                    
+
+                           mirror = true;
+                           load(rel_file);
                        end
-                       mirror = true;
-                       load(rel_file);
                     end
                     patch_experts.correlations(c, i) = correlation_2;
                     patch_experts.rms_errors(c, i) = rmse;
@@ -107,6 +106,6 @@ for s=scales
         end
     end
     trainingScale = str2num(s{1});
-    save(['dpn_patches_', s{1} '_general2.mat'], 'trainingScale', 'centers', 'visiIndex', 'patch_experts', 'normalisationOptions');
-    write_patch_expert_bin(['dpn_patches_', s{1} '_general2.dat'], trainingScale, centers, visiIndex, patch_experts);
+    save(['dpn_patches_', s{1} '_general_v2.mat'], 'trainingScale', 'centers', 'visiIndex', 'patch_experts', 'normalisationOptions');
+%     write_patch_expert_bin(['dpn_patches_', s{1} '_general_v2.dat'], trainingScale, centers, visiIndex, patch_experts);
 end

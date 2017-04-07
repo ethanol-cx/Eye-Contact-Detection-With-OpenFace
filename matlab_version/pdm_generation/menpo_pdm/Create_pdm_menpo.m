@@ -2,13 +2,11 @@ clear;
 
 addpath('../PDM_helpers/');
 
-% load('menpo_68_pts.mat');
-
-% Reconstruct_Torresani;
+Reconstruct_Torresani;
 
 %% Create the PDM using PCA, from the recovered 3D data
 clear
-load('Torr_wild_200_no_rem_wild_menpo.mat');
+load('Torr_menpo_wild.mat');
 
 % need to still perform procrustes though
 
@@ -94,7 +92,10 @@ end
 V = V_aligned;
 M = M_aligned;
 
-save('pdm_68_aligned_menpo_v5.mat', 'E', 'M', 'V');
+save('pdm_68_aligned_menpo.mat', 'E', 'M', 'V');
+writePDM(V, E, M, 'pdm_68_aligned_menpo.txt');
 
-writePDM(V, E, M, 'pdm_68_aligned_wild.txt');
-
+% also save this to model location
+if(exist('../../models/pdm/', 'file'))
+    save('../../models/pdm/pdm_68_aligned_menpo.mat', 'E', 'M', 'V');
+end

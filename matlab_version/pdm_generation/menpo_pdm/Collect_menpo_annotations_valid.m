@@ -1,6 +1,6 @@
 % collect the training data annotations (from the menpo challenge)
 clear
-train_data_loc = 'C:\Users\tbaltrus\Documents\menpo_data_orig/';
+train_data_loc = 'D:\Datasets\menpo/';
 
 dataset_locs = {[train_data_loc, '/valid/'];};
 
@@ -27,54 +27,7 @@ for i=1:numel(dataset_locs)
         img = imread([dataset_locs{i}, landmarkImgs(p).name]);
         landmarks = landmarks.data;
         landmark_labels = -ones(68,2); 
-
-        % Problem with the labels        
-        if(strcmp(landmarkImgs(p).name, 'aflw__face_63514.jpg'))
-            % The annotation style is quite different
-            continue;
-        end
-        
-        % Problem with the labels        
-        if(strcmp(landmarkImgs(p).name, 'aflw__face_65249.jpg'))
-            landmarks(1:12,:) = landmarks(12:-1:1,:);
-            landmarks(13:16,:) = landmarks(16:-1:13,:);
-        end
-        
-        % Problem with the labels
-        if(strcmp(landmarkImgs(p).name, 'aflw__face_64866.jpg'))
-            landmarks(1:12,:) = landmarks(12:-1:1,:);
-        end
-        
-        % Problem with the labels
-        if(strcmp(landmarkImgs(p).name, 'aflw__face_64771.jpg'))
-            landmarks(1:12,:) = landmarks(12:-1:1,:);
-            landmarks(13:16,:) = landmarks(16:-1:13,:);
-        end
-        
-        if(strcmp(landmarkImgs(p).name, 'aflw__face_64735.jpg'))
-            landmarks(13:16,:) = landmarks(16:-1:13,:);
-        end
-        
-        % Problem with the labels
-        if(strcmp(landmarkImgs(p).name, 'aflw__face_64238.jpg'))
-            landmarks(18:22,:) = landmarks(22:-1:18,:);
-        end
-        
-        if(strcmp(landmarkImgs(p).name, 'aflw__face_43770.jpg'))
-            landmarks(13:16,:) = landmarks(16:-1:13,:);
-        end
                 
-        % Problem with the labels
-        if(strcmp(landmarkImgs(p).name, 'aflw__face_63080.jpg'))
-            landmarks(1:12,:) = landmarks(12:-1:1,:);
-            landmarks(13:16,:) = landmarks(16:-1:13,:);
-        end
-           
-        % Problem with the labels
-        if(strcmp(landmarkImgs(p).name, 'aflw__face_63001.jpg'))
-            landmarks(18:27,:) = landmarks([23:27, 18:22],:);
-        end
-        
         if(size(landmarks,1) == 39)
             % Determine if the points are clock-wise or counter clock-wise
             % Clock-wise points are facing left, counter-clock-wise right

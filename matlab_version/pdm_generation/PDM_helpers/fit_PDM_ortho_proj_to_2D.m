@@ -319,13 +319,13 @@ function [non_rigid, rigid] = CalcReferenceUpdate(params_delta, current_non_rigi
                -wy, wx, 1];
 	
 	% Make sure R_delta is orthonormal
-	R_delta = OrthonormaliseRotation(R_delta);
+	R_delta = double(OrthonormaliseRotation(R_delta));
 	
     % Combine rotations
 	R_final = R * R_delta;
 
 	% Extract euler angle
-	euler = Rot2Euler(R_final);	
+	euler = real(Rot2Euler(R_final));	
 	
 	rigid(2:4) = euler;
     

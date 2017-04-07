@@ -1,3 +1,5 @@
+% If a different type of PDM is to be trained, prepare training data here
+
 clear
 load('menpo_68_pts_flip.mat');
 addpath('../PDM_helpers');

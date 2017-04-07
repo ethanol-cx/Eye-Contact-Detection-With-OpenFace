@@ -53,3 +53,20 @@ matlab_version/experiments_JANUS/all_fit_cvpr/
 matlab_version/experiments_JANUS/cfss_fit/
 matlab_runners/Feature Point Experiments/out_dclm/
 matlab_runners/Feature Point Experiments/300VW_features_dclm/
+exe/FaceLandmarkVid/Debug/
+lib/3rdParty/dlib/Debug/
+lib/local/FaceAnalyser/Debug/
+lib/local/LandmarkDetector/Debug/
+matlab_version/experiments_menpo/menpo_fit_clnf/
+matlab_version/experiments_menpo/menpo_fit_dclm/
+matlab_version/experiments_menpo/menpo_fit_dclm_bbox_corr/
+matlab_version/experiments_menpo/menpo_fit_dclm_more_hyp/
+matlab_version/experiments_menpo/menpo_fit_ceclm/
+matlab_version/experiments_menpo/menpo_fit_ceclm_test_profile/
+matlab_version/experiments_menpo/menpo_fit_ceclm_test_semifrontal/
+matlab_version/experiments_menpo/menpo_fit_dclm_pdm_cen/
+matlab_version/experiments_menpo/menpo_fit_dclm_pdm_cen_2/
+matlab_version/experiments_menpo/out_profile/
+matlab_version/experiments_menpo/out_semifrontal/
+matlab_version/pdm_generation/menpo_pdm/old_models/
+matlab_version/pdm_generation/menpo_pdm/
