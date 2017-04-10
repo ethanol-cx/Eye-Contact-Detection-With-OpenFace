@@ -1,27 +1,21 @@
-function [fps, resDir] = run_bu_experiment(bu_dir, verbose, version, varargin)
+function [output_dir] = run_bu_experiment(bu_dir, verbose, varargin)
    
-    executable = '"../../x64/Release/FeatureExtraction.exe"';
-
-    output = 'Tracker_';
-    
-    % listing the output based on the current revision
-    output = [output 'r' num2str(version)];
-    
-    output = cat(2, output, '/');
-      
-    if(~exist([bu_dir output], 'dir'))
-        mkdir([bu_dir output]);    
+    if(isunix)
+        executable = '"../../build/bin/FeatureExtraction"';
+    else
+        executable = '"../../x64/Release/FeatureExtraction.exe"';
     end
+
+    output_dir = 'experiments/bu_out/';        
 
     buFiles = dir([bu_dir '*.avi']);
     
     numTogether = 25;
     
-    tic;
     for i=1:numTogether:numel(buFiles)
         
         command = executable;
-        command = cat(2, command, [' -root ' '"' bu_dir '/"']);
+        command = cat(2, command, [' -inroot ' '"' bu_dir '/"']);
         
         % BU dataset orientation is in terms of camera plane, instruct the
         % tracker to output it in that format
@@ -37,12 +31,12 @@ function [fps, resDir] = run_bu_experiment(bu_dir, verbose, version, varargin)
             [~, name, ~] = fileparts(inputFile);   
 
             % where to output results
-            outputFile = [output name '.txt'];
+            outputFile = [output_dir name '.txt'];
             
             command = cat(2, command, [' -f "' inputFile '" -of "' outputFile '"']);
 
             if(verbose)
-                outputVideo = ['"' output name '.avi' '"'];
+                outputVideo = ['"' output_dir name '.avi' '"'];
                 command = cat(2, command, [' -ov ' outputVideo]);
             end
         end
@@ -53,13 +47,11 @@ function [fps, resDir] = run_bu_experiment(bu_dir, verbose, version, varargin)
             command = cat(2, command, [' -mloc "', varargin{find(strcmp('model', varargin))+1}, '"']);
         end  
         
-        dos(command);
+        if(isunix)
+            unix(command, '-echo')
+        else
+            dos(command);
+        end
     end
-    
-    timeTaken = toc;
-    fps = 9000 / timeTaken;
-    
-    % tell the caller where the output was written
-    resDir = [bu_dir output];
-    
+            
 end

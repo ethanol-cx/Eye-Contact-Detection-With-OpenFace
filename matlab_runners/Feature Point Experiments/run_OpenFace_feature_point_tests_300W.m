@@ -5,17 +5,11 @@ curr_dir = cd('.');
 % Replace this with your downloaded 300-W train data
 if(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
     database_root = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
+elseif(exist('D:/Dropbox/Dropbox/AAM/test data/', 'file'))
+    database_root = 'D:/Dropbox/Dropbox/AAM/test data/';
 else
-    database_root = 'C:\300W/';
+    database_root = '/multicomp/datasets/300-W/';
 end
-
-%% Run using DPN generak model
-out_clnf = [curr_dir '/out_dclm/'];
-if(~exist(out_clnf, 'file'))
-   mkdir(out_clnf); 
-end
-
-[err_dclm, err_no_out_dclm] = Run_CLM_fitting_on_images(out_clnf, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_dclm_general.txt', 'multi_view', 1);
 
 %% Run using CLNF in the wild model
 out_clnf = [curr_dir '/out_wild_clnf_wild/'];
@@ -23,7 +17,7 @@ if(~exist(out_clnf, 'file'))
    mkdir(out_clnf); 
 end
 
-[err_clnf_wild, err_no_out_clnf_wild] = Run_CLM_fitting_on_images(out_clnf, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_clnf_wild.txt', 'multi_view', 1);
+[err_clnf_wild, err_no_out_clnf_wild] = Run_OF_on_images(out_clnf, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_clnf_wild.txt', 'multi_view', 1);
 
 %% Run using SVR model
 out_svr = [curr_dir '/out_wild_svr_wild/'];
@@ -31,26 +25,44 @@ if(~exist(out_svr, 'file'))
    mkdir(out_svr); 
 end
 
-[err_svr_wild, err_no_out_svr_wild] = Run_CLM_fitting_on_images(out_svr, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_clm_wild.txt', 'multi_view', 1);                
+[err_svr_wild, err_no_out_svr_wild] = Run_OF_on_images(out_svr, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_clm_wild.txt', 'multi_view', 1);                
+
+%% Run using general CLNF model
+out_clnf = [curr_dir '/out_wild_clnf/'];
+if(~exist(out_clnf, 'file'))
+   mkdir(out_clnf); 
+end
+
+[err_clnf, err_no_out_clnf] = Run_OF_on_images(out_clnf, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_clnf_general.txt', 'multi_view', 1);
+
+%% Run using SVR model
+out_svr = [curr_dir '/out_wild_svr/'];
+if(~exist(out_svr, 'file'))
+   mkdir(out_svr); 
+end
+
+[err_svr, err_no_out_svr] = Run_OF_on_images(out_svr, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_clm_general.txt', 'multi_view', 1);                
 
 %%
 save('results/landmark_detections.mat');
 
 f = fopen('results/landmark_detections.txt', 'w');
 fprintf(f, 'Type, mean, median\n');
-fprintf(f, 'err dclm: %f, %f\n', mean(err_dclm), median(err_dclm));
-
+fprintf(f, 'err clnf: %f, %f\n', mean(err_clnf), median(err_clnf));
 fprintf(f, 'err clnf wild: %f, %f\n', mean(err_clnf_wild), median(err_clnf_wild));
 
+fprintf(f, 'err svr: %f, %f\n', mean(err_svr), median(err_svr));
 fprintf(f, 'err svr wild: %f, %f\n', mean(err_svr_wild), median(err_svr_wild));
 
+fprintf(f, 'err clnf no out: %f, %f\n', mean(err_no_out_clnf), median(err_no_out_clnf));
 fprintf(f, 'err clnf wild no out: %f, %f\n', mean(err_no_out_clnf_wild), median(err_no_out_clnf_wild));
 
+fprintf(f, 'err svr no out: %f, %f\n', mean(err_no_out_svr), median(err_no_out_svr));
 fprintf(f, 'err svr wild no out: %f, %f\n', mean(err_no_out_svr_wild), median(err_no_out_svr_wild));
 
 fclose(f);
 
-%% Draw the corresponding error graphs comparing DCLM, CLNF and SVR
+%% Draw the corresponding error graphs comparing CLNF and SVR
 
 % set up the canvas
 line_width = 6;
@@ -95,18 +107,6 @@ intraface_error = compute_error( labels - 0.5,  shapes);
 plot(error_x, error_y, 'g--','DisplayName', 'SDM', 'LineWidth',line_width);
 hold on;
 
-% load DCLM errors
-load('out_dclm/res.mat');
-labels = labels([1:60,62:64,66:end],:, detected_cpp);
-shapes = shapes([1:60,62:64,66:end],:, detected_cpp);
-labels = labels(18:end,:,:);
-shapes = shapes(18:end,:,:);
-
-clnf_error_cpp = compute_error( labels,  shapes);
-[error_x, error_y] = cummErrorCurve(clnf_error_cpp);
-plot(error_x, error_y, 'r','DisplayName', 'DCLM', 'LineWidth',line_width);
-hold on;
-
 % load clnf errors
 load('out_wild_clnf_wild/res.mat');
 labels = labels([1:60,62:64,66:end],:, detected_cpp);
@@ -116,7 +116,7 @@ shapes = shapes(18:end,:,:);
 
 clnf_error_cpp = compute_error( labels,  shapes);
 [error_x, error_y] = cummErrorCurve(clnf_error_cpp);
-plot(error_x, error_y, 'DisplayName', 'CLM+CLNF', 'LineWidth',line_width);
+plot(error_x, error_y, 'r','DisplayName', 'CLM+CLNF', 'LineWidth',line_width);
 hold on;
 
 % load svr errors
@@ -149,8 +149,8 @@ plot(error_x, error_y, 'kx','DisplayName', 'DRMF', 'LineWidth',line_width);
 hold on;
 
 % Make it look nice and print to a pdf
-set(gca,'xtick',[0:0.025:0.1])
-xlim([0,0.1]);
+set(gca,'xtick',[0:0.05:0.15])
+xlim([0,0.15]);
 xlabel('Size normalised shape RMS error','FontName','Helvetica');
 ylabel('Proportion of images','FontName','Helvetica');
 grid on

@@ -1,6 +1,4 @@
-function [ err_outline, err_no_outline ] = Run_CLM_fitting_on_images(output_loc, database_root, varargin)
-%RUN_CLM_FITTING_ON_IMAGES Summary of this function goes here
-%   Detailed explanation goes here
+function [ err_outline, err_no_outline ] = Run_OF_on_images(output_loc, database_root, varargin)
 
 dataset_dirs = {};
 
@@ -27,8 +25,12 @@ else
     verbose = false;
 end
       
-command = '"../../x64/Release/FaceLandmarkImg.exe" ';
-
+if(isunix)
+    command = '"../../build/bin/FaceLandmarkImg"';
+else
+    command = '"../../x64/Release/FaceLandmarkImg.exe"';
+end
+    
 if(any(strcmp(varargin, 'model')))
     model = varargin{find(strcmp(varargin, 'model')) + 1};
 else
@@ -61,7 +63,11 @@ parfor i=1:numel(dataset_dirs)
     
     command_c = cat(2, command_c, ' -wild ');
     
-    dos(command_c);
+    if(isunix)
+        unix(command_c, '-echo');
+    else
+        dos(command_c);
+    end
 
 end
 toc

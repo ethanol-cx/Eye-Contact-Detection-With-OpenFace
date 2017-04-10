@@ -1,6 +1,9 @@
 clear
-
-executable = '"../../x64/Release/FaceLandmarkImg.exe"';
+if(isunix)
+    executable = '"../../build/bin/FaceLandmarkImg"';
+else
+    executable = '"../../x64/Release/FaceLandmarkImg.exe"';
+end
     
 in_dir  = '../../videos/';
 out_dir = './demo_img/';
@@ -38,4 +41,8 @@ command = cat(2, command, [' -mloc "', model, '"']);
 % Comment to skip this functionality
 command = cat(2, command, ' -wild ');
 
-dos(command);
+if(isunix)
+    unix(command);
+else
+    dos(command);
+end

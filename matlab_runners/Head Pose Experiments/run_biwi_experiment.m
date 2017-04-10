@@ -1,30 +1,25 @@
-function [fps, resDir] = run_biwi_experiment(rootDir, biwiDir, outputDir, verbose, depth, version, varargin)
+function [output_dir] = run_biwi_experiment(rootDir, biwiDir, verbose, depth, varargin)
 % Biwi dataset experiment
 
-executable = '"../../x64/Release/FeatureExtraction.exe"';
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
+end
 
-output = 'Tracker_';
+output_dir = 'experiments/biwi_out';    
 
 dbSeqDir = dir([rootDir biwiDir]);
-
-% listing the output based on the current revision
-output = [output 'r' num2str(version)];
    
 if(depth)
-    output = cat(2, output, '_depth');
+    output_dir = cat(2, output_dir, '_depth');
 end
 
-outputDir = cat(2, outputDir, ['/' output '/']);
-
-if(~exist([outputDir], 'dir'))
-    mkdir([outputDir]);    
-end
+output_dir = cat(2, output_dir, '/');
 
 offset = 0;
 
 r = 1 + offset;
-
-tic;
     
 numTogether = 25;
 
@@ -34,7 +29,7 @@ for i=3 + offset:numTogether:numel(dbSeqDir)
        
     command = executable;
            
-    command = cat(2, command, [' -root ' '"' rootDir '"']);
+    command = cat(2, command, [' -inroot ' '"' rootDir '"']);
      
     % deal with edge cases
     if(numTogether + i > numel(dbSeqDir))
@@ -44,7 +39,7 @@ for i=3 + offset:numTogether:numel(dbSeqDir)
     for n=0:numTogether-1
         
         inputFile = [biwiDir dbSeqDir(i+n).name '/colour.avi'];
-        outputFile = [outputDir dbSeqDir(i+n).name '.txt'];
+        outputFile = [output_dir dbSeqDir(i+n).name '.txt'];
 
         command = cat(2, command, [' -f "' inputFile '" -of "' outputFile  '"']);
 
@@ -54,7 +49,7 @@ for i=3 + offset:numTogether:numel(dbSeqDir)
         end
 
         if(verbose)
-            outputVideo = [outputDir dbSeqDir(i).name '.avi'];
+            outputVideo = [output_dir dbSeqDir(i).name '.avi'];
             command = cat(2, command, [' -ov "' outputVideo '"']);    
         end
     end    
@@ -65,9 +60,9 @@ for i=3 + offset:numTogether:numel(dbSeqDir)
     end
             
     r = r+1;    
-    dos(command);
+    if(isunix)
+        unix(command, '-echo')
+    else
+        dos(command);
+    end
 end
-
-timeTaken = toc;
-fps = 15678 / timeTaken;
-resDir = outputDir;

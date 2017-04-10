@@ -1,4 +1,10 @@
-executable = '"../../x64/Release/FeatureExtraction.exe"';
+clear
+
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
+end
 
 output = './output_features_vid/';
 
@@ -40,7 +46,11 @@ for i=1:numel(in_files)
                  
 end
 
-dos(command);
+if(isunix)
+    unix(command);
+else
+    dos(command);
+end
 
 %% Demonstrating reading the output files
 

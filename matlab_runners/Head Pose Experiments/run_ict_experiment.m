@@ -1,27 +1,22 @@
-function [fps, resDir] = run_ict_experiment(rootDir, ictDir, outputRoot, verbose, depth, version, varargin)
+function [output_dir] = run_ict_experiment(rootDir, ictDir, verbose, depth, varargin)
 %EVALUATEICTDATABASE Summary of this function goes here
 %   Detailed explanation goes here
 
-executable = '"../../x64/Release/FeatureExtraction.exe"';
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
+end
 
-output = 'Tracker_';
+output_dir = 'experiments/ict_out';    
 
 dbSeqDir = dir([rootDir ictDir]);
-
-% listing the output based on the current revision
-output = [output 'r' num2str(version)];
    
 if(depth)
-    output = cat(2, output, '_depth');
+    output_dir = cat(2, output_dir, '_depth');
 end
 
-outputDir = cat(2, outputRoot, ['/' output '/']);
-
-if(~exist([rootDir outputDir], 'dir'))
-    mkdir([rootDir outputDir]);    
-end
-
-tic;
+output_dir = cat(2, output_dir, '/');
 
 numTogether = 10;
 
@@ -29,7 +24,7 @@ for i=3:numTogether:numel(dbSeqDir)
         
     command = [executable  ' -fx 535 -fy 536 -cx 327 -cy 241 -no2Dfp -no3Dfp -noMparams -noAUs -noGaze '];
 
-    command = cat(2, command, [' -root ' '"' rootDir '/"']);
+    command = cat(2, command, [' -inroot ' '"' rootDir '/"']);
 
     % deal with edge cases
     if(numTogether + i > numel(dbSeqDir))
@@ -39,9 +34,9 @@ for i=3:numTogether:numel(dbSeqDir)
     for n=0:numTogether-1
         
         inputFile = [ictDir dbSeqDir(i+n).name '/colour undist.avi'];
-        outputFile = [outputDir dbSeqDir(i+n).name '.txt'];
+        outputFile = [output_dir dbSeqDir(i+n).name '.txt'];
         
-        command = cat(2, command,  [' -f "' inputFile '" -op "' outputFile  '" ']);
+        command = cat(2, command,  [' -f "' inputFile '" -of "' outputFile  '" ']);
         
         if(depth)
             dDir = [ictDir dbSeqDir(i+n).name '/depthAligned/'];
@@ -49,7 +44,7 @@ for i=3:numTogether:numel(dbSeqDir)
         end
         
         if(verbose)
-            outputVideo = [outputDir dbSeqDir(i+n).name '.avi'];
+            outputVideo = [output_dir dbSeqDir(i+n).name '.avi'];
             command = cat(2, command, [' -ov "' outputVideo '"']);
         end
     end
@@ -58,12 +53,13 @@ for i=3:numTogether:numel(dbSeqDir)
         command = cat(2, command, [' -mloc "', varargin{find(strcmp('model', varargin))+1}, '"']);
     end    
         
-    dos(command);
+    if(isunix)
+        unix(command, '-echo')
+    else
+        dos(command);
+    end
 end
 
-timeTaken = toc;
-fps = 10661 / timeTaken;
-resDir = outputDir;
 
 end
 
