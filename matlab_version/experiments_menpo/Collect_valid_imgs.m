@@ -1,6 +1,6 @@
 function [images, detections, labels] = Collect_valid_imgs(root_dir)
 
-    load('menpo_valid_dets.mat');
+    load('face_detections/menpo_valid_dets.mat');
 
     % Have three bounding box locations (frontal tuned, profile tuned)
     detections = zeros(numel(bboxes), 4);

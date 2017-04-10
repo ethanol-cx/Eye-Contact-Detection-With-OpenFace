@@ -19,10 +19,12 @@ for i =1:num_of_images
     detected_points      = detected_points_all{i} + 0.5;
     ground_truth_points  = ground_truth_all{i};
     num_of_points = size(ground_truth_points,1);
-    
-    if(num_of_points == 68)
-        interocular_distance = norm(ground_truth_points(37,:)-ground_truth_points(46,:));
-    else
+
+   normalization = (max(ground_truth_points(:,1))-min(ground_truth_points(:,1)))+...
+       (max(ground_truth_points(:,2))-min(ground_truth_points(:,2)));
+   normalization = normalization / 2;    
+        
+    if(num_of_points==39)
         frontal_ids(i) = false;
         landmark_labels = zeros(68,2);
         % Need to map to the profile points, and normalize based on size
@@ -65,13 +67,11 @@ for i =1:num_of_images
             landmark_labels(right_to_frontal_map(:,2),:) = ground_truth_points(right_to_frontal_map(:,1),:);                
         end
                            
-       interocular_distance = (max(ground_truth_points(:,1))-min(ground_truth_points(:,1)))+...
-           (max(ground_truth_points(:,2))-min(ground_truth_points(:,2)));
-       interocular_distance = interocular_distance / 2;
        detected_points = detected_points(landmark_labels(:,1)~=0,:);
        ground_truth_points = landmark_labels(landmark_labels(:,1)~=0,:);
        
     end
+
     
     num_of_points = size(ground_truth_points,1);
         
@@ -79,7 +79,7 @@ for i =1:num_of_images
     for j=1:num_of_points
         sum = sum+norm(detected_points(j,:)-ground_truth_points(j,:));
     end
-    error_per_image(i) = sum/(num_of_points*interocular_distance);
+    error_per_image(i) = sum/(num_of_points*normalization);
 end
 
 end

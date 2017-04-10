@@ -6,7 +6,7 @@ addpath('../fitting/');
 addpath('../CCNF/');
 addpath('../models/');
 
-[images, detections, labels] = Collect_valid_imgs('C:\Users\tbaltrus\Documents\menpo_data_orig/');
+[images, detections, labels] = Collect_menpo_imgs('C:\Users\tbaltrus\Documents\menpo_data_orig/');
 
 %% loading the patch experts
    
@@ -57,7 +57,7 @@ all_views_used = zeros(numel(images),1);
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
 multi_view = true;
-verbose = true;
+verbose = false;
 tic
 for i=1:numel(images)
 
@@ -68,12 +68,12 @@ for i=1:numel(images)
         image = rgb2gray(image);
     end              
 
-    bbox = squeeze(detections(i,1,:));                  
+    bbox = squeeze(detections(i,:));                  
     
     % have a multi-view version
     if(multi_view)
 
-        views = [0,0,0; 0,-30,0; 0,-70,0; 0,30,0; 0,70,0];
+        views = [0,0,0; 0,-30,0; 0,-70,0; 0,30,0; 0,70,0; 0,0,30; 0,0,-30;];
         views = views * pi/180;                                                                                     
 
         shapes = zeros(num_points, 2, size(views,1));
@@ -153,7 +153,7 @@ end
 %     numel(experiments), mean(experiment.errors_normed), median(experiment.errors_normed));
 
 %%
-output_results = 'results/results_valid_clnf_menpo.mat';
+output_results = 'results/results_clnf_cross-data.mat';
 save(output_results, 'experiments');
     
 end
