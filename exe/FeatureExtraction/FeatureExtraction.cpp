@@ -2,7 +2,7 @@
 // Copyright (C) 2016, Carnegie Mellon University and University of Cambridge,
 // all rights reserved.
 //
-// THIS SOFTWARE IS PROVIDED ìAS ISî FOR ACADEMIC USE ONLY AND ANY EXPRESS
+// THIS SOFTWARE IS PROVIDED ‚ÄúAS IS‚Äù FOR ACADEMIC USE ONLY AND ANY EXPRESS
 // OR IMPLIED WARRANTIES WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
 // PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
@@ -15,13 +15,13 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 // Notwithstanding the license granted herein, Licensee acknowledges that certain components
-// of the Software may be covered by so-called ìopen sourceî software licenses (ìOpen Source
-// Componentsî), which means any software licenses approved as open source licenses by the
+// of the Software may be covered by so-called ‚Äúopen source‚Äù software licenses (‚ÄúOpen Source
+// Components‚Äù), which means any software licenses approved as open source licenses by the
 // Open Source Initiative or any substantially similar licenses, including without limitation any
 // license that, as a condition of distribution of the software licensed under such license,
 // requires that the distributor make the software available in source code format. Licensor shall
 // provide a list of Open Source Components for a particular version of the Software upon
-// Licenseeís request. Licensee will comply with the applicable terms of such licenses and to
+// Licensee‚Äôs request. Licensee will comply with the applicable terms of such licenses and to
 // the extent required by the licenses covering Open Source Components, the terms of such
 // licenses will apply in lieu of the terms of this Agreement. To the extent the terms of the
 // licenses applicable to Open Source Components prohibit any of the restrictions in this
@@ -38,20 +38,20 @@
 //       reports and manuals, must cite at least one of the following works:
 //
 //       OpenFace: an open source facial behavior analysis toolkit
-//       Tadas Baltruöaitis, Peter Robinson, and Louis-Philippe Morency
+//       Tadas Baltru≈°aitis, Peter Robinson, and Louis-Philippe Morency
 //       in IEEE Winter Conference on Applications of Computer Vision, 2016  
 //
 //       Rendering of Eyes for Eye-Shape Registration and Gaze Estimation
-//       Erroll Wood, Tadas Baltruöaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
+//       Erroll Wood, Tadas Baltru≈°aitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
 //       in IEEE International. Conference on Computer Vision (ICCV),  2015 
 //
 //       Cross-dataset learning and person-speci?c normalisation for automatic Action Unit detection
-//       Tadas Baltruöaitis, Marwa Mahmoud, and Peter Robinson 
+//       Tadas Baltru≈°aitis, Marwa Mahmoud, and Peter Robinson 
 //       in Facial Expression Recognition and Analysis Challenge, 
 //       IEEE International Conference on Automatic Face and Gesture Recognition, 2015 
 //
 //       Constrained Local Neural Fields for robust facial landmark detection in the wild.
-//       Tadas Baltruöaitis, Peter Robinson, and Louis-Philippe Morency. 
+//       Tadas Baltru≈°aitis, Peter Robinson, and Louis-Philippe Morency. 
 //       in IEEE Int. Conference on Computer Vision Workshops, 300 Faces in-the-Wild Challenge, 2013.    
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -81,6 +81,9 @@
 #include <FaceAnalyser.h>
 #include <GazeEstimation.h>
 
+#ifndef CONFIG_DIR
+#define CONFIG_DIR "~"
+#endif
 
 #define INFO_STREAM( stream ) \
 std::cout << stream << std::endl
@@ -239,6 +242,10 @@ int main (int argc, char **argv)
 
 	vector<string> arguments = get_arguments(argc, argv);
 
+	// Search paths
+	boost::filesystem::path config_path = boost::filesystem::path(CONFIG_DIR);
+	boost::filesystem::path parent_path = boost::filesystem::path(arguments[0]).parent_path();
+
 	// Some initial parameters that can be overriden from command line	
 	vector<string> input_files, depth_directories, output_files, tracked_videos_output;
 	
@@ -299,7 +306,7 @@ int main (int argc, char **argv)
 
 	double sim_scale = -1;
 	int sim_size = 112;
-	bool grayscale = false;	
+	bool grayscale = false;
 	bool video_output = false;
 	bool dynamic = true; // Indicates if a dynamic AU model should be used (dynamic is useful if the video is long enough to include neutral expressions)
 	int num_hog_rows;
@@ -310,32 +317,33 @@ int main (int argc, char **argv)
 	bool output_2D_landmarks = true;
 	bool output_3D_landmarks = true;
 	bool output_model_params = true;
-	bool output_pose = true; 
+	bool output_pose = true;
 	bool output_AUs = true;
 	bool output_gaze = true;
 
 	get_output_feature_params(output_similarity_align, output_hog_align_files, sim_scale, sim_size, grayscale, verbose, dynamic,
 		output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, arguments);
-	
 
 	// Used for image masking
-
 	string tri_loc;
-	if(boost::filesystem::exists(path("model/tris_68_full.txt")))
+	boost::filesystem::path tri_loc_path = boost::filesystem::path("model/tris_68_full.txt");
+	if (boost::filesystem::exists(tri_loc_path))
 	{
-		tri_loc = "model/tris_68_full.txt";
+		tri_loc = tri_loc_path.string();
+	}
+	else if (boost::filesystem::exists(parent_path/tri_loc_path))
+	{
+		tri_loc = (parent_path/tri_loc_path).string();
+	}
+	else if (boost::filesystem::exists(config_path/tri_loc_path))
+	{
+		tri_loc = (config_path/tri_loc_path).string();
 	}
 	else
 	{
-		path loc = path(arguments[0]).parent_path() / "model/tris_68_full.txt";
-		tri_loc = loc.string();
-
-		if(!exists(loc))
-		{
-			cout << "Can't find triangulation files, exiting" << endl;
-			return 1;
-		}
-	}	
+		cout << "Can't find triangulation files, exiting" << endl;
+		return 1;
+	}
 
 	// If multiple video files are tracked, use this to indicate if we are done
 	bool done = false;	
@@ -354,24 +362,24 @@ int main (int argc, char **argv)
 		au_loc_local = "AU_predictors/AU_all_static.txt";
 	}
 
-	if(boost::filesystem::exists(path(au_loc_local)))
+	boost::filesystem::path au_loc_path = boost::filesystem::path(au_loc_local);
+	if (boost::filesystem::exists(au_loc_path))
 	{
-		au_loc = au_loc_local;
+		au_loc = au_loc_path.string();
+	}
+	else if (boost::filesystem::exists(parent_path/au_loc_path))
+	{
+		au_loc = (parent_path/au_loc_path).string();
+	}
+	else if (boost::filesystem::exists(config_path/au_loc_path))
+	{
+		au_loc = (config_path/au_loc_path).string();
 	}
 	else
 	{
-		path loc = path(arguments[0]).parent_path() / au_loc_local;
-
-		if(exists(loc))
-		{
-			au_loc = loc.string();
-		}
-		else
-		{
-			cout << "Can't find AU prediction files, exiting" << endl;
-			return 1;
-		}
-	}	
+		cout << "Can't find AU prediction files, exiting" << endl;
+		return 1;
+	}
 
 	// Creating a  face analyser that will be used for AU extraction
 
@@ -597,13 +605,13 @@ int main (int argc, char **argv)
 			}
 
 
-			if(hog_output_file.is_open())
+			if (hog_output_file.is_open())
 			{
 				output_HOG_frame(&hog_output_file, detection_success, hog_descriptor, num_hog_rows, num_hog_cols);
 			}
 
 			// Write the similarity normalised output
-			if(!output_similarity_align.empty())
+			if (!output_similarity_align.empty())
 			{
 
 				if (sim_warped_img.channels() == 3 && grayscale)
@@ -612,18 +620,18 @@ int main (int argc, char **argv)
 				}
 
 				char name[100];
-					
+
 				// Filename is based on frame number
 				std::sprintf(name, "frame_det_%06d.bmp", frame_count + 1);
 
 				// Construct the output filename
 				boost::filesystem::path slash("/");
-					
+
 				std::string preferredSlash = slash.make_preferred().string();
-				
+
 				string out_file = output_similarity_align[f_n] + preferredSlash + string(name);
 				bool write_success = imwrite(out_file, sim_warped_img);
-				
+
 				if (!write_success)
 				{
 					cout << "Could not output similarity aligned image image" << endl;
@@ -662,20 +670,24 @@ int main (int argc, char **argv)
 					captured_image = cv::Mat();
 				}
 			}
-			// detect key presses
-			char character_press = cv::waitKey(1);
 			
-			// restart the tracker
-			if(character_press == 'r')
+			if (!det_parameters.quiet_mode)
 			{
-				face_model.Reset();
+				// detect key presses
+				char character_press = cv::waitKey(1);
+			
+				// restart the tracker
+				if(character_press == 'r')
+				{
+					face_model.Reset();
+				}
+				// quit the application
+				else if(character_press=='q')
+				{
+					return(0);
+				}
 			}
-			// quit the application
-			else if(character_press=='q')
-			{
-				return(0);
-			}
-
+			
 			// Update the frame count
 			frame_count++;
 
@@ -692,7 +704,7 @@ int main (int argc, char **argv)
 		
 		output_file.close();
 
-		if(output_files.size() > 0 && output_AUs)
+		if (output_files.size() > 0 && output_AUs)
 		{
 			cout << "Postprocessing the Action Unit predictions" << endl;
 			face_analyser.PostprocessOutputFile(output_files[f_n], dynamic);
@@ -1112,6 +1124,7 @@ void get_output_feature_params(vector<string> &output_similarity_aligned, vector
 	}
 
 }
+
 
 // Can process images via directories creating a separate output file per directory
 void get_image_input_output_params_feats(vector<vector<string> > &input_image_files, bool& as_video, vector<string> &arguments)

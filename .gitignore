@@ -6,7 +6,7 @@ lib/local/LandmarkDetector/x64/
 exe/FaceLandmarkImg/x64/
 exe/FaceLandmarkVid/x64/
 exe/FeatureExtraction/x64/
-x64/Release/
+/x64/Release/
 OpenFace.VC.opendb
 OpenFace.sdf
 matlab_runners/Action Unit Experiments/AU_preds/
@@ -21,13 +21,14 @@ matlab_runners/Feature Point Experiments/yt_features_clm/
 matlab_runners/Gaze Experiments/mpii_out/
 build/
 Release/AU_predictors/
-Release/
+/Debug/
+/Release/
 exe/Recording/recording/
 ipch/
 exe/FeatureExtraction/out_bp4d/
 matlab_runners/Action Unit Experiments/out_bp4d/
 matlab_runners/Action Unit Experiments/out_SEMAINE/
-x64/Debug/
+/x64/Debug/
 matlab_runners/Action Unit Experiments/out_unbc/
 matlab_runners/Action Unit Experiments/out_bosph/
 matlab_runners/Action Unit Experiments/out_DISFA/
@@ -51,5 +52,22 @@ lib/local/LandmarkDetector/Debug/
 OpenFaceDemo/bin/
 OpenFaceDemo/obj/
 Debug/model/
-Debug/
 *.suo
+lib/3rdParty/dlib/Debug/
+lib/local/FaceAnalyser/Debug/
+lib/local/LandmarkDetector/Debug/
+matlab_runners/Head Pose Experiments/experiments/biwi_out/
+matlab_runners/Head Pose Experiments/experiments/bu_out/
+matlab_runners/Head Pose Experiments/experiments/ict_out/
+exe/FaceLandmarkImg/Release/
+exe/FaceLandmarkVid/Release/
+exe/FaceLandmarkVidMulti/Release/
+exe/FeatureExtraction/Release/
+exe/Recording/Release/
+gui/OpenFaceDemo/obj/
+lib/3rdParty/dlib/Release/
+lib/local/CamCom/Release/
+lib/local/CppInerop/Release/
+lib/local/CppInerop/x64/
+lib/local/FaceAnalyser/Release/
+lib/local/LandmarkDetector/Release/

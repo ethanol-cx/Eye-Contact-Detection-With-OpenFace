@@ -1,4 +1,10 @@
-executable = '"../../x64/Release/FaceLandmarkVidMulti.exe"';
+clear;
+
+if(isunix)
+    executable = '"../../build/bin/FaceLandmarkVidMulti"';
+else
+    executable = '"../../x64/Release/FaceLandmarkVidMulti.exe"';
+end
 
 output = './demo_vid/';
 
@@ -38,4 +44,8 @@ for i=1:numel(in_files)
                  
 end
 
-dos(command);
+if(isunix)
+    unix(command);
+else
+    dos(command);
+end

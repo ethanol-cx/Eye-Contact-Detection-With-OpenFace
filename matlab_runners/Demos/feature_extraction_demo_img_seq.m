@@ -1,4 +1,10 @@
-executable = '"../../x64/Release/FeatureExtraction.exe"';
+clear
+
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
+end
 
 output = './output_features_seq/';
 
@@ -29,11 +35,15 @@ for i=1:numel(in_dirs)
     
     command = cat(2, command, ['-asvid -fdir "' in_dirs{i} '" -of "' outputFile '" ']);
         
-    command = cat(2, command, [' -simalign "' outputDir_aligned '" -hogalign "' outputHOG_aligned '"']);    
+    command = cat(2, command, [' -simalign "' outputDir_aligned '" -simsize 200 -hogalign "' outputHOG_aligned '"']);    
                  
 end
 
-dos(command);
+if(isunix)
+    unix(command);
+else
+    dos(command);
+end
 
 %% Demonstrating reading the output files
 

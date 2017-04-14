@@ -1,6 +1,7 @@
 clear
 
-fera_loc = 'D:\Datasets\fera\';
+addpath(genpath('helpers/'));
+find_FERA2011;
 
 out_loc = './out_fera/';
 
@@ -9,41 +10,38 @@ if(~exist(out_loc, 'dir'))
 end
 
 %%
-executable = '"../../x64/Release/FeatureExtraction.exe"';
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
+end
 
-fera_dirs = dir([fera_loc, 'au_train*']);
+fera_dirs = dir([FERA2011_dir, 'train*']);
 
-for f1=1:numel(fera_dirs)
+parfor f1=1:numel(fera_dirs)
 
-    fera_dirs_level_2 = dir([fera_loc, fera_dirs(f1).name]);
-    fera_dirs_level_2 = fera_dirs_level_2(3:end);
-   
-    parfor f2=1:numel(fera_dirs_level_2)
+    vid_files = dir([FERA2011_dir, fera_dirs(f1).name, '/*.avi']);
 
-        vid_files = dir([fera_loc, fera_dirs(f1).name, '/', fera_dirs_level_2(f2).name, '/*.avi']);
-        
-        for v=1:numel(vid_files)
+    for v=1:numel(vid_files)
 
-            command = [executable ' -asvid -q -no2Dfp -no3Dfp -noMparams -noPose -noGaze -au_static '];
+        command = [executable ' -asvid -q -no2Dfp -no3Dfp -noMparams -noPose -noGaze -au_static '];
 
-            curr_vid = [fera_loc, fera_dirs(f1).name, '/', fera_dirs_level_2(f2).name, '/', vid_files(v).name];
+        curr_vid = [FERA2011_dir, fera_dirs(f1).name, '/', vid_files(v).name];
 
-            [~,name,~] = fileparts(curr_vid);
-            output_file = [out_loc name '.au.txt'];
+        [~,name,~] = fileparts(curr_vid);
+        output_file = [out_loc name '.au.txt'];
 
-            command = cat(2, command, [' -f "' curr_vid '" -of "' output_file '"']);
+        command = cat(2, command, [' -f "' curr_vid '" -of "' output_file '"']);
 
-
+        if(isunix)
+            unix(command, '-echo');
+        else
             dos(command);
         end
     end
 end
 
 %%
-addpath('./helpers/');
-
-find_FERA2011;
-
 [ labels_gt, valid_ids, filenames] = extract_FERA2011_labels(FERA2011_dir, all_recs, all_aus);
 labels_gt = cat(1, labels_gt{:});
 
