@@ -14,7 +14,7 @@ else
     database_root = 'D:/Dropbox/Dropbox/AAM/test data/';
 end
 
-database_root = [database_root, '/ytceleb_annotations_CVPR2014/'];
+database_root = [database_root, '/ytceleb/'];
 
 in_vids = dir([database_root '/*.avi']);
 

@@ -96,7 +96,7 @@ plot(error_x, error_y, '-.k','DisplayName', 'DRMF (CVPR 13)', 'LineWidth',line_w
 
 set(gca,'xtick',[0:0.05:0.15])
 xlim([0,0.15]);
-xlabel('Size normalised shape RMS error','FontName','Helvetica');
+xlabel('IOD normalised shape error','FontName','Helvetica');
 ylabel('Proportion of images','FontName','Helvetica');
 grid on
 % title('Fitting in the wild without outline','FontSize',60,'FontName','Helvetica');
@@ -171,7 +171,7 @@ plot(error_x, error_y, '-.k','DisplayName', 'DRMF', 'LineWidth',line_width);
 
 set(gca,'xtick',[0:0.05:0.15])
 xlim([0,0.15]);
-xlabel('Size normalised shape RMS error','FontName','Helvetica');
+xlabel('IOD normalised shape error','FontName','Helvetica');
 ylabel('Proportion of images','FontName','Helvetica');
 grid on
 %title('Fitting in the wild','FontSize',60,'FontName','Helvetica');

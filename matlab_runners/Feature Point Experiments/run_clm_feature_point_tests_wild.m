@@ -149,7 +149,7 @@ hold on;
 % Make it look nice and print to a pdf
 set(gca,'xtick',[0:0.05:0.15])
 xlim([0,0.15]);
-xlabel('Size normalised shape RMS error','FontName','Helvetica');
+xlabel('Size normalised shape error','FontName','Helvetica');
 ylabel('Proportion of images','FontName','Helvetica');
 grid on
 legend('show', 'Location', 'SouthEast');
