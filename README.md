@@ -43,7 +43,7 @@ The system is capable of performing a number of facial analysis tasks:
 
 If you use any of the resources provided on this page in any of your publications we ask you to cite the following work and the work for a relevant submodule you used.
 
-####Overall system
+#### Overall system
 
 **OpenFace: an open source facial behavior analysis toolkit**
 Tadas Baltrušaitis, Peter Robinson, and Louis-Philippe Morency,
