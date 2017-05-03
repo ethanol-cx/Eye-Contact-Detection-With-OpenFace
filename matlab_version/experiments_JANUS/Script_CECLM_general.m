@@ -1,4 +1,4 @@
-function Script_DCLM_general_large()
+function Script_CECLM_general()
 
 addpath('../PDM_helpers/');
 addpath('../fitting/normxcorr2_mex_ALL');
@@ -15,10 +15,10 @@ root_test_data = 'D:/Datasets/janus_labeled';
    
 clmParams = struct;
 
-clmParams.window_size = [29,29; 27,27; 21,21; 21,21];
+clmParams.window_size = [25,25; 23,23; 21,21; 21,21];
 clmParams.numPatchIters = size(clmParams.window_size,1);
 
-[patches] = Load_DCLM_Patch_Experts( '../models/general/', 'dccnf_patches_*_general.mat', [], [], clmParams);
+[patches] = Load_DCLM_Patch_Experts( '../models/cen/', 'cen_patches_*_general.mat', [], [], clmParams);
 
 %% Fitting the model to the provided image
 
@@ -34,8 +34,8 @@ pdm.M = double(M);
 pdm.E = double(E);
 pdm.V = double(V);
 
-clmParams.regFactor = [35, 27, 20, 20];
-clmParams.sigmaMeanShift = [1.25, 1.375, 1.5, 1.5]; 
+clmParams.regFactor = 0.9*[35, 27, 20, 20];
+clmParams.sigmaMeanShift = 1.5*[1.25, 1.375, 1.5, 1.5]; 
 clmParams.tikhonov_factor = [2.5, 5, 7.5, 7.5];
 
 clmParams.startScale = 1;
@@ -61,6 +61,10 @@ all_views_used = zeros(numel(images),1);
 % orientation
 multi_view = true;
 verbose = false;
+
+% As the orientations are not equally reliable reweigh them
+load('../learn_error_mapping/cen_general_mapping.mat');
+
 tic
 for i=1:numel(images)
 
@@ -76,25 +80,11 @@ for i=1:numel(images)
     % have a multi-view version
     if(multi_view)
 
-        views = [0,0,0; 0,-45,0; -30,0,0; 0,45,0; 30,0,0];
+        views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
         views = views * pi/180;                                                                                     
-
-        shapes = zeros(num_points, 2, size(views,1));
-        ls = zeros(size(views,1),1);
-        lmark_lhoods = zeros(num_points,size(views,1));
-        views_used = zeros(num_points,size(views,1));
-
-        % Find the best orientation
-        for v = 1:size(views,1)
-            [shapes(:,:,v),~,~,ls(v),lmark_lhoods(:,v),views_used(v)] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams, 'orientation', views(v,:));                                            
-        end
-
-        [lhood, v_ind] = max(ls);
-        lmark_lhood = lmark_lhoods(:,v_ind);
-
-        shape = shapes(:,:,v_ind);
-        view_used = views_used(v);
-
+        
+        [shape,~,~,lhood,lmark_lhood,view_used] =...
+            Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
     else
         [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
     end
@@ -105,7 +95,7 @@ for i=1:numel(images)
     shapes_all(:,:,i) = shape;
     labels_all(:,:,i) = labels(i,:,:);
 
-    if(mod(i, 50)==0)
+    if(mod(i, 200)==0)
         fprintf('%d done\n', i );
     end
 
@@ -136,7 +126,7 @@ for i=1:numel(images)
         % occluded ones)
 
 %         f = figure('visible','off');
-        f = figure;
+%         f = figure;
         try
         if(max(image_orig(:)) > 1)
             imshow(double(image_orig)/255, 'Border', 'tight');
@@ -146,14 +136,14 @@ for i=1:numel(images)
         axis equal;
         hold on;
         
-        plot(shape(:,1), shape(:,2),'.r','MarkerSize',20);
-        plot(shape(:,1), shape(:,2),'.b','MarkerSize',10);
+        plot(shape(v_points,1), shape(v_points,2),'.r','MarkerSize',20);
+        plot(shape(v_points,1), shape(v_points,2),'.b','MarkerSize',10);
 %                                         print(f, '-r80', '-dpng', sprintf('%s/%s%d.png', output_root, 'fit', i));
 %         print(f, '-djpeg', sprintf('%s/%s%d.jpg', output_root, 'fit', i));
 %                                         close(f);
         hold off;
-%         drawnow expose
-        close(f);
+        drawnow expose
+%         close(f);
         catch warn
 
         end
@@ -178,7 +168,7 @@ fprintf('experiment %d done: mean normed error %.3f median normed error %.4f\n',
     numel(experiments), mean(experiment.errors_normed), median(experiment.errors_normed));
 
 %%
-output_results = 'results/results_wild_dclm_general_large.mat';
+output_results = 'results/results_ceclm_general.mat';
 save(output_results, 'experiments');
     
 end

@@ -11,7 +11,6 @@ root_test_data = 'D:/Datasets/janus_labeled';
 
 [images, detections, labels] = Collect_JANUS_imgs(root_test_data);
 
-
 %% loading the patch experts
    
 clmParams = struct;
@@ -23,7 +22,7 @@ clmParams.numPatchIters = size(clmParams.window_size,1);
 
 %% Fitting the model to the provided image
 
-verbose = true; % set to true to visualise the fitting
+verbose = false; % set to true to visualise the fitting
 output_root = './wild_fit_clnf/';
 
 % the default PDM to use
@@ -87,7 +86,7 @@ for i=1:numel(images)
     % have a multi-view version
     if(multi_view)
 
-        views = [0,0,0; 0,-30,0; -30,0,0; 0,30,0; 30,0,0];
+        views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
         views = views * pi/180;                                                                                     
 
         shapes = zeros(num_points, 2, size(views,1));
@@ -168,7 +167,7 @@ for i=1:numel(images)
         % occluded ones)
 
 %         f = figure('visible','off');
-        f = figure;
+%         f = figure;
         try
         if(max(image_orig(:)) > 1)
             imshow(double(image_orig)/255, 'Border', 'tight');
@@ -181,11 +180,11 @@ for i=1:numel(images)
         plot(shape(:,1), shape(:,2),'.r','MarkerSize',20);
         plot(shape(:,1), shape(:,2),'.b','MarkerSize',10);
 %                                         print(f, '-r80', '-dpng', sprintf('%s/%s%d.png', output_root, 'fit', i));
-        print(f, '-djpeg', sprintf('%s/%s%d.jpg', output_root, 'fit', i));
+%         print(f, '-djpeg', sprintf('%s/%s%d.jpg', output_root, 'fit', i));
 %                                         close(f);
         hold off;
-%         drawnow expose
-        close(f);
+        drawnow expose
+%         close(f);
         catch warn
 
         end
@@ -210,7 +209,7 @@ fprintf('experiment %d done: mean normed error %.3f median normed error %.4f\n',
     numel(experiments), mean(experiment.errors_normed), median(experiment.errors_normed));
 
 %%
-output_results = 'results/results_wild_clnf_general_final_inner.mat';
+output_results = 'results/results_wild_clnf_general.mat';
 save(output_results, 'experiments');
     
 end
