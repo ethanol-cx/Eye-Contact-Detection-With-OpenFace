@@ -85,3 +85,8 @@ matlab_version/pdm_generation/menpo_pdm/
 matlab_version/experiments_menpo/menpo_challenge_helpers/out_profile/
 matlab_version/experiments_menpo/menpo_challenge_helpers/out_semifrontal/
 matlab_version/experiments_menpo/menpo_challenge_helpers/out_semifrontal.zip
+matlab_runners/out_UvA_NEMO/
+exe/FaceLandmarkVid/Release/
+lib/3rdParty/dlib/Release/
+lib/local/FaceAnalyser/Release/
+lib/local/LandmarkDetector/Release/
