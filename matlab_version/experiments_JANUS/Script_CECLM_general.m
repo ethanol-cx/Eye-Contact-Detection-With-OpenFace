@@ -22,7 +22,7 @@ clmParams.numPatchIters = size(clmParams.window_size,1);
 
 %% Fitting the model to the provided image
 
-output_root = './wild_fit_dclm/';
+output_root = './fit_ceclm_general/';
 
 % the default PDM to use
 pdmLoc = ['../models/pdm/pdm_68_aligned_wild.mat'];
@@ -60,8 +60,18 @@ all_views_used = zeros(numel(images),1);
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
 multi_view = true;
-verbose = false;
+verbose = true;
+output_img = false;
 
+if(output_img)
+    output_root = './ceclm_gen_out/';
+    if(~exist(output_root, 'dir'))
+        mkdir(output_root);
+    end
+end
+if(verbose)
+    f = figure;
+end
 % As the orientations are not equally reliable reweigh them
 load('../learn_error_mapping/cen_general_mapping.mat');
 
@@ -101,58 +111,19 @@ for i=1:numel(images)
 
     lhoods(i) = lhood;
 
-    if(verbose)
-
-        actualShape = squeeze(labels(i,:,:));
-        
-        [height_img, width_img,~] = size(image_orig);
-        width = max(actualShape(:,1)) - min(actualShape(:,1));
-        height = max(actualShape(:,2)) - min(actualShape(:,2));
-
+    if(output_img)
         v_points = sum(squeeze(labels(i,:,:)),2) > 0;
-
-        img_min_x = max(int32(min(actualShape(v_points,1))) - width/3,1);
-        img_max_x = min(int32(max(actualShape(v_points,1))) + width/3,width_img);
-
-        img_min_y = max(int32(min(actualShape(v_points,2))) - height/3,1);
-        img_max_y = min(int32(max(actualShape(v_points,2))) + height/3,height_img);
-
-        shape(:,1) = shape(:,1) - double(img_min_x);
-        shape(:,2) = shape(:,2) - double(img_min_y);
-
-        image_orig = image_orig(img_min_y:img_max_y, img_min_x:img_max_x, :);    
-
-        % valid points to draw (not to draw
-        % occluded ones)
-
-%         f = figure('visible','off');
-%         f = figure;
-        try
-        if(max(image_orig(:)) > 1)
-            imshow(double(image_orig)/255, 'Border', 'tight');
-        else
-            imshow(double(image_orig), 'Border', 'tight');
-        end
-        axis equal;
-        hold on;
-        
-        plot(shape(v_points,1), shape(v_points,2),'.r','MarkerSize',20);
-        plot(shape(v_points,1), shape(v_points,2),'.b','MarkerSize',10);
-%                                         print(f, '-r80', '-dpng', sprintf('%s/%s%d.png', output_root, 'fit', i));
-%         print(f, '-djpeg', sprintf('%s/%s%d.jpg', output_root, 'fit', i));
-%                                         close(f);
-        hold off;
-        drawnow expose
-%         close(f);
-        catch warn
-
-        end
+        DrawFaceOnImg(image_orig, shape, sprintf('%s/%s%d.jpg', output_root, 'fit', i), bbox, v_points);
     end
-
+    
+    if(verbose)
+        v_points = sum(squeeze(labels(i,:,:)),2) > 0;
+        DrawFaceOnFig(image_orig, shape, bbox, v_points);
+    end
 end
 toc
 
-experiment.errors_normed = compute_error(labels_all, shapes_all + 0.5);
+experiment.errors_normed = compute_error(labels_all, shapes_all - 0.5);
 experiment.lhoods = lhoods;
 experiment.shapes = shapes_all;
 experiment.labels = labels_all;
