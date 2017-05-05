@@ -1,14 +1,9 @@
-function Script_CLNF_general_no_out()
+function Script_CLNF_general()
 
-addpath('../PDM_helpers/');
-addpath('../fitting/normxcorr2_mex_ALL');
-addpath('../fitting/');
-addpath('../CCNF/');
-addpath('../models/');
+addpath(genpath('../'));
 
-% Replace this with the location of in 300 faces in the wild data
+% Replace this with the location of the IJB-FL data location
 root_test_data = 'D:/Datasets/janus_labeled';
-
 [images, detections, labels] = Collect_JANUS_imgs(root_test_data);
 
 %% loading the patch experts
@@ -21,9 +16,6 @@ clmParams.numPatchIters = size(clmParams.window_size,1);
 [patches] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*_general.mat', [], [], clmParams);
 
 %% Fitting the model to the provided image
-
-verbose = false; % set to true to visualise the fitting
-output_root = './wild_fit_clnf/';
 
 % the default PDM to use
 pdmLoc = ['../models/pdm/pdm_68_aligned_wild.mat'];
@@ -53,9 +45,6 @@ inds_inner = 18:68;
 [patches_inner] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*general_no_out.mat', [], [], clmParams_inner);
 clmParams_inner.multi_modal_types  = patches_inner(1).multi_modal_types;
 
-% load('results/results_wild_clnf_general.mat');
-% clear 'experiments';
-
 % for recording purposes
 experiment.params = clmParams;
 
@@ -70,6 +59,7 @@ all_views_used = zeros(numel(images),1);
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
 multi_view = true;
+verbose = false; % set to true to visualise the fitting
 
 tic
 for i=1:numel(images)
@@ -143,73 +133,25 @@ for i=1:numel(images)
     lhoods(i) = lhood;
 
     if(verbose)
-
-        actualShape = squeeze(labels(i,:,:));
-        
-        [height_img, width_img,~] = size(image_orig);
-        width = max(actualShape(:,1)) - min(actualShape(:,1));
-        height = max(actualShape(:,2)) - min(actualShape(:,2));
-
         v_points = sum(squeeze(labels(i,:,:)),2) > 0;
-
-        img_min_x = max(int32(min(actualShape(v_points,1))) - width/3,1);
-        img_max_x = min(int32(max(actualShape(v_points,1))) + width/3,width_img);
-
-        img_min_y = max(int32(min(actualShape(v_points,2))) - height/3,1);
-        img_max_y = min(int32(max(actualShape(v_points,2))) + height/3,height_img);
-
-        shape(:,1) = shape(:,1) - double(img_min_x);
-        shape(:,2) = shape(:,2) - double(img_min_y);
-
-        image_orig = image_orig(img_min_y:img_max_y, img_min_x:img_max_x, :);    
-
-        % valid points to draw (not to draw
-        % occluded ones)
-
-%         f = figure('visible','off');
-%         f = figure;
-        try
-        if(max(image_orig(:)) > 1)
-            imshow(double(image_orig)/255, 'Border', 'tight');
-        else
-            imshow(double(image_orig), 'Border', 'tight');
-        end
-        axis equal;
-        hold on;
-        
-        plot(shape(:,1), shape(:,2),'.r','MarkerSize',20);
-        plot(shape(:,1), shape(:,2),'.b','MarkerSize',10);
-%                                         print(f, '-r80', '-dpng', sprintf('%s/%s%d.png', output_root, 'fit', i));
-%         print(f, '-djpeg', sprintf('%s/%s%d.jpg', output_root, 'fit', i));
-%                                         close(f);
-        hold off;
-        drawnow expose
-%         close(f);
-        catch warn
-
-        end
+        DrawFaceOnFig(image_orig, shape, bbox, v_points);
     end
 
 end
 toc
 
-experiment.errors_normed = compute_error(labels_all - 0.5, shapes_all);
+experiment.errors_normed = compute_error(labels_all, shapes_all - 0.5);
 experiment.lhoods = lhoods;
 experiment.shapes = shapes_all;
 experiment.labels = labels_all;
 experiment.all_lmark_lhoods = all_lmark_lhoods;
 experiment.all_views_used = all_views_used;
-% save the experiment
-if(~exist('experiments', 'var'))
-    experiments = experiment;
-else
-    experiments = cat(1, experiments, experiment);
-end
-fprintf('experiment %d done: mean normed error %.3f median normed error %.4f\n', ...
-    numel(experiments), mean(experiment.errors_normed), median(experiment.errors_normed));
+
+fprintf('Done: mean normed error %.3f median normed error %.4f\n', ...
+    mean(experiment.errors_normed), median(experiment.errors_normed));
 
 %%
 output_results = 'results/results_wild_clnf_general.mat';
-save(output_results, 'experiments');
+save(output_results, 'experiment');
     
 end

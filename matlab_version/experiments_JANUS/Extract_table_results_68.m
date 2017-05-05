@@ -2,13 +2,13 @@ clear
 
 load('results/results_wild_clnf_general.mat');
 
-[clnf_error, ~,~,frontal_ids] = compute_error( experiments.labels,  experiments.shapes-1.0);
+[clnf_error, ~,~,frontal_ids] = compute_error( experiment.labels,  experiment.shapes-1.0);
 clnf_error_frontal = clnf_error(frontal_ids);
 clnf_error_profile = clnf_error(~frontal_ids);
 
 load('results/results_ceclm_general.mat');
 
-[ceclm_error,~,~,frontal_ids] = compute_error( experiments.labels,  experiments.shapes-1.0);
+[ceclm_error,~,~,frontal_ids] = compute_error( experiment.labels,  experiment.shapes-1.0);
 ceclm_error_frontal = ceclm_error(frontal_ids);
 ceclm_error_profile = ceclm_error(~frontal_ids);
 
@@ -32,7 +32,7 @@ for i = 1:size(shapes, 3)
     shapes(:,2,i) = estimatedPose(i,69:end);
 end
 
-[cfss_error,~,~,frontal_ids] = compute_error( experiments.labels, shapes-1.0);
+[cfss_error,~,~,frontal_ids] = compute_error( experiment.labels, shapes-1.0);
 cfss_error_frontal = cfss_error(frontal_ids);
 cfss_error_profile = cfss_error(~frontal_ids);
 
@@ -46,6 +46,6 @@ for i = 1:size(shapes, 3)
     shapes(:,2,i) = shapes_c{i}(:,2);
 end
 
-[tcdcn_error,~,~,frontal_ids] = compute_error( experiments.labels, shapes-1);
+[tcdcn_error,~,~,frontal_ids] = compute_error( experiment.labels, shapes-1);
 tcdcn_error_frontal = tcdcn_error(frontal_ids);
 tcdcn_error_profile = tcdcn_error(~frontal_ids);

@@ -1,14 +1,9 @@
 function Script_CECLM_menpo()
 
-addpath('../PDM_helpers/');
-addpath('../fitting/normxcorr2_mex_ALL');
-addpath('../fitting/');
-addpath('../CCNF/');
-addpath('../models/');
+addpath(genpath('../'));
 
-% Replace this with the location of in 300 faces in the wild data
+% Replace this with the location of the IJB-FL data location
 root_test_data = 'D:/Datasets/janus_labeled';
-
 [images, detections, labels] = Collect_JANUS_imgs(root_test_data);
 
 %% loading the patch experts
@@ -58,7 +53,7 @@ all_views_used = zeros(numel(images),1);
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
 multi_view = true;
-verbose = true;
+verbose = false;
 output_img = false;
 
 if(output_img)
@@ -127,17 +122,12 @@ experiment.shapes = shapes_all;
 experiment.labels = labels_all;
 experiment.all_lmark_lhoods = all_lmark_lhoods;
 experiment.all_views_used = all_views_used;
-% save the experiment
-if(~exist('experiments', 'var'))
-    experiments = experiment;
-else
-    experiments = cat(1, experiments, experiment);
-end
-fprintf('experiment %d done: mean normed error %.3f median normed error %.4f\n', ...
-    numel(experiments), mean(experiment.errors_normed), median(experiment.errors_normed));
+
+fprintf('Done: mean normed error %.3f median normed error %.4f\n', ...
+    mean(experiment.errors_normed), median(experiment.errors_normed));
 
 %%
 output_results = 'results/results_ceclm_menpo.mat';
-save(output_results, 'experiments');
+save(output_results, 'experiment');
     
 end

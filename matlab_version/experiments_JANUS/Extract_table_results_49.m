@@ -2,16 +2,16 @@ clear
 
 load('results/results_wild_clnf_general.mat');
 
-[clnf_error, ~,~,frontal_ids] = compute_error_small( experiments.labels,  experiments.shapes-1.0);
+[clnf_error, ~,~,frontal_ids] = compute_error_small( experiment.labels,  experiment.shapes-1.0);
 clnf_error_frontal = clnf_error(frontal_ids);
 clnf_error_profile = clnf_error(~frontal_ids);
 
 load('results/results_ceclm_general.mat');
 
-[ceclm_error,~,~,frontal_ids] = compute_error_small( experiments.labels,  experiments.shapes-1.0);
+[ceclm_error,~,~,frontal_ids] = compute_error_small( experiment.labels,  experiment.shapes-1.0);
 ceclm_error_frontal = ceclm_error(frontal_ids);
 ceclm_error_profile = ceclm_error(~frontal_ids);
-labels = experiments.labels;
+labels = experiment.labels;
 
 load('results/CFAN_JANUS.mat');
 
