@@ -1,5 +1,5 @@
 clear;
-load('C:\Users\tbaltrus\Documents\OpenFace\matlab_version\models\general\ccnf_patches_0.25_general.mat', 'centers', 'visiIndex', 'normalisationOptions');
+load('../general/ccnf_patches_0.25_general.mat', 'centers', 'visiIndex', 'normalisationOptions');
 
 mirrorInds = [1,17;2,16;3,15;4,14;5,13;6,12;7,11;8,10;18,27;19,26;20,25;21,24;22,23;...
   32,36;33,35;37,46;38,45;39,44;40,43;41,48;42,47;49,55;50,54;51,53;60,56;59,57;...
@@ -26,6 +26,10 @@ patch_experts.patch_experts = cell(n_views, n_landmarks);
 
 scales = {'0.25', '0.35', '0.50', '1.00'};
 
+visiIndex = zeros(7, 68);
+
+root = 'D:/deep_experts/menpo/rmses/';
+
 for s=scales
 
     for c=1:n_views
@@ -34,45 +38,39 @@ for s=scales
 
             for i=1:n_landmarks
 
-                if(visiIndex(c,i))
-                    mirror = false;
-                    % Find the relevant file
-                    if(c == frontalView)
-                        rel_file = sprintf('D:/deep_experts/rmses/MultiGeneral_arch4general_%s_frontal_%d_512.mat', s{1}, i);
-                    else
-                        rel_file = sprintf('D:/deep_experts/rmses/MultiGeneral_arch4general_%s_profile%d_%d_512.mat', s{1}, c-1, i);                    
-                    end
-                    if(exist(rel_file, 'file'))
-                       load(rel_file); 
-                    else
-                       rel_id = mirrorInds(mirrorInds(:,2)==i,1);
-                       if(isempty(rel_id))
-                           rel_id = mirrorInds(mirrorInds(:,1)==i,2);
-                       end
-                       if(~visiIndex(c, rel_id))
-                           break;
-                       end
-                       if(c == frontalView)
-                           rel_file = sprintf('D:/deep_experts/rmses/MultiGeneral_arch4general_%s_frontal_%d_512.mat', s{1}, rel_id);
-                       else
-                           rel_file = sprintf('D:/deep_experts/rmses/MultiGeneral_arch4general_%s_profile%d_%d_512.mat', s{1}, c-1, rel_id);                    
-                       end
-                       mirror = true;
-                       load(rel_file);
-                    end
-                    patch_experts.correlations(c, i) = correlation_2;
-                    patch_experts.rms_errors(c, i) = rmse;
-
-                    if(~mirror)
-                        patch_experts.patch_experts{c, i} = weights;
-                    else
-                        flips = fliplr(reshape([1:121]', 11, 11));
-                        weights_flipped = weights;
-                        weights_flipped{1}(2:end,:) = weights{1}(flips+1,:);
-                        patch_experts.patch_experts{c,i} = weights_flipped;
-                    end
+                mirror = false;
+                % Find the relevant file
+                if(c == frontalView)
+                    rel_file = sprintf([root, '/%s_frontal_%d_512.mat'], s{1}, i);
+                else                    
+                    rel_file = sprintf([root, '/%s_profile%d_%d_512.mat'], s{1}, c-1, i);                    
                 end
+                if(exist(rel_file, 'file'))
+                    visiIndex(c,i) = 1;
+                    load(rel_file); 
+                else
+                   rel_id = mirrorInds(mirrorInds(:,2)==i,1);
+                   if(isempty(rel_id))
+                       rel_id = mirrorInds(mirrorInds(:,1)==i,2);
+                   end
+                   if(c == frontalView)                       
+                       rel_file = sprintf([root, '/%s_frontal_%d_512.mat'], s{1}, rel_id);
+                       mirror = true;
+                       visiIndex(c,i) = 1;
+                       load(rel_file);
+                   end
+                end
+                patch_experts.correlations(c, i) = correlation_2;
+                patch_experts.rms_errors(c, i) = rmse;
 
+                if(~mirror)
+                    patch_experts.patch_experts{c, i} = weights;
+                else
+                    flips = fliplr(reshape([1:121]', 11, 11));
+                    weights_flipped = weights;
+                    weights_flipped{1}(2:end,:) = weights{1}(flips+1,:);
+                    patch_experts.patch_experts{c,i} = weights_flipped;
+                end
             end
         else
 
@@ -83,6 +81,11 @@ for s=scales
             corr_T  = swap(corr_T, mirrorInds(:,1), mirrorInds(:,2));
             patch_experts.correlations(c,:) = corr_T;
 
+            vis_T = visiIndex(swap_id,:);
+            % Appending a mirror view instead, based on the profile view               
+            vis_T  = swap(vis_T, mirrorInds(:,1), mirrorInds(:,2));
+            visiIndex(c,:) = vis_T;
+            
             rmsT = patch_experts.rms_errors(swap_id,:);
             rmsT = swap(rmsT, mirrorInds(:,1), mirrorInds(:,2));
             patch_experts.rms_errors(c,:) = rmsT;
@@ -107,6 +110,6 @@ for s=scales
         end
     end
     trainingScale = str2num(s{1});
-    save(['dpn_patches_', s{1} '_general.mat'], 'trainingScale', 'centers', 'visiIndex', 'patch_experts', 'normalisationOptions');
-    write_patch_expert_bin(['dpn_patches_', s{1} '_general.dat'], trainingScale, centers, visiIndex, patch_experts);
+    save(['cen_patches_', s{1} '_menpo.mat'], 'trainingScale', 'centers', 'visiIndex', 'patch_experts', 'normalisationOptions');
+    write_patch_expert_bin(['cen_patches_', s{1} '_menpo.dat'], trainingScale, centers, visiIndex, patch_experts);
 end

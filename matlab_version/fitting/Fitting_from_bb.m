@@ -136,7 +136,7 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
             responses = PatchResponseSVM_multi_modal( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale).normalisationOptionsCol, clmParams, clmParams.window_size(i,:));
         elseif(strcmp(patchExperts(scale).type, 'CCNF'))                        
             responses = PatchResponseCCNF( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
-        elseif(strcmp(patchExperts(scale).type, 'DNN'))                        
+        elseif(strcmp(patchExperts(scale).type, 'CEN'))                        
             responses = PatchResponseDNN( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
         end
         

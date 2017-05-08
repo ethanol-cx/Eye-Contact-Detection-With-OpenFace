@@ -1,4 +1,4 @@
-function [patches] = Load_DCLM_Patch_Experts( col_patch_dir, col_patch_file, depth_patch_dir, depth_patch_file, clmParams)
+function [patches] = Load_CECLM_Patch_Experts( col_patch_dir, col_patch_file)
 %LOAD_PATCH_EXPERTS Summary of this function goes here
 %   Detailed explanation goes here
    
@@ -19,7 +19,7 @@ function [patches] = Load_DCLM_Patch_Experts( col_patch_dir, col_patch_file, dep
         patch.modalities = patch_experts.types;
         patch.multi_modal_types = patch_experts.types;
 
-        patch.type = 'DNN';
+        patch.type = 'CEN';
 
         % Knowing what normalisation was performed during training is
         % important for fitting

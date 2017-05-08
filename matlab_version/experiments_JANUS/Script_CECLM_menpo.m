@@ -6,43 +6,16 @@ addpath(genpath('../'));
 root_test_data = 'D:/Datasets/janus_labeled';
 [images, detections, labels] = Collect_JANUS_imgs(root_test_data);
 
-%% loading the patch experts
-   
-clmParams = struct;
+%% loading the CE-CLM model and parameters   
+[patches, pdm, clmParams, early_term_params] = Load_CECLM_menpo();
+% Use the multi-hypothesis model, as bounding box tells nothing about
+% orientation
+multi_view = true;
 
-clmParams.window_size = [25,25; 23,23; 21,21; 21,21];
-clmParams.numPatchIters = size(clmParams.window_size,1);
-
-[patches] = Load_DCLM_Patch_Experts( '../models/cen/', 'cen_patches_*_menpo.mat', [], [], clmParams);
-
-%% Fitting the model to the provided image
-
-% the default PDM to use
-pdmLoc = ['../models/pdm/pdm_68_aligned_menpo.mat'];
-
-load(pdmLoc);
-
-pdm = struct;
-pdm.M = double(M);
-pdm.E = double(E);
-pdm.V = double(V);
-
-clmParams.regFactor = 0.9*[35, 27, 20, 20];
-clmParams.sigmaMeanShift = 1.5*[1.25, 1.375, 1.5, 1.5]; 
-clmParams.tikhonov_factor = [2.5, 5, 7.5, 7.5];
-
-clmParams.startScale = 1;
-clmParams.num_RLMS_iter = 10;
-clmParams.fTol = 0.01;
-clmParams.useMultiScale = true;
-clmParams.use_multi_modal = 1;
-clmParams.multi_modal_types  = patches(1).multi_modal_types;
-clmParams.numPatchIters = 4;
-
-% for recording purposes
+%% Setup recording
 experiment.params = clmParams;
 
-num_points = numel(M)/3;
+num_points = numel(pdm.M)/3;
 
 shapes_all = zeros(size(labels,2),size(labels,3), size(labels,1));
 labels_all = zeros(size(labels,2),size(labels,3), size(labels,1));
@@ -50,14 +23,12 @@ lhoods = zeros(numel(images),1);
 all_lmark_lhoods = zeros(num_points, numel(images));
 all_views_used = zeros(numel(images),1);
 
-% Use the multi-hypothesis model, as bounding box tells nothing about
-% orientation
-multi_view = true;
+% Change if you want to visualize the outputs
 verbose = false;
 output_img = false;
 
 if(output_img)
-    output_root = './ceclm_menpo_out/';
+    output_root = './ceclm_gen_out/';
     if(~exist(output_root, 'dir'))
         mkdir(output_root);
     end
@@ -65,8 +36,9 @@ end
 if(verbose)
     f = figure;
 end
-% As the orientations are not equally reliable reweigh them
-load('../learn_error_mapping/cen_menpo_mapping.mat');
+
+
+%% Fitting the model to the provided images
 
 tic
 for i=1:numel(images)
@@ -116,7 +88,7 @@ for i=1:numel(images)
 end
 toc
 
-experiment.errors_normed = compute_error(labels_all, shapes_all - 0.5);
+experiment.errors_normed = compute_error(labels_all, shapes_all - 1.0);
 experiment.lhoods = lhoods;
 experiment.shapes = shapes_all;
 experiment.labels = labels_all;

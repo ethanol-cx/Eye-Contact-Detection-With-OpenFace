@@ -140,7 +140,7 @@ for i=1:numel(images)
 end
 toc
 
-experiment.errors_normed = compute_error(labels_all, shapes_all - 0.5);
+experiment.errors_normed = compute_error(labels_all, shapes_all - 1.0);
 experiment.lhoods = lhoods;
 experiment.shapes = shapes_all;
 experiment.labels = labels_all;
