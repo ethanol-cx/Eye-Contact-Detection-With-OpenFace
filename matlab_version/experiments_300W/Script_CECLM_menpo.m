@@ -2,9 +2,13 @@ function Script_CECLM_menpo()
 
 addpath(genpath('../'));
 
-% Replace this with the location of the IJB-FL data location
-root_test_data = 'D:/Datasets/janus_labeled';
-[images, detections, labels] = Collect_JANUS_imgs(root_test_data);
+% Replace this with the location of the 300W data location
+if(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
+    root_test_data = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
+else
+    root_test_data = 'D:/Dropbox/Dropbox/AAM/test data/';
+end
+[images, detections, labels] = Collect_wild_imgs(root_test_data);
 
 %% loading the CE-CLM model and parameters   
 [patches, pdm, clmParams, early_term_params] = Load_CECLM_menpo();
@@ -55,7 +59,7 @@ for i=1:numel(images)
     % have a multi-view version
     if(multi_view)
 
-        views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
+        views = [0,0,0; 0,-30,0; 0,30,0; 0,0,30; 0,0,-30;];
         views = views * pi/180;                                                                                     
         
         [shape,~,~,lhood,lmark_lhood,view_used] =...
@@ -88,7 +92,7 @@ for i=1:numel(images)
 end
 toc
 
-experiment.errors_normed = compute_error(labels_all, shapes_all - 1.0);
+experiment.errors_normed = compute_error(labels_all, shapes_all + 1.0);
 experiment.lhoods = lhoods;
 experiment.shapes = shapes_all;
 experiment.labels = labels_all;

@@ -1,6 +1,6 @@
 clear
 
-load('results/results_wild_clnf_general.mat');
+load('results/results_clnf_wild.mat');
 
 [clnf_error, ~,~,frontal_ids] = compute_error_small( experiment.labels,  experiment.shapes-1.0);
 clnf_error_frontal = clnf_error(frontal_ids);
