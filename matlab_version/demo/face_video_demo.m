@@ -6,8 +6,8 @@ addpath(genpath('../face_detection'));
 addpath('../CCNF/');
 
 %% 
-vid_dir = '../../videos/';
-vids = dir([vid_dir, '*.avi']);
+vid_dir = '../../samples/';
+vids = cat(1, dir([vid_dir, '*.avi']), dir([vid_dir, '*.wmv']));
 
 %%
 verbose = true;
