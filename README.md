@@ -33,7 +33,7 @@ The system is capable of performing a number of facial analysis tasks:
 
 - Gaze tracking (image of it in action)
 
-<img src="https://github.com/TadasBaltrusaitis/OpenFace/blob/master/imgs/gaze_ex.png" height="378" width="567" >
+<img src="https://github.com/TadasBaltrusaitis/OpenFace/blob/master/imgs/gaze_ex.png" height="182" width="600" >
 
 - Facial Feature Extraction (aligned faces and HOG features)
 
