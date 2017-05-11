@@ -3,7 +3,7 @@ clear
 %% 
 inds_ibug = 562:696;
 
-load('./results/results_clnf.mat');
+load('./results/results_clnf_wild.mat');
 labels = experiment.labels([1:60,62:64,66:end],:,:);
 shapes = experiment.shapes([1:60,62:64,66:end],:,:);
 labels = labels(18:end,:,:);
@@ -11,7 +11,6 @@ shapes = shapes(18:end,:,:);
 
 clnf_error_ibug = compute_error( labels(:,:,inds_ibug),  shapes(:,:,inds_ibug) + 1.0);
 
-% load('results/results_wild_dclm_general_v4.mat');
 load('./results/results_ceclm_menpo.mat');
 
 labels = experiment.labels([1:60,62:64,66:end],:,:);
@@ -89,13 +88,12 @@ end
 shapes = shapes([1:60,62:64,66:end],:,:);
 shapes = shapes(18:end,:,:);
 
-load('results/results_clnf.mat');
 tcdcn_error_ibug = compute_error(labels_all(:,:,inds_ibug), shapes(:,:,inds_ibug));
 
 %% 
 inds_comm = [338:561,697:1026];
 
-load('./results/results_clnf.mat');
+load('./results/results_clnf_wild.mat');
 labels = experiment.labels([1:60,62:64,66:end],:,:);
 shapes = experiment.shapes([1:60,62:64,66:end],:,:);
 labels = labels(18:end,:,:);

@@ -3,11 +3,11 @@ clear
 %% 
 inds_ibug = 562:696;
 
-load('results/results_clnf.mat');
+load('./results/results_clnf_wild.mat');
 
 clnf_error_ibug = compute_error( experiment.labels(:,:,inds_ibug),  experiment.shapes(:,:,inds_ibug) + 1.0);
 
-load('./results/results_ceclm_general.mat');
+load('./results/results_ceclm_menpo.mat');
 
 ceclm_error_ibug = compute_error( experiment.labels(:,:,inds_ibug),  experiment.shapes(:,:,inds_ibug) + 1.0);
 
@@ -38,7 +38,7 @@ for i=1:size(estimatedPose,1)
     shapes(:,1,i) = xs;
     shapes(:,2,i) = ys;
 end
-load('results/results_clnf.mat');
+load('results/results_clnf_wild.mat');
 cfss_error_ibug = compute_error(experiment.labels(:,:,inds_ibug), shapes(:,:,inds_ibug)+0.5);
 
 
@@ -51,16 +51,16 @@ for i=1:numel(shapes_c)
     shapes(:,1,i) = xs;
     shapes(:,2,i) = ys;
 end
-load('results/results_clnf.mat');
+load('results/results_clnf_wild.mat');
 tcdcn_error_ibug = compute_error(experiment.labels(:,:,inds_ibug), shapes(:,:,inds_ibug));
 
 %% 
 inds_comm = [338:561,697:1026];
 
-load('./results/results_clnf.mat');
+load('./results/results_clnf_wild.mat');
 clnf_error_comm = compute_error( experiment.labels(:,:,inds_comm),  experiment.shapes(:,:,inds_comm) + 1.0);
 
-load('./results/results_ceclm_general.mat');
+load('./results/results_ceclm_menpo.mat');
 ceclm_error_comm = compute_error( experiment.labels(:,:,inds_comm),  experiment.shapes(:,:,inds_comm) + 1.0);
 
 load('results/zhu_wild.mat');
@@ -84,7 +84,7 @@ for i=1:size(estimatedPose,1)
     shapes(:,2,i) = ys;
 end
 
-load('./results/results_clnf.mat');
+load('./results/results_clnf_wild.mat');
 cfss_error_comm = compute_error(experiment.labels(:,:,inds_comm), shapes(:,:,inds_comm)+0.5);
 
 load('results/tcdcn_300W.mat');
@@ -96,5 +96,5 @@ for i=1:numel(shapes_c)
     shapes(:,1,i) = xs;
     shapes(:,2,i) = ys;
 end
-load('./results/results_clnf.mat');
+load('./results/results_clnf_wild.mat');
 tcdcn_error_comm = compute_error(experiment.labels(:,:,inds_comm), shapes(:,:,inds_comm));

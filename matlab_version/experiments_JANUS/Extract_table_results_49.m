@@ -1,12 +1,12 @@
 clear
 
-load('results/results_clnf_wild.mat');
+load('./results/results_clnf_wild.mat');
 
 [clnf_error, ~,~,frontal_ids] = compute_error_small( experiment.labels,  experiment.shapes-1.0);
 clnf_error_frontal = clnf_error(frontal_ids);
 clnf_error_profile = clnf_error(~frontal_ids);
 
-load('results/results_ceclm_general.mat');
+load('./results/results_ceclm_general.mat');
 
 [ceclm_error,~,~,frontal_ids] = compute_error_small( experiment.labels,  experiment.shapes-1.0);
 ceclm_error_frontal = ceclm_error(frontal_ids);

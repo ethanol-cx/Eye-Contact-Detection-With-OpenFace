@@ -1,5 +1,4 @@
 clear
-close all
 
 % First grab the numbers
 Extract_table_results_68;

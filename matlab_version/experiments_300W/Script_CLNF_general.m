@@ -2,11 +2,15 @@ function Script_CLNF_general()
 
 addpath(genpath('../'));
 
-% Replace this with the location of the IJB-FL data location
-root_test_data = 'D:/Datasets/janus_labeled';
-[images, detections, labels] = Collect_JANUS_imgs(root_test_data);
+% Replace this with the location of in 300 faces in the wild data
+if(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
+    root_test_data = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
+else
+    root_test_data = 'D:/Dropbox/Dropbox/AAM/test data/';
+end
 
-%% loading the patch experts
+[images, detections, labels] = Collect_wild_imgs(root_test_data);
+%% loading the patch experts and pdms
    
 clmParams = struct;
 
@@ -14,8 +18,6 @@ clmParams.window_size = [25,25; 23,23; 21,21];
 clmParams.numPatchIters = size(clmParams.window_size,1);
 
 [patches] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*_general.mat', [], [], clmParams);
-
-%% Fitting the model to the provided image
 
 % the default PDM to use
 pdmLoc = ['../models/pdm/pdm_68_aligned_wild.mat'];
@@ -48,6 +50,21 @@ clmParams_inner.multi_modal_types  = patches_inner(1).multi_modal_types;
 % for recording purposes
 experiment.params = clmParams;
 
+%% Change if you want to visualize the outputs
+verbose = false;
+output_img = false;
+
+if(output_img)
+    output_root = './clnf_out_general/';
+    if(~exist(output_root, 'dir'))
+        mkdir(output_root);
+    end
+end
+if(verbose)
+    f = figure;
+end
+
+%% For recording
 num_points = numel(M)/3;
 
 shapes_all = zeros(size(labels,2),size(labels,3), size(labels,1));
@@ -59,7 +76,8 @@ all_views_used = zeros(numel(images),1);
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
 multi_view = true;
-verbose = false; % set to true to visualise the fitting
+
+%% Fitting the model to the provided image
 
 tic
 for i=1:numel(images)
@@ -76,7 +94,7 @@ for i=1:numel(images)
     % have a multi-view version
     if(multi_view)
 
-        views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
+        views = [0,0,0; 0,-30,0; 0,30,0; 0,0,30; 0,0,-30;];
         views = views * pi/180;                                                                                     
 
         shapes = zeros(num_points, 2, size(views,1));
@@ -132,6 +150,12 @@ for i=1:numel(images)
 
     lhoods(i) = lhood;
 
+    
+    if(output_img)
+        v_points = sum(squeeze(labels(i,:,:)),2) > 0;
+        DrawFaceOnImg(image_orig, shape, sprintf('%s/%s%d.jpg', output_root, 'fit', i), bbox, v_points);
+    end
+    
     if(verbose)
         v_points = sum(squeeze(labels(i,:,:)),2) > 0;
         DrawFaceOnFig(image_orig, shape, bbox, v_points);
@@ -140,7 +164,7 @@ for i=1:numel(images)
 end
 toc
 
-experiment.errors_normed = compute_error(labels_all, shapes_all - 1.0);
+experiment.errors_normed = compute_error(labels_all, shapes_all + 1.0);
 experiment.lhoods = lhoods;
 experiment.shapes = shapes_all;
 experiment.labels = labels_all;

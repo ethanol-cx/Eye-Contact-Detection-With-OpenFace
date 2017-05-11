@@ -65,6 +65,12 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
     
     clmParams_old = clmParams;
     
+    % In case there are no iterations initialize thes to empty
+    view = GetView(patchExperts(scale).centers, global_params(2:4));  
+    final_lhood = 0;
+    [shape2D] = GetShapeOrtho(M, PDM.V, local_params, global_params);
+    landmark_lhoods = zeros(size(shape2D,1),1);
+    
     % multi iteration refinement using NU-RLMS in each one
     for i=1:clmParams.numPatchIters
       
