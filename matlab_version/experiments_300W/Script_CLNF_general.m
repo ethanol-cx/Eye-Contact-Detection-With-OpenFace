@@ -70,8 +70,6 @@ num_points = numel(M)/3;
 shapes_all = zeros(size(labels,2),size(labels,3), size(labels,1));
 labels_all = zeros(size(labels,2),size(labels,3), size(labels,1));
 lhoods = zeros(numel(images),1);
-all_lmark_lhoods = zeros(num_points, numel(images));
-all_views_used = zeros(numel(images),1);
 
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
@@ -99,22 +97,17 @@ for i=1:numel(images)
 
         shapes = zeros(num_points, 2, size(views,1));
         ls = zeros(size(views,1),1);
-        lmark_lhoods = zeros(num_points,size(views,1));
-        views_used = zeros(num_points,size(views,1));
 
         % Find the best orientation
         for v = 1:size(views,1)
-            [shapes(:,:,v),~,~,ls(v),lmark_lhoods(:,v),views_used(v)] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams, 'orientation', views(v,:));                                            
+            [shapes(:,:,v),~,~,ls(v)] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams, 'orientation', views(v,:));                                            
         end
 
         [lhood, v_ind] = max(ls);
-        lmark_lhood = lmark_lhoods(:,v_ind);
-
         shape = shapes(:,:,v_ind);
-        view_used = views_used(v);
 
     else
-        [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
+        [shape,~,~,lhood] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
     end
 
     % Perform inner face fitting
@@ -135,9 +128,6 @@ for i=1:numel(images)
 
         [ ~, ~, ~, ~, ~, ~, shape_fit] = fit_PDM_ortho_proj_to_2D_no_reg(pdm.M, pdm.E, pdm.V, shape);    
 
-        all_lmark_lhoods(:,i) = lmark_lhood;
-        all_views_used(i) = view_used;
-
         shapes_all(:,:,i) = shape_fit;
     else
         shapes_all(:,:,i) = shape;                    
@@ -150,7 +140,6 @@ for i=1:numel(images)
 
     lhoods(i) = lhood;
 
-    
     if(output_img)
         v_points = sum(squeeze(labels(i,:,:)),2) > 0;
         DrawFaceOnImg(image_orig, shape, sprintf('%s/%s%d.jpg', output_root, 'fit', i), bbox, v_points);
@@ -168,8 +157,6 @@ experiment.errors_normed = compute_error(labels_all, shapes_all + 1.0);
 experiment.lhoods = lhoods;
 experiment.shapes = shapes_all;
 experiment.labels = labels_all;
-experiment.all_lmark_lhoods = all_lmark_lhoods;
-experiment.all_views_used = all_views_used;
 
 fprintf('Done: mean normed error %.3f median normed error %.4f\n', ...
     mean(experiment.errors_normed), median(experiment.errors_normed));

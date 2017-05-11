@@ -46,8 +46,6 @@ num_points = numel(M)/3;
 shapes_all = zeros(size(labels,2),size(labels,3), size(labels,1));
 labels_all = zeros(size(labels,2),size(labels,3), size(labels,1));
 lhoods = zeros(numel(images),1);
-all_lmark_lhoods = zeros(num_points, numel(images));
-all_views_used = zeros(numel(images),1);
 
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
@@ -74,22 +72,17 @@ for i=1:numel(images)
 
         shapes = zeros(num_points, 2, size(views,1));
         ls = zeros(size(views,1),1);
-        lmark_lhoods = zeros(num_points,size(views,1));
-        views_used = zeros(num_points,size(views,1));
 
         % Find the best orientation
         for v = 1:size(views,1)
-            [shapes(:,:,v),~,~,ls(v),lmark_lhoods(:,v),views_used(v)] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams, 'orientation', views(v,:));                                            
+            [shapes(:,:,v),~,~,ls(v)] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams, 'orientation', views(v,:));                                            
         end
 
         [lhood, v_ind] = max(ls);
-        lmark_lhood = lmark_lhoods(:,v_ind);
-
         shape = shapes(:,:,v_ind);
-        view_used = views_used(v);
 
     else
-        [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
+        [shape,~,~,lhood] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
     end
     shapes_all(:,:,i) = shape;
     labels_all(:,:,i) = labels(i,:,:);
@@ -112,8 +105,6 @@ experiment.errors_normed = compute_error(labels_all, shapes_all - 1.0);
 experiment.lhoods = lhoods;
 experiment.shapes = shapes_all;
 experiment.labels = labels_all;
-experiment.all_lmark_lhoods = all_lmark_lhoods;
-experiment.all_views_used = all_views_used;
 
 fprintf('Done: mean normed error %.3f median normed error %.4f\n', ...
     mean(experiment.errors_normed), median(experiment.errors_normed));
