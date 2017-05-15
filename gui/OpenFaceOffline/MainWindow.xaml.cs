@@ -1,37 +1,13 @@
 ﻿///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016, Carnegie Mellon University and University of Cambridge,
+// Copyright (C) 2017, Carnegie Mellon University and University of Cambridge,
 // all rights reserved.
 //
-// THIS SOFTWARE IS PROVIDED “AS IS” FOR ACADEMIC USE ONLY AND ANY EXPRESS
-// OR IMPLIED WARRANTIES WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-// BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY.
-// OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
+// ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
 //
-// Notwithstanding the license granted herein, Licensee acknowledges that certain components
-// of the Software may be covered by so-called “open source” software licenses (“Open Source
-// Components”), which means any software licenses approved as open source licenses by the
-// Open Source Initiative or any substantially similar licenses, including without limitation any
-// license that, as a condition of distribution of the software licensed under such license,
-// requires that the distributor make the software available in source code format. Licensor shall
-// provide a list of Open Source Components for a particular version of the Software upon
-// Licensee’s request. Licensee will comply with the applicable terms of such licenses and to
-// the extent required by the licenses covering Open Source Components, the terms of such
-// licenses will apply in lieu of the terms of this Agreement. To the extent the terms of the
-// licenses applicable to Open Source Components prohibit any of the restrictions in this
-// License Agreement with respect to such Open Source Component, such restrictions will not
-// apply to such Open Source Component. To the extent the terms of the licenses applicable to
-// Open Source Components require Licensor to make an offer to provide source code or
-// related information in connection with the Software, such offer is hereby made. Any request
-// for source code or related information should be directed to cl-face-tracker-distribution@lists.cam.ac.uk
-// Licensee acknowledges receipt of notices for the Open Source Components for the initial
-// delivery of the Software.
+// BY USING OR DOWNLOADING THE SOFTWARE, YOU ARE AGREEING TO THE TERMS OF THIS LICENSE AGREEMENT.  
+// IF YOU DO NOT AGREE WITH THESE TERMS, YOU MAY NOT USE OR DOWNLOAD THE SOFTWARE.
+//
+// License can be found in OpenFace-license.txt
 
 //     * Any publications arising from the use of this software, including but
 //       not limited to academic journal and conference publications, technical
@@ -124,7 +100,7 @@ namespace OpenFaceOffline
         volatile bool detectionSucceeding = false;
         
         // For tracking
-        FaceModelParameters clnf_params;
+        FaceModelParameters face_model_params;
         CLNF clnf_model;
         FaceAnalyserManaged face_analyser;
 
@@ -169,8 +145,8 @@ namespace OpenFaceOffline
             
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
-            clnf_params = new FaceModelParameters(root, false);
-            clnf_model = new CLNF(clnf_params);
+            face_model_params = new FaceModelParameters(root, false);
+            clnf_model = new CLNF(face_model_params);
             face_analyser = new FaceAnalyserManaged(root, DynamicAUModels, image_output_size);
 
         }
@@ -188,7 +164,7 @@ namespace OpenFaceOffline
             // Create the video capture and call the VideoLoop
             if (filenames != null)
             {
-                clnf_params.optimiseForVideo();
+                face_model_params.optimiseForVideo();
                 if (cam_id == -2)
                 {
                     List<String> image_files_all = new List<string>();
@@ -221,39 +197,13 @@ namespace OpenFaceOffline
                 }
                 else if (cam_id == -3)
                 {
-                    SetupImageMode();
-                    clnf_params.optimiseForImages();
-                    // Loading an image file (or a number of them)
-                    foreach (string filename in filenames)
-                    {
-                        if (!thread_running)
-                        {
-                            continue;
-                        }
+                    // Process all the provided images
+                    ProcessImages(filenames);
 
-                        capture = new Capture(filename);
-
-                        if (capture.isOpened())
-                        {
-                            // Start the actual processing                        
-                            ProcessImage();
-
-                        }
-                        else
-                        {
-                            string messageBoxText = "File is not an image or the decoder is not supported.";
-                            string caption = "Not valid file";
-                            MessageBoxButton button = MessageBoxButton.OK;
-                            MessageBoxImage icon = MessageBoxImage.Warning;
-
-                            // Display message box
-                            MessageBox.Show(messageBoxText, caption, button, icon);
-                        }
-                    }
                 }
                 else
                 {
-                    clnf_params.optimiseForVideo();
+                    face_model_params.optimiseForVideo();
                     // Loading a video file (or a number of them)
                     foreach (string filename in filenames)
                     {
@@ -290,6 +240,67 @@ namespace OpenFaceOffline
 
         }
 
+        // 
+        private void ProcessImages(string[] filenames)
+        {
+            // Turn off unneeded visualisations and recording settings
+            bool TrackVid = ShowTrackedVideo; ShowTrackedVideo = true;
+            bool ShowApp = ShowAppearance; ShowAppearance = false;
+            bool ShowGeo = ShowGeometry; ShowGeometry = false;
+            bool showAU = ShowAUs; ShowAUs = false;
+            bool recAlign = RecordAligned;
+            bool recHOG = RecordHOG;
+
+            // Actually update the GUI accordingly
+            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
+            {
+                VisualisationChange(null, null);
+            }));
+
+            face_model_params.optimiseForImages();
+            // Loading an image file (or a number of them)
+            foreach (string filename in filenames)
+            {
+                if (!thread_running)
+                {
+                    continue;
+                }
+
+                capture = new Capture(filename);
+
+                if (capture.isOpened())
+                {
+                    // Start the actual processing                        
+                    ProcessImage();
+
+                }
+                else
+                {
+                    string messageBoxText = "File is not an image or the decoder is not supported.";
+                    string caption = "Not valid file";
+                    MessageBoxButton button = MessageBoxButton.OK;
+                    MessageBoxImage icon = MessageBoxImage.Warning;
+
+                    // Display message box
+                    MessageBox.Show(messageBoxText, caption, button, icon);
+                }
+            }
+
+            // Clear image setup, restore the views
+            ShowTrackedVideo = TrackVid;
+            ShowAppearance = ShowApp;
+            ShowGeometry = ShowGeo;
+            ShowAUs = showAU;
+            RecordHOG = recHOG;
+            RecordAligned = recAlign;
+
+            // Actually update the GUI accordingly
+            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
+            {
+                VisualisationChange(null, null);
+            }));
+        }
+
         // Capturing and processing the video frame by frame
         private void ProcessImage()
         {
@@ -297,7 +308,6 @@ namespace OpenFaceOffline
 
             clnf_model.Reset();
             face_analyser.Reset();
-
 
             //////////////////////////////////////////////
             // CAPTURE FRAME AND DETECT LANDMARKS FOLLOWED BY THE REQUIRED IMAGE PROCESSING
@@ -322,7 +332,7 @@ namespace OpenFaceOffline
                 return;
             }
 
-            List<List<Tuple<double, double>>> landmark_detections = ProcessImage(clnf_model, clnf_params, frame, grayFrame);
+            List<List<Tuple<double, double>>> landmark_detections = ProcessImage(clnf_model, face_model_params, frame, grayFrame);
 
             List<Point> landmark_points = new List<Point>();
 
@@ -424,7 +434,7 @@ namespace OpenFaceOffline
                     continue;
                 }
 
-                detectionSucceeding = ProcessFrame(clnf_model, clnf_params, frame, grayFrame, fx, fy, cx, cy);
+                detectionSucceeding = ProcessFrame(clnf_model, face_model_params, frame, grayFrame, fx, fy, cx, cy);
 
                 // The face analysis step (for AUs and eye gaze)
                 face_analyser.AddNextFrame(frame, clnf_model, fx, fy, cx, cy, false, ShowAppearance, false); // TODO change
@@ -505,7 +515,7 @@ namespace OpenFaceOffline
                     continue;
                 }
 
-                detectionSucceeding = ProcessFrame(clnf_model, clnf_params, frame, grayFrame, fx, fy, cx, cy);
+                detectionSucceeding = ProcessFrame(clnf_model, face_model_params, frame, grayFrame, fx, fy, cx, cy);
 
                 // The face analysis step (for AUs and eye gaze)
                 face_analyser.AddNextFrame(frame, clnf_model, fx, fy, cx, cy, false, ShowAppearance, false); // TODO change
@@ -725,26 +735,6 @@ namespace OpenFaceOffline
         // ----------------------------------------------------------
         // Mode handling (image, video)
         // ----------------------------------------------------------
-        private void SetupImageMode()
-        {
-
-            // Turn off unneeded visualisations
-            ShowTrackedVideo = true;
-            ShowAppearance = false;
-            ShowGeometry = false;
-            ShowAUs = false;
-
-            RecordAligned = false;
-            RecordHOG = false;
-
-            // Actually update the GUI accordingly
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
-            {
-                VisualisationChange(null, null);
-            }));
-
-            // TODO change what next and back buttons do?
-        }
 
         // Disable GUI components that should not be active during processing
         private void SetupFeatureExtractionMode()
