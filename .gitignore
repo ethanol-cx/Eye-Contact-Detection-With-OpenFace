@@ -90,3 +90,8 @@ exe/FaceLandmarkVid/Release/
 lib/3rdParty/dlib/Release/
 lib/local/FaceAnalyser/Release/
 lib/local/LandmarkDetector/Release/
+matlab_version/experiments_300VW/CLM_res_2/
+matlab_version/experiments_300VW/CLNF_res_2/
+matlab_version/experiments_300VW/CECLM_res_menpo/
+matlab_version/experiments_300VW/CLNF_res_general/
+matlab_version/experiments_300VW/CECLM_res_general/

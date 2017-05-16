@@ -1,5 +1,6 @@
 function Script_CECLM_menpo_test_profile()
 
+addpath('menpo_challenge_helpers');
 addpath('../PDM_helpers/');
 addpath('../fitting/normxcorr2_mex_ALL');
 addpath('../fitting/');
@@ -20,6 +21,7 @@ clmParams.numPatchIters = size(clmParams.window_size,1);
 %% Fitting the model to the provided image
 
 output_root = './menpo_fit_ceclm_test_profile/';
+mkdir(output_root);
 out_pts = './out_profile/';
 mkdir(out_pts);
 % the default PDM to use
@@ -58,13 +60,13 @@ all_views_used = zeros(numel(images),1);
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
 multi_view = true;
-verbose = false;
+verbose = true;
 tic
 if(verbose)
     f = figure;
 end
 
-load('../pdm_generation/menpo_pdm/conversion.mat');
+load('../pdm_generation/menpo_pdm/menpo_chin/conversion.mat');
 
 for i=1:numel(images)
 
@@ -123,7 +125,7 @@ for i=1:numel(images)
 
     lhoods(i) = lhood;
 
-    if(verbose)
+    if(verbose && mod(i,20) == 0)
         %         f = figure('visible','off');
 
         try

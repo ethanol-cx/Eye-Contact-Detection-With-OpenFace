@@ -49,10 +49,12 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
             shapes = zeros(num_points, 2, numel(to_refine));
             ls = zeros(numel(to_refine),1);
             lmark_lhoods = zeros(num_points,numel(to_refine));
-            views_used = zeros(numel(to_refine),1);         
+            views_used = zeros(numel(to_refine),1);  
+            globals_n = cell(size(to_refine,1),1);
+            locals_n = cell(size(to_refine,1),1);            
             ind = 1;
             for v = to_refine'                    
-                [shapes(:,:,ind), globals{ind}, locals{ind},...
+                [shapes(:,:,ind), globals_n{ind}, locals_n{ind},...
                     ls(ind),lmark_lhoods(:,ind),views_used(ind)] ...
                     = Fitting_from_bb(Image, DepthImage, bounding_box, PDM, patches_large, clmParams_large, 'gparam', globals{v}, 'lparam', locals{v});
                 ind = ind+1;
@@ -62,8 +64,8 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
         % TODO aggregation?
         [final_lhood, v_ind] = max(ls);
         landmark_lhoods = lmark_lhoods(:,v_ind);
-        global_params = globals(v_ind,:);
-        local_params = locals(v_ind,:);
+        global_params = globals_n{v_ind};
+        local_params = locals_n{v_ind};
         shape = shapes(:,:,v_ind);
         view_used = views_used(v_ind);
     end

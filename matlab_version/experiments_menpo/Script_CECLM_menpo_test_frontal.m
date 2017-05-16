@@ -1,5 +1,6 @@
 function Script_CECLM_menpo_test_frontal()
 
+addpath('menpo_challenge_helpers');
 addpath('../PDM_helpers/');
 addpath('../fitting/normxcorr2_mex_ALL');
 addpath('../fitting/');
