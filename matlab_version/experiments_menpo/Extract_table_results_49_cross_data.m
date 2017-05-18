@@ -12,13 +12,14 @@ drmf_error_frontal = drmf_error(frontal_ids);
 drmf_error_profile = drmf_error(~frontal_ids);
 
 load('results/menpo_train_sdm.mat');
-
+for i = 1:numel(experiment.shapes)
+    shapes{i} = shapes{i}+0.5;
+end
 [sdm_error, frontal_ids] = compute_error_menpo_small( labels,  shapes);
 sdm_error_frontal = sdm_error(frontal_ids);
 sdm_error_profile = sdm_error(~frontal_ids);
 
 load('results/Menpo_train_pocr.mat');
-
 [pocr_error, frontal_ids] = compute_error_menpo_small( labels,  experiments.shapes);
 pocr_error_frontal = pocr_error(frontal_ids);
 pocr_error_profile = pocr_error(~frontal_ids);
@@ -31,7 +32,7 @@ ceclm_error_profile = ceclm_error(~frontal_ids);
 
 load('results/tcdcn_menpo.mat');
 for i = 1:numel(shapes)
-    shapes{i} = shapes{i}+0.5;
+    shapes{i} = shapes{i};
 end
 
 [tcdcn_error, frontal_ids] = compute_error_menpo_small(labels, shapes);

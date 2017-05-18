@@ -25,7 +25,7 @@ cfan_error_profile = cfan_error(~frontal_ids);
 
 load('results/tcdcn_menpo.mat');
 for i = 1:numel(shapes)
-    shapes{i} = shapes{i}+0.5;
+    shapes{i} = shapes{i};
 end
 
 [tcdcn_error, frontal_ids] = compute_error_menpo_1(labels, shapes);

@@ -44,7 +44,7 @@ clm_error_ibug = compute_error( labels(:,:,inds_ibug),  shapes(:,:,inds_ibug) + 
 load('results/300W_3DDFA.mat');
 shapes = shapes([1:60,62:64,66:end],:,:);
 shapes = shapes(18:end,:,:);
-error_3ddfa_ibug = compute_error( labels_all(:,:,inds_ibug),  shapes(:,:,inds_ibug) + 0.5);
+error_3ddfa_ibug = compute_error( labels_all(:,:,inds_ibug),  shapes(:,:,inds_ibug) + 1.0);
 
 load('results/drmf_wild.mat');
 labels_all = labels_all(18:end,:,:);
@@ -55,7 +55,7 @@ drmf_error_ibug = compute_error(labels_all(:,:,inds_ibug), shapes_all(:,:,inds_i
 load('results/300W_sdm.mat');
 shapes_all = experiments.shapes;
 
-sdm_error_ibug = compute_error(labels_all(:,:,inds_ibug), shapes_all(:,:,inds_ibug));
+sdm_error_ibug = compute_error(labels_all(:,:,inds_ibug), shapes_all(:,:,inds_ibug)+1.5);
 
 load('results/300W_pocr.mat');
 shapes_all = experiments.shapes;
@@ -88,7 +88,7 @@ end
 shapes = shapes([1:60,62:64,66:end],:,:);
 shapes = shapes(18:end,:,:);
 
-tcdcn_error_ibug = compute_error(labels_all(:,:,inds_ibug), shapes(:,:,inds_ibug));
+tcdcn_error_ibug = compute_error(labels_all(:,:,inds_ibug), shapes(:,:,inds_ibug)+0.5);
 
 %% 
 inds_comm = [338:561,697:1026];
@@ -125,7 +125,7 @@ clm_error_comm = compute_error( labels(:,:,inds_comm),  shapes(:,:,inds_comm) + 
 load('results/300W_3DDFA.mat');
 shapes = shapes([1:60,62:64,66:end],:,:);
 shapes = shapes(18:end,:,:);
-error_3ddfa_comm = compute_error( labels_all(:,:,inds_comm),  shapes(:,:,inds_comm)+0.5);
+error_3ddfa_comm = compute_error( labels_all(:,:,inds_comm),  shapes(:,:,inds_comm)+1.0);
 
 load('results/drmf_wild.mat');
 labels_all = labels_all(18:end,:,:);
@@ -136,7 +136,7 @@ drmf_error_comm = compute_error(labels_all(:,:,inds_comm), shapes_all(:,:,inds_c
 load('results/300W_sdm.mat');
 shapes_all = experiments.shapes;
 
-sdm_error_comm = compute_error(labels_all(:,:,inds_comm), shapes_all(:,:,inds_comm));
+sdm_error_comm = compute_error(labels_all(:,:,inds_comm), shapes_all(:,:,inds_comm)+1.5);
 
 load('results/300W_pocr.mat');
 shapes_all = experiments.shapes;
@@ -168,4 +168,4 @@ for i=1:numel(shapes_c)
 end
 shapes = shapes([1:60,62:64,66:end],:,:);
 shapes = shapes(18:end,:,:);
-tcdcn_error_comm = compute_error(labels_all(:,:,inds_comm), shapes(:,:,inds_comm));
+tcdcn_error_comm = compute_error(labels_all(:,:,inds_comm), shapes(:,:,inds_comm)+0.5);
