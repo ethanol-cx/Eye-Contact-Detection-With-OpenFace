@@ -48,6 +48,7 @@ using CppInterop;
 using CppInterop.LandmarkDetector;
 using CameraInterop;
 using FaceAnalyser_Interop;
+using GazeAnalyser_Interop;
 using System.Globalization;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
@@ -103,6 +104,7 @@ namespace OpenFaceOffline
         FaceModelParameters face_model_params;
         CLNF clnf_model;
         FaceAnalyserManaged face_analyser;
+        GazeAnalyserManaged gaze_analyser;
 
         // Recording parameters (default values)
         Recorder recorder;
@@ -149,6 +151,7 @@ namespace OpenFaceOffline
             clnf_model = new CLNF(face_model_params);
             face_analyser = new FaceAnalyserManaged(root, DynamicAUModels, image_output_size);
 
+            gaze_analyser = new GazeAnalyserManaged();
         }
 
         // ----------------------------------------------------------
@@ -437,11 +440,12 @@ namespace OpenFaceOffline
                 detectionSucceeding = ProcessFrame(clnf_model, face_model_params, frame, grayFrame, fx, fy, cx, cy);
 
                 // The face analysis step (for AUs and eye gaze)
-                face_analyser.AddNextFrame(frame, clnf_model, fx, fy, cx, cy, false, ShowAppearance, false); // TODO change
-                
-                recorder.RecordFrame(clnf_model, face_analyser, detectionSucceeding, frame_id + 1, ((double)frame_id) / fps);
+                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, false, ShowAppearance); // TODO change
+                gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, fx, fy, cx, cy);
 
-                List<Tuple<double, double>> landmarks = clnf_model.CalculateLandmarks();
+                recorder.RecordFrame(clnf_model, face_analyser, gaze_analyser, detectionSucceeding, frame_id + 1, ((double)frame_id) / fps);
+
+                List<Tuple<double, double>> landmarks = clnf_model.CalculateVisibleLandmarks();
 
                 VisualizeFeatures(frame, landmarks, fx, fy, cx, cy, progress);
 
@@ -517,12 +521,15 @@ namespace OpenFaceOffline
 
                 detectionSucceeding = ProcessFrame(clnf_model, face_model_params, frame, grayFrame, fx, fy, cx, cy);
 
-                // The face analysis step (for AUs and eye gaze)
-                face_analyser.AddNextFrame(frame, clnf_model, fx, fy, cx, cy, false, ShowAppearance, false); // TODO change
+                // The face analysis step (for AUs)
+                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, false, ShowAppearance);
 
-                recorder.RecordFrame(clnf_model, face_analyser, detectionSucceeding, frame_id + 1, ((double)frame_id) / fps);
+                // For gaze analysis
+                gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, fx, fy, cx, cy);
 
-                List<Tuple<double, double>> landmarks = clnf_model.CalculateLandmarks();
+                recorder.RecordFrame(clnf_model, face_analyser, gaze_analyser, detectionSucceeding, frame_id + 1, ((double)frame_id) / fps);
+
+                List<Tuple<double, double>> landmarks = clnf_model.CalculateVisibleLandmarks();
 
                 VisualizeFeatures(frame, landmarks, fx, fy, cx, cy, progress);
                 
@@ -579,13 +586,13 @@ namespace OpenFaceOffline
             if (detectionSucceeding)
             {
                 
-                eye_landmarks = clnf_model.CalculateEyeLandmarks();
+                eye_landmarks = clnf_model.CalculateVisibleEyeLandmarks();
                 lines = clnf_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
 
                 scale = clnf_model.GetRigidParams()[0];
 
-                gaze_lines = face_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
-                gaze_angle = face_analyser.GetGazeAngle();
+                gaze_lines = gaze_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
+                gaze_angle = gaze_analyser.GetGazeAngle();
             }
 
             // Visualisation (as a separate function)

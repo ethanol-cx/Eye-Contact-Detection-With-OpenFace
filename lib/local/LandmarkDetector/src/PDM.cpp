@@ -55,7 +55,7 @@ using namespace LandmarkDetector;
 
 //=============================================================================
 // Orthonormalising the 3x3 rotation matrix
-void Orthonormalise(cv::Matx33d &R)
+void PDM::Orthonormalise(cv::Matx33d &R)
 {
 
 	cv::SVD svd(R,cv::SVD::MODIFY_A);
@@ -493,7 +493,7 @@ void PDM::UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>&
 
 }
 
-void PDM::CalcParams(cv::Vec6d& out_params_global, const cv::Mat_<double>& out_params_local, const cv::Mat_<double>& landmark_locations, const cv::Vec3d rotation)
+void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<double>& out_params_local, const cv::Mat_<double>& landmark_locations, const cv::Vec3d rotation)
 {
 		
 	int m = this->NumberOfModes();

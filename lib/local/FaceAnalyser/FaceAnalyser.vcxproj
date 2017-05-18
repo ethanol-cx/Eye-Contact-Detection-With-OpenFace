@@ -94,7 +94,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>./include;$(SolutionDir)lib\local\LandmarkDetector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -113,9 +113,10 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>./include;$(SolutionDir)lib\local\LandmarkDetector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>WIN64;_DEBUG;_LIB;EIGEN_MPL2_ONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -135,7 +136,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>
       </SDLCheck>
-      <AdditionalIncludeDirectories>./include;$(SolutionDir)lib\local\LandmarkDetector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -160,9 +161,10 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>
       </SDLCheck>
-      <AdditionalIncludeDirectories>./include;$(SolutionDir)lib\local\LandmarkDetector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>WIN64;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -181,23 +183,24 @@
     <ProjectReference Include="..\..\3rdParty\dlib\dlib.vcxproj">
       <Project>{b47a5f12-2567-44e9-ae49-35763ec82149}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\LandmarkDetector\LandmarkDetector.vcxproj">
-      <Project>{bdc1d107-de17-4705-8e7b-cdde8bfb2bf8}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\GazeEstimation.cpp" />
+    <ClCompile Include="src\FaceAnalyserParameters.cpp" />
+    <ClCompile Include="src\PAW.cpp" />
+    <ClCompile Include="src\PDM.cpp" />
     <ClCompile Include="src\SVM_dynamic_lin.cpp" />
     <ClCompile Include="src\SVM_static_lin.cpp" />
     <ClCompile Include="src\SVR_dynamic_lin_regressors.cpp" />
     <ClCompile Include="src\SVR_static_lin_regressors.cpp" />
     <ClInclude Include="include\FaceAnalyser.h" />
+    <ClInclude Include="include\FaceAnalyserParameters.h" />
     <ClInclude Include="include\Face_utils.h">
       <FileType>CppCode</FileType>
     </ClInclude>
     <ClCompile Include="src\FaceAnalyser.cpp" />
     <ClCompile Include="src\Face_utils.cpp" />
-    <ClInclude Include="include\GazeEstimation.h" />
+    <ClInclude Include="include\PAW.h" />
+    <ClInclude Include="include\PDM.h" />
     <ClInclude Include="include\SVM_dynamic_lin.h" />
     <ClInclude Include="include\SVM_static_lin.h" />
     <ClInclude Include="include\SVR_dynamic_lin_regressors.h" />

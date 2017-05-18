@@ -23,9 +23,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="FaceAnalyserInterop.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LandmarkDetectorInterop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -33,6 +30,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CameraInterop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FaceAnalyserInterop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GazeAnalyserInterop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

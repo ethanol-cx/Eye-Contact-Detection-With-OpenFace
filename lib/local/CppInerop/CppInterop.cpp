@@ -35,5 +35,6 @@
 // This is the main DLL file.
 #include "LandmarkDetectorInterop.h"
 #include "FaceAnalyserInterop.h"
+#include "GazeAnalyserInterop.h"
 #include "OpenCVWrappers.h"
 #include "CameraInterop.h"

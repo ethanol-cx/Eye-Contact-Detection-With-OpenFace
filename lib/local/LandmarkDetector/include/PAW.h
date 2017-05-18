@@ -127,7 +127,10 @@ public:
     
 private:
 
-	int findTriangle(const cv::Point_<double>& point, const std::vector<std::vector<double>>& control_points, int guess = -1) const;
+	// Helper functions for dealing with triangles
+	static bool sameSide(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3);
+	static bool pointInTriangle(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3);
+	static int findTriangle(const cv::Point_<double>& point, const std::vector<std::vector<double>>& control_points, int guess = -1);
 
   };
   //===========================================================================

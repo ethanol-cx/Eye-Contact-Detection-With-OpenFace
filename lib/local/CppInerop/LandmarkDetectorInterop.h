@@ -52,12 +52,21 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+// Allows to overcome boost name clash stuff with C++ CLI
+#ifdef __cplusplus_cli
+#define generic __identifier(generic)
+#endif
+
 #include <OpenCVWrappers.h>
 
 #include <LandmarkCoreIncludes.h>
 
 #include <Face_utils.h>
 #include <FaceAnalyser.h>
+
+#ifdef __cplusplus_cli
+#undef generic
+#endif
 
 #pragma managed
 
@@ -258,8 +267,8 @@ namespace CppInterop {
 				}
 			}
 	
-			System::Collections::Generic::List<System::Tuple<double,double>^>^ CalculateLandmarks() {
-				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateLandmarks(*clnf);
+			System::Collections::Generic::List<System::Tuple<double,double>^>^ CalculateVisibleLandmarks() {
+				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateVisibleLandmarks(*clnf);
 				
 				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double,double>^>();
 				for(cv::Point2d p : vecLandmarks) {
@@ -269,8 +278,30 @@ namespace CppInterop {
 				return landmarks;
 			}
 
-			System::Collections::Generic::List<System::Tuple<double, double>^>^ CalculateEyeLandmarks() {
-				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateEyeLandmarks(*clnf);
+			System::Collections::Generic::List<System::Tuple<double, double>^>^ CalculateAllLandmarks() {
+				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateAllLandmarks(*clnf);
+
+				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double, double>^>();
+				for (cv::Point2d p : vecLandmarks) {
+					landmarks->Add(gcnew System::Tuple<double, double>(p.x, p.y));
+				}
+
+				return landmarks;
+			}
+
+			System::Collections::Generic::List<System::Tuple<double, double>^>^ CalculateAllEyeLandmarks() {
+				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateAllEyeLandmarks(*clnf);
+
+				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double, double>^>();
+				for (cv::Point2d p : vecLandmarks) {
+					landmarks->Add(gcnew System::Tuple<double, double>(p.x, p.y));
+				}
+
+				return landmarks;
+			}
+
+			System::Collections::Generic::List<System::Tuple<double, double>^>^ CalculateVisibleEyeLandmarks() {
+				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateVisibleEyeLandmarks(*clnf);
 
 				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double, double>^>();
 				for (cv::Point2d p : vecLandmarks) {

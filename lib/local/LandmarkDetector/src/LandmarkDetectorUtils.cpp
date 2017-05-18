@@ -977,7 +977,7 @@ void DrawBox(vector<pair<cv::Point, cv::Point>> lines, cv::Mat image, cv::Scalar
 }
 
 // Computing landmarks (to be drawn later possibly)
-vector<cv::Point2d> CalculateLandmarks(const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities)
+vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities)
 {
 	int n = shape2D.rows/2;
 	vector<cv::Point2d> landmarks;
@@ -996,7 +996,7 @@ vector<cv::Point2d> CalculateLandmarks(const cv::Mat_<double>& shape2D, const cv
 }
 
 // Computing landmarks (to be drawn later possibly)
-vector<cv::Point2d> CalculateLandmarks(const cv::Mat_<double>& shape2D)
+vector<cv::Point2d> CalculateAllLandmarks(const cv::Mat_<double>& shape2D)
 {
 	
 	int n;
@@ -1030,18 +1030,29 @@ vector<cv::Point2d> CalculateLandmarks(const cv::Mat_<double>& shape2D)
 }
 
 // Computing landmarks (to be drawn later possibly)
-vector<cv::Point2d> CalculateLandmarks(const CLNF& clnf_model)
+vector<cv::Point2d> CalculateAllLandmarks(const CLNF& clnf_model)
 {
+	return CalculateAllLandmarks(clnf_model.detected_landmarks);
+}
 
-	int idx = clnf_model.patch_experts.GetViewIdx(clnf_model.params_global, 0);
-
-	// Because we only draw visible points, need to find which points patch experts consider visible at a certain orientation
-	return CalculateLandmarks(clnf_model.detected_landmarks, clnf_model.patch_experts.visibilities[0][idx]);
-
+// Computing landmarks (to be drawn later possibly)
+vector<cv::Point2d> CalculateVisibleLandmarks(const CLNF& clnf_model)
+{
+	// If the detection was not successful no landmarks are visible
+	if(clnf_model.detection_success)
+	{
+		int idx = clnf_model.patch_experts.GetViewIdx(clnf_model.params_global, 0);
+		// Because we only draw visible points, need to find which points patch experts consider visible at a certain orientation
+		return CalculateVisibleLandmarks(clnf_model.detected_landmarks, clnf_model.patch_experts.visibilities[0][idx]);
+	}
+	else
+	{
+		return vector<cv::Point2d>();
+	}
 }
 
 // Computing eye landmarks (to be drawn later or in different interfaces)
-vector<cv::Point2d> CalculateEyeLandmarks(const CLNF& clnf_model)
+vector<cv::Point2d> CalculateVisibleEyeLandmarks(const CLNF& clnf_model)
 {
 
 	vector<cv::Point2d> to_return;
@@ -1053,7 +1064,7 @@ vector<cv::Point2d> CalculateEyeLandmarks(const CLNF& clnf_model)
 			clnf_model.hierarchical_model_names[i].compare("right_eye_28") == 0)
 		{
 
-			auto lmks = CalculateLandmarks(clnf_model.hierarchical_models[i]);
+			auto lmks = CalculateVisibleLandmarks(clnf_model.hierarchical_models[i]);
 			for (auto lmk : lmks)
 			{
 				to_return.push_back(lmk);
@@ -1063,6 +1074,28 @@ vector<cv::Point2d> CalculateEyeLandmarks(const CLNF& clnf_model)
 	return to_return;
 }
 
+// Computing eye landmarks (to be drawn later or in different interfaces)
+vector<cv::Point2d> CalculateAllEyeLandmarks(const CLNF& clnf_model)
+{
+
+	vector<cv::Point2d> to_return;
+	// If the model has hierarchical updates draw those too
+	for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
+	{
+
+		if (clnf_model.hierarchical_model_names[i].compare("left_eye_28") == 0 ||
+			clnf_model.hierarchical_model_names[i].compare("right_eye_28") == 0)
+		{
+
+			auto lmks = CalculateAllLandmarks(clnf_model.hierarchical_models[i]);
+			for (auto lmk : lmks)
+			{
+				to_return.push_back(lmk);
+			}
+		}
+	}
+	return to_return;
+}
 
 // Drawing landmarks on a face image
 void Draw(cv::Mat img, const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities)

@@ -72,3 +72,4 @@ lib/local/CppInerop/x64/
 lib/local/FaceAnalyser/Release/
 lib/local/LandmarkDetector/Release/
 gui/HeadPose-live/obj/
+lib/local/GazeAnalyser/x64/

@@ -34,6 +34,7 @@
 
 using CppInterop.LandmarkDetector;
 using FaceAnalyser_Interop;
+using GazeAnalyser_Interop;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -100,7 +101,7 @@ namespace OpenFaceOffline
                 output_features_file.Write(", gaze_0_x, gaze_0_y, gaze_0_z, gaze_1_x, gaze_1_y, gaze_1_z, gaze_angle_x, gaze_angle_y");
 
                 // Output gaze eye landmarks
-                int gaze_num_lmks = clnf_model.CalculateEyeLandmarks().Count;
+                int gaze_num_lmks = clnf_model.CalculateAllEyeLandmarks().Count;
                 for (int i = 0; i < gaze_num_lmks; ++i)
                 {
                     output_features_file.Write(", eye_lmk_x_" + i);
@@ -187,7 +188,7 @@ namespace OpenFaceOffline
             }
         }
 
-        public void RecordFrame(CLNF clnf_model, FaceAnalyserManaged face_analyser, bool success, int frame_ind, double time_stamp)
+        public void RecordFrame(CLNF clnf_model, FaceAnalyserManaged face_analyser, GazeAnalyserManaged gaze_analyser, bool success, int frame_ind, double time_stamp)
         {
             // Making sure that full stop is used instead of a comma for data recording
             System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
@@ -204,13 +205,13 @@ namespace OpenFaceOffline
 
             if (output_gaze)
             {
-                var gaze = face_analyser.GetGazeCamera();
-                var gaze_angle = face_analyser.GetGazeAngle();
+                var gaze = gaze_analyser.GetGazeCamera();
+                var gaze_angle = gaze_analyser.GetGazeAngle();
 
                 output_features_file.Write(String.Format(", {0:F5}, {1:F5}, {2:F5}, {3:F5}, {4:F5}, {5:F5}, {6:F5}, {7:F5}", gaze.Item1.Item1, gaze.Item1.Item2, gaze.Item1.Item3,
                     gaze.Item2.Item1, gaze.Item2.Item2, gaze.Item2.Item3, gaze_angle.Item1, gaze_angle.Item2));
 
-                List<Tuple<double, double>> landmarks_2d = clnf_model.CalculateEyeLandmarks();
+                List<Tuple<double, double>> landmarks_2d = clnf_model.CalculateAllEyeLandmarks();
 
                 for (int i = 0; i < landmarks_2d.Count; ++i)
                     output_features_file.Write(", {0:F2}", landmarks_2d[i].Item1);
@@ -225,7 +226,7 @@ namespace OpenFaceOffline
 
             if (output_2D_landmarks)
             {
-                List<Tuple<double, double>> landmarks_2d = clnf_model.CalculateLandmarks();
+                List<Tuple<double, double>> landmarks_2d = clnf_model.CalculateAllLandmarks();
 
                 for (int i = 0; i < landmarks_2d.Count; ++i)
                     output_features_file.Write(", {0:F2}", landmarks_2d[i].Item1);
@@ -292,7 +293,7 @@ namespace OpenFaceOffline
             if (record_HOG)
                 face_analyser.StopHOGRecording();
 
-            face_analyser.PostProcessOutputFile(out_filename, dynamic_AU_model);
+            face_analyser.PostProcessOutputFile(out_filename);
         }
 
     }

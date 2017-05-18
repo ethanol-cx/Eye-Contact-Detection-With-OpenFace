@@ -11,8 +11,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>
-    </LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-asvid -no2Dfp -no3Dfp -noMparams -noPose -noGaze  -fdirs "D:/Datasets/UNBC/Images/095-tv095/tv095t1afaff/" -of "./out_unbc/095-tv095_tv095t1afaff.au.txt" -fdir "D:/Datasets/UNBC/Images/095-tv095/tv095t2aeunaff/" -of "./out_unbc/095-tv095_tv095t2aeunaff.au.txt" -fdir "D:/Datasets/UNBC/Images/095-tv095/tv095t2afaff/" -of "./out_unbc/095-tv095_tv095t2afaff.au.txt"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

@@ -55,6 +55,7 @@ using CppInterop;
 using CppInterop.LandmarkDetector;
 using CameraInterop;
 using FaceAnalyser_Interop;
+using GazeAnalyser_Interop;
 using System.Windows.Threading;
 using System.Diagnostics;
 
@@ -108,7 +109,7 @@ namespace OpenFaceDemo
         FaceModelParameters clnf_params;
         CLNF clnf_model;
         FaceAnalyserManaged face_analyser;
-
+        GazeAnalyserManaged gaze_analyser;
 
         public MainWindow()
         {
@@ -123,6 +124,7 @@ namespace OpenFaceDemo
             clnf_params = new FaceModelParameters(root, true);
             clnf_model = new CLNF(clnf_params);
             face_analyser = new FaceAnalyserManaged(root, true, 112);
+            gaze_analyser = new GazeAnalyserManaged();
 
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
             {
@@ -300,21 +302,25 @@ namespace OpenFaceDemo
                 double scale = clnf_model.GetRigidParams()[0];
 
                 double time_stamp = (DateTime.Now - (DateTime)startTime).TotalMilliseconds;
-                // The face analysis step (only done if recording AUs, HOGs or video)
-                face_analyser.AddNextFrame(frame, clnf_model, fx, fy, cx, cy, true, false, false);
 
+                // The face analysis step (only done if recording AUs, HOGs or video)
+                if(detectionSucceeding)
+                { 
+                    face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, true, false);
+                    gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, fx, fy, cx, cy);
+                }
                 List<Tuple<Point, Point>> lines = null;
                 List<Tuple<double, double>> landmarks = null;
                 List<Tuple<double, double>> eye_landmarks = null;
                 List<Tuple<Point, Point>> gaze_lines = null;
-                Tuple<double, double> gaze_angle = face_analyser.GetGazeAngle();
+                Tuple<double, double> gaze_angle = gaze_analyser.GetGazeAngle();
 
                 if (detectionSucceeding)
                 {
-                    landmarks = clnf_model.CalculateLandmarks();
-                    eye_landmarks = clnf_model.CalculateEyeLandmarks();
+                    landmarks = clnf_model.CalculateVisibleLandmarks();
+                    eye_landmarks = clnf_model.CalculateVisibleEyeLandmarks();
                     lines = clnf_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
-                    gaze_lines = face_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
+                    gaze_lines = gaze_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
                 }
 
                 // Visualisation

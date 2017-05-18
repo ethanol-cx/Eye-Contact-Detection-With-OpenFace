@@ -55,9 +55,8 @@ using OpenCVWrappers;
 using CppInterop;
 using CppInterop.LandmarkDetector;
 using CameraInterop;
-using FaceAnalyser_Interop;
 using System.Windows.Threading;
-using FaceAnalyser_Interop;
+using GazeAnalyser_Interop;
 
 using ZeroMQ;
 using System.Drawing;
@@ -304,10 +303,10 @@ namespace HeadPoseLive
 
         }
 
-        private bool ProcessFrame(CLNF clnf_model, FaceAnalyserManaged face_analyser, FaceModelParameters model_params, RawImage frame, RawImage grayscale_frame, double fx, double fy, double cx, double cy)
+        private bool ProcessFrame(CLNF clnf_model, GazeAnalyserManaged gaze_analyser, FaceModelParameters model_params, RawImage frame, RawImage grayscale_frame, double fx, double fy, double cx, double cy)
         {
             bool detection_succeeding = clnf_model.DetectLandmarksInVideo(grayscale_frame, model_params);
-            face_analyser.AddNextFrame(frame, clnf_model, fx, fy, cx, cy, true, false, false);
+            gaze_analyser.AddNextFrame(clnf_model, detection_succeeding, fx, fy, cx, cy);
             return detection_succeeding;
 
         }
@@ -393,7 +392,7 @@ namespace HeadPoseLive
             String root = AppDomain.CurrentDomain.BaseDirectory;
             FaceModelParameters model_params = new FaceModelParameters(root, false);
             CLNF face_model = new CLNF(model_params);
-            FaceAnalyserManaged face_analyser = new FaceAnalyserManaged(root, false, 112);
+            GazeAnalyserManaged gaze_analyser = new GazeAnalyserManaged();
 
             DateTime? startTime = CurrentTime;
 
@@ -424,7 +423,7 @@ namespace HeadPoseLive
                 if (grayFrame == null)
                     continue;
 
-                bool detectionSucceeding = ProcessFrame(face_model, face_analyser, model_params, frame, grayFrame, fx, fy, cx, cy);
+                bool detectionSucceeding = ProcessFrame(face_model, gaze_analyser, model_params, frame, grayFrame, fx, fy, cx, cy);
 
                 lock (recording_lock)
                 {
@@ -449,17 +448,17 @@ namespace HeadPoseLive
 
                 if (detectionSucceeding)
                 {
-                    List<Tuple<double, double>> landmarks_doubles = face_model.CalculateLandmarks();
+                    List<Tuple<double, double>> landmarks_doubles = face_model.CalculateVisibleLandmarks();
 
                     foreach (var p in landmarks_doubles)
                         landmarks.Add(new System.Windows.Point(p.Item1, p.Item2));
 
-                    eye_landmarks = face_model.CalculateEyeLandmarks();
+                    eye_landmarks = face_model.CalculateVisibleEyeLandmarks();
 
                     scale = face_model.GetRigidParams()[0];
 
-                    gaze_lines = face_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
-                    gaze_angle = face_analyser.GetGazeAngle();
+                    gaze_lines = gaze_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
+                    gaze_angle = gaze_analyser.GetGazeAngle();
 
                     lines = face_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
                 }
@@ -467,7 +466,6 @@ namespace HeadPoseLive
                 if (reset)
                 {
                     face_model.Reset();
-                    face_analyser.Reset();
                     reset = false;
                 }
 

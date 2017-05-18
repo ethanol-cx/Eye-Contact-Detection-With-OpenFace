@@ -35,17 +35,21 @@
 #ifndef __FACEANALYSER_h_
 #define __FACEANALYSER_h_
 
+// STL includes
+#include <string>
+#include <vector>
+#include <map>
+
+// OpenCV includes
+#include <opencv2/core/core.hpp>
+
+// Local includes
 #include "SVR_dynamic_lin_regressors.h"
 #include "SVR_static_lin_regressors.h"
 #include "SVM_static_lin.h"
 #include "SVM_dynamic_lin.h"
-
-#include <string>
-#include <vector>
-
-#include <opencv2/core/core.hpp>
-
-#include "LandmarkCoreIncludes.h"
+#include "PDM.h"
+#include "FaceAnalyserParameters.h"
 
 namespace FaceAnalysis
 {
@@ -57,14 +61,10 @@ public:
 
 	enum RegressorType{ SVR_appearance_static_linear = 0, SVR_appearance_dynamic_linear = 1, SVR_dynamic_geom_linear = 2, SVR_combined_linear = 3, SVM_linear_stat = 4, SVM_linear_dyn = 5, SVR_linear_static_seg = 6, SVR_linear_dynamic_seg =7};
 
-	// Constructor from a model file (or a default one if not provided
-	// TODO scale width and height should be read in as part of the model as opposed to being here?
-	FaceAnalyser(vector<cv::Vec3d> orientation_bins = vector<cv::Vec3d>(), double scale = 0.7, int width = 112, int height = 112, std::string au_location = "AU_predictors/AU_all_best.txt", std::string tri_location = "model/tris_68_full.txt");
+	// Constructor for FaceAnalyser using the parameters structure
+	FaceAnalyser(const FaceAnalysis::FaceAnalyserParameters& face_analyser_params);
 
-	void AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CLNF& clnf, double timestamp_seconds, bool online = false, bool visualise = true);
-
-	// If the features are extracted manually (shouldn't really be used)
-	void PredictAUs(const cv::Mat_<double>& hog_features, const cv::Mat_<double>& geom_features, const LandmarkDetector::CLNF& clnf_model, bool online);
+	void AddNextFrame(const cv::Mat& frame, const cv::Mat_<double>& detected_landmarks, bool success, double timestamp_seconds, bool online = false, bool visualise = true);
 
 	cv::Mat GetLatestHOGDescriptorVisualisation();
 
@@ -77,7 +77,7 @@ public:
 
 	// A standalone call for predicting AUs from a static image, the first element in the pair represents occurence the second intensity
 	// This call is useful for detecting action units in images
-	std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, double>>> PredictStaticAUs(const cv::Mat& frame, const LandmarkDetector::CLNF& clnf, bool visualise = true);
+	std::pair<std::vector<std::pair<std::string, double>>, std::vector<std::pair<std::string, double>>> PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<double>& detected_landmarks, bool visualise = true);
 
 	void Reset();
 
@@ -96,16 +96,21 @@ public:
 
 	// Identify if models are static or dynamic (useful for correction and shifting)
 	std::vector<bool> GetDynamicAUClass() const; // Presence
-	std::vector<std::pair<string, bool>> GetDynamicAUReg() const; // Intensity
+	std::vector<std::pair<std::string, bool>> GetDynamicAUReg() const; // Intensity
 
 
-	void ExtractAllPredictionsOfflineReg(vector<std::pair<std::string, vector<double>>>& au_predictions, vector<double>& confidences, vector<bool>& successes, vector<double>& timestamps, bool dynamic);
-	void ExtractAllPredictionsOfflineClass(vector<std::pair<std::string, vector<double>>>& au_predictions, vector<double>& confidences, vector<bool>& successes, vector<double>& timestamps, bool dynamic);
+	void ExtractAllPredictionsOfflineReg(std::vector<std::pair<std::string, std::vector<double>>>& au_predictions, 
+		std::vector<double>& confidences, std::vector<bool>& successes, std::vector<double>& timestamps, bool dynamic);
+	void ExtractAllPredictionsOfflineClass(std::vector<std::pair<std::string, std::vector<double>>>& au_predictions,
+		std::vector<double>& confidences, std::vector<bool>& successes, std::vector<double>& timestamps, bool dynamic);
 
 	// Helper function for post-processing AU output files
-	void FaceAnalyser::PostprocessOutputFile(string output_file, bool dynamic);
+	void FaceAnalyser::PostprocessOutputFile(std::string output_file);
 
 private:
+
+	// Point distribution model coddesponding to the current Face Analyser
+	FaceAnalysis::PDM pdm;
 
 	// Where the predictions are kept
 	std::vector<std::pair<std::string, double>> AU_predictions_reg;
@@ -114,18 +119,21 @@ private:
 	std::vector<std::pair<std::string, double>> AU_predictions_combined;
 
 	// Keeping track of AU predictions over time (useful for post-processing)
-	vector<double> timestamps;
-	std::map<std::string, vector<double>> AU_predictions_reg_all_hist;
-	std::map<std::string, vector<double>> AU_predictions_class_all_hist;
-	std::vector<double> confidences;
+	std::vector<double> timestamps;
+	std::map<std::string, std::vector<double>> AU_predictions_reg_all_hist;
+	std::map<std::string, std::vector<double>> AU_predictions_class_all_hist;
 	std::vector<bool> valid_preds;
 
 	int frames_tracking;
+
+	// Is the AU model dynamic
+	bool dynamic;
 
 	// Cache of intermediate images
 	cv::Mat aligned_face_for_au;
 	cv::Mat aligned_face_for_output;
 	cv::Mat hog_descriptor_visualisation;
+	bool out_grayscale;
 
 	// Private members to be used for predictions
 	// The HOG descriptor of the last frame
@@ -139,18 +147,18 @@ private:
 
 	// Use histograms for quick (but approximate) median computation
 	// Use the same for
-	vector<cv::Mat_<unsigned int> > hog_desc_hist;
+	std::vector<cv::Mat_<unsigned int> > hog_desc_hist;
 
 	// This is not being used at the moment as it is a bit slow
-	vector<cv::Mat_<unsigned int> > face_image_hist;
-	vector<int> face_image_hist_sum;
+	std::vector<cv::Mat_<unsigned int> > face_image_hist;
+	std::vector<int> face_image_hist_sum;
 
-	vector<cv::Vec3d> head_orientations;
+	std::vector<cv::Vec3d> head_orientations;
 
 	int num_bins_hog;
 	double min_val_hog;
 	double max_val_hog;
-	vector<int> hog_hist_sum;
+	std::vector<int> hog_hist_sum;
 	int view_used;
 
 	// The geometry descriptor (rigid followed by non-rigid shape parameters from CLNF)
@@ -171,11 +179,13 @@ private:
 	std::vector<std::pair<std::string, double>> PredictCurrentAUsClass(int view);
 
 	// special step for online (rather than offline AU prediction)
-	std::vector<pair<string, double>> CorrectOnlineAUs(std::vector<std::pair<std::string, double>> predictions_orig, int view, bool dyn_shift = false, bool dyn_scale = false, bool update_track = true, bool clip_values = false);
+	std::vector<std::pair<std::string, double>> CorrectOnlineAUs(std::vector<std::pair<std::string, double>> predictions_orig, int view, bool dyn_shift = false, bool dyn_scale = false, bool update_track = true, bool clip_values = false);
+
+	void Read(std::string model_loc);
 
 	void ReadAU(std::string au_location);
 
-	void ReadRegressor(std::string fname, const vector<string>& au_names);
+	void ReadRegressor(std::string fname, const std::vector<std::string>& au_names);
 
 	// A utility function for keeping track of approximate running medians used for AU and emotion inference using a set of histograms (the histograms are evenly spaced from min_val to max_val)
 	// Descriptor has to be a row vector
@@ -193,18 +203,20 @@ private:
 
 	// The AUs predicted by the model are not always 0 calibrated to a person. That is they don't always predict 0 for a neutral expression
 	// Keeping track of the predictions we can correct for this, by assuming that at least "ratio" of frames are neutral and subtract that value of prediction, only perform the correction after min_frames
-	void UpdatePredictionTrack(cv::Mat_<unsigned int>& prediction_corr_histogram, int& prediction_correction_count, vector<double>& correction, const vector<pair<string, double>>& predictions, double ratio=0.25, int num_bins = 200, double min_val = -3, double max_val = 5, int min_frames = 10);
-	void GetSampleHist(cv::Mat_<unsigned int>& prediction_corr_histogram, int prediction_correction_count, vector<double>& sample, double ratio, int num_bins = 200, double min_val = 0, double max_val = 5);
+	void UpdatePredictionTrack(cv::Mat_<unsigned int>& prediction_corr_histogram, int& prediction_correction_count, 
+		std::vector<double>& correction, const std::vector<std::pair<std::string, double>>& predictions, double ratio=0.25, int num_bins = 200, double min_val = -3, double max_val = 5, int min_frames = 10);
+	void GetSampleHist(cv::Mat_<unsigned int>& prediction_corr_histogram, int prediction_correction_count, 
+		std::vector<double>& sample, double ratio, int num_bins = 200, double min_val = 0, double max_val = 5);
 
 	void PostprocessPredictions();
 
-	vector<cv::Mat_<unsigned int>> au_prediction_correction_histogram;
-	vector<int> au_prediction_correction_count;
+	std::vector<cv::Mat_<unsigned int>> au_prediction_correction_histogram;
+	std::vector<int> au_prediction_correction_count;
 
 	// Some dynamic scaling (the logic is that before the extreme versions of expression or emotion are shown,
 	// it is hard to tell the boundaries, this allows us to scale the model to the most extreme seen)
 	// They have to be view specific
-	vector<vector<double>> dyn_scaling;
+	std::vector<std::vector<double>> dyn_scaling;
 	
 	// Keeping track of predictions for summary stats
 	cv::Mat_<double> AU_prediction_track;
@@ -214,15 +226,19 @@ private:
 
 	// Used for face alignment
 	cv::Mat_<int> triangulation;
-	double align_scale;	
-	int align_width;
-	int align_height;
+	double align_scale_au;
+	int align_width_au;
+	int align_height_au;
+
+	double align_scale_out;
+	int align_width_out;
+	int align_height_out;
 
 	// Useful placeholder for renormalizing the initial frames of shorter videos
 	int max_init_frames = 3000;
-	vector<cv::Mat_<double>> hog_desc_frames_init;
-	vector<cv::Mat_<double>> geom_descriptor_frames_init;
-	vector<int> views;
+	std::vector<cv::Mat_<double>> hog_desc_frames_init;
+	std::vector<cv::Mat_<double>> geom_descriptor_frames_init;
+	std::vector<int> views;
 	bool postprocessed = false;
 	int frames_tracking_succ = 0;
 

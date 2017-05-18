@@ -336,51 +336,11 @@ int main (int argc, char **argv)
 	
 	cv::CascadeClassifier classifier(det_parameters.face_detector_location);
 	dlib::frontal_face_detector face_detector_hog = dlib::get_frontal_face_detector();
-
-	// Loading the AU prediction models
-	string au_loc = "AU_predictors/AU_all_static.txt";
-
-	boost::filesystem::path au_loc_path = boost::filesystem::path(au_loc);
-	if (boost::filesystem::exists(au_loc_path))
-	{
-		au_loc = au_loc_path.string();
-	}
-	else if (boost::filesystem::exists(parent_path/au_loc_path))
-	{
-		au_loc = (parent_path/au_loc_path).string();
-	}
-	else if (boost::filesystem::exists(config_path/au_loc_path))
-	{
-		au_loc = (config_path/au_loc_path).string();
-	}
-	else
-	{
-		cout << "Can't find AU prediction files, exiting" << endl;
-		return 1;
-	}
-
-	// Used for image masking for AUs
-	string tri_loc;
-	boost::filesystem::path tri_loc_path = boost::filesystem::path("model/tris_68_full.txt");
-	if (boost::filesystem::exists(tri_loc_path))
-	{
-		tri_loc = tri_loc_path.string();
-	}
-	else if (boost::filesystem::exists(parent_path/tri_loc_path))
-	{
-		tri_loc = (parent_path/tri_loc_path).string();
-	}
-	else if (boost::filesystem::exists(config_path/tri_loc_path))
-	{
-		tri_loc = (config_path/tri_loc_path).string();
-	}
-	else
-	{
-		cout << "Can't find triangulation files, exiting" << endl;
-		return 1;
-	}
-
-	FaceAnalysis::FaceAnalyser face_analyser(vector<cv::Vec3d>(), 0.7, 112, 112, au_loc, tri_loc);
+	
+	// Load facial feature extractor and AU analyser (make sure it is static)
+	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
+	face_analysis_params.OptimizeForImages();
+	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
 	bool visualise = !det_parameters.quiet_mode;
 
@@ -464,12 +424,12 @@ int main (int argc, char **argv)
 
 				if (success && det_parameters.track_gaze)
 				{
-					FaceAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
-					FaceAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
+					GazeAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
+					GazeAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
 
 				}
 
-				auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model, false);
+				auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model.detected_landmarks, false);
 
 				// Writing out the detected landmarks (in an OS independent manner)
 				if(!output_landmark_locations.empty())
@@ -515,7 +475,7 @@ int main (int argc, char **argv)
 
 					// Draw it in reddish if uncertain, blueish if certain
 					LandmarkDetector::DrawBox(read_image, pose_estimate_to_draw, cv::Scalar(255.0, 0, 0), 3, fx, fy, cx, cy);
-					FaceAnalysis::DrawGaze(read_image, clnf_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
+					GazeAnalysis::DrawGaze(read_image, clnf_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
 				}
 
 				// displaying detected landmarks
@@ -580,11 +540,11 @@ int main (int argc, char **argv)
 			
 			if (det_parameters.track_gaze)
 			{
-				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
-				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
+				GazeAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
+				GazeAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
 			}
 
-			auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model, false);
+			auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model.detected_landmarks, false);
 
 			// Writing out the detected landmarks
 			if(!output_landmark_locations.empty())
@@ -609,7 +569,7 @@ int main (int argc, char **argv)
 
 				// Draw it in reddish if uncertain, blueish if certain
 				LandmarkDetector::DrawBox(read_image, pose_estimate_to_draw, cv::Scalar(255.0, 0, 0), 3, fx, fy, cx, cy);
-				FaceAnalysis::DrawGaze(read_image, clnf_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
+				GazeAnalysis::DrawGaze(read_image, clnf_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
 			}
 
 			create_display_image(read_image, display_image, clnf_model);

@@ -426,7 +426,7 @@ void PAW::WarpRegion(cv::Mat_<float>& mapx, cv::Mat_<float>& mapy)
 // ============================================================
 
 // Is the point (x0,y0) on same side as a half-plane defined by (x1,y1), (x2, y2), and (x3, y3)
-bool sameSide(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3)
+bool PAW::sameSide(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3)
 {
     
     double x = (x3-x2)*(y0-y2) - (x0-x2)*(y3-y2);
@@ -437,7 +437,7 @@ bool sameSide(double x0, double y0, double x1, double y1, double x2, double y2, 
 }
 
 // if point (x0, y0) is on same side for all three half-planes it is in a triangle
-bool pointInTriangle(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3)
+bool PAW::pointInTriangle(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3)
 {
 	bool same_1 = sameSide(x0, y0, x1, y1, x2, y2, x3, y3);
 	bool same_2 = sameSide(x0, y0, x2, y2, x1, y1, x3, y3);
@@ -448,7 +448,7 @@ bool pointInTriangle(double x0, double y0, double x1, double y1, double x2, doub
 }
 
 // Find if a given point lies in the triangles
-int PAW::findTriangle(const cv::Point_<double>& point, const std::vector<vector<double>>& control_points, int guess) const
+int PAW::findTriangle(const cv::Point_<double>& point, const std::vector<vector<double>>& control_points, int guess)
 {
     
 	int num_tris = control_points.size();
