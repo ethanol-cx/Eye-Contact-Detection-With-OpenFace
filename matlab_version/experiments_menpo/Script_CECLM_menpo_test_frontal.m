@@ -95,7 +95,6 @@ for i=1:numel(images)
     end
 
 end
-toc
 
 experiment.lhoods = lhoods;
 experiment.shapes = shapes_all;
@@ -104,6 +103,6 @@ experiment.all_views_used = all_views_used;
 
 %%
 output_results = 'results/results_test_menpo_semifrontal.mat';
-save(output_results, 'experiments');
+save(output_results, 'experiment');
     
 end
