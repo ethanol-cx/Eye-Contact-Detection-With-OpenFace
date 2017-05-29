@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlib", "lib\3rdParty\dlib\dlib.vcxproj", "{B47A5F12-2567-44E9-AE49-35763EC82149}"
 EndProject
@@ -145,10 +145,9 @@ Global
 		{E143A2AA-312E-4DFE-B61D-9A87CCBC8E90}.Release|x64.Build.0 = Release|Any CPU
 		{F396362D-821E-4EA6-9BBF-1F6050844118}.Debug|Win32.ActiveCfg = Debug|x86
 		{F396362D-821E-4EA6-9BBF-1F6050844118}.Debug|Win32.Build.0 = Debug|x86
-		{F396362D-821E-4EA6-9BBF-1F6050844118}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{F396362D-821E-4EA6-9BBF-1F6050844118}.Debug|x64.Build.0 = Debug|Any CPU
-		{F396362D-821E-4EA6-9BBF-1F6050844118}.Release|Win32.ActiveCfg = Release|Any CPU
-		{F396362D-821E-4EA6-9BBF-1F6050844118}.Release|Win32.Build.0 = Release|Any CPU
+		{F396362D-821E-4EA6-9BBF-1F6050844118}.Debug|x64.ActiveCfg = Debug|x86
+		{F396362D-821E-4EA6-9BBF-1F6050844118}.Release|Win32.ActiveCfg = Release|x86
+		{F396362D-821E-4EA6-9BBF-1F6050844118}.Release|Win32.Build.0 = Release|x86
 		{F396362D-821E-4EA6-9BBF-1F6050844118}.Release|x64.ActiveCfg = Release|Any CPU
 		{F396362D-821E-4EA6-9BBF-1F6050844118}.Release|x64.Build.0 = Release|Any CPU
 		{5F915541-F531-434F-9C81-79F5DB58012B}.Debug|Win32.ActiveCfg = Debug|Win32
