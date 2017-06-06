@@ -1,30 +1,21 @@
 clear; 
-addpath('../PDM_helpers/');
-addpath('../fitting/normxcorr2_mex_ALL');
-addpath('../fitting/');
-addpath('../CCNF/');
-addpath('../models/');
+addpath(genpath('../'));
 
-output_dir = './DCLM_res/';
+output_dir = './CLNF_res_general/';
 
 %% select database and load bb initializations
 db_root = 'D:\Datasets\300VW_Dataset_2015_12_14\300VW_Dataset_2015_12_14/';
 bb_root = '../..//matlab_runners/Feature Point Experiments/300VW_face_dets/';
 extra_dir = 'D:\Datasets\300VW_Dataset_2015_12_14\extra';
-
-in_dirs = dir(db_root);
-in_dirs = in_dirs(3:end);
-in_dirs = in_dirs(1:end-2);
-preds_all = [];
-gts_all = [];
+[ vid_locs, bboxes, gts_all, invalid_frames ] = CollectTestData(db_root, bb_root, extra_dir);
 
 %% loading the patch experts and the PDM
 clmParams = struct;
 
-clmParams.window_size = [25,25; 23,23; 21,21; 21,21];
+clmParams.window_size = [25,25; 23,23; 21,21; 19,19; 17,17;];
 clmParams.numPatchIters = size(clmParams.window_size,1);
 
-[patches] = Load_DCLM_Patch_Experts( '../models/general/', 'dccnf_patches_*_general.mat', [], [], clmParams);
+[patches] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*_general.mat', [], [], clmParams);
 
 % the default PDM to use
 pdmLoc = ['../models/pdm/pdm_68_aligned_wild.mat'];
@@ -50,20 +41,16 @@ multi_view = true;
 verbose = true;
 
 %% Select video
-for i=1:numel(in_dirs)
+for i=1:numel(vid_locs)
 
-    in_file_name = [db_root '/', in_dirs(i).name, '/vid.avi']; 
+    vid = VideoReader(vid_locs{i});
 
-    vid = VideoReader(in_file_name);
-
-    bounding_boxes = dlmread([bb_root,  in_dirs(i).name, '_dets.txt'], ',');
+    bounding_boxes = bboxes{i};
     preds = [];
     n_frames = size(bounding_boxes,1);
     for f=1:n_frames
         input_image = readFrame(vid);
-                
-        reset = true;
-        
+                        
         %% Initialize from detected bounding boxes every 30 frames
         if (mod(f-1, 30) == 0)
             ind = min(f, size(bounding_boxes,1));
@@ -89,22 +76,26 @@ for i=1:numel(in_dirs)
             clmParams.window_size = [25,25; 23,23; 21,21; 21,21];
             clmParams.numPatchIters = 4;
             clmParams.startScale = 1;
-            views = [0,0,0; 0,-45,0; -30,0,0; 0,45,0; 30,0,0];
+            
+            views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
             views = views * pi/180;                                                                                     
 
             shapes = zeros(num_points, 2, size(views,1));
             ls = zeros(size(views,1),1);
             lmark_lhoods = zeros(num_points,size(views,1));
             views_used = zeros(num_points,size(views,1));
-
+            g_params = cell(size(views,1),1);
+            l_params = cell(size(views,1),1);
+            
             % Find the best orientation
             for v = 1:size(views,1)
-                [shapes(:,:,v),g_param,l_param,ls(v),lmark_lhoods(:,v),views_used(v)] = Fitting_from_bb(input_image, [], bb, pdm, patches, clmParams, 'orientation', views(v,:));                                            
+                [shapes(:,:,v),g_params{v},l_params{v},ls(v),lmark_lhoods(:,v),views_used(v)] = Fitting_from_bb(input_image, [], bb, pdm, patches, clmParams, 'orientation', views(v,:));                                            
             end
 
             [lhood, v_ind] = max(ls);
             lmark_lhood = lmark_lhoods(:,v_ind);
-
+            g_param = g_params{v_ind};
+            l_param = l_params{v_ind};
             shape = shapes(:,:,v_ind);
             view_used = views_used(v);
 
@@ -128,29 +119,18 @@ for i=1:numel(in_dirs)
     end
     
     %% Grab the ground truth
-    fps_all = dir([db_root, '/', in_dirs(i).name, '/annot/*.pts']);
-    gt_landmarks = zeros([68, 2, size(fps_all)]);
-    for k = 1:size(fps_all)
+    gt_landmarks = gts_all{i};
 
-        gt_landmarks_frame = dlmread([db_root, '/', in_dirs(i).name, '/annot/', fps_all(k).name], ' ', 'A4..B71');
-        gt_landmarks(:,:,k) = gt_landmarks_frame;
+    % Remove unreliable frames
+    if(~isempty(invalid_frames{i}))
+        preds(:,:,int32(invalid_frames{i}))=[];
     end
     
     if(size(gt_landmarks,3) ~= size(preds,3))
         fprintf('something went wrong with vid %d\n', i);
     end
-
-    % Remove unreliable frames
-    if(exist([extra_dir, '/', in_dirs(i).name, '.mat'], 'file'))
-        load([extra_dir, '/', in_dirs(i).name, '.mat']);
-        gt_landmarks(:,:,int32(error)) = [];
-        preds(:,:,int32(error))=[];
-    end    
     
-    vid_name = in_dirs(i).name;
+    [vid_name,~,~] = fileparts(vid_locs{i});
+    [~,vid_name,~] = fileparts(vid_name);
     save([output_dir, '/', vid_name], 'preds', 'gt_landmarks');
 end
-% [pocr_error, err_pp_pocr] = compute_error( gts_all,  preds_all);
-
-
-
