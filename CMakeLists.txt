@@ -9,6 +9,10 @@ set(CMAKE_CONFIG_DIR etc/OpenFace)
 set(CONFIG_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_CONFIG_DIR}")
 add_definitions(-DCONFIG_DIR="${CONFIG_DIR}")
 
+find_package( BLAS REQUIRED )
+include_directories( ${BLAS_INCLUDE_DIRS} )
+LINK_DIRECTORIES(${BLAS_LIBRARY_DIRS})	
+
 find_package( OpenCV REQUIRED )
 
 MESSAGE("OpenCV information:") 
@@ -17,7 +21,6 @@ MESSAGE("  OpenCV_LIBRARIES: ${OpenCV_LIBRARIES}")
 MESSAGE("  OpenCV_LIBRARY_DIRS: ${OpenCV_LIBRARY_DIRS}") 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
-find_package(OpenBlas REQUIRED)
 
 find_package( Boost 1.5.9 REQUIRED COMPONENTS filesystem system)
 MESSAGE("Boost information:") 
