@@ -1,5 +1,6 @@
 #TBB library
 include_directories(${TBB_ROOT_DIR}/include)
+include_directories(${BLAS_ROOT_DIR})
 
 add_executable(FaceLandmarkVid FaceLandmarkVid.cpp)
 
@@ -14,6 +15,6 @@ target_link_libraries(FaceLandmarkVid FaceAnalyser)
 
 target_link_libraries(FaceLandmarkVid dlib)
 
-target_link_libraries(FaceLandmarkVid ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES})
+target_link_libraries(FaceLandmarkVid ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES} ${BLAS_libraries})
 
 install (TARGETS FaceLandmarkVid DESTINATION bin)
