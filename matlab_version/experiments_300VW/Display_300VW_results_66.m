@@ -30,8 +30,8 @@ load('results/iccr_errors.mat');
 plot(error_x, error_y, 'DisplayName', 'iCCR', 'LineWidth',line_width);
 
 % Make it look nice and print to a pdf
-set(gca,'xtick',[0.01:0.01:0.05])
-xlim([0.01,0.05]);
+set(gca,'xtick',[0.01:0.01:0.08])
+xlim([0.01,0.08]);
 xlabel('IOD normalized MAE','FontName','Helvetica');
 ylabel('Proportion of images','FontName','Helvetica');
 grid on
@@ -77,8 +77,8 @@ load('results/iccr_errors.mat');
 plot(error_x, error_y, 'DisplayName', 'iCCR', 'LineWidth',line_width);
 
 % Make it look nice and print to a pdf
-set(gca,'xtick',[0.01:0.01:0.07])
-xlim([0.01,0.07]);
+set(gca,'xtick',[0.01:0.01:0.08])
+xlim([0.01,0.08]);
 xlabel('IOD normalized MAE','FontName','Helvetica');
 ylabel('Proportion of images','FontName','Helvetica');
 grid on
@@ -124,8 +124,8 @@ load('results/iccr_errors.mat');
 plot(error_x, error_y, 'DisplayName', 'iCCR', 'LineWidth',line_width);
 
 % Make it look nice and print to a pdf
-set(gca,'xtick',[0.01:0.01:0.07])
-xlim([0.01,0.07]);
+set(gca,'xtick',[0.01:0.01:0.08])
+xlim([0.01,0.08]);
 xlabel('IOD normalized MAE','FontName','Helvetica');
 ylabel('Proportion of images','FontName','Helvetica');
 grid on

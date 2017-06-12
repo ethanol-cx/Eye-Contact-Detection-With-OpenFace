@@ -81,6 +81,9 @@
 #include <FaceAnalyser.h>
 #include <GazeEstimation.h>
 
+// OpenBlas include
+#include <cblas.h>
+
 #ifndef CONFIG_DIR
 #define CONFIG_DIR "~"
 #endif
@@ -243,6 +246,8 @@ void post_process_output_file(FaceAnalysis::FaceAnalyser& face_analyser, string 
 int main (int argc, char **argv)
 {
 
+	openblas_set_num_threads(1);
+
 	vector<string> arguments = get_arguments(argc, argv);
 
 	// Search paths
@@ -395,7 +400,7 @@ int main (int argc, char **argv)
 	if (sim_scale == -1) sim_scale = sim_size * (0.7 / 112.0);
 
 	FaceAnalysis::FaceAnalyser face_analyser(vector<cv::Vec3d>(), sim_scale, sim_size, sim_size, au_loc, tri_loc);
-		
+
 	while(!done) // this is not a for loop as we might also be reading from a webcam
 	{
 		
@@ -644,7 +649,7 @@ int main (int argc, char **argv)
 
 				string out_file = output_similarity_align[f_n] + preferredSlash + string(name);
 				bool write_success = imwrite(out_file, sim_warped_img);
-
+				
 				if (!write_success)
 				{
 					cout << "Could not output similarity aligned image image" << endl;
