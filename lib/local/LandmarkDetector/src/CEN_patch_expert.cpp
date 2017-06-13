@@ -58,7 +58,7 @@
 
 #include "stdafx.h"
 
-#include "DPN_patch_expert.h"
+#include "CEN_patch_expert.h"
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -73,7 +73,7 @@
 using namespace LandmarkDetector;
 
 // Copy constructor		
-DPN_patch_expert::DPN_patch_expert(const DPN_patch_expert& other) : confidence(other.confidence), width(other.width), height(other.height)
+CEN_patch_expert::CEN_patch_expert(const CEN_patch_expert& other) : confidence(other.confidence), width(other.width), height(other.height)
 {
 
 	// Copy the layer weights in a deep way
@@ -87,7 +87,7 @@ DPN_patch_expert::DPN_patch_expert(const DPN_patch_expert& other) : confidence(o
 }
 
 //===========================================================================
-void DPN_patch_expert::Read(ifstream &stream)
+void CEN_patch_expert::Read(ifstream &stream)
 {
 
 	// Sanity check
@@ -214,7 +214,7 @@ void im2colBias(const cv::Mat_<float>& input, int width, int height, cv::Mat_<fl
 }
 
 //===========================================================================
-void DPN_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response)
+void CEN_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response)
 {
 
 	int response_height = area_of_interest.rows - height + 1;

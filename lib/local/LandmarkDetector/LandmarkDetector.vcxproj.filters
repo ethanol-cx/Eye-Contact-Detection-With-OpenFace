@@ -34,7 +34,7 @@
     <ClCompile Include="src\LandmarkDetectorParameters.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="src\DPN_patch_expert.cpp">
+    <ClCompile Include="src\CEN_patch_expert.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -75,7 +75,7 @@
     <ClInclude Include="include\LandmarkDetectorFunc.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="include\DPN_patch_expert.h">
+    <ClInclude Include="include\CEN_patch_expert.h">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

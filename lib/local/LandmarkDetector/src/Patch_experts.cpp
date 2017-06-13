@@ -160,7 +160,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 	
 
 	bool use_ccnf = !this->ccnf_expert_intensity.empty();
-	bool use_dpn = !this->dpn_expert_intensity.empty();
+	bool use_cen = !this->cen_expert_intensity.empty();
 
 	// If using CCNF patch experts might need to precalculate Sigmas
 	if(use_ccnf)
@@ -210,10 +210,10 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				int area_of_interest_width;
 				int area_of_interest_height;
 
-				if (use_dpn)
+				if (use_cen)
 				{
-					area_of_interest_width = window_size + dpn_expert_intensity[scale][view_id][i].width - 1;
-					area_of_interest_height = window_size + dpn_expert_intensity[scale][view_id][i].height - 1;
+					area_of_interest_width = window_size + cen_expert_intensity[scale][view_id][i].width - 1;
+					area_of_interest_height = window_size + cen_expert_intensity[scale][view_id][i].height - 1;
 				}
 				else if (use_ccnf)
 				{
@@ -241,10 +241,10 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				// get the correct size response window			
 				patch_expert_responses[i] = cv::Mat_<float>(window_size, window_size);
 
-				// Get intensity response either from the SVR, CCNF, or DPN patch experts (prefer DPN as they are the most accurate so far)
-				if (!dpn_expert_intensity.empty())
+				// Get intensity response either from the SVR, CCNF, or CEN patch experts (prefer CEN as they are the most accurate so far)
+				if (!cen_expert_intensity.empty())
 				{
-					dpn_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
+					cen_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
 				}
 				else if (!ccnf_expert_intensity.empty())
 				{
@@ -338,7 +338,7 @@ int Patch_experts::GetViewIdx(const cv::Vec6d& params_global, int scale) const
 
 
 //===========================================================================
-void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<string> depth_svr_expert_locations, vector<string> intensity_ccnf_expert_locations, vector<string> intensity_dpn_expert_locations)
+void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<string> depth_svr_expert_locations, vector<string> intensity_ccnf_expert_locations, vector<string> intensity_cen_expert_locations)
 {
 
 	// initialise the SVR intensity patch expert parameters
@@ -376,23 +376,23 @@ void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 		Read_CCNF_patch_experts(location,  centers[scale], visibilities[scale], ccnf_expert_intensity[scale], patch_scaling[scale]);
 	}
 
-	// Initialise and read CCNF patch experts (currently only intensity based), 
-	int num_intensity_dpn = intensity_dpn_expert_locations.size();
+	// Initialise and read CEN patch experts (currently only intensity based), 
+	int num_intensity_cen = intensity_cen_expert_locations.size();
 
-	// CCNF experts override the SVR ones
-	if (num_intensity_dpn > 0)
+	// CEN experts override the SVR and CCNF ones
+	if (num_intensity_cen > 0)
 	{
-		centers.resize(num_intensity_dpn);
-		visibilities.resize(num_intensity_dpn);
-		patch_scaling.resize(num_intensity_dpn);
-		dpn_expert_intensity.resize(num_intensity_dpn);
+		centers.resize(num_intensity_cen);
+		visibilities.resize(num_intensity_cen);
+		patch_scaling.resize(num_intensity_cen);
+		cen_expert_intensity.resize(num_intensity_cen);
 	}
 
-	for (int scale = 0; scale < num_intensity_dpn; ++scale)
+	for (int scale = 0; scale < num_intensity_cen; ++scale)
 	{
-		string location = intensity_dpn_expert_locations[scale];
-		cout << "Reading the intensity DPN patch experts from: " << location << "....";
-		Read_DPN_patch_experts(location, centers[scale], visibilities[scale], dpn_expert_intensity[scale], patch_scaling[scale]);
+		string location = intensity_cen_expert_locations[scale];
+		cout << "Reading the intensity CEN patch experts from: " << location << "....";
+		Read_CEN_patch_experts(location, centers[scale], visibilities[scale], cen_expert_intensity[scale], patch_scaling[scale]);
 	}
 
 	// initialise the SVR depth patch expert parameters
@@ -598,8 +598,8 @@ void Patch_experts::Read_CCNF_patch_experts(string patchesFileLocation, std::vec
 	}
 }
 
-//======================= Reading the DPN patch experts =========================================//
-void Patch_experts::Read_DPN_patch_experts(string expert_location, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<DPN_patch_expert> >& patches, double& scale)
+//======================= Reading the CEN patch experts =========================================//
+void Patch_experts::Read_CEN_patch_experts(string expert_location, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<CEN_patch_expert> >& patches, double& scale)
 {
 
 	ifstream patchesFile(expert_location.c_str(), ios::in | ios::binary);

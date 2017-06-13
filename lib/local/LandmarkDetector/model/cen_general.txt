@@ -1,0 +1,6 @@
+PDM pdms/pdm_68_aligned_menpo.txt
+Triangulations tris_68.txt
+PatchesCEN patch_experts/cen_patches_0.25_menpo.dat
+PatchesCEN patch_experts/cen_patches_0.35_menpo.dat
+PatchesCEN patch_experts/cen_patches_0.50_menpo.dat
+PatchesCEN patch_experts/cen_patches_1.00_menpo.dat

@@ -65,7 +65,7 @@
 
 #include "SVR_patch_expert.h"
 #include "CCNF_patch_expert.h"
-#include "DPN_patch_expert.h"
+#include "CEN_patch_expert.h"
 #include "PDM.h"
 
 namespace LandmarkDetector
@@ -91,8 +91,8 @@ public:
 	// The node connectivity for CCNF experts, at different window sizes and corresponding to separate edge features
 	vector<vector<cv::Mat_<float> > >					sigma_components;
 
-	// The collection of DPN patch experts (for intensity images), the experts are laid out scale->view->landmark
-	vector<vector<vector<DPN_patch_expert> > >			dpn_expert_intensity;
+	// The collection of CEN patch experts (for intensity images), the experts are laid out scale->view->landmark
+	vector<vector<vector<CEN_patch_expert> > >			cen_expert_intensity;
 
 	// The available scales for intensity patch experts
 	vector<double>							patch_scaling;
@@ -123,7 +123,7 @@ public:
 	inline int nViews(size_t scale = 0) const { return (int)centers[scale].size(); };
 
 	// Reading in all of the patch experts
-	void Read(vector<string> intensity_svr_expert_locations, vector<string> depth_svr_expert_locations, vector<string> intensity_ccnf_expert_locations, vector<string> intensity_dpn_expert_locations);
+	void Read(vector<string> intensity_svr_expert_locations, vector<string> depth_svr_expert_locations, vector<string> intensity_ccnf_expert_locations, vector<string> intensity_cen_expert_locations);
 
 
    
@@ -131,7 +131,7 @@ public:
 private:
 	void Read_SVR_patch_experts(string expert_location, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<Multi_SVR_patch_expert> >& patches, double& scale);
 	void Read_CCNF_patch_experts(string patchesFileLocation, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<CCNF_patch_expert> >& patches, double& patchScaling);
-	void Read_DPN_patch_experts(string expert_location, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<DPN_patch_expert> >& patches, double& scale);
+	void Read_CEN_patch_experts(string expert_location, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<CEN_patch_expert> >& patches, double& scale);
 
 
 };

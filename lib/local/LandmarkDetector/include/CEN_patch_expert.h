@@ -57,8 +57,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef __DPN_PATCH_EXPERT_h_
-#define __DPN_PATCH_EXPERT_h_
+#ifndef __CEN_PATCH_EXPERT_h_
+#define __CEN_PATCH_EXPERT_h_
 
 // system includes
 #include <vector>
@@ -70,10 +70,10 @@ namespace LandmarkDetector
 {
 	//===========================================================================
 	/**
-	The classes describing the DPN patch experts
+	The classes describing the CEN patch experts
 	*/
 
-	class DPN_patch_expert {
+	class CEN_patch_expert {
 	public:
 
 		// Width and height of the patch expert support area
@@ -91,10 +91,10 @@ namespace LandmarkDetector
 		// Confidence of the current patch expert (used for NU_RLMS optimisation)
 		double  confidence;
 
-		DPN_patch_expert() { ; }
+		CEN_patch_expert() { ; }
 
 		// A copy constructor
-		DPN_patch_expert(const DPN_patch_expert& other);
+		CEN_patch_expert(const CEN_patch_expert& other);
 
 		// Reading in the patch expert
 		void Read(std::ifstream &stream);
