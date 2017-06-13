@@ -129,7 +129,6 @@ void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, 
 
 int main (int argc, char **argv)
 {
-	openblas_set_num_threads(1);
 
 	vector<string> arguments = get_arguments(argc, argv);
 

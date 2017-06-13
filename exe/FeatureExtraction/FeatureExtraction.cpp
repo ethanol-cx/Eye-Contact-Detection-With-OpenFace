@@ -246,8 +246,6 @@ void post_process_output_file(FaceAnalysis::FaceAnalyser& face_analyser, string 
 int main (int argc, char **argv)
 {
 
-	openblas_set_num_threads(1);
-
 	vector<string> arguments = get_arguments(argc, argv);
 
 	// Search paths

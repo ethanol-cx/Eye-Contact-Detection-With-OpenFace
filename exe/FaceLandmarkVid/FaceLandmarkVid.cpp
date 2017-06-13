@@ -182,8 +182,6 @@ void visualise_tracking(cv::Mat& captured_image, cv::Mat_<float>& depth_image, c
 int main (int argc, char **argv)
 {
 
-	openblas_set_num_threads(1);
-
 	vector<string> arguments = get_arguments(argc, argv);
 
 	// Some initial parameters that can be overriden from command line	

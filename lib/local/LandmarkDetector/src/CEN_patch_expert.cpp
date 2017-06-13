@@ -90,6 +90,14 @@ CEN_patch_expert::CEN_patch_expert(const CEN_patch_expert& other) : confidence(o
 void CEN_patch_expert::Read(ifstream &stream)
 {
 
+	// Setting up OpenBLAS
+	#if OS_UNIX
+
+	#else
+		openblas_set_num_threads(1);
+	#endif
+
+
 	// Sanity check
 	int read_type;
 
