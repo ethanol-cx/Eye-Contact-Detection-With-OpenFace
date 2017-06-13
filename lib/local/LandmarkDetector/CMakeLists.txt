@@ -7,7 +7,7 @@ SET(SOURCE
     src/CCNF_patch_expert.cpp
 	src/LandmarkDetectionValidator.cpp
     src/LandmarkDetectorFunc.cpp
-	src/DPN_patch_expert.cpp
+	src/CEN_patch_expert.cpp
 	src/LandmarkDetectorModel.cpp
     src/LandmarkDetectorUtils.cpp
 	src/LandmarkDetectorParameters.cpp
@@ -21,7 +21,7 @@ SET(SOURCE
 SET(HEADERS
     include/CCNF_patch_expert.h	
     include/LandmarkCoreIncludes.h
-	include/DPN_patch_expert.h
+	include/CEN_patch_expert.h
 	include/LandmarkDetectionValidator.h
     include/LandmarkDetectorFunc.h
 	include/LandmarkDetectorModel.h

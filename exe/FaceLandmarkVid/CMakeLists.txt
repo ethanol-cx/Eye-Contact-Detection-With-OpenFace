@@ -9,7 +9,6 @@ include_directories(${LandmarkDetector_SOURCE_DIR}/include)
 
 include_directories(../../lib/local/LandmarkDetector/include)
 include_directories(../../lib/local/FaceAnalyser/include)
-include_directories(../../lib/3rdParty/OpenBLAS/include)		
 
 target_link_libraries(FaceLandmarkVid LandmarkDetector)
 target_link_libraries(FaceLandmarkVid FaceAnalyser)
