@@ -1,47 +1,13 @@
 function Script_CECLM_general_cross_data_multi_hyp()
 
-addpath('../PDM_helpers/');
-addpath('../fitting/normxcorr2_mex_ALL');
-addpath('../fitting/');
-addpath('../CCNF/');
-addpath('../models/');
+addpath(genpath('../'));
 
-[images, detections, labels] = Collect_menpo_train_imgs('D:\Datasets\menpo/');
+[images, detections, labels] = Collect_menpo_train_imgs('C:\datasets\menpo\menpo_data_orig/');
 
 %% loading the patch experts
-   
-clmParams = struct;
-
-clmParams.window_size = [25,25; 23,23; 21,21; 21,21];
-clmParams.numPatchIters = size(clmParams.window_size,1);
-
-[patches] = Load_DCLM_Patch_Experts( '../models/cen/', 'cen_patches_*_general.mat', [], [], clmParams);
+[patches, pdm, clmParams] = Load_CECLM_general();
 
 %% Fitting the model to the provided image
-
-output_root = './menpo_fit_dclm_more_epochs/';
-
-% the default PDM to use
-pdmLoc = ['../models/pdm/pdm_68_aligned_wild.mat'];
-
-load(pdmLoc);
-
-pdm = struct;
-pdm.M = double(M);
-pdm.E = double(E);
-pdm.V = double(V);
-
-clmParams.regFactor = 0.9 * [35, 27, 20, 20];
-clmParams.sigmaMeanShift = 1.5 * [1.25, 1.375, 1.5, 1.5]; 
-clmParams.tikhonov_factor = [2.5, 5, 7.5, 7.5];
-
-clmParams.startScale = 1;
-clmParams.num_RLMS_iter = 10;
-clmParams.fTol = 0.01;
-clmParams.useMultiScale = true;
-clmParams.use_multi_modal = 1;
-clmParams.multi_modal_types  = patches(1).multi_modal_types;
-
 views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
 views = views * pi/180;                                                                                     
 num_views = size(views,1);
