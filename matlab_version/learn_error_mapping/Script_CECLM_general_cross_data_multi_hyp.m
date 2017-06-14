@@ -2,7 +2,7 @@ function Script_CECLM_general_cross_data_multi_hyp()
 
 addpath(genpath('../'));
 
-[images, detections, labels] = Collect_menpo_train_imgs('C:\datasets\menpo\menpo_data_orig/');
+[images, detections, labels] = Collect_menpo_train_imgs('D:\Datasets\menpo/');
 
 %% loading the patch experts
 [patches, pdm, clmParams] = Load_CECLM_general();
@@ -17,7 +17,7 @@ clmParams.numPatchIters = 1;
 % for recording purposes
 experiment.params = clmParams;
 
-num_points = numel(M)/3;
+num_points = numel(pdm.M)/3;
 
 shapes_all = cell(numel(images), num_views);
 labels_all = cell(numel(images), 1);
