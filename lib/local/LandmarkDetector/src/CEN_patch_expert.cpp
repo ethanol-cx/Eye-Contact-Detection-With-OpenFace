@@ -77,7 +77,7 @@ CEN_patch_expert::CEN_patch_expert(const CEN_patch_expert& other) : confidence(o
 {
 
 	// Copy the layer weights in a deep way
-	for (size_t i = 0; i < weights.size(); ++i)
+	for (size_t i = 0; i < other.weights.size(); ++i)
 	{
 		this->weights.push_back(other.weights[i].clone());
 		this->biases.push_back(other.biases[i].clone());
