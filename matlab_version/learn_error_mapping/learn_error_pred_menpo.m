@@ -1,6 +1,6 @@
 clear;
 
-load('results/results_ceclm_menpo.mat');
+load('./results/results_ceclm_menpo.mat');
 
 % Generate a lot of possibilities and find best
 weights = [1,1,1,0,0,0];
