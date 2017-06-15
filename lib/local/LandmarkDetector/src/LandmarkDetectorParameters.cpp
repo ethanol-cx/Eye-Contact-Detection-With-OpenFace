@@ -87,6 +87,7 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 		{
 			string face_detector_loc = arguments[i + 1];
 			face_detector_location = face_detector_loc;
+			curr_face_detector = HAAR_DETECTOR;
 			valid[i] = false;
 			valid[i + 1] = false;
 			i++;
