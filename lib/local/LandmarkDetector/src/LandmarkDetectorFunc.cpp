@@ -602,6 +602,7 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 			params.window_sizes_current[0] = 0;
 			params.validate_detections = old_params.validate_detections;
 			success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+			early_term = true;
 			break;
 		}
 		else
