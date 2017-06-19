@@ -5,7 +5,7 @@ output_dir = './CLM_res/';
 
 %% select database and load bb initializations
 db_root = 'D:\Datasets\300VW_Dataset_2015_12_14\300VW_Dataset_2015_12_14/';
-bb_root = '../..//matlab_runners/Feature Point Experiments/300VW_face_dets/';
+bb_root = './300VW_dets_mtcnn/';
 extra_dir = 'D:\Datasets\300VW_Dataset_2015_12_14\extra';
 [ vid_locs, bboxes, gts_all, invalid_frames ] = CollectTestData(db_root, bb_root, extra_dir);
 

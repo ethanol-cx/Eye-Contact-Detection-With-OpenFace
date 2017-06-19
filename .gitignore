@@ -95,3 +95,5 @@ matlab_version/experiments_300VW/CLNF_res_2/
 matlab_version/experiments_300VW/CECLM_res_menpo/
 matlab_version/experiments_300VW/CLNF_res_general/
 matlab_version/experiments_300VW/CECLM_res_general/
+matlab_version/experiments_300VW/CECLM_res_general_mtcnn/
+matlab_version/experiments_300VW/CLNF_res_general_mtcnn/

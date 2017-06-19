@@ -25,6 +25,10 @@ load('results/clnf_errors.mat');
 [error_x, error_y] = cummErrorCurve(clnf_error_66_cat_1);
 plot(error_x, error_y, 'DisplayName', 'CLNF', 'LineWidth',line_width);
 
+load('results/cfan_errors.mat');
+[error_x, error_y] = cummErrorCurve(cfan_error_66_cat_1);
+plot(error_x, error_y, 'DisplayName', 'CFAN', 'LineWidth',line_width);
+
 load('results/iccr_errors.mat');
 [error_x, error_y] = cummErrorCurve(iccr_error_66_cat_1);
 plot(error_x, error_y, 'DisplayName', 'iCCR', 'LineWidth',line_width);
@@ -72,6 +76,10 @@ load('results/clnf_errors.mat');
 [error_x, error_y] = cummErrorCurve(clnf_error_66_cat_2);
 plot(error_x, error_y, 'DisplayName', 'CLNF', 'LineWidth',line_width);
 
+load('results/cfan_errors.mat');
+[error_x, error_y] = cummErrorCurve(cfan_error_66_cat_2);
+plot(error_x, error_y, 'DisplayName', 'CFAN', 'LineWidth',line_width);
+
 load('results/iccr_errors.mat');
 [error_x, error_y] = cummErrorCurve(iccr_error_66_cat_2);
 plot(error_x, error_y, 'DisplayName', 'iCCR', 'LineWidth',line_width);
@@ -118,6 +126,10 @@ plot(error_x, error_y, 'DisplayName', 'CFSS', 'LineWidth',line_width);
 load('results/clnf_errors.mat');
 [error_x, error_y] = cummErrorCurve(clnf_error_66_cat_3);
 plot(error_x, error_y, 'DisplayName', 'CLNF', 'LineWidth',line_width);
+
+load('results/cfan_errors.mat');
+[error_x, error_y] = cummErrorCurve(cfan_error_66_cat_3);
+plot(error_x, error_y, 'DisplayName', 'CFAN', 'LineWidth',line_width);
 
 load('results/iccr_errors.mat');
 [error_x, error_y] = cummErrorCurve(iccr_error_66_cat_3);
