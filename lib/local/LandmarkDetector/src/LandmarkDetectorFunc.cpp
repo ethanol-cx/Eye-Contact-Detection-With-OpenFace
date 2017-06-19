@@ -546,7 +546,7 @@ template <typename T> std::vector<size_t> sort_indexes(const vector<T> &v) {
 
 	// sort indexes based on comparing values in v
 	sort(idx.begin(), idx.end(),
-		[&v](size_t i1, size_t i2) {return v[i1] < v[i2]; });
+		[&v](size_t i1, size_t i2) {return v[i1] > v[i2]; });
 
 	return idx;
 }
@@ -613,10 +613,6 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 		}
 	}
 
-	params.refine_hierarchical = old_params.refine_hierarchical;
-	params.window_sizes_current = params.window_sizes_init;
-	params.window_sizes_current[0] = 0;
-	params.validate_detections = old_params.validate_detections;
 
 	if (!early_term)
 	{
@@ -639,7 +635,16 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 		// Sort the likelihoods and pick the best top 3 models
 		vector<size_t> indices = sort_indexes(likelihoods);
 
-		for (size_t i = 0; i < 3; ++i)
+		// Pick 3 best hypotheses and complete them
+		size_t max = indices.size() >= 3 ? 3 : indices.size();
+
+		params.refine_hierarchical = old_params.refine_hierarchical;
+		params.window_sizes_current = params.window_sizes_init;
+		params.window_sizes_current[0] = 0;
+		params.validate_detections = old_params.validate_detections;
+
+
+		for (size_t i = 0; i < max; ++i)
 		{
 			// Reset the potentially set clnf_model parameters
 			clnf_model.params_local = local_parameters[indices[i]];
