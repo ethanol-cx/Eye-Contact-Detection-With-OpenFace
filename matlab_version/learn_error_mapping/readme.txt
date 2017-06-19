@@ -8,3 +8,5 @@ Script_CECLM_menpo_multi_hyp.m
 Then:
 learn_error_pred_general.m
 learn_error_pred_menpo.m
+
+To use in C++ also generate the early_term_cen.txt file using output_corrections.m

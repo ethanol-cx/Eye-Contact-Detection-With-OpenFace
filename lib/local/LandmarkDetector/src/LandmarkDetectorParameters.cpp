@@ -204,6 +204,7 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 		}
 	}
 
+
 	// Make sure model_location is valid
 	// First check working directory, then the executable's directory, then the config path set by the build process.
 	boost::filesystem::path config_path = boost::filesystem::path(CONFIG_DIR);
@@ -223,6 +224,12 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 	else
 	{
 		std::cout << "Could not find the landmark detection model to load" << std::endl;
+	}
+
+	if (model_path.stem().string().compare("main_ceclm_general") == 0)
+	{
+		sigma = 1.5 * sigma;
+		reg_factor = 0.9 * reg_factor;
 	}
 }
 

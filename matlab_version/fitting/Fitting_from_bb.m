@@ -143,7 +143,7 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
         elseif(strcmp(patchExperts(scale).type, 'CCNF'))                        
             responses = PatchResponseCCNF( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
         elseif(strcmp(patchExperts(scale).type, 'CEN'))                        
-            responses = PatchResponseDNN( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
+            responses = PatchResponseCEN( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
         end
         
         

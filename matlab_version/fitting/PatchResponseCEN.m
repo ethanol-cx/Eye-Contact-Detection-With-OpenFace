@@ -1,4 +1,4 @@
-function [ responses ] = PatchResponseDNN(patches, patch_experts_class, visibilities, patchExperts, window_size)
+function [ responses ] = PatchResponseCEN(patches, patch_experts_class, visibilities, patchExperts, window_size)
 %PATCHRESPONSESVM Summary of this function goes here
 %   Detailed explanation goes here
 

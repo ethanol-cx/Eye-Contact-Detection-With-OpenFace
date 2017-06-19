@@ -11,6 +11,14 @@ else
     database_root = '/multicomp/datasets/300-W/';
 end
 
+%% Run using CE-CLM model
+out_clnf = [curr_dir '/out_ceclm/'];
+if(~exist(out_clnf, 'file'))
+   mkdir(out_clnf); 
+end
+
+[err_ceclm, err_no_out_ceclm] = Run_OF_on_images(out_clnf, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_ceclm_general.txt', 'multi_view', 1);
+
 %% Run using CLNF in the wild model
 out_clnf = [curr_dir '/out_wild_clnf_wild/'];
 if(~exist(out_clnf, 'file'))
@@ -48,6 +56,8 @@ save('results/landmark_detections.mat');
 
 f = fopen('results/landmark_detections.txt', 'w');
 fprintf(f, 'Type, mean, median\n');
+fprintf(f, 'err ce-clm: %f, %f\n', mean(err_ceclm), median(err_ceclm));
+
 fprintf(f, 'err clnf: %f, %f\n', mean(err_clnf), median(err_clnf));
 fprintf(f, 'err clnf wild: %f, %f\n', mean(err_clnf_wild), median(err_clnf_wild));
 
@@ -107,6 +117,18 @@ intraface_error = compute_error( labels - 0.5,  shapes);
 plot(error_x, error_y, 'g--','DisplayName', 'SDM', 'LineWidth',line_width);
 hold on;
 
+% load ce-clm errors
+load('out_ceclm/res.mat');
+labels = labels([1:60,62:64,66:end],:, detected_cpp);
+shapes = shapes([1:60,62:64,66:end],:, detected_cpp);
+labels = labels(18:end,:,:);
+shapes = shapes(18:end,:,:);
+
+ceclm_error_cpp = compute_error( labels,  shapes);
+[error_x, error_y] = cummErrorCurve(ceclm_error_cpp);
+plot(error_x, error_y, 'r','DisplayName', 'CECLM', 'LineWidth',line_width);
+hold on;
+
 % load clnf errors
 load('out_wild_clnf_wild/res.mat');
 labels = labels([1:60,62:64,66:end],:, detected_cpp);
@@ -116,7 +138,7 @@ shapes = shapes(18:end,:,:);
 
 clnf_error_cpp = compute_error( labels,  shapes);
 [error_x, error_y] = cummErrorCurve(clnf_error_cpp);
-plot(error_x, error_y, 'r','DisplayName', 'CLM+CLNF', 'LineWidth',line_width);
+plot(error_x, error_y,  'DisplayName', 'CLM+CLNF', 'LineWidth',line_width);
 hold on;
 
 % load svr errors

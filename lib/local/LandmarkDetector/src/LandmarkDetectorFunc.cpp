@@ -67,6 +67,7 @@
 
 // System includes
 #include <vector>
+#include <numeric>
 
 using namespace LandmarkDetector;
 
@@ -455,37 +456,12 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 // Optionally can provide a bounding box in which detection is performed (this is useful if multiple faces are to be detected in images)
 //================================================================================================================
 
-// This is the one where the actual work gets done, other DetectLandmarksInImage calls lead to this one
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> depth_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool DetectLandmarksInImageMultiHypBasic(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> depth_image, vector<cv::Vec3d> rotation_hypotheses, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
 {
 
-	// Can have multiple hypotheses
-	vector<cv::Vec3d> rotation_hypotheses;
-
-	if(params.multi_view)
-	{
-		// Try out different orientation initialisations
-		// It is possible to add other orientation hypotheses easilly by just pushing to this vector
-		rotation_hypotheses.push_back(cv::Vec3d(0,0,0));
-		rotation_hypotheses.push_back(cv::Vec3d(0,0.5236,0));
-		rotation_hypotheses.push_back(cv::Vec3d(0,-0.5236,0));
-
-		// If not using CEN patch experts add additional hypotheses
-		if(clnf_model.patch_experts.cen_expert_intensity.size() == 0)
-		{
-			rotation_hypotheses.push_back(cv::Vec3d(0.5236,0,0));
-			rotation_hypotheses.push_back(cv::Vec3d(-0.5236,0,0));
-		}
-	}
-	else
-	{
-		// Assume the face is close to frontal
-		rotation_hypotheses.push_back(cv::Vec3d(0,0,0));
-	}
-	
 	// Use the initialisation size for the landmark detection
 	params.window_sizes_current = params.window_sizes_init;
-	
+
 	// Store the current best estimate
 	double best_likelihood;
 	cv::Vec6d best_global_parameters;
@@ -501,7 +477,7 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	vector<cv::Mat_<double>> best_detected_landmarks_h(clnf_model.hierarchical_models.size());
 	vector<cv::Mat_<double>> best_landmark_likelihoods_h(clnf_model.hierarchical_models.size());
 
-	for(size_t hypothesis = 0; hypothesis < rotation_hypotheses.size(); ++hypothesis)
+	for (size_t hypothesis = 0; hypothesis < rotation_hypotheses.size(); ++hypothesis)
 	{
 		// Reset the potentially set clnf_model parameters
 		clnf_model.params_local.setTo(0.0);
@@ -513,10 +489,10 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 
 		// calculate the local and global parameters from the generated 2D shape (mapping from the 2D to 3D because camera params are unknown)
 		clnf_model.pdm.CalcParams(clnf_model.params_global, bounding_box, clnf_model.params_local, rotation_hypotheses[hypothesis]);
-	
-		bool success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);	
 
-		if(hypothesis == 0 || best_likelihood < clnf_model.model_likelihood)
+		bool success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+
+		if (hypothesis == 0 || best_likelihood < clnf_model.model_likelihood)
 		{
 			best_likelihood = clnf_model.model_likelihood;
 			best_global_parameters = clnf_model.params_global;
@@ -557,6 +533,207 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	}
 
 	return best_success;
+
+
+}
+
+// Helper index sorting function
+template <typename T> std::vector<size_t> sort_indexes(const vector<T> &v) {
+
+	// initialize original index locations
+	vector<size_t> idx(v.size());
+	std::iota(idx.begin(), idx.end(), 0);
+
+	// sort indexes based on comparing values in v
+	sort(idx.begin(), idx.end(),
+		[&v](size_t i1, size_t i2) {return v[i1] < v[i2]; });
+
+	return idx;
+}
+
+bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> depth_image, vector<cv::Vec3d> rotation_hypotheses, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+{
+	FaceModelParameters old_params(params);
+	
+	// Use the initialisation size for the landmark detection
+	params.window_sizes_current = params.window_sizes_init;
+
+	bool early_term = false;
+
+	// Setup the parameters accordingly
+	// Only do the first iteration
+	for (int i = 1; i < params.window_sizes_current.size(); ++i)
+	{
+		params.window_sizes_current[i] = 0;
+	}
+	params.refine_hierarchical = false;
+	params.validate_detections = false;
+
+	bool success = false;
+
+	// Keeping track of converges
+	vector<double> likelihoods;
+	vector<cv::Vec6d> global_parameters;
+	vector<cv::Mat_<double>> local_parameters;
+
+	for (size_t hypothesis = 0; hypothesis < rotation_hypotheses.size(); ++hypothesis)
+	{
+		// Reset the potentially set clnf_model parameters
+		clnf_model.params_local.setTo(0.0);
+
+		for (size_t part = 0; part < clnf_model.hierarchical_models.size(); ++part)
+		{
+			clnf_model.hierarchical_models[part].params_local.setTo(0.0);
+		}
+
+		// calculate the local and global parameters from the generated 2D shape (mapping from the 2D to 3D because camera params are unknown)
+		clnf_model.pdm.CalcParams(clnf_model.params_global, bounding_box, clnf_model.params_local, rotation_hypotheses[hypothesis]);
+
+		// Perform landmark detection in first scale
+		clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+
+		double lhood = clnf_model.model_likelihood * clnf_model.patch_experts.early_term_weights[clnf_model.view_used] + clnf_model.patch_experts.early_term_biases[clnf_model.view_used];
+
+		// If likelihood higher than cutoff continue on this model
+		if (lhood > clnf_model.patch_experts.early_term_cutoffs[clnf_model.view_used])
+		{
+			params.refine_hierarchical = old_params.refine_hierarchical;
+			params.window_sizes_current = params.window_sizes_init;
+			params.window_sizes_current[0] = 0;
+			params.validate_detections = old_params.validate_detections;
+			success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+			break;
+		}
+		else
+		{
+			likelihoods.push_back(lhood);
+			global_parameters.push_back(clnf_model.params_global);
+			local_parameters.push_back(clnf_model.params_local);
+		}
+	}
+
+	params.refine_hierarchical = old_params.refine_hierarchical;
+	params.window_sizes_current = params.window_sizes_init;
+	params.window_sizes_current[0] = 0;
+	params.validate_detections = old_params.validate_detections;
+
+	if (!early_term)
+	{
+
+		// Store the current best estimate
+		double best_likelihood;
+		cv::Vec6d best_global_parameters;
+		cv::Mat_<double> best_local_parameters;
+		cv::Mat_<double> best_detected_landmarks;
+		cv::Mat_<double> best_landmark_likelihoods;
+		bool best_success;
+
+		// The hierarchical model parameters
+		vector<double> best_likelihood_h(clnf_model.hierarchical_models.size());
+		vector<cv::Vec6d> best_global_parameters_h(clnf_model.hierarchical_models.size());
+		vector<cv::Mat_<double>> best_local_parameters_h(clnf_model.hierarchical_models.size());
+		vector<cv::Mat_<double>> best_detected_landmarks_h(clnf_model.hierarchical_models.size());
+		vector<cv::Mat_<double>> best_landmark_likelihoods_h(clnf_model.hierarchical_models.size());
+
+		// Sort the likelihoods and pick the best top 3 models
+		vector<size_t> indices = sort_indexes(likelihoods);
+
+		for (size_t i = 0; i < 3; ++i)
+		{
+			// Reset the potentially set clnf_model parameters
+			clnf_model.params_local = local_parameters[indices[i]];
+			clnf_model.params_global = global_parameters[indices[i]];
+			for (size_t part = 0; part < clnf_model.hierarchical_models.size(); ++part)
+			{
+				clnf_model.hierarchical_models[part].params_local.setTo(0.0);
+			}
+	
+			// Perform landmark detection in first scale
+			success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+
+			if (i == 0 || best_likelihood < clnf_model.model_likelihood)
+			{
+				best_likelihood = clnf_model.model_likelihood;
+				best_global_parameters = clnf_model.params_global;
+				best_local_parameters = clnf_model.params_local.clone();
+				best_detected_landmarks = clnf_model.detected_landmarks.clone();
+				best_landmark_likelihoods = clnf_model.landmark_likelihoods.clone();
+				best_success = success;
+			}
+
+			for (size_t part = 0; part < clnf_model.hierarchical_models.size(); ++part)
+			{
+				if (i == 0 || best_likelihood < clnf_model.hierarchical_models[part].model_likelihood)
+				{
+					best_likelihood_h[part] = clnf_model.hierarchical_models[part].model_likelihood;
+					best_global_parameters_h[part] = clnf_model.hierarchical_models[part].params_global;
+					best_local_parameters_h[part] = clnf_model.hierarchical_models[part].params_local.clone();
+					best_detected_landmarks_h[part] = clnf_model.hierarchical_models[part].detected_landmarks.clone();
+					best_landmark_likelihoods_h[part] = clnf_model.hierarchical_models[part].landmark_likelihoods.clone();
+				}
+			}
+		}
+
+		// Store the best estimates in the clnf_model
+		clnf_model.model_likelihood = best_likelihood;
+		clnf_model.params_global = best_global_parameters;
+		clnf_model.params_local = best_local_parameters.clone();
+		clnf_model.detected_landmarks = best_detected_landmarks.clone();
+		clnf_model.detection_success = best_success;
+		clnf_model.landmark_likelihoods = best_landmark_likelihoods.clone();
+
+		for (size_t part = 0; part < clnf_model.hierarchical_models.size(); ++part)
+		{
+			clnf_model.hierarchical_models[part].params_global = best_global_parameters_h[part];
+			clnf_model.hierarchical_models[part].params_local = best_local_parameters_h[part].clone();
+			clnf_model.hierarchical_models[part].detected_landmarks = best_detected_landmarks_h[part].clone();
+			clnf_model.hierarchical_models[part].landmark_likelihoods = best_landmark_likelihoods_h[part].clone();
+		}
+
+	}
+
+	params = old_params;
+
+	return success;
+
+}
+
+
+// This is the one where the actual work gets done, other DetectLandmarksInImage calls lead to this one
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> depth_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+{
+
+	// Can have multiple hypotheses
+	vector<cv::Vec3d> rotation_hypotheses;
+
+	if(params.multi_view)
+	{
+		// Try out different orientation initialisations
+		// It is possible to add other orientation hypotheses easilly by just pushing to this vector
+		rotation_hypotheses.push_back(cv::Vec3d(0,0,0));
+		rotation_hypotheses.push_back(cv::Vec3d(0,0.5236,0));
+		rotation_hypotheses.push_back(cv::Vec3d(0,-0.5236,0));
+		rotation_hypotheses.push_back(cv::Vec3d(0,0, 0.5236));
+		rotation_hypotheses.push_back(cv::Vec3d(0,0, 0.5236));
+	}
+	else
+	{
+		// Assume the face is close to frontal
+		rotation_hypotheses.push_back(cv::Vec3d(0,0,0));
+	}
+	
+	bool success;
+
+	// Either use basic multi-hypothesis testing or clever testing if early termination parameters are present
+	if(clnf_model.patch_experts.early_term_biases.size() == 0)
+	{
+		success = DetectLandmarksInImageMultiHypBasic(grayscale_image, depth_image, rotation_hypotheses, bounding_box, clnf_model, params);
+	}
+	else
+	{
+		success = DetectLandmarksInImageMultiHypEarlyTerm(grayscale_image, depth_image, rotation_hypotheses, bounding_box, clnf_model, params);
+	}
+	return success;
 }
 
 bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> depth_image, CLNF& clnf_model, FaceModelParameters& params)

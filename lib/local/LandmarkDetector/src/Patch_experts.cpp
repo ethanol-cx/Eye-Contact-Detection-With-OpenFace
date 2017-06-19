@@ -80,7 +80,9 @@
 using namespace LandmarkDetector;
 
 // A copy constructor
-Patch_experts::Patch_experts(const Patch_experts& other) : patch_scaling(other.patch_scaling), centers(other.centers), svr_expert_intensity(other.svr_expert_intensity), svr_expert_depth(other.svr_expert_depth), ccnf_expert_intensity(other.ccnf_expert_intensity), cen_expert_intensity(other.cen_expert_intensity)
+Patch_experts::Patch_experts(const Patch_experts& other) : patch_scaling(other.patch_scaling), centers(other.centers), svr_expert_intensity(other.svr_expert_intensity), 
+														svr_expert_depth(other.svr_expert_depth), ccnf_expert_intensity(other.ccnf_expert_intensity), cen_expert_intensity(other.cen_expert_intensity),
+														early_term_weights(other.early_term_weights), early_term_biases(other.early_term_biases), early_term_cutoffs(other.early_term_cutoffs)
 {
 
 	// Make sure the matrices are allocated properly
@@ -338,7 +340,7 @@ int Patch_experts::GetViewIdx(const cv::Vec6d& params_global, int scale) const
 
 
 //===========================================================================
-void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<string> depth_svr_expert_locations, vector<string> intensity_ccnf_expert_locations, vector<string> intensity_cen_expert_locations)
+void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<string> depth_svr_expert_locations, vector<string> intensity_ccnf_expert_locations, vector<string> intensity_cen_expert_locations, string early_term_loc)
 {
 
 	// initialise the SVR intensity patch expert parameters
@@ -446,6 +448,34 @@ void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 				svr_expert_depth.clear();
 				return;		
 			}
+		}
+	}
+
+	// Reading in early termination parameters
+	if (!early_term_loc.empty())
+	{
+		ifstream earlyTermFile(early_term_loc.c_str(), ios_base::in);
+
+		// Reading in weights/biases/cutoffs
+		for (int i = 0; i < centers[0].size(); ++i)
+		{
+			double weight;
+			earlyTermFile >> weight;
+			early_term_weights.push_back(weight);
+		}
+
+		for (int i = 0; i < centers[0].size(); ++i)
+		{
+			double bias;
+			earlyTermFile >> bias;
+			early_term_biases.push_back(bias);
+		}
+
+		for (int i = 0; i < centers[0].size(); ++i)
+		{
+			double cutoff;
+			earlyTermFile >> cutoff;
+			early_term_cutoffs.push_back(cutoff);
 		}
 	}
 

@@ -103,6 +103,12 @@ public:
 	// Landmark visibilities for each scale and view
     vector<vector<cv::Mat_<int> > >          visibilities;
 
+	// Early termination calibration values, useful for CE-CLM model to speed up the multi-hypothesis setup
+	vector<double> early_term_weights;
+	vector<double> early_term_biases;
+	vector<double> early_term_cutoffs;
+
+
 	// A default constructor
 	Patch_experts(){;}
 
@@ -123,9 +129,8 @@ public:
 	inline int nViews(size_t scale = 0) const { return (int)centers[scale].size(); };
 
 	// Reading in all of the patch experts
-	void Read(vector<string> intensity_svr_expert_locations, vector<string> depth_svr_expert_locations, vector<string> intensity_ccnf_expert_locations, vector<string> intensity_cen_expert_locations);
-
-
+	void Read(vector<string> intensity_svr_expert_locations, vector<string> depth_svr_expert_locations, vector<string> intensity_ccnf_expert_locations, vector<string> intensity_cen_expert_locations,
+		string early_term_loc = "");
    
 
 private:

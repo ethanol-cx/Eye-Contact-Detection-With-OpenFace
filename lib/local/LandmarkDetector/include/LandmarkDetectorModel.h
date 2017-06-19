@@ -155,6 +155,9 @@ public:
 	// Useful when resetting or initialising the model closer to a specific location (when multiple faces are present)
 	cv::Point_<double> preference_det;
 
+	// Tracking which view was used last
+	int view_used;
+
 	// A default constructor
 	CLNF();
 

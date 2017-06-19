@@ -270,6 +270,7 @@ void CLNF::Read_CLNF(string clnf_location)
 	vector<string> depth_expert_locations;
 	vector<string> ccnf_expert_locations;
 	vector<string> cen_expert_locations;
+	string early_term_loc;
 
 	// The other module locations should be defined as relative paths from the main model
 	boost::filesystem::path root = boost::filesystem::path(clnf_location).parent_path();
@@ -345,10 +346,14 @@ void CLNF::Read_CLNF(string clnf_location)
 		{
 			cen_expert_locations.push_back(location);
 		}
+		else if (module.compare("EarlyTermination") == 0)
+		{
+			early_term_loc = location;
+		}
 	} 
   
 	// Initialise the patch experts
-	patch_experts.Read(intensity_expert_locations, depth_expert_locations, ccnf_expert_locations, cen_expert_locations);
+	patch_experts.Read(intensity_expert_locations, depth_expert_locations, ccnf_expert_locations, cen_expert_locations, early_term_loc);
 
 	// Read in a face detector
 	face_detector_HOG = dlib::get_frontal_face_detector();
@@ -358,7 +363,7 @@ void CLNF::Read_CLNF(string clnf_location)
 void CLNF::Read(string main_location)
 {
 
-	cout << "Reading the CLNF landmark detector/tracker from: " << main_location << endl;
+	cout << "Reading the landmark detector/tracker from: " << main_location << endl;
 	
 	ifstream locations(main_location.c_str(), ios_base::in);
 	if(!locations.is_open())
@@ -779,6 +784,7 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const cv::Mat_<float>& depthImg, const
 
 		// Get the view used by patch experts
 		int view_id = patch_experts.GetViewIdx(params_global, scale);
+		this->view_used = view_id;
 
 		// the actual optimisation step
 		this->NU_RLMS(params_global, params_local, patch_expert_responses, cv::Vec6d(params_global), params_local.clone(), current_shape, sim_img_to_ref, sim_ref_to_img, window_size, view_id, true, scale, this->landmark_likelihoods, tmp_parameters);
