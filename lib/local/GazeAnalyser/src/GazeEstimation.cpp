@@ -1,38 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016, Carnegie Mellon University and University of Cambridge,
+// Copyright (C) 2017, Carnegie Mellon University and University of Cambridge,
 // all rights reserved.
 //
-// THIS SOFTWARE IS PROVIDED “AS IS” FOR ACADEMIC USE ONLY AND ANY EXPRESS
-// OR IMPLIED WARRANTIES WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-// BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY.
-// OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
+// ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
 //
-// Notwithstanding the license granted herein, Licensee acknowledges that certain components
-// of the Software may be covered by so-called “open source” software licenses (“Open Source
-// Components”), which means any software licenses approved as open source licenses by the
-// Open Source Initiative or any substantially similar licenses, including without limitation any
-// license that, as a condition of distribution of the software licensed under such license,
-// requires that the distributor make the software available in source code format. Licensor shall
-// provide a list of Open Source Components for a particular version of the Software upon
-// Licensee’s request. Licensee will comply with the applicable terms of such licenses and to
-// the extent required by the licenses covering Open Source Components, the terms of such
-// licenses will apply in lieu of the terms of this Agreement. To the extent the terms of the
-// licenses applicable to Open Source Components prohibit any of the restrictions in this
-// License Agreement with respect to such Open Source Component, such restrictions will not
-// apply to such Open Source Component. To the extent the terms of the licenses applicable to
-// Open Source Components require Licensor to make an offer to provide source code or
-// related information in connection with the Software, such offer is hereby made. Any request
-// for source code or related information should be directed to cl-face-tracker-distribution@lists.cam.ac.uk
-// Licensee acknowledges receipt of notices for the Open Source Components for the initial
-// delivery of the Software.
-
+// BY USING OR DOWNLOADING THE SOFTWARE, YOU ARE AGREEING TO THE TERMS OF THIS LICENSE AGREEMENT.  
+// IF YOU DO NOT AGREE WITH THESE TERMS, YOU MAY NOT USE OR DOWNLOAD THE SOFTWARE.
+//
+// License can be found in OpenFace-license.txt
+//
 //     * Any publications arising from the use of this software, including but
 //       not limited to academic journal and conference publications, technical
 //       reports and manuals, must cite at least one of the following works:
@@ -64,9 +40,12 @@
 
 #include "GazeEstimation.h"
 
+#include "LandmarkDetectorUtils.h"
+#include "LandmarkDetectorFunc.h"
+
 using namespace std;
 
-using namespace FaceAnalysis;
+using namespace GazeAnalysis;
 
 // For subpixel accuracy drawing
 const int gaze_draw_shiftbits = 4;
@@ -100,7 +79,7 @@ cv::Point3f RaySphereIntersect(cv::Point3f rayOrigin, cv::Point3f rayDir, cv::Po
 	return rayOrigin + rayDir * t;
 }
 
-cv::Point3f GetPupilPosition(cv::Mat_<double> eyeLdmks3d){
+cv::Point3f GazeAnalysis::GetPupilPosition(cv::Mat_<double> eyeLdmks3d){
 	
 	eyeLdmks3d = eyeLdmks3d.t();
 
@@ -110,9 +89,9 @@ cv::Point3f GetPupilPosition(cv::Mat_<double> eyeLdmks3d){
 	return p;
 }
 
-void FaceAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Point3f& gaze_absolute, float fx, float fy, float cx, float cy, bool left_eye)
+void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Point3f& gaze_absolute, float fx, float fy, float cx, float cy, bool left_eye)
 {
-	cv::Vec6d headPose = LandmarkDetector::GetPoseCamera(clnf_model, fx, fy, cx, cy);
+	cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
 	cv::Vec3d eulerAngles(headPose(3), headPose(4), headPose(5));
 	cv::Matx33d rotMat = LandmarkDetector::Euler2RotationMatrix(eulerAngles);
 
@@ -141,7 +120,7 @@ void FaceAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 
 	cv::Mat faceLdmks3d = clnf_model.GetShape(fx, fy, cx, cy);
 	faceLdmks3d = faceLdmks3d.t();
-	cv::Mat offset = (cv::Mat_<double>(3, 1) << 0, -3.50, 0);
+	cv::Mat offset = (cv::Mat_<double>(3, 1) << 0, -3.5, 7.0);
 	int eyeIdx = 1;
 	if (left_eye)
 	{
@@ -157,8 +136,23 @@ void FaceAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 	gaze_absolute = gazeVecAxis / norm(gazeVecAxis);
 }
 
+cv::Vec2d GazeAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2, cv::Vec6d head_pose)
+{
 
-void FaceAnalysis::DrawGaze(cv::Mat img, const LandmarkDetector::CLNF& clnf_model, cv::Point3f gazeVecAxisLeft, cv::Point3f gazeVecAxisRight, float fx, float fy, float cx, float cy)
+	cv::Vec3d eulerAngles(head_pose(3), head_pose(4), head_pose(5));
+	cv::Matx33d rotMat = LandmarkDetector::Euler2RotationMatrix(eulerAngles);
+	cv::Point3f gaze_point = (gaze_vector_1 + gaze_vector_2) / 2;
+	cv::Vec3d gaze(gaze_point.x, gaze_point.y, gaze_point.z);
+
+	gaze = rotMat * gaze;
+
+	double x_angle = atan2(gaze[0], -gaze[2]);
+	double y_angle = atan2(gaze[1], -gaze[2]);
+
+	return cv::Vec2d(x_angle, y_angle);
+
+}
+void GazeAnalysis::DrawGaze(cv::Mat img, const LandmarkDetector::CLNF& clnf_model, cv::Point3f gazeVecAxisLeft, cv::Point3f gazeVecAxisRight, float fx, float fy, float cx, float cy)
 {
 
 	cv::Mat cameraMat = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);

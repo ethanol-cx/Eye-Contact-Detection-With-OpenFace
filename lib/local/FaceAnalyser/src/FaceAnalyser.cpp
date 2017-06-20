@@ -1,38 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016, Carnegie Mellon University and University of Cambridge,
+// Copyright (C) 2017, Carnegie Mellon University and University of Cambridge,
 // all rights reserved.
 //
-// THIS SOFTWARE IS PROVIDED “AS IS” FOR ACADEMIC USE ONLY AND ANY EXPRESS
-// OR IMPLIED WARRANTIES WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-// BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY.
-// OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
+// ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
 //
-// Notwithstanding the license granted herein, Licensee acknowledges that certain components
-// of the Software may be covered by so-called “open source” software licenses (“Open Source
-// Components”), which means any software licenses approved as open source licenses by the
-// Open Source Initiative or any substantially similar licenses, including without limitation any
-// license that, as a condition of distribution of the software licensed under such license,
-// requires that the distributor make the software available in source code format. Licensor shall
-// provide a list of Open Source Components for a particular version of the Software upon
-// Licensee’s request. Licensee will comply with the applicable terms of such licenses and to
-// the extent required by the licenses covering Open Source Components, the terms of such
-// licenses will apply in lieu of the terms of this Agreement. To the extent the terms of the
-// licenses applicable to Open Source Components prohibit any of the restrictions in this
-// License Agreement with respect to such Open Source Component, such restrictions will not
-// apply to such Open Source Component. To the extent the terms of the licenses applicable to
-// Open Source Components require Licensor to make an offer to provide source code or
-// related information in connection with the Software, such offer is hereby made. Any request
-// for source code or related information should be directed to cl-face-tracker-distribution@lists.cam.ac.uk
-// Licensee acknowledges receipt of notices for the Open Source Components for the initial
-// delivery of the Software.
-
+// BY USING OR DOWNLOADING THE SOFTWARE, YOU ARE AGREEING TO THE TERMS OF THIS LICENSE AGREEMENT.  
+// IF YOU DO NOT AGREE WITH THESE TERMS, YOU MAY NOT USE OR DOWNLOAD THE SOFTWARE.
+//
+// License can be found in OpenFace-license.txt
+//
 //     * Any publications arising from the use of this software, including but
 //       not limited to academic journal and conference publications, technical
 //       reports and manuals, must cite at least one of the following works:
@@ -65,6 +41,7 @@
 // System includes
 #include <stdio.h>
 #include <iostream>
+#include <iomanip>
 
 #include <string>
 
@@ -75,7 +52,6 @@
 #include <boost/algorithm/string/split.hpp>
 
 // Local includes
-#include "LandmarkCoreIncludes.h"
 #include "Face_utils.h"
 
 using namespace FaceAnalysis;
@@ -83,13 +59,17 @@ using namespace FaceAnalysis;
 using namespace std;
 
 // Constructor from a model file (or a default one if not provided
-FaceAnalyser::FaceAnalyser(vector<cv::Vec3d> orientation_bins, double scale, int width, int height, std::string au_location, std::string tri_location)
+FaceAnalyser::FaceAnalyser(const FaceAnalysis::FaceAnalyserParameters& face_analyser_params)
 {
-	this->ReadAU(au_location);
+	this->Read(face_analyser_params.getModelLoc());
 		
-	align_scale = scale;	
-	align_width = width;
-	align_height = height;
+	align_scale_out = face_analyser_params.getSimScaleOut();
+	align_width_out = face_analyser_params.getSimSizeOut();
+	align_height_out = face_analyser_params.getSimSizeOut();
+
+	align_scale_au = face_analyser_params.sim_scale_au;
+	align_width_au = face_analyser_params.sim_size_au;
+	align_height_au = face_analyser_params.sim_size_au;
 
 	// Initialise the histograms that will represent bins from 0 - 1 (as HoG values are only stored as those)
 	num_bins_hog = 1000;
@@ -103,15 +83,20 @@ FaceAnalyser::FaceAnalyser(vector<cv::Vec3d> orientation_bins, double scale, int
 		
 	// Keep track for how many frames have been tracked so far
 	frames_tracking = 0;
-	
-	if(orientation_bins.empty())
+
+	// If the model used is dynamic (person callibration and video correction)
+	dynamic = face_analyser_params.getDynamic();
+
+	out_grayscale = face_analyser_params.grayscale;
+
+	if(face_analyser_params.getOrientationBins().empty())
 	{
 		// Just using frontal currently
 		head_orientations.push_back(cv::Vec3d(0,0,0));
 	}
 	else
 	{
-		head_orientations = orientation_bins;
+		head_orientations = face_analyser_params.getOrientationBins();
 	}
 	hog_hist_sum.resize(head_orientations.size());
 	face_image_hist_sum.resize(head_orientations.size());
@@ -122,10 +107,6 @@ FaceAnalyser::FaceAnalyser(vector<cv::Vec3d> orientation_bins, double scale, int
 	au_prediction_correction_count.resize(head_orientations.size(), 0);
 	au_prediction_correction_histogram.resize(head_orientations.size());
 	dyn_scaling.resize(head_orientations.size());
-
-	// The triangulation used for masking out the non-face parts of aligned image
-	std::ifstream triangulation_file(tri_location);	
-	LandmarkDetector::ReadMat(triangulation_file, triangulation);
 
 }
 
@@ -267,12 +248,17 @@ int GetViewId(const vector<cv::Vec3d> orientations_all, const cv::Vec3d& orienta
 	
 }
 
-std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, double>>> FaceAnalyser::PredictStaticAUs(const cv::Mat& frame, const LandmarkDetector::CLNF& clnf, bool visualise)
+std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, double>>> FaceAnalyser::PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<double>& detected_landmarks, bool visualise)
 {
+	
+	// Extract shape parameters from the detected landmarks
+	cv::Vec6d params_global;
+	cv::Mat_<double> params_local;
+	pdm.CalcParams(params_global, params_local, detected_landmarks);
 
 	// First align the face
-	AlignFaceMask(aligned_face_for_au, frame, clnf, triangulation, true, 0.7, 112, 112);
-
+	AlignFaceMask(aligned_face_for_au, frame, detected_landmarks, params_global, pdm, triangulation, true, 0.7, 112, 112);
+	
 	// Extract HOG descriptor from the frame and convert it to a useable format
 	cv::Mat_<double> hog_descriptor;
 	Extract_FHOG_descriptor(hog_descriptor, aligned_face_for_au, this->num_hog_rows, this->num_hog_cols);
@@ -280,17 +266,17 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 	// Store the descriptor
 	hog_desc_frame = hog_descriptor;
 
-	cv::Vec3d curr_orient(clnf.params_global[1], clnf.params_global[2], clnf.params_global[3]);
+	cv::Vec3d curr_orient(params_global[1], params_global[2], params_global[3]);
 	int orientation_to_use = GetViewId(this->head_orientations, curr_orient);
-
+	
 	// Geom descriptor and its median
-	geom_descriptor_frame = clnf.params_local.t();
+	geom_descriptor_frame = params_local.t();
 
 	// Stack with the actual feature point locations (without mean)
-	cv::Mat_<double> locs = clnf.pdm.princ_comp * geom_descriptor_frame.t();
+	cv::Mat_<double> locs = pdm.princ_comp * geom_descriptor_frame.t();
 
 	cv::hconcat(locs.t(), geom_descriptor_frame.clone(), geom_descriptor_frame);
-
+	
 	// First convert the face image to double representation as a row vector, TODO rem
 	//cv::Mat_<uchar> aligned_face_cols(1, aligned_face_for_au.cols * aligned_face_for_au.rows * aligned_face_for_au.channels(), aligned_face_for_au.data, 1);
 	//cv::Mat_<double> aligned_face_cols_double;
@@ -320,44 +306,54 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 
 }
 
-void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CLNF& clnf_model, double timestamp_seconds, bool online, bool visualise)
+void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<double>& detected_landmarks, bool success, double timestamp_seconds, bool online, bool visualise)
 {
 
 	frames_tracking++;
 
+	// Extract shape parameters from the detected landmarks
+	cv::Vec6d params_global;
+	cv::Mat_<double> params_local;
+	pdm.CalcParams(params_global, params_local, detected_landmarks);
+
 	// First align the face if tracking was successfull
-	if (clnf_model.detection_success)
+	if(success)
 	{
 
 		// The aligned face requirement for AUs
-		AlignFaceMask(aligned_face_for_au, frame, clnf_model, triangulation, true, 0.7, 112, 112);
+		AlignFaceMask(aligned_face_for_au, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_au, align_width_au, align_height_au);
 
 		// If the output requirement matches use the already computed one, else compute it again
-		if (align_scale == 0.7 && align_width == 112 && align_height == 112)
+		if(align_scale_out == align_scale_au && align_width_out == align_width_au && align_height_out == align_height_au)
 		{
 			aligned_face_for_output = aligned_face_for_au.clone();
 		}
 		else
 		{
-			AlignFaceMask(aligned_face_for_output, frame, clnf_model, triangulation, true, align_scale, align_width, align_height);
+			AlignFaceMask(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_out, align_width_out, align_height_out);
 		}
 	}
 	else
 	{
-		aligned_face_for_output = cv::Mat(align_height, align_width, CV_8UC3);
-		aligned_face_for_au = cv::Mat(112, 112, CV_8UC3);
+		aligned_face_for_output = cv::Mat(align_height_out, align_width_out, CV_8UC3);
+		aligned_face_for_au = cv::Mat(align_height_au, align_width_au, CV_8UC3);
 		aligned_face_for_output.setTo(0);
 		aligned_face_for_au.setTo(0);
+	}
+
+	if (aligned_face_for_output.channels() == 3 && out_grayscale)
+	{
+		cvtColor(aligned_face_for_output, aligned_face_for_output, CV_BGR2GRAY);
 	}
 
 	// Extract HOG descriptor from the frame and convert it to a useable format
 	cv::Mat_<double> hog_descriptor;
 	Extract_FHOG_descriptor(hog_descriptor, aligned_face_for_au, this->num_hog_rows, this->num_hog_cols);
-
+	
 	// Store the descriptor
 	hog_desc_frame = hog_descriptor;
 
-	cv::Vec3d curr_orient(clnf_model.params_global[1], clnf_model.params_global[2], clnf_model.params_global[3]);
+	cv::Vec3d curr_orient(params_global[1], params_global[2], params_global[3]);
 	int orientation_to_use = GetViewId(this->head_orientations, curr_orient);
 
 	// Only update the running median if predictions are not high
@@ -389,33 +385,33 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CL
 	//	}
 	//}
 
-	update_median = update_median & clnf_model.detection_success;
+	update_median = update_median & success;
 
-	if (clnf_model.detection_success)
+	if (success)
 		frames_tracking_succ++;
 
 	// A small speedup
-	if (frames_tracking % 2 == 1)
+	if(frames_tracking % 2 == 1)
 	{
 		UpdateRunningMedian(this->hog_desc_hist[orientation_to_use], this->hog_hist_sum[orientation_to_use], this->hog_desc_median, hog_descriptor, update_median, this->num_bins_hog, this->min_val_hog, this->max_val_hog);
 		this->hog_desc_median.setTo(0, this->hog_desc_median < 0);
-	}
+	}	
 
 	// Geom descriptor and its median
-	geom_descriptor_frame = clnf_model.params_local.t();
-
-	if (!clnf_model.detection_success)
+	geom_descriptor_frame = params_local.t();
+	
+	if(!success)
 	{
 		geom_descriptor_frame.setTo(0);
 	}
 
 	// Stack with the actual feature point locations (without mean)
-	cv::Mat_<double> locs = clnf_model.pdm.princ_comp * geom_descriptor_frame.t();
-
+	cv::Mat_<double> locs = pdm.princ_comp * geom_descriptor_frame.t();
+	
 	cv::hconcat(locs.t(), geom_descriptor_frame.clone(), geom_descriptor_frame);
-
+	
 	// A small speedup
-	if (frames_tracking % 2 == 1)
+	if(frames_tracking % 2 == 1)
 	{
 		UpdateRunningMedian(this->geom_desc_hist, this->geom_hist_sum, this->geom_descriptor_median, geom_descriptor_frame, update_median, this->num_bins_geom, this->min_val_geom, this->max_val_geom);
 	}
@@ -424,9 +420,9 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CL
 	//cv::Mat_<uchar> aligned_face_cols(1, aligned_face.cols * aligned_face.rows * aligned_face.channels(), aligned_face.data, 1);
 	//cv::Mat_<double> aligned_face_cols_double;
 	//aligned_face_cols.convertTo(aligned_face_cols_double, CV_64F);
-
+	
 	// Visualising the median HOG
-	if (visualise)
+	if(visualise)
 	{
 		FaceAnalysis::Visualise_FHOG(hog_descriptor, num_hog_rows, num_hog_cols, hog_descriptor_visualisation);
 	}
@@ -435,9 +431,9 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CL
 	AU_predictions_reg = PredictCurrentAUs(orientation_to_use);
 
 	std::vector<std::pair<std::string, double>> AU_predictions_reg_corrected;
-	if (online)
+	if(online)
 	{
-		AU_predictions_reg_corrected = CorrectOnlineAUs(AU_predictions_reg, orientation_to_use, true, false, clnf_model.detection_success, true);
+		AU_predictions_reg_corrected = CorrectOnlineAUs(AU_predictions_reg, orientation_to_use, true, false, success, true);
 	}
 
 	// Add the reg predictions to the historic data
@@ -446,7 +442,7 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CL
 
 		// Find the appropriate AU (if not found add it)		
 		// Only add if the detection was successful
-		if (clnf_model.detection_success)
+		if(success)
 		{
 			AU_predictions_reg_all_hist[AU_predictions_reg[au].first].push_back(AU_predictions_reg[au].second);
 		}
@@ -455,7 +451,7 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CL
 			AU_predictions_reg_all_hist[AU_predictions_reg[au].first].push_back(0);
 		}
 	}
-
+	
 	AU_predictions_class = PredictCurrentAUsClass(orientation_to_use);
 
 	for (size_t au = 0; au < AU_predictions_class.size(); ++au)
@@ -463,7 +459,7 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CL
 
 		// Find the appropriate AU (if not found add it)		
 		// Only add if the detection was successful
-		if (clnf_model.detection_success)
+		if(success)
 		{
 			AU_predictions_class_all_hist[AU_predictions_class[au].first].push_back(AU_predictions_class[au].second);
 		}
@@ -472,15 +468,15 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CL
 			AU_predictions_class_all_hist[AU_predictions_class[au].first].push_back(0);
 		}
 	}
+	
 
-
-	if (online)
+	if(online)
 	{
 		AU_predictions_reg = AU_predictions_reg_corrected;
 	}
 	else
 	{
-		if (clnf_model.detection_success && frames_tracking_succ - 1 < max_init_frames)
+		if (success && frames_tracking_succ - 1 < max_init_frames)
 		{
 			hog_desc_frames_init.push_back(hog_descriptor);
 			geom_descriptor_frames_init.push_back(geom_descriptor_frame);
@@ -491,10 +487,7 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CL
 	this->current_time_seconds = timestamp_seconds;
 
 	view_used = orientation_to_use;
-
-	bool success = clnf_model.detection_success;
-
-	confidences.push_back(clnf_model.detection_certainty);
+			
 	valid_preds.push_back(success);
 	timestamps.push_back(timestamp_seconds);
 
@@ -503,79 +496,6 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const LandmarkDetector::CL
 void FaceAnalyser::GetGeomDescriptor(cv::Mat_<double>& geom_desc)
 {
 	geom_desc = this->geom_descriptor_frame.clone();
-}
-
-void FaceAnalyser::PredictAUs(const cv::Mat_<double>& hog_features, const cv::Mat_<double>& geom_features, const LandmarkDetector::CLNF& clnf_model, bool online)
-{
-	// Store the descriptor
-	hog_desc_frame = hog_features.clone();
-	this->geom_descriptor_frame = geom_features.clone();
-
-	cv::Vec3d curr_orient(clnf_model.params_global[1], clnf_model.params_global[2], clnf_model.params_global[3]);
-	int orientation_to_use = GetViewId(this->head_orientations, curr_orient);
-
-	// Perform AU prediction	
-	AU_predictions_reg = PredictCurrentAUs(orientation_to_use);
-
-	std::vector<std::pair<std::string, double>> AU_predictions_reg_corrected;
-	if(online)
-	{
-		AU_predictions_reg_corrected = CorrectOnlineAUs(AU_predictions_reg, orientation_to_use, true, false, clnf_model.detection_success);
-	}
-
-	// Add the reg predictions to the historic data
-	for (size_t au = 0; au < AU_predictions_reg.size(); ++au)
-	{
-
-		// Find the appropriate AU (if not found add it)		
-		// Only add if the detection was successful
-		if(clnf_model.detection_success)
-		{
-			AU_predictions_reg_all_hist[AU_predictions_reg[au].first].push_back(AU_predictions_reg[au].second);
-		}
-		else
-		{
-			AU_predictions_reg_all_hist[AU_predictions_reg[au].first].push_back(0.0);
-		}
-	}
-
-	AU_predictions_class = PredictCurrentAUsClass(orientation_to_use);
-
-	for (size_t au = 0; au < AU_predictions_class.size(); ++au)
-	{
-
-		// Find the appropriate AU (if not found add it)		
-		// Only add if the detection was successful
-		if(clnf_model.detection_success)
-		{
-			AU_predictions_class_all_hist[AU_predictions_class[au].first].push_back(AU_predictions_class[au].second);
-		}
-		else
-		{
-			AU_predictions_class_all_hist[AU_predictions_class[au].first].push_back(0.0);
-		}
-	}
-
-	if(online)
-	{
-		AU_predictions_reg = AU_predictions_reg_corrected;
-	}
-
-	for(size_t i = 0; i < AU_predictions_reg.size(); ++i)
-	{
-		AU_predictions_combined.push_back(AU_predictions_reg[i]);
-	}
-	for(size_t i = 0; i < AU_predictions_class.size(); ++i)
-	{
-		AU_predictions_combined.push_back(AU_predictions_class[i]);
-	}
-
-	view_used = orientation_to_use;
-
-	bool success = clnf_model.detection_success;
-
-	confidences.push_back(clnf_model.detection_certainty);
-	valid_preds.push_back(success);
 }
 
 // Perform prediction on initial n frames anew as the current neutral face estimate is better now
@@ -636,7 +556,6 @@ void FaceAnalyser::ExtractAllPredictionsOfflineReg(vector<std::pair<std::string,
 	// First extract the valid AU values and put them in a different format
 	vector<vector<double>> aus_valid;
 	vector<double> offsets;
-	confidences = this->confidences;
 	successes = this->valid_preds;
 	
 	vector<string> dyn_au_names = AU_SVR_dynamic_appearance_lin_regressors.GetAUNames();
@@ -683,7 +602,7 @@ void FaceAnalyser::ExtractAllPredictionsOfflineReg(vector<std::pair<std::string,
 			if (au_id != -1 && AU_SVR_dynamic_appearance_lin_regressors.GetCutoffs()[au_id] != -1)
 			{
 				double cutoff = AU_SVR_dynamic_appearance_lin_regressors.GetCutoffs()[au_id];
-				offsets.push_back(au_good.at((int)au_good.size() * cutoff));				
+				offsets.push_back(au_good.at((double)au_good.size() * cutoff));
 			}
 			else
 			{
@@ -729,16 +648,14 @@ void FaceAnalyser::ExtractAllPredictionsOfflineReg(vector<std::pair<std::string,
 		// Perform a moving average of 3 frames
 		int window_size = 3;
 		vector<double> au_vals_tmp = au_iter->second;
-		for (int i = (window_size - 1) / 2; i < (int)au_iter->second.size() - (window_size - 1) / 2; ++i)
+		for (size_t i = (window_size - 1) / 2; i < au_iter->second.size() - (window_size - 1) / 2; ++i)
 		{
 			double sum = 0;
-			int count_over = 0;
 			for (int w = -(window_size - 1) / 2; w <= (window_size - 1) / 2; ++w)
 			{
 				sum += au_vals_tmp[i + w];
-				count_over++;
 			}
-			sum = sum / count_over;
+			sum = sum / window_size;
 
 			au_iter->second[i] = sum;
 		}
@@ -765,16 +682,14 @@ void FaceAnalyser::ExtractAllPredictionsOfflineClass(vector<std::pair<std::strin
 		// Perform a moving average of 7 frames on classifications
 		int window_size = 7;
 		vector<double> au_vals_tmp = au_vals;
-		for (int i = (window_size - 1)/2; i < (int)au_vals.size() - (window_size - 1) / 2; ++i)
+		for (size_t i = (window_size - 1)/2; i < au_vals.size() - (window_size - 1) / 2; ++i)
 		{
 			double sum = 0;
-			int count_over = 0;
 			for (int w = -(window_size - 1) / 2; w <= (window_size - 1) / 2; ++w)
 			{
 				sum += au_vals_tmp[i + w];
-				count_over++;
 			}
-			sum = sum / count_over;
+			sum = sum / window_size;
 			if (sum < 0.5)
 				sum = 0;
 			else
@@ -787,7 +702,6 @@ void FaceAnalyser::ExtractAllPredictionsOfflineClass(vector<std::pair<std::strin
 
 	}
 
-	confidences = this->confidences;
 	successes = this->valid_preds;
 }
 
@@ -830,7 +744,6 @@ void FaceAnalyser::Reset()
 	timestamps.clear();
 	AU_predictions_reg_all_hist.clear();
 	AU_predictions_class_all_hist.clear();
-	confidences.clear();
 	valid_preds.clear();
 
 	// Clean up the postprocessing data as well
@@ -1086,9 +999,77 @@ vector<pair<string, double>> FaceAnalyser::GetCurrentAUsCombined() const
 	return AU_predictions_combined;
 }
 
+void FaceAnalyser::Read(std::string model_loc)
+{
+	// Reading in the modules for AU recognition
+
+	cout << "Reading the AU analysis module from: " << model_loc << endl;
+
+	ifstream locations(model_loc.c_str(), ios_base::in);
+	if (!locations.is_open())
+	{
+		cout << "Couldn't open the model file, aborting" << endl;
+		return;
+	}
+	string line;
+
+	// The other module locations should be defined as relative paths from the main model
+	boost::filesystem::path root = boost::filesystem::path(model_loc).parent_path();
+
+	// The main file contains the references to other files
+	while (!locations.eof())
+	{
+		getline(locations, line);
+
+		stringstream lineStream(line);
+
+		string module;
+		string location;
+
+		// figure out which module is to be read from which file
+		lineStream >> module;
+
+		lineStream >> location;
+
+		// remove carriage return at the end for compatibility with unix systems
+		if (location.size() > 0 && location.at(location.size() - 1) == '\r')
+		{
+			location = location.substr(0, location.size() - 1);
+		}
+
+		// append to root
+		location = (root / location).string();
+		if (module.compare("AUPredictor") == 0)
+		{
+			// The AU predictors
+			cout << "Reading the AU predictors from: " << location;
+			ReadAU(location);
+			cout << "... Done" << endl;
+		}
+		else if (module.compare("PDM") == 0)
+		{
+			cout << "Reading the PDM from: " << location;
+			pdm = PDM::PDM();
+			pdm.Read(location);
+			cout << "... Done" << endl;
+		}
+		else if (module.compare("Triangulation") == 0)
+		{
+			cout << "Reading the triangulation from:" << location;
+			// The triangulation used for masking out the non-face parts of aligned image
+			std::ifstream triangulation_file(location);
+			ReadMat(triangulation_file, triangulation);
+			cout << "... Done" << endl;
+		}
+	}
+
+}
+
 // Reading in AU prediction modules
 void FaceAnalyser::ReadAU(std::string au_model_location)
 {
+
+
 
 	// Open the list of the regressors in the file
 	ifstream locations(au_model_location.c_str(), ios::in);
@@ -1121,7 +1102,7 @@ void FaceAnalyser::ReadAU(std::string au_model_location)
 
 		// Parse comma separated names that this regressor produces
 		name = lineStream.str();
-		int index = name.find_first_of(' ');
+		int index = (int)name.find_first_of(' ');
 
 		if(index >= 0)
 		{
@@ -1155,13 +1136,13 @@ void FaceAnalyser::UpdatePredictionTrack(cv::Mat_<unsigned int>& prediction_corr
 	// The median update
 	if(prediction_corr_histogram.empty())
 	{
-		prediction_corr_histogram = cv::Mat_<unsigned int>(predictions.size(), num_bins, (unsigned int)0);
+		prediction_corr_histogram = cv::Mat_<unsigned int>((int)predictions.size(), num_bins, (unsigned int)0);
 	}
 	
 	for(int i = 0; i < prediction_corr_histogram.rows; ++i)
 	{
 		// Find the bins corresponding to the current descriptor
-		int index = (predictions[i].second - min_val)*((double)num_bins)/(length);
+		int index = (int)((predictions[i].second - min_val)*((double)num_bins)/(length));
 		if(index < 0)
 		{
 			index = 0;
@@ -1179,7 +1160,7 @@ void FaceAnalyser::UpdatePredictionTrack(cv::Mat_<unsigned int>& prediction_corr
 	if(prediction_correction_count >= min_frames)
 	{
 		// Recompute the correction
-		int cutoff_point = ratio * prediction_correction_count;
+		int cutoff_point = (int)(ratio * prediction_correction_count);
 
 		// For each dimension
 		for(int i = 0; i < prediction_corr_histogram.rows; ++i)
@@ -1209,7 +1190,7 @@ void FaceAnalyser::GetSampleHist(cv::Mat_<unsigned int>& prediction_corr_histogr
 	sample.resize(prediction_corr_histogram.rows, 0);
 
 	// Recompute the correction
-	int cutoff_point = ratio * prediction_correction_count;
+	int cutoff_point = (int)(ratio * prediction_correction_count);
 
 	// For each dimension
 	for(int i = 0; i < prediction_corr_histogram.rows; ++i)
@@ -1260,7 +1241,7 @@ double FaceAnalyser::GetCurrentTimeSeconds() {
 }
 
 // Allows for post processing of the AU signal
-void FaceAnalyser::PostprocessOutputFile(string output_file, bool dynamic)
+void FaceAnalyser::PostprocessOutputFile(string output_file)
 {
 
 	vector<double> certainties;
@@ -1273,8 +1254,8 @@ void FaceAnalyser::PostprocessOutputFile(string output_file, bool dynamic)
 	ExtractAllPredictionsOfflineReg(predictions_reg, certainties, successes, timestamps, dynamic);
 	ExtractAllPredictionsOfflineClass(predictions_class, certainties, successes, timestamps, dynamic);
 
-	int num_class = predictions_class.size();
-	int num_reg = predictions_reg.size();
+	int num_class = (int)predictions_class.size();
+	int num_reg = (int)predictions_reg.size();
 
 	// Extract the indices of writing out first
 	vector<string> au_reg_names = GetAURegNames();
@@ -1331,7 +1312,7 @@ void FaceAnalyser::PostprocessOutputFile(string output_file, bool dynamic)
 	{
 		if (tokens[i].find("AU") != string::npos && begin_ind == -1)
 		{
-			begin_ind = i;
+			begin_ind = (int)i;
 			break;
 		}
 	}

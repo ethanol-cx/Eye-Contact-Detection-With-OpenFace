@@ -1,37 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016, Carnegie Mellon University and University of Cambridge,
+// Copyright (C) 2017, Carnegie Mellon University and University of Cambridge,
 // all rights reserved.
 //
-// THIS SOFTWARE IS PROVIDED “AS IS” FOR ACADEMIC USE ONLY AND ANY EXPRESS
-// OR IMPLIED WARRANTIES WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-// BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY.
-// OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
+// ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
 //
-// Notwithstanding the license granted herein, Licensee acknowledges that certain components
-// of the Software may be covered by so-called “open source” software licenses (“Open Source
-// Components”), which means any software licenses approved as open source licenses by the
-// Open Source Initiative or any substantially similar licenses, including without limitation any
-// license that, as a condition of distribution of the software licensed under such license,
-// requires that the distributor make the software available in source code format. Licensor shall
-// provide a list of Open Source Components for a particular version of the Software upon
-// Licensee’s request. Licensee will comply with the applicable terms of such licenses and to
-// the extent required by the licenses covering Open Source Components, the terms of such
-// licenses will apply in lieu of the terms of this Agreement. To the extent the terms of the
-// licenses applicable to Open Source Components prohibit any of the restrictions in this
-// License Agreement with respect to such Open Source Component, such restrictions will not
-// apply to such Open Source Component. To the extent the terms of the licenses applicable to
-// Open Source Components require Licensor to make an offer to provide source code or
-// related information in connection with the Software, such offer is hereby made. Any request
-// for source code or related information should be directed to cl-face-tracker-distribution@lists.cam.ac.uk
-// Licensee acknowledges receipt of notices for the Open Source Components for the initial
-// delivery of the Software.
+// BY USING OR DOWNLOADING THE SOFTWARE, YOU ARE AGREEING TO THE TERMS OF THIS LICENSE AGREEMENT.  
+// IF YOU DO NOT AGREE WITH THESE TERMS, YOU MAY NOT USE OR DOWNLOAD THE SOFTWARE.
+//
+// License can be found in OpenFace-license.txt
 
 //     * Any publications arising from the use of this software, including but
 //       not limited to academic journal and conference publications, technical
@@ -89,7 +65,7 @@ vector<string> get_arguments(int argc, char **argv)
 
 	vector<string> arguments;
 
-	for(int i = 0; i < argc; ++i)
+	for (int i = 0; i < argc; ++i)
 	{
 		arguments.push_back(string(argv[i]));
 	}
@@ -98,12 +74,12 @@ vector<string> get_arguments(int argc, char **argv)
 
 void convert_to_grayscale(const cv::Mat& in, cv::Mat& out)
 {
-	if(in.channels() == 3)
+	if (in.channels() == 3)
 	{
 		// Make sure it's in a correct format
-		if(in.depth() != CV_8U)
+		if (in.depth() != CV_8U)
 		{
-			if(in.depth() == CV_16U)
+			if (in.depth() == CV_16U)
 			{
 				cv::Mat tmp = in / 256;
 				tmp.convertTo(tmp, CV_8U);
@@ -115,18 +91,18 @@ void convert_to_grayscale(const cv::Mat& in, cv::Mat& out)
 			cv::cvtColor(in, out, CV_BGR2GRAY);
 		}
 	}
-	else if(in.channels() == 4)
+	else if (in.channels() == 4)
 	{
 		cv::cvtColor(in, out, CV_BGRA2GRAY);
 	}
 	else
 	{
-		if(in.depth() == CV_16U)
+		if (in.depth() == CV_16U)
 		{
 			cv::Mat tmp = in / 256;
 			out = tmp.clone();
 		}
-		else if(in.depth() != CV_8U)
+		else if (in.depth() != CV_8U)
 		{
 			in.convertTo(out, CV_8U);
 		}
@@ -173,7 +149,7 @@ void write_out_pose_landmarks(const string& outfeatures, const cv::Mat_<double>&
 		for (int i = 0; i < n; ++i)
 		{
 			// Use matlab format, so + 1
-			featuresFile << shape3D.at<double>(i) << " " << shape3D.at<double>(i + n) << " " << shape3D.at<double>(i + 2*n) << endl;
+			featuresFile << shape3D.at<double>(i) << " " << shape3D.at<double>(i + n) << " " << shape3D.at<double>(i + 2 * n) << endl;
 		}
 		featuresFile << "}" << endl;
 
@@ -255,15 +231,15 @@ void write_out_landmarks(const string& outfeatures, const LandmarkDetector::CLNF
 
 void create_display_image(const cv::Mat& orig, cv::Mat& display_image, LandmarkDetector::CLNF& clnf_model)
 {
-	
+
 	// Draw head pose if present and draw eye gaze as well
 
 	// preparing the visualisation image
-	display_image = orig.clone();		
+	display_image = orig.clone();
 
 	// Creating a display image			
-	cv::Mat xs = clnf_model.detected_landmarks(cv::Rect(0, 0, 1, clnf_model.detected_landmarks.rows/2));
-	cv::Mat ys = clnf_model.detected_landmarks(cv::Rect(0, clnf_model.detected_landmarks.rows/2, 1, clnf_model.detected_landmarks.rows/2));
+	cv::Mat xs = clnf_model.detected_landmarks(cv::Rect(0, 0, 1, clnf_model.detected_landmarks.rows / 2));
+	cv::Mat ys = clnf_model.detected_landmarks(cv::Rect(0, clnf_model.detected_landmarks.rows / 2, 1, clnf_model.detected_landmarks.rows / 2));
 	double min_x, max_x, min_y, max_y;
 
 	cv::minMaxLoc(xs, &min_x, &max_x);
@@ -272,17 +248,17 @@ void create_display_image(const cv::Mat& orig, cv::Mat& display_image, LandmarkD
 	double width = max_x - min_x;
 	double height = max_y - min_y;
 
-	int minCropX = max((int)(min_x-width/3.0),0);
-	int minCropY = max((int)(min_y-height/3.0),0);
+	int minCropX = max((int)(min_x - width / 3.0), 0);
+	int minCropY = max((int)(min_y - height / 3.0), 0);
 
-	int widthCrop = min((int)(width*5.0/3.0), display_image.cols - minCropX - 1);
-	int heightCrop = min((int)(height*5.0/3.0), display_image.rows - minCropY - 1);
+	int widthCrop = min((int)(width*5.0 / 3.0), display_image.cols - minCropX - 1);
+	int heightCrop = min((int)(height*5.0 / 3.0), display_image.rows - minCropY - 1);
 
-	double scaling = 350.0/widthCrop;
-	
+	double scaling = 350.0 / widthCrop;
+
 	// first crop the image
 	display_image = display_image(cv::Rect((int)(minCropX), (int)(minCropY), (int)(widthCrop), (int)(heightCrop)));
-		
+
 	// now scale it
 	cv::resize(display_image.clone(), display_image, cv::Size(), scaling, scaling);
 
@@ -292,8 +268,8 @@ void create_display_image(const cv::Mat& orig, cv::Mat& display_image, LandmarkD
 
 	cv::Mat shape = clnf_model.detected_landmarks.clone();
 
-	xs.copyTo(shape(cv::Rect(0, 0, 1, clnf_model.detected_landmarks.rows/2)));
-	ys.copyTo(shape(cv::Rect(0, clnf_model.detected_landmarks.rows/2, 1, clnf_model.detected_landmarks.rows/2)));
+	xs.copyTo(shape(cv::Rect(0, 0, 1, clnf_model.detected_landmarks.rows / 2)));
+	ys.copyTo(shape(cv::Rect(0, clnf_model.detected_landmarks.rows / 2, 1, clnf_model.detected_landmarks.rows / 2)));
 
 	// Do the shifting for the hierarchical models as well
 	for (size_t part = 0; part < clnf_model.hierarchical_models.size(); ++part)
@@ -312,12 +288,12 @@ void create_display_image(const cv::Mat& orig, cv::Mat& display_image, LandmarkD
 	}
 
 	LandmarkDetector::Draw(display_image, clnf_model);
-						
+
 }
 
-int main (int argc, char **argv)
+int main(int argc, char **argv)
 {
-		
+
 	//Convert arguments to more convenient vector form
 	vector<string> arguments = get_arguments(argc, argv);
 
@@ -330,9 +306,9 @@ int main (int argc, char **argv)
 
 	// Bounding boxes for a face in each image (optional)
 	vector<cv::Rect_<double> > bounding_boxes;
-	
+
 	LandmarkDetector::get_image_input_output_params(files, depth_files, output_landmark_locations, output_pose_locations, output_images, bounding_boxes, arguments);
-	LandmarkDetector::FaceModelParameters det_parameters(arguments);	
+	LandmarkDetector::FaceModelParameters det_parameters(arguments);
 	// No need to validate detections, as we're not doing tracking
 	det_parameters.validate_detections = false;
 
@@ -357,59 +333,19 @@ int main (int argc, char **argv)
 	cout << "Loading the model" << endl;
 	LandmarkDetector::CLNF clnf_model(det_parameters.model_location);
 	cout << "Model loaded" << endl;
-	
+
 	cv::CascadeClassifier classifier(det_parameters.face_detector_location);
 	dlib::frontal_face_detector face_detector_hog = dlib::get_frontal_face_detector();
 
-	// Loading the AU prediction models
-	string au_loc = "AU_predictors/AU_all_static.txt";
-
-	boost::filesystem::path au_loc_path = boost::filesystem::path(au_loc);
-	if (boost::filesystem::exists(au_loc_path))
-	{
-		au_loc = au_loc_path.string();
-	}
-	else if (boost::filesystem::exists(parent_path/au_loc_path))
-	{
-		au_loc = (parent_path/au_loc_path).string();
-	}
-	else if (boost::filesystem::exists(config_path/au_loc_path))
-	{
-		au_loc = (config_path/au_loc_path).string();
-	}
-	else
-	{
-		cout << "Can't find AU prediction files, exiting" << endl;
-		return 1;
-	}
-
-	// Used for image masking for AUs
-	string tri_loc;
-	boost::filesystem::path tri_loc_path = boost::filesystem::path("model/tris_68_full.txt");
-	if (boost::filesystem::exists(tri_loc_path))
-	{
-		tri_loc = tri_loc_path.string();
-	}
-	else if (boost::filesystem::exists(parent_path/tri_loc_path))
-	{
-		tri_loc = (parent_path/tri_loc_path).string();
-	}
-	else if (boost::filesystem::exists(config_path/tri_loc_path))
-	{
-		tri_loc = (config_path/tri_loc_path).string();
-	}
-	else
-	{
-		cout << "Can't find triangulation files, exiting" << endl;
-		return 1;
-	}
-
-	FaceAnalysis::FaceAnalyser face_analyser(vector<cv::Vec3d>(), 0.7, 112, 112, au_loc, tri_loc);
+	// Load facial feature extractor and AU analyser (make sure it is static)
+	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
+	face_analysis_params.OptimizeForImages();
+	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
 	bool visualise = !det_parameters.quiet_mode;
 
 	// Do some image loading
-	for(size_t i = 0; i < files.size(); i++)
+	for (size_t i = 0; i < files.size(); i++)
 	{
 		string file = files.at(i);
 
@@ -425,7 +361,7 @@ int main (int argc, char **argv)
 		// Loading depth file if exists (optional)
 		cv::Mat_<float> depth_image;
 
-		if(depth_files.size() > 0)
+		if (depth_files.size() > 0)
 		{
 			string dFile = depth_files.at(i);
 			cv::Mat dTemp = cv::imread(dFile, -1);
@@ -435,7 +371,7 @@ int main (int argc, char **argv)
 		// Making sure the image is in uchar grayscale
 		cv::Mat_<uchar> grayscale_image;
 		convert_to_grayscale(read_image, grayscale_image);
-		
+
 
 		// If optical centers are not defined just use center of image
 		if (cx_undefined)
@@ -455,13 +391,13 @@ int main (int argc, char **argv)
 
 
 		// if no pose defined we just use a face detector
-		if(bounding_boxes.empty())
+		if (bounding_boxes.empty())
 		{
-			
+
 			// Detect faces in an image
 			vector<cv::Rect_<double> > face_detections;
 
-			if(det_parameters.curr_face_detector == LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR)
+			if (det_parameters.curr_face_detector == LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR)
 			{
 				vector<double> confidences;
 				LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, face_detector_hog, confidences);
@@ -474,29 +410,29 @@ int main (int argc, char **argv)
 			// Detect landmarks around detected faces
 			int face_det = 0;
 			// perform landmark detection for every face detected
-			for(size_t face=0; face < face_detections.size(); ++face)
+			for (size_t face = 0; face < face_detections.size(); ++face)
 			{
 				// if there are multiple detections go through them
 				bool success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, depth_image, face_detections[face], clnf_model, det_parameters);
 
 				// Estimate head pose and eye gaze				
-				cv::Vec6d headPose = LandmarkDetector::GetCorrectedPoseWorld(clnf_model, fx, fy, cx, cy);
+				cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
 
 				// Gaze tracking, absolute gaze direction
 				cv::Point3f gazeDirection0(0, 0, -1);
 				cv::Point3f gazeDirection1(0, 0, -1);
 
 				if (success && det_parameters.track_gaze)
-				{
-					FaceAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
-					FaceAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
+				{					
+					GazeAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
+					GazeAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
 
 				}
 
-				auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model, false);
+				auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model.detected_landmarks, false);
 
 				// Writing out the detected landmarks (in an OS independent manner)
-				if(!output_landmark_locations.empty())
+				if (!output_landmark_locations.empty())
 				{
 					char name[100];
 					// append detection number (in case multiple faces are detected)
@@ -535,28 +471,28 @@ int main (int argc, char **argv)
 
 				if (det_parameters.track_gaze)
 				{
-					cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetCorrectedPoseWorld(clnf_model, fx, fy, cx, cy);
+					cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
 
 					// Draw it in reddish if uncertain, blueish if certain
 					LandmarkDetector::DrawBox(read_image, pose_estimate_to_draw, cv::Scalar(255.0, 0, 0), 3, fx, fy, cx, cy);
-					FaceAnalysis::DrawGaze(read_image, clnf_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
+					GazeAnalysis::DrawGaze(read_image, clnf_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
 				}
 
 				// displaying detected landmarks
 				cv::Mat display_image;
 				create_display_image(read_image, display_image, clnf_model);
 
-				if(visualise && success)
+				if (visualise && success)
 				{
 					imshow("colour", display_image);
 					cv::waitKey(1);
 				}
 
 				// Saving the display images (in an OS independent manner)
-				if(!output_images.empty() && success)
+				if (!output_images.empty() && success)
 				{
 					string outimage = output_images.at(i);
-					if(!outimage.empty())
+					if (!outimage.empty())
 					{
 						char name[100];
 						sprintf(name, "_det_%d", face_det);
@@ -571,8 +507,8 @@ int main (int argc, char **argv)
 						boost::filesystem::path ext = out_feat_path.extension();
 						outimage = dir.string() + preferredSlash + fname.string() + string(name) + ext.string();
 						create_directory_from_file(outimage);
-						bool write_success = cv::imwrite(outimage, display_image);	
-						
+						bool write_success = cv::imwrite(outimage, display_image);
+
 						if (!write_success)
 						{
 							cout << "Could not output a processed image" << endl;
@@ -583,7 +519,7 @@ int main (int argc, char **argv)
 
 				}
 
-				if(success)
+				if (success)
 				{
 					face_det++;
 				}
@@ -596,22 +532,22 @@ int main (int argc, char **argv)
 			LandmarkDetector::DetectLandmarksInImage(grayscale_image, bounding_boxes[i], clnf_model, det_parameters);
 
 			// Estimate head pose and eye gaze				
-			cv::Vec6d headPose = LandmarkDetector::GetCorrectedPoseWorld(clnf_model, fx, fy, cx, cy);
+			cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
 
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, -1);
 			cv::Point3f gazeDirection1(0, 0, -1);
-			
+
 			if (det_parameters.track_gaze)
 			{
-				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
-				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
+				GazeAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
+				GazeAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
 			}
 
-			auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model, false);
+			auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model.detected_landmarks, false);
 
 			// Writing out the detected landmarks
-			if(!output_landmark_locations.empty())
+			if (!output_landmark_locations.empty())
 			{
 				string outfeatures = output_landmark_locations.at(i);
 				write_out_landmarks(outfeatures, clnf_model, headPose, gazeDirection0, gazeDirection1, ActionUnits.first, ActionUnits.second);
@@ -629,28 +565,28 @@ int main (int argc, char **argv)
 
 			if (det_parameters.track_gaze)
 			{
-				cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetCorrectedPoseWorld(clnf_model, fx, fy, cx, cy);
+				cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
 
 				// Draw it in reddish if uncertain, blueish if certain
 				LandmarkDetector::DrawBox(read_image, pose_estimate_to_draw, cv::Scalar(255.0, 0, 0), 3, fx, fy, cx, cy);
-				FaceAnalysis::DrawGaze(read_image, clnf_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
+				GazeAnalysis::DrawGaze(read_image, clnf_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
 			}
 
 			create_display_image(read_image, display_image, clnf_model);
 
-			if(visualise)
+			if (visualise)
 			{
 				imshow("colour", display_image);
 				cv::waitKey(1);
 			}
 
-			if(!output_images.empty())
+			if (!output_images.empty())
 			{
 				string outimage = output_images.at(i);
-				if(!outimage.empty())
+				if (!outimage.empty())
 				{
 					create_directory_from_file(outimage);
-					bool write_success = imwrite(outimage, display_image);	
+					bool write_success = imwrite(outimage, display_image);
 
 					if (!write_success)
 					{
@@ -659,10 +595,10 @@ int main (int argc, char **argv)
 					}
 				}
 			}
-		}				
+		}
 
 	}
-	
+
 	return 0;
 }
 

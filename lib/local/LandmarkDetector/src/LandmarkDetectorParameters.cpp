@@ -181,7 +181,7 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 		{
 			// For in the wild fitting these parameters are suitable
 			window_sizes_init = vector<int>(4);
-			window_sizes_init[0] = 15; window_sizes_init[1] = 13; window_sizes_init[2] = 11; window_sizes_init[3] = 9;
+			window_sizes_init[0] = 15; window_sizes_init[1] = 13; window_sizes_init[2] = 11; window_sizes_init[3] = 11;
 
 			sigma = 1.25;
 			reg_factor = 35;

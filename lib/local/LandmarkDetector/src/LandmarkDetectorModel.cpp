@@ -769,14 +769,16 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const cv::Mat_<float>& depthImg, const
 		
 		if(parameters.refine_parameters == true)
 		{
-			// Adapt the parameters based on scale (wan't to reduce regularisation as scale increases, but increa sigma and tikhonov)
-			tmp_parameters.reg_factor = parameters.reg_factor - 15 * log(patch_experts.patch_scaling[scale]/0.25)/log(2);
+			int scale_max = scale >= 2 ? 2 : scale;
+
+			// Adapt the parameters based on scale (wan't to reduce regularisation as scale increases, but increase sigma and Tikhonov)
+			tmp_parameters.reg_factor = parameters.reg_factor - 15 * log(patch_experts.patch_scaling[scale_max]/0.25)/log(2);
 			
 			if(tmp_parameters.reg_factor <= 0)
 				tmp_parameters.reg_factor = 0.001;
 
-			tmp_parameters.sigma = parameters.sigma + 0.25 * log(patch_experts.patch_scaling[scale]/0.25)/log(2);
-			tmp_parameters.weight_factor = parameters.weight_factor + 2 * parameters.weight_factor *  log(patch_experts.patch_scaling[scale]/0.25)/log(2);
+			tmp_parameters.sigma = parameters.sigma + 0.25 * log(patch_experts.patch_scaling[scale_max]/0.25)/log(2);
+			tmp_parameters.weight_factor = parameters.weight_factor + 2 * parameters.weight_factor *  log(patch_experts.patch_scaling[scale_max]/0.25)/log(2);
 		}
 
 		// Get the current landmark locations

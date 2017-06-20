@@ -32,56 +32,24 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __SVMSTATICLIN_h_
-#define __SVMSTATICLIN_h_
+#ifndef __GAZEESTIMATION_h_
+#define __GAZEESTIMATION_h_
 
-#include <vector>
-#include <string>
+#include "LandmarkDetectorModel.h"
 
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
+#include "opencv2/core/core.hpp"
 
-#include <opencv2/core/core.hpp>
-
-namespace FaceAnalysis
+namespace GazeAnalysis
 {
 
-// Collection of linear SVR regressors for AU prediction
-class SVM_static_lin{
+	void EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Point3f& gaze_absolute, float fx, float fy, float cx, float cy, bool left_eye);
+	void DrawGaze(cv::Mat img, const LandmarkDetector::CLNF& clnf_model, cv::Point3f gazeVecAxisLeft, cv::Point3f gazeVecAxisRight, float fx, float fy, float cx, float cy);
 
-public:
+	// Getting the gaze angle in radians with respect to head pose (need to call EstimateGaze first)
+	cv::Vec2d GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2, cv::Vec6d head_pose);
 
-	SVM_static_lin()
-	{}
+	// Some utilities
+	cv::Point3f GetPupilPosition(cv::Mat_<double> eyeLdmks3d);
 
-	// Predict the AU from HOG appearance of the face
-	void Predict(std::vector<double>& predictions, std::vector<std::string>& names, const cv::Mat_<double>& fhog_descriptor, const cv::Mat_<double>& geom_params);
-
-	// Reading in the model (or adding to it)
-	void Read(std::ifstream& stream, const std::vector<std::string>& au_names);
-
-	std::vector<std::string> GetAUNames() const
-	{
-		return AU_names;
-	}
-
-private:
-
-	// The names of Action Units this model is responsible for
-	std::vector<std::string> AU_names;
-
-	// For normalisation
-	cv::Mat_<double> means;
-	
-	// For actual prediction
-	cv::Mat_<double> support_vectors;	
-	cv::Mat_<double> biases;
-
-	std::vector<double> pos_classes;
-	std::vector<double> neg_classes;
-
-};
-  //===========================================================================
 }
 #endif
