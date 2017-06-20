@@ -99,3 +99,4 @@ matlab_version/experiments_300VW/CECLM_res_general_mtcnn/
 matlab_version/experiments_300VW/CLNF_res_general_mtcnn/
 matlab_runners/Feature Point Experiments/out_ceclm/
 lib/local/GazeAnalyser/x64/
+matlab_runners/Feature Point Experiments/out_clnf/

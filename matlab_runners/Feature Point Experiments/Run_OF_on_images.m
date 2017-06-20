@@ -76,9 +76,10 @@ toc
 
 % Extract the error sizes
 dirs = {[database_root '/AFW/'];
+    [database_root 'lfpw/testset/'];
     [database_root '/ibug/'];
     [database_root '/helen/testset/'];
-    [database_root 'lfpw/testset/'];};
+    };
 
 landmark_dets = dir([output_loc '/*.pts']);
 
@@ -126,15 +127,12 @@ if(size(shapes,2) == 66 && size(labels,2) == 68)
     shapes = shapes(inds_66,:,:);
 end
 
-% Center the pixel
-labels = labels - 0.5;
-
+labels = labels - 1.0;
 err_outline = compute_error(labels, shapes);
-
 labels_no_out = labels(18:end,:,:);
 shapes_no_out = shapes(18:end,:,:);
-
 err_no_outline = compute_error(labels_no_out, shapes_no_out);
+
 
 %%
 
