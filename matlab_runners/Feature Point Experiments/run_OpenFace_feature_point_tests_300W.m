@@ -49,13 +49,15 @@ fclose(f);
 %% Draw the corresponding error graphs comparing CLNF and SVR
 
 % set up the canvas
-line_width = 6;
 scrsz = get(0,'ScreenSize');
 figure1 = figure('Position',[20 50 3*scrsz(3)/4 0.9*scrsz(4)]);
 
 set(figure1,'Units','Inches');
 pos = get(figure1,'Position');
 set(figure1,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+line_width = 6;
+hold on;
+
 % Create axes
 axes1 = axes('Parent',figure1,'FontSize',40,'FontName','Helvetica');
 
@@ -69,22 +71,23 @@ hold on;
 
 % load clnf errors
 load('out_clnf/res.mat');
-clnf_error_cpp = compute_error( labels - 0.5,  shapes);
+clnf_error_cpp = compute_error( labels - 1.0,  shapes);
 [error_x, error_y] = cummErrorCurve(clnf_error_cpp);
 plot(error_x, error_y,  'DisplayName', 'CLM+CLNF', 'LineWidth',line_width);
 hold on;
 
 % load svr errors
 load('out_svr/res.mat');
-svr_error_cpp = compute_error( labels - 0.5,  shapes);
+svr_error_cpp = compute_error( labels - 1.0,  shapes);
 [error_x, error_y] = cummErrorCurve(svr_error_cpp);
 plot(error_x, error_y, 'b-.','DisplayName', 'CLM+SVR', 'LineWidth',line_width);
 
-% Make it look nice and print to a pdf
-set(gca,'xtick',[0:0.05:0.15])
-xlim([0,0.15]);
-xlabel('Size normalised shape RMS error','FontName','Helvetica');
+set(gca,'xtick',[0.02:0.01:0.1])
+xlim([0.02,0.08]);
+xlabel('IOD normalised MAE','FontName','Helvetica');
 ylabel('Proportion of images','FontName','Helvetica');
 grid on
-legend('show', 'Location', 'SouthEast');
+leg = legend('show', 'Location', 'SouthEast');
+set(leg,'FontSize',50)
+
 print -dpdf results/300W_res.pdf
