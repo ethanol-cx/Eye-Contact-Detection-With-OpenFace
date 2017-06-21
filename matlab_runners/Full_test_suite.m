@@ -16,6 +16,7 @@ run_OpenFace_feature_point_tests_300W;
 assert(median(err_ceclm) < 0.036);
 assert(median(err_clnf) < 0.039);
 run_yt_dataset;
+assert(median(ceclm_error) < 0.045);
 assert(median(clnf_error) < 0.053);
 cd('../');
 
