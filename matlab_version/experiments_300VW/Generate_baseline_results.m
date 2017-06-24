@@ -1,8 +1,7 @@
 clear
 
 pocr_dir = 'D:\Dropbox\Dropbox\AAM\3rd party models\PO-CR\300VW_mtcnn/';
-cfss_dir = 'C:\Users\tbaltrus\Documents\300W-CFSS/';
-% cfss_dir = 'D:\Dropbox\Dropbox\AAM\3rd party models\CVPR15-CFSS-master\CVPR15-CFSS-master\300VW_mtcnn/';
+cfss_dir = 'D:\Dropbox\Dropbox\AAM\3rd party models\CVPR15-CFSS-master\CVPR15-CFSS-master\300VW_mtcnn/';
 iccr_dir = 'D:\demo_iccr\iCCR\iCCR\out_300VW/';
 chehra_dir = 'D:\Datasets\300VW_Dataset_2015_12_14\chehra_out_mtcnn/';
 sdm_dir = 'D:\Datasets\300VW_Dataset_2015_12_14\sdm_out_mtcnn/';
