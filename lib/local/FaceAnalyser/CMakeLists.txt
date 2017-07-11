@@ -19,8 +19,8 @@ SET(HEADERS
     include/Face_utils.h	
 	include/FaceAnalyser.h
 	include/FaceAnalyserParameters.h
-	include/PAW.cpp
-	include/PDM.cpp	
+	include/PAW.h
+	include/PDM.h	
 	include/SVM_dynamic_lin.h
 	include/SVM_static_lin.h
 	include/SVR_dynamic_lin_regressors.h
