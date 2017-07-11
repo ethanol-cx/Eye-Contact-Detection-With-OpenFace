@@ -105,7 +105,7 @@ public:
 		std::vector<double>& confidences, std::vector<bool>& successes, std::vector<double>& timestamps, bool dynamic);
 
 	// Helper function for post-processing AU output files
-	void FaceAnalyser::PostprocessOutputFile(std::string output_file);
+	void PostprocessOutputFile(std::string output_file);
 
 private:
 
