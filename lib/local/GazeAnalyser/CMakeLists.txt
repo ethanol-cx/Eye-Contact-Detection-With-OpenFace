@@ -13,6 +13,7 @@ SET(HEADERS
 
 include_directories(./include)
 include_directories(${GazeAnalyser_SOURCE_DIR}/include)
+include_directories(../LandmarkDetector/include)
 
 add_library( GazeAnalyser ${SOURCE} ${HEADERS} )
 
