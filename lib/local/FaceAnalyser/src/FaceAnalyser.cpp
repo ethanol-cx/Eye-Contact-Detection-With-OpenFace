@@ -1049,7 +1049,7 @@ void FaceAnalyser::Read(std::string model_loc)
 		else if (module.compare("PDM") == 0)
 		{
 			cout << "Reading the PDM from: " << location;
-			pdm = PDM::PDM();
+			pdm = PDM();
 			pdm.Read(location);
 			cout << "... Done" << endl;
 		}
