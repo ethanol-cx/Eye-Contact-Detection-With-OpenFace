@@ -200,7 +200,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 #pragma omp parallel for
 #endif
 	tbb::parallel_for(0, (int)n, [&](int i){
-//	for(int i = 0; i < n; i++)
+	//for(int i = 0; i < n; i++)
 	{
 
 		if (visibilities[scale][view_id].rows == n)
@@ -246,7 +246,14 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				// Get intensity response either from the SVR, CCNF, or CEN patch experts (prefer CEN as they are the most accurate so far)
 				if (!cen_expert_intensity.empty())
 				{
-					cen_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
+					if (scale <= 2)
+					{
+						cen_expert_intensity[scale][view_id][i].ResponseSparse(area_of_interest, patch_expert_responses[i]);
+					}
+					else
+					{
+						cen_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
+					}
 				}
 				else if (!ccnf_expert_intensity.empty())
 				{

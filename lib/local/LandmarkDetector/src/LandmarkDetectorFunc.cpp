@@ -665,10 +665,16 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 		// Try out different orientation initialisations
 		// It is possible to add other orientation hypotheses easilly by just pushing to this vector
 		rotation_hypotheses.push_back(cv::Vec3d(0,0,0));
-		rotation_hypotheses.push_back(cv::Vec3d(0,0.5236,0));
-		rotation_hypotheses.push_back(cv::Vec3d(0,-0.5236,0));
-		rotation_hypotheses.push_back(cv::Vec3d(0,0, 0.5236));
-		rotation_hypotheses.push_back(cv::Vec3d(0,0, -0.5236));
+		rotation_hypotheses.push_back(cv::Vec3d(0, -0.5236, 0));
+		rotation_hypotheses.push_back(cv::Vec3d(0, 0.5236,0));
+		rotation_hypotheses.push_back(cv::Vec3d(0, -0.96, 0));
+		rotation_hypotheses.push_back(cv::Vec3d(0, 0.96, 0));
+		rotation_hypotheses.push_back(cv::Vec3d(0, 0, 0.5236));
+		rotation_hypotheses.push_back(cv::Vec3d(0, 0, -0.5236));
+		rotation_hypotheses.push_back(cv::Vec3d(0, -1.57, 0));
+		rotation_hypotheses.push_back(cv::Vec3d(0, 1.57, 0));
+		rotation_hypotheses.push_back(cv::Vec3d(0, -1.22, 0.698));
+		rotation_hypotheses.push_back(cv::Vec3d(0, 1.22, -0.698));
 	}
 	else
 	{

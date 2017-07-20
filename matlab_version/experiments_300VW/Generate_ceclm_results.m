@@ -13,7 +13,7 @@ labels = zeros(68,2,0);
 % Load results
 for i=cat_1
     
-    load(['CECLM_res_general/', num2str(i)]);    
+    load(['CECLM_res_general_no_4/', num2str(i)]);    
     ceclm_preds = cat(3, ceclm_preds, preds);
 
     labels = cat(3, labels, gt_landmarks);    
@@ -23,12 +23,14 @@ end
 labels = labels([1:60,62:64,66:end],:,:);
 ceclm_preds = ceclm_preds([1:60,62:64,66:end],:,:);
 ceclm_error_66_cat_1 = compute_error(labels, ceclm_preds);
+ceclm_error_66_cat_1_auc = auc(ceclm_error_66_cat_1);
 
 % Do the 49 point version
 labels = labels(18:end,:,:);
 ceclm_preds = ceclm_preds(18:end,:,:);
 
 ceclm_error_49_cat_1 = compute_error(labels, ceclm_preds);
+ceclm_error_49_cat_1_auc = auc(ceclm_error_49_cat_1);
 
 %%
 
@@ -38,7 +40,7 @@ labels = zeros(68,2,0);
 % Load results
 for i=cat_2
     
-    load(['CECLM_res_general/', num2str(i)]);    
+    load(['CECLM_res_general_no_4/', num2str(i)]);    
     ceclm_preds = cat(3, ceclm_preds, preds);
 
     labels = cat(3, labels, gt_landmarks);    
@@ -48,12 +50,15 @@ end
 labels = labels([1:60,62:64,66:end],:,:);
 ceclm_preds = ceclm_preds([1:60,62:64,66:end],:,:);
 ceclm_error_66_cat_2 = compute_error(labels, ceclm_preds);
+ceclm_error_66_cat_2_auc = auc(ceclm_error_66_cat_2);
 
 % Do the 49 point version
 labels = labels(18:end,:,:);
 ceclm_preds = ceclm_preds(18:end,:,:);
 
 ceclm_error_49_cat_2 = compute_error(labels, ceclm_preds);
+ceclm_error_49_cat_2_auc = auc(ceclm_error_49_cat_2);
+
 %%
 ceclm_preds = zeros(68,2,0);
 
@@ -61,7 +66,7 @@ labels = zeros(68,2,0);
 % Load results
 for i=cat_3
     
-    load(['CECLM_res_general/', num2str(i)]);    
+    load(['CECLM_res_general_no_4/', num2str(i)]);    
     ceclm_preds = cat(3, ceclm_preds, preds);
 
     labels = cat(3, labels, gt_landmarks);    
@@ -71,13 +76,17 @@ end
 labels = labels([1:60,62:64,66:end],:,:);
 ceclm_preds = ceclm_preds([1:60,62:64,66:end],:,:);
 ceclm_error_66_cat_3 = compute_error(labels, ceclm_preds);
+ceclm_error_66_cat_3_auc = auc(ceclm_error_66_cat_3);
 
 % Do the 49 point version
 labels = labels(18:end,:,:);
 ceclm_preds = ceclm_preds(18:end,:,:);
 
 ceclm_error_49_cat_3 = compute_error(labels, ceclm_preds);
+ceclm_error_49_cat_3_auc = auc(ceclm_error_49_cat_3);
 
 %% Save the results
-save('results/ceclm_errors', 'ceclm_error_66_cat_1', 'ceclm_error_66_cat_2', 'ceclm_error_66_cat_3',...
-    'ceclm_error_49_cat_1', 'ceclm_error_49_cat_2', 'ceclm_error_49_cat_3'); 
+save('results/ceclm_errors_no_4', 'ceclm_error_66_cat_1', 'ceclm_error_66_cat_2', 'ceclm_error_66_cat_3',...
+    'ceclm_error_49_cat_1', 'ceclm_error_49_cat_2', 'ceclm_error_49_cat_3',...
+    'ceclm_error_66_cat_1_auc', 'ceclm_error_66_cat_2_auc', 'ceclm_error_66_cat_3_auc',...
+    'ceclm_error_49_cat_1_auc', 'ceclm_error_49_cat_2_auc', 'ceclm_error_49_cat_3_auc'); 

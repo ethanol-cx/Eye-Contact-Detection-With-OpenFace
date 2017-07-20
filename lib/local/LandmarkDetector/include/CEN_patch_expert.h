@@ -102,6 +102,9 @@ namespace LandmarkDetector
 		// The actual response computation from intensity image
 		void Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
 
+		// Faster version of the response that only considers a subset of the area_of_interest
+		void ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
+
 	};
 }
 #endif
