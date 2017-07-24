@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2017 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #ifndef __TBB__flow_graph_impl_H
@@ -69,8 +69,8 @@ namespace internal {
     class source_body_leaf : public source_body<Output> {
     public:
         source_body_leaf( const Body &_body ) : body(_body) { }
-        /*override*/ bool operator()(Output &output) { return body( output ); }
-        /*override*/ source_body_leaf* clone() {
+        bool operator()(Output &output) __TBB_override { return body( output ); }
+        source_body_leaf* clone() __TBB_override {
             return new source_body_leaf< Output, Body >(body);
         }
         Body get_body() { return body; }
@@ -92,9 +92,9 @@ namespace internal {
     class function_body_leaf : public function_body< Input, Output > {
     public:
         function_body_leaf( const B &_body ) : body(_body) { }
-        Output operator()(const Input &i) { return body(i); }
+        Output operator()(const Input &i) __TBB_override { return body(i); }
         B get_body() { return body; }
-        /*override*/ function_body_leaf* clone() {
+        function_body_leaf* clone() __TBB_override {
             return new function_body_leaf< Input, Output, B >(body);
         }
     private:
@@ -106,12 +106,12 @@ namespace internal {
     class function_body_leaf< continue_msg, continue_msg, B> : public function_body< continue_msg, continue_msg > {
     public:
         function_body_leaf( const B &_body ) : body(_body) { }
-        continue_msg operator()( const continue_msg &i ) {
+        continue_msg operator()( const continue_msg &i ) __TBB_override {
             body(i);
             return i;
         }
         B get_body() { return body; }
-        /*override*/ function_body_leaf* clone() {
+        function_body_leaf* clone() __TBB_override {
            return new function_body_leaf< continue_msg, continue_msg, B >(body);
         }
     private:
@@ -123,12 +123,12 @@ namespace internal {
     class function_body_leaf< Input, continue_msg, B> : public function_body< Input, continue_msg > {
     public:
         function_body_leaf( const B &_body ) : body(_body) { }
-        continue_msg operator()(const Input &i) {
+        continue_msg operator()(const Input &i) __TBB_override {
             body(i);
             return continue_msg();
         }
         B get_body() { return body; }
-        /*override*/ function_body_leaf* clone() {
+        function_body_leaf* clone() __TBB_override {
             return new function_body_leaf< Input, continue_msg, B >(body);
         }
     private:
@@ -140,25 +140,16 @@ namespace internal {
     class function_body_leaf< continue_msg, Output, B > : public function_body< continue_msg, Output > {
     public:
         function_body_leaf( const B &_body ) : body(_body) { }
-        Output operator()(const continue_msg &i) {
+        Output operator()(const continue_msg &i) __TBB_override {
             return body(i);
         }
         B get_body() { return body; }
-        /*override*/ function_body_leaf* clone() {
+        function_body_leaf* clone() __TBB_override {
             return new function_body_leaf< continue_msg, Output, B >(body);
         }
     private:
         B body;
     };
-
-#if __TBB_PREVIEW_ASYNC_NODE
-template< typename T, typename = typename T::async_gateway_type >
-void set_async_gateway(T *body, void *g) {
-    body->set_async_gateway(static_cast<typename T::async_gateway_type *>(g));
-}
-
-inline void set_async_gateway(...) { }
-#endif
 
     //! function_body that takes an Input and a set of output ports
     template<typename Input, typename OutputSet>
@@ -167,9 +158,7 @@ inline void set_async_gateway(...) { }
         virtual ~multifunction_body () {}
         virtual void operator()(const Input &/* input*/, OutputSet &/*oset*/) = 0;
         virtual multifunction_body* clone() = 0;
-#if __TBB_PREVIEW_ASYNC_NODE
-        virtual void set_gateway(void *gateway) = 0;
-#endif
+        virtual void* get_body_ptr() = 0;
     };
 
     //! leaf for multifunction.  OutputSet can be a std::tuple or a vector.
@@ -177,17 +166,11 @@ inline void set_async_gateway(...) { }
     class multifunction_body_leaf : public multifunction_body<Input, OutputSet> {
     public:
         multifunction_body_leaf(const B &_body) : body(_body) { }
-        void operator()(const Input &input, OutputSet &oset) {
+        void operator()(const Input &input, OutputSet &oset) __TBB_override {
             body(input, oset); // body may explicitly put() to one or more of oset.
         }
-        B get_body() { return body; }
-
-#if __TBB_PREVIEW_ASYNC_NODE
-        /*override*/  void set_gateway(void *gateway) {
-           set_async_gateway(&body, gateway);
-        }
-#endif
-        /*override*/ multifunction_body_leaf* clone() {
+        void* get_body_ptr() __TBB_override { return &body; }
+        multifunction_body_leaf* clone() __TBB_override {
             return new multifunction_body_leaf<Input, OutputSet,B>(body);
         }
 
@@ -218,9 +201,9 @@ template <typename Input, typename Output, typename B>
 class type_to_key_function_body_leaf : public type_to_key_function_body<Input, Output> {
 public:
     type_to_key_function_body_leaf( const B &_body ) : body(_body) { }
-    /*override*/Output operator()(const Input &i) { return body(i); }
+    Output operator()(const Input &i) __TBB_override { return body(i); }
     B get_body() { return body; }
-    /*override*/ type_to_key_function_body_leaf* clone() {
+    type_to_key_function_body_leaf* clone() __TBB_override {
         return new type_to_key_function_body_leaf< Input, Output, B>(body);
     }
 private:
@@ -231,17 +214,13 @@ template <typename Input, typename Output, typename B>
 class type_to_key_function_body_leaf<Input,Output&,B> : public type_to_key_function_body< Input, Output&> {
 public:
     type_to_key_function_body_leaf( const B &_body ) : body(_body) { }
-
-    /*override*/const Output& operator()(const Input &i) {
+    const Output& operator()(const Input &i) __TBB_override {
         return body(i);
     }
-
     B get_body() { return body; }
-
-    /*override*/ type_to_key_function_body_leaf* clone() {
+    type_to_key_function_body_leaf* clone() __TBB_override {
         return new type_to_key_function_body_leaf< Input, Output&, B>(body);
     }
-
 private:
     B body;
 };
@@ -260,7 +239,7 @@ private:
 
         forward_task_bypass( NodeType &n ) : my_node(n) {}
 
-        task *execute() {
+        task *execute() __TBB_override {
             task * new_task = my_node.forward_task();
             if (new_task == SUCCESSFULLY_ENQUEUED) new_task = NULL;
             return new_task;
@@ -279,7 +258,7 @@ private:
 
         apply_body_task_bypass( NodeType &n, const Input &i ) : my_node(n), my_input(i) {}
 
-        task *execute() {
+        task *execute() __TBB_override {
             task * next_task = my_node.apply_body_bypass( my_input );
             if(next_task == SUCCESSFULLY_ENQUEUED) next_task = NULL;
             return next_task;
@@ -296,7 +275,7 @@ private:
 
         source_task_bypass( NodeType &n ) : my_node(n) {}
 
-        task *execute() {
+        task *execute() __TBB_override {
             task *new_task = my_node.apply_body_bypass( );
             if(new_task == SUCCESSFULLY_ENQUEUED) return NULL;
             return new_task;
@@ -405,12 +384,22 @@ private:
 
     //! A cache of predecessors that only supports try_get
     template< typename T, typename M=spin_mutex >
+#if __TBB_PREVIEW_ASYNC_MSG
+    // TODO: make predecessor_cache type T-independent when async_msg becomes regular feature
+    class predecessor_cache : public node_cache< untyped_sender, M > {
+#else
     class predecessor_cache : public node_cache< sender<T>, M > {
+#endif // __TBB_PREVIEW_ASYNC_MSG
     public:
         typedef M mutex_type;
         typedef T output_type;
+#if __TBB_PREVIEW_ASYNC_MSG
+        typedef untyped_sender predecessor_type;
+        typedef untyped_receiver successor_type;
+#else
         typedef sender<output_type> predecessor_type;
         typedef receiver<output_type> successor_type;
+#endif // __TBB_PREVIEW_ASYNC_MSG
 
         predecessor_cache( ) : my_owner( NULL ) { }
 
@@ -462,19 +451,25 @@ private:
     protected:
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        using node_cache< sender<T>, M >::my_built_predecessors;
+        using node_cache< predecessor_type, M >::my_built_predecessors;
 #endif
         successor_type *my_owner;
     };
 
     //! An cache of predecessors that supports requests and reservations
+    // TODO: make reservable_predecessor_cache type T-independent when async_msg becomes regular feature
     template< typename T, typename M=spin_mutex >
     class reservable_predecessor_cache : public predecessor_cache< T, M > {
     public:
         typedef M mutex_type;
         typedef T output_type;
+#if __TBB_PREVIEW_ASYNC_MSG
+        typedef untyped_sender predecessor_type;
+        typedef untyped_receiver successor_type;
+#else
         typedef sender<T> predecessor_type;
         typedef receiver<T> successor_type;
+#endif // __TBB_PREVIEW_ASYNC_MSG
 
         reservable_predecessor_cache( ) : reserved_src(NULL) { }
 
@@ -538,6 +533,7 @@ private:
 
 
     //! An abstract cache of successors
+    // TODO: make successor_cache type T-independent when async_msg becomes regular feature
     template<typename T, typename M=spin_rw_mutex >
     class successor_cache : tbb::internal::no_copy {
     protected:
@@ -545,15 +541,22 @@ private:
         typedef M mutex_type;
         mutex_type my_mutex;
 
+#if __TBB_PREVIEW_ASYNC_MSG
+        typedef untyped_receiver successor_type;
+        typedef untyped_receiver *pointer_type;
+        typedef untyped_sender owner_type;
+#else
         typedef receiver<T> successor_type;
         typedef receiver<T> *pointer_type;
+        typedef sender<T> owner_type;
+#endif // __TBB_PREVIEW_ASYNC_MSG
         typedef std::list< pointer_type > successors_type;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
         edge_container<successor_type> my_built_successors;
 #endif
         successors_type my_successors;
 
-        sender<T> *my_owner;
+        owner_type *my_owner;
 
     public:
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
@@ -585,7 +588,7 @@ private:
 
         successor_cache( ) : my_owner(NULL) {}
 
-        void set_owner( sender<T> *owner ) { my_owner = owner; }
+        void set_owner( owner_type *owner ) { my_owner = owner; }
 
         virtual ~successor_cache() {}
 
@@ -617,7 +620,9 @@ private:
 #endif
         }
 
+#if !__TBB_PREVIEW_ASYNC_MSG
         virtual task * try_put_task( const T &t ) = 0;
+#endif // __TBB_PREVIEW_ASYNC_MSG
      };  // successor_cache<T>
 
     //! An abstract cache of successors, specialized to continue_msg
@@ -628,8 +633,13 @@ private:
         typedef spin_rw_mutex mutex_type;
         mutex_type my_mutex;
 
+#if __TBB_PREVIEW_ASYNC_MSG
+        typedef untyped_receiver successor_type;
+        typedef untyped_receiver *pointer_type;
+#else
         typedef receiver<continue_msg> successor_type;
         typedef receiver<continue_msg> *pointer_type;
+#endif // __TBB_PREVIEW_ASYNC_MSG
         typedef std::list< pointer_type > successors_type;
         successors_type my_successors;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
@@ -708,11 +718,14 @@ private:
 #endif
         }
 
+#if !__TBB_PREVIEW_ASYNC_MSG
         virtual task * try_put_task( const continue_msg &t ) = 0;
+#endif // __TBB_PREVIEW_ASYNC_MSG
 
     };  // successor_cache< continue_msg >
 
     //! A cache of successors that are broadcast to
+    // TODO: make broadcast_cache type T-independent when async_msg becomes regular feature
     template<typename T, typename M=spin_rw_mutex>
     class broadcast_cache : public successor_cache<T, M> {
         typedef M mutex_type;
@@ -723,7 +736,12 @@ private:
         broadcast_cache( ) {}
 
         // as above, but call try_put_task instead, and return the last task we received (if any)
-        /*override*/ task * try_put_task( const T &t ) {
+#if __TBB_PREVIEW_ASYNC_MSG
+        template<typename X>
+        task * try_put_task( const X &t ) {
+#else
+        task * try_put_task( const T &t ) __TBB_override {
+#endif // __TBB_PREVIEW_ASYNC_MSG
             task * last_task = NULL;
             bool upgraded = true;
             typename mutex_type::scoped_lock l(this->my_mutex, upgraded);
@@ -752,6 +770,7 @@ private:
     };
 
     //! A cache of successors that are put in a round-robin fashion
+    // TODO: make round_robin_cache type T-independent when async_msg becomes regular feature
     template<typename T, typename M=spin_rw_mutex >
     class round_robin_cache : public successor_cache<T, M> {
         typedef size_t size_type;
@@ -767,7 +786,12 @@ private:
             return this->my_successors.size();
         }
 
-        /*override*/task *try_put_task( const T &t ) {
+#if __TBB_PREVIEW_ASYNC_MSG
+        template<typename X>
+        task * try_put_task( const X &t ) {
+#else
+        task *try_put_task( const T &t ) __TBB_override {
+#endif // __TBB_PREVIEW_ASYNC_MSG
             bool upgraded = true;
             typename mutex_type::scoped_lock l(this->my_mutex, upgraded);
             typename successors_type::iterator i = this->my_successors.begin();
@@ -797,7 +821,7 @@ private:
 
         T *my_node;
 
-        task *execute() {
+        task *execute() __TBB_override {
             return my_node->decrement_counter();
         }
 

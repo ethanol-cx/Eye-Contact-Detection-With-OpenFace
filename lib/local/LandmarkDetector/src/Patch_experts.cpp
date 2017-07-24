@@ -314,7 +314,6 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				}
 			}
 		}
-		//}
 	}
 	});
 
