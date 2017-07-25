@@ -441,6 +441,8 @@ int main (int argc, char **argv)
 				return 1;
 			}
 
+			// If image sequence provided, assume the fps is 30
+			fps_vid_in = 30;
 		}	
 		
 		// If optical centers are not defined just use center of image
