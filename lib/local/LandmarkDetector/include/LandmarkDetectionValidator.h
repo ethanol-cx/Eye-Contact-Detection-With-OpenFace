@@ -83,7 +83,7 @@ class DetectionValidator
 		
 public:    
 	
-	// What type of validator we're using - 0 - linear svr, 1 - feed forward neural net, 2 - convolutional neural net
+	// What type of validator we're using - 0 - linear svr, 1 - feed forward neural net, 2 - convolutional neural net, 3 - new version of convolutional neural net
 	int validator_type;
 
 	// The orientations of each of the landmark detection validator
@@ -122,11 +122,15 @@ public:
 	vector<vector<vector<vector<pair<int, cv::Mat_<double> > > > > > cnn_convolutional_layers_dft;
 	vector<vector<vector<float > > > cnn_convolutional_layers_bias;
 	vector< vector<int> > cnn_subsampling_layers;
-	vector< vector<cv::Mat_<float> > > cnn_fully_connected_layers;
+	vector< vector<cv::Mat_<float> > > cnn_fully_connected_layers_weights;
 	vector< vector<float > > cnn_fully_connected_layers_bias;
-	// 0 - convolutional, 1 - subsampling, 2 - fully connected
+	// OLD CNN: 0 - convolutional, 1 - subsampling, 2 - fully connected
+	// NEW CNN: 0 - convolutional, 1 - max pooling (2x2 stride 2), 2 - fully connected, 3 - relu, 4 - sigmoid
 	vector<vector<int> > cnn_layer_types;
 	
+	// Extra params for the new CNN
+	vector< vector<cv::Mat_<float>  > > cnn_fully_connected_layers_biases;
+
 	//==========================================
 
 	// Normalisation for face validation
@@ -160,6 +164,9 @@ private:
 
 	// Convolutional Neural Network
 	double CheckCNN(const cv::Mat_<double>& warped_img, int view_id);
+
+	// Convolutional Neural Network
+	double CheckCNN_old(const cv::Mat_<double>& warped_img, int view_id);
 
 	// A normalisation helper
 	void NormaliseWarpedToVector(const cv::Mat_<double>& warped_img, cv::Mat_<double>& feature_vec, int view_id);
