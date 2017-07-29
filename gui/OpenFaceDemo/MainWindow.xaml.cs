@@ -121,7 +121,7 @@ namespace OpenFaceDemo
 
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
-            clnf_params = new FaceModelParameters(root, true);
+            clnf_params = new FaceModelParameters(root, false); // TODO check this
             clnf_model = new CLNF(clnf_params);
             face_analyser = new FaceAnalyserManaged(root, true, 112);
             gaze_analyser = new GazeAnalyserManaged();
@@ -284,7 +284,7 @@ namespace OpenFaceDemo
                     cx = grayFrame.Width / 2f;
                     cy = grayFrame.Height / 2f;
                 }
-
+                
                 bool detectionSucceeding = ProcessFrame(clnf_model, clnf_params, frame, grayFrame, fx, fy, cx, cy);
 
                 double confidence = (-clnf_model.GetConfidence()) / 2.0 + 0.5;
@@ -304,11 +304,9 @@ namespace OpenFaceDemo
                 double time_stamp = (DateTime.Now - (DateTime)startTime).TotalMilliseconds;
 
                 // The face analysis step (only done if recording AUs, HOGs or video)
-                if(detectionSucceeding)
-                { 
-                    face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, true, false);
-                    gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, fx, fy, cx, cy);
-                }
+                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, true, false);
+                gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, fx, fy, cx, cy);
+
                 List<Tuple<Point, Point>> lines = null;
                 List<Tuple<double, double>> landmarks = null;
                 List<Tuple<double, double>> eye_landmarks = null;
