@@ -1,14 +1,38 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017, Carnegie Mellon University and University of Cambridge,
+// Copyright (C) 2016, Carnegie Mellon University and University of Cambridge,
 // all rights reserved.
 //
-// ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
+// THIS SOFTWARE IS PROVIDED “AS IS” FOR ACADEMIC USE ONLY AND ANY EXPRESS
+// OR IMPLIED WARRANTIES WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
+// BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY.
+// OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
-// BY USING OR DOWNLOADING THE SOFTWARE, YOU ARE AGREEING TO THE TERMS OF THIS LICENSE AGREEMENT.  
-// IF YOU DO NOT AGREE WITH THESE TERMS, YOU MAY NOT USE OR DOWNLOAD THE SOFTWARE.
-//
-// License can be found in OpenFace-license.txt
-//
+// Notwithstanding the license granted herein, Licensee acknowledges that certain components
+// of the Software may be covered by so-called “open source” software licenses (“Open Source
+// Components”), which means any software licenses approved as open source licenses by the
+// Open Source Initiative or any substantially similar licenses, including without limitation any
+// license that, as a condition of distribution of the software licensed under such license,
+// requires that the distributor make the software available in source code format. Licensor shall
+// provide a list of Open Source Components for a particular version of the Software upon
+// Licensee’s request. Licensee will comply with the applicable terms of such licenses and to
+// the extent required by the licenses covering Open Source Components, the terms of such
+// licenses will apply in lieu of the terms of this Agreement. To the extent the terms of the
+// licenses applicable to Open Source Components prohibit any of the restrictions in this
+// License Agreement with respect to such Open Source Component, such restrictions will not
+// apply to such Open Source Component. To the extent the terms of the licenses applicable to
+// Open Source Components require Licensor to make an offer to provide source code or
+// related information in connection with the Software, such offer is hereby made. Any request
+// for source code or related information should be directed to cl-face-tracker-distribution@lists.cam.ac.uk
+// Licensee acknowledges receipt of notices for the Open Source Components for the initial
+// delivery of the Software.
+
 //     * Any publications arising from the use of this software, including but
 //       not limited to academic journal and conference publications, technical
 //       reports and manuals, must cite at least one of the following works:
@@ -108,15 +132,27 @@ cnn_convolutional_layers_bias(other.cnn_convolutional_layers_bias), cnn_convolut
 		}
 	}
 
-	this->cnn_fully_connected_layers.resize(other.cnn_fully_connected_layers.size());
-	for (size_t v = 0; v < other.cnn_fully_connected_layers.size(); ++v)
+	this->cnn_fully_connected_layers_weights.resize(other.cnn_fully_connected_layers_weights.size());
+	for (size_t v = 0; v < other.cnn_fully_connected_layers_weights.size(); ++v)
 	{
-		this->cnn_fully_connected_layers[v].resize(other.cnn_fully_connected_layers[v].size());
+		this->cnn_fully_connected_layers_weights[v].resize(other.cnn_fully_connected_layers_weights[v].size());
 
-		for (size_t l = 0; l < other.cnn_fully_connected_layers[v].size(); ++l)
+		for (size_t l = 0; l < other.cnn_fully_connected_layers_weights[v].size(); ++l)
 		{
 			// Make sure the matrix is copied.
-			this->cnn_fully_connected_layers[v][l] = other.cnn_fully_connected_layers[v][l].clone();
+			this->cnn_fully_connected_layers_weights[v][l] = other.cnn_fully_connected_layers_weights[v][l].clone();
+		}
+	}
+
+	this->cnn_fully_connected_layers_biases.resize(other.cnn_fully_connected_layers_biases.size());
+	for (size_t v = 0; v < other.cnn_fully_connected_layers_biases.size(); ++v)
+	{
+		this->cnn_fully_connected_layers_biases[v].resize(other.cnn_fully_connected_layers_biases[v].size());
+
+		for (size_t l = 0; l < other.cnn_fully_connected_layers_biases[v].size(); ++l)
+		{
+			// Make sure the matrix is copied.
+			this->cnn_fully_connected_layers_biases[v][l] = other.cnn_fully_connected_layers_biases[v][l].clone();
 		}
 	}
 
@@ -188,11 +224,20 @@ void DetectionValidator::Read(string location)
 			cnn_convolutional_layers.resize(n);
 			cnn_convolutional_layers_dft.resize(n);
 			cnn_subsampling_layers.resize(n);
-			cnn_fully_connected_layers.resize(n);
+			cnn_fully_connected_layers_weights.resize(n);
 			cnn_layer_types.resize(n);
 			cnn_fully_connected_layers_bias.resize(n);
 			cnn_convolutional_layers_bias.resize(n);
 		}			
+		else if (validator_type == 3)
+		{
+			cnn_convolutional_layers.resize(n);
+			cnn_convolutional_layers_dft.resize(n);
+			cnn_fully_connected_layers_weights.resize(n);
+			cnn_layer_types.resize(n);
+			cnn_fully_connected_layers_biases.resize(n);
+			cnn_convolutional_layers_bias.resize(n);
+		}
 
 		// Initialise the normalisation terms
 		mean_images.resize(n);
@@ -318,11 +363,82 @@ void DetectionValidator::Read(string location)
 						// Fully connected layer
 						cv::Mat_<float> weights;
 						ReadMatBin(detection_validator_stream, weights);
-						cnn_fully_connected_layers[i].push_back(weights);
+						cnn_fully_connected_layers_weights[i].push_back(weights);
 					}
 				}
 			}
-			
+			else if (validator_type == 3)
+			{
+				int network_depth;
+				detection_validator_stream.read((char*)&network_depth, 4);
+
+				cnn_layer_types[i].resize(network_depth);
+
+				for (int layer = 0; layer < network_depth; ++layer)
+				{
+
+					int layer_type;
+					detection_validator_stream.read((char*)&layer_type, 4);
+					cnn_layer_types[i][layer] = layer_type;
+
+					// convolutional
+					if (layer_type == 0)
+					{
+
+						// Read the number of input maps
+						int num_in_maps;
+						detection_validator_stream.read((char*)&num_in_maps, 4);
+
+						// Read the number of kernels for each input map
+						int num_kernels;
+						detection_validator_stream.read((char*)&num_kernels, 4);
+
+						vector<vector<cv::Mat_<float> > > kernels;
+						vector<vector<pair<int, cv::Mat_<double> > > > kernel_dfts;
+
+						kernels.resize(num_in_maps);
+						kernel_dfts.resize(num_in_maps);
+
+						vector<float> biases;
+						for (int k = 0; k < num_kernels; ++k)
+						{
+							float bias;
+							detection_validator_stream.read((char*)&bias, 4);
+							biases.push_back(bias);
+						}
+
+						cnn_convolutional_layers_bias[i].push_back(biases);
+
+						// For every input map
+						for (int in = 0; in < num_in_maps; ++in)
+						{
+							kernels[in].resize(num_kernels);
+							kernel_dfts[in].resize(num_kernels);
+
+							// For every kernel on that input map
+							for (int k = 0; k < num_kernels; ++k)
+							{
+								ReadMatBin(detection_validator_stream, kernels[in][k]);
+
+							}
+						}
+
+						cnn_convolutional_layers[i].push_back(kernels);
+						cnn_convolutional_layers_dft[i].push_back(kernel_dfts);
+					}
+					else if (layer_type == 2)
+					{
+						cv::Mat_<float> biases;
+						ReadMatBin(detection_validator_stream, biases);
+						cnn_fully_connected_layers_biases[i].push_back(biases);
+
+						// Fully connected layer
+						cv::Mat_<float> weights;
+						ReadMatBin(detection_validator_stream, weights);
+						cnn_fully_connected_layers_weights[i].push_back(weights);
+					}
+				}
+			}
 			// Read in the piece-wise affine warps
 			paws[i].Read(detection_validator_stream);
 		}
@@ -360,6 +476,10 @@ double DetectionValidator::Check(const cv::Vec3d& orientation, const cv::Mat_<uc
 		dec = CheckNN(warped, id);
 	}
 	else if(validator_type == 2)
+	{
+		dec = CheckCNN_old(warped, id);
+	}
+	else if (validator_type == 3)
 	{
 		dec = CheckCNN(warped, id);
 	}
@@ -433,7 +553,7 @@ double DetectionValidator::CheckSVR(const cv::Mat_<double>& warped_img, int view
 }
 
 // Convolutional Neural Network
-double DetectionValidator::CheckCNN(const cv::Mat_<double>& warped_img, int view_id)
+double DetectionValidator::CheckCNN_old(const cv::Mat_<double>& warped_img, int view_id)
 {
 
 	cv::Mat_<double> feature_vec;
@@ -599,7 +719,7 @@ double DetectionValidator::CheckCNN(const cv::Mat_<double>& warped_img, int view
 				cv::hconcat(input_concat, add, input_concat);
 			}
 						
-			input_concat = input_concat * cnn_fully_connected_layers[view_id][fully_connected_layer].t();
+			input_concat = input_concat * cnn_fully_connected_layers_weights[view_id][fully_connected_layer].t();
 
 			cv::exp(-input_concat - cnn_fully_connected_layers_bias[view_id][fully_connected_layer], input_concat);
 			input_concat = 1.0 /(1.0 + input_concat);		
@@ -609,6 +729,55 @@ double DetectionValidator::CheckCNN(const cv::Mat_<double>& warped_img, int view
 
 			fully_connected_layer++;
 		}
+		// Max pooling layer
+		if (layer_type == 3)
+		{
+
+			vector<cv::Mat_<float>> outputs_sub;
+
+			// Iterate over pool height and width, all the stride is 2x2 and no padding is used
+			int stride_x = 2;
+			int stride_y = 2;
+
+			int pool_x = 2;
+			int pool_y = 2;
+
+			for (size_t in = 0; in < input_maps.size(); ++in)
+			{
+				int out_x = input_maps[in].cols / stride_x;
+				int out_y = input_maps[in].rows / stride_y;
+
+				cv::Mat_<float> sub_out(out_y, out_x, 0.0);
+				cv::Mat_<float> in_map = input_maps[in];
+
+				for (int x = 0; x < input_maps[in].cols; x+= stride_x)
+				{
+					for (int y = 0; y < input_maps[in].rows; y+= stride_y) 
+					{
+						float curr_max = -FLT_MAX;
+						for (int x_in = x; x_in < x+pool_x; ++x_in) 
+						{
+							for (int y_in = y; y_in < y + pool_y; ++y_in)
+							{
+								float curr_val = in_map.at<float>(y_in, x_in);
+								if (curr_val > curr_max)
+								{
+									curr_max = curr_val;
+								}
+							}
+						}
+						int x_in_out = x / stride_x;
+						int y_in_out = y / stride_y;
+						sub_out.at<float>(y_in_out, x_in_out) = curr_max;
+					}
+				}
+
+				outputs_sub.push_back(sub_out);
+			}
+			outputs = outputs_sub;
+			subsample_layer++;
+		}
+
 		// Set the outputs of this layer to inputs of the next
 		input_maps = outputs;
 
@@ -616,6 +785,222 @@ double DetectionValidator::CheckCNN(const cv::Mat_<double>& warped_img, int view
 	
 	// Turn it to -1, 1 range
 	double dec = (outputs[0].at<float>(0) - 0.5) * 2.0;
+
+	return dec;
+}
+
+// Convolutional Neural Network
+double DetectionValidator::CheckCNN(const cv::Mat_<double>& warped_img, int view_id)
+{
+	
+	cv::Mat_<double> feature_vec;
+	NormaliseWarpedToVector(warped_img, feature_vec, view_id);
+
+	// Create a normalised image from the crop vector
+	cv::Mat_<float> img(warped_img.size(), 0.0);
+	img = img.t();
+
+	cv::Mat mask = paws[view_id].pixel_mask.t();
+	cv::MatIterator_<uchar>  mask_it = mask.begin<uchar>();
+
+	cv::MatIterator_<double> feature_it = feature_vec.begin();
+	cv::MatIterator_<float> img_it = img.begin();
+
+	int wInt = img.cols;
+	int hInt = img.rows;
+
+	for (int i = 0; i < wInt; ++i)
+	{
+		for (int j = 0; j < hInt; ++j, ++mask_it, ++img_it)
+		{
+			// if is within mask
+			if (*mask_it)
+			{
+				// assign the feature to image if it is within the mask
+				*img_it = (float)*feature_it++;
+			}
+		}
+	}
+	img = img.t();
+
+	int cnn_layer = 0;
+	int fully_connected_layer = 0;
+
+	vector<cv::Mat_<float> > input_maps;
+	input_maps.push_back(img);
+
+	vector<cv::Mat_<float> > outputs;
+
+	for (size_t layer = 0; layer < cnn_layer_types[view_id].size(); ++layer)
+	{
+		// Determine layer type
+		int layer_type = cnn_layer_types[view_id][layer];
+
+		// Convolutional layer
+		if (layer_type == 0)
+		{
+			outputs.clear();
+			for (size_t in = 0; in < input_maps.size(); ++in)
+			{
+				cv::Mat_<float> input_image = input_maps[in];
+
+				// Useful precomputed data placeholders for quick correlation (convolution)
+				cv::Mat_<double> input_image_dft;
+				cv::Mat integral_image;
+				cv::Mat integral_image_sq;
+
+				for (size_t k = 0; k < cnn_convolutional_layers[view_id][cnn_layer][in].size(); ++k)
+				{
+					cv::Mat_<float> kernel = cnn_convolutional_layers[view_id][cnn_layer][in][k];
+
+					// The convolution (with precomputation)
+					cv::Mat_<float> output;
+					if (cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].second.empty())
+					{
+						std::map<int, cv::Mat_<double> > precomputed_dft;
+
+						LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
+
+						cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].first = precomputed_dft.begin()->first;
+						cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].second = precomputed_dft.begin()->second;
+					}
+					else
+					{
+						std::map<int, cv::Mat_<double> > precomputed_dft;
+						precomputed_dft[cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].first] = cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].second;
+						LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
+					}
+
+					// Combining the maps
+					if (in == 0)
+					{
+						outputs.push_back(output);
+					}
+					else
+					{
+						outputs[k] = outputs[k] + output;
+					}
+
+				}
+
+			}
+
+			for (size_t k = 0; k < cnn_convolutional_layers[view_id][cnn_layer][0].size(); ++k)
+			{
+				outputs[k] = outputs[k] + cnn_convolutional_layers_bias[view_id][cnn_layer][k];
+			}
+			cnn_layer++;
+		}
+		if (layer_type == 1)
+		{
+			vector<cv::Mat_<float>> outputs_sub;
+
+			// Iterate over pool height and width, all the stride is 2x2 and no padding is used
+			int stride_x = 2;
+			int stride_y = 2;
+
+			int pool_x = 2;
+			int pool_y = 2;
+
+			for (size_t in = 0; in < input_maps.size(); ++in)
+			{
+				int out_x = input_maps[in].cols / stride_x;
+				int out_y = input_maps[in].rows / stride_y;
+
+				cv::Mat_<float> sub_out(out_y, out_x, 0.0);
+				cv::Mat_<float> in_map = input_maps[in];
+
+				for (int x = 0; x < input_maps[in].cols; x += stride_x)
+				{
+					for (int y = 0; y < input_maps[in].rows; y += stride_y)
+					{
+						float curr_max = -FLT_MAX;
+						for (int x_in = x; x_in < x + pool_x; ++x_in)
+						{
+							for (int y_in = y; y_in < y + pool_y; ++y_in)
+							{
+								float curr_val = in_map.at<float>(y_in, x_in);
+								if (curr_val > curr_max)
+								{
+									curr_max = curr_val;
+								}
+							}
+						}
+						int x_in_out = x / stride_x;
+						int y_in_out = y / stride_y;
+						sub_out.at<float>(y_in_out, x_in_out) = curr_max;
+					}
+				}
+
+				outputs_sub.push_back(sub_out);
+
+			}
+			outputs = outputs_sub;
+		}
+		if (layer_type == 2)
+		{
+			// Concatenate all the maps
+			cv::Mat_<float> input_concat = input_maps[0].t();
+			input_concat = input_concat.reshape(0, 1);
+
+			for (size_t in = 1; in < input_maps.size(); ++in)
+			{
+				cv::Mat_<float> add = input_maps[in].t();
+				add = add.reshape(0, 1);
+				cv::hconcat(input_concat, add, input_concat);
+			}
+
+			input_concat = input_concat * cnn_fully_connected_layers_weights[view_id][fully_connected_layer];
+			input_concat = input_concat + cnn_fully_connected_layers_biases[view_id][fully_connected_layer].t();
+
+			outputs.clear();
+			outputs.push_back(input_concat);
+
+			fully_connected_layer++;
+		}
+		if (layer_type == 3) // ReLU
+		{
+			outputs.clear();
+			for (size_t k = 0; k < input_maps.size(); ++k)
+			{
+				// Apply the ReLU
+				cv::threshold(input_maps[k], input_maps[k], 0, 0, cv::THRESH_TOZERO);
+				outputs.push_back(input_maps[k]);
+
+			}
+		}
+		if (layer_type == 4)
+		{
+			outputs.clear();
+			for (size_t k = 0; k < input_maps.size(); ++k)
+			{
+				// Apply the sigmoid
+				cv::exp(-input_maps[k], input_maps[k]);
+				input_maps[k] = 1.0 / (1.0 + input_maps[k]);
+
+				outputs.push_back(input_maps[k]);
+
+			}
+		}
+		// Set the outputs of this layer to inputs of the next
+		input_maps = outputs;
+
+	}
+
+	// First turn to the 0-3 range
+	double max_val = 0;
+	cv::Point max_loc;
+	cv::minMaxLoc(outputs[0].t(), 0, &max_val, 0, &max_loc);
+	int max_idx = max_loc.y;
+	double max = 3;
+	double min = 0;
+	double bins = (double)outputs[0].cols;
+	// Unquantizing the softmax layer to continuous value
+	double step_size = (max - min) / bins; // This should be saved somewhere
+	double unquantized = min + step_size / 2.0 + max_idx * step_size;
+
+	// Turn it to -1, 1 range
+	double dec = (unquantized - 1.5) / 1.5;
 
 	return dec;
 }
