@@ -76,7 +76,8 @@ CLNF::CLNF(const CLNF& other): pdm(other.pdm), params_local(other.params_local.c
 	this->detection_certainty = other.detection_certainty;
 	this->model_likelihood = other.model_likelihood;
 	this->failures_in_a_row = other.failures_in_a_row;
-	
+	this->success_in_a_row = other.success_in_a_row;
+
 	// Load the CascadeClassifier (as it does not have a proper copy constructor)
 	if(!face_detector_location.empty())
 	{
@@ -121,6 +122,7 @@ CLNF & CLNF::operator= (const CLNF& other)
 		this->detection_certainty = other.detection_certainty;
 		this->model_likelihood = other.model_likelihood;
 		this->failures_in_a_row = other.failures_in_a_row;
+		this->success_in_a_row = other.success_in_a_row;
 
 		this->eye_model = other.eye_model;
 
@@ -164,6 +166,7 @@ CLNF::CLNF(const CLNF&& other)
 	this->detection_certainty = other.detection_certainty;
 	this->model_likelihood = other.model_likelihood;
 	this->failures_in_a_row = other.failures_in_a_row;
+	this->success_in_a_row = other.success_in_a_row;
 
 	pdm = other.pdm;
 	params_local = other.params_local;
@@ -199,6 +202,7 @@ CLNF & CLNF::operator= (const CLNF&& other)
 	this->detection_certainty = other.detection_certainty;
 	this->model_likelihood = other.model_likelihood;
 	this->failures_in_a_row = other.failures_in_a_row;
+	this->success_in_a_row = other.success_in_a_row;
 
 	pdm = other.pdm;
 	params_local = other.params_local;
@@ -527,6 +531,7 @@ void CLNF::Read(string main_location)
 	params_global = cv::Vec6d(1, 0, 0, 0, 0, 0);
 
 	failures_in_a_row = -1;
+	success_in_a_row = 0;
 
 }
 
@@ -547,6 +552,7 @@ void CLNF::Reset()
 	params_global = cv::Vec6d(1, 0, 0, 0, 0, 0);
 
 	failures_in_a_row = -1;
+	success_in_a_row = 0;
 	face_template = cv::Mat_<uchar>();
 }
 

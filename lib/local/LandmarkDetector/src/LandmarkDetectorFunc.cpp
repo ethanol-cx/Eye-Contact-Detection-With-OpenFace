@@ -288,16 +288,36 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 			CorrectGlobalParametersVideo(grayscale_image, clnf_model, params);
 		}
 
+
+		// If we are performing face validation, do it every 3 frames due to performance
+		bool reset_to_true = false;
+		double old_certainty = 0;
+		if (params.validate_detections == true && clnf_model.success_in_a_row % 3 != 0)
+		{
+			params.validate_detections = false;
+			reset_to_true = true;
+			old_certainty = clnf_model.detection_certainty;
+		}
+
 		bool track_success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+
+		if (reset_to_true)
+		{
+			params.validate_detections = true;
+			clnf_model.detection_certainty = old_certainty;
+		}
+
 		if(!track_success)
 		{
 			// Make a record that tracking failed
 			clnf_model.failures_in_a_row++;
+			clnf_model.success_in_a_row = 0;
 		}
 		else
 		{
 			// indicate that tracking is a success
 			clnf_model.failures_in_a_row = -1;			
+			clnf_model.success_in_a_row++;
 			UpdateTemplate(grayscale_image, clnf_model);
 		}
 	}
@@ -377,7 +397,8 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 			}
 			else
 			{
-				clnf_model.failures_in_a_row = -1;				
+				clnf_model.failures_in_a_row = -1;			
+				clnf_model.success_in_a_row++;
 				UpdateTemplate(grayscale_image, clnf_model);
 				return true;
 			}
@@ -388,12 +409,14 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 	if(!clnf_model.tracking_initialised)
 	{
 		clnf_model.failures_in_a_row++;
+		clnf_model.success_in_a_row = 0;
 	}
 
 	// un-initialise the tracking
 	if(	clnf_model.failures_in_a_row > 100)
 	{
 		clnf_model.tracking_initialised = false;
+		clnf_model.success_in_a_row = 0;
 	}
 
 	return clnf_model.detection_success;
