@@ -243,7 +243,6 @@ void CLNF::Read_CLNF(string clnf_location)
 	string line;
 	
 	vector<string> intensity_expert_locations;
-	vector<string> depth_expert_locations;
 	vector<string> ccnf_expert_locations;
 
 	// The other module locations should be defined as relative paths from the main model
@@ -308,10 +307,6 @@ void CLNF::Read_CLNF(string clnf_location)
 		{
 			intensity_expert_locations.push_back(location);
 		}
-		else if(module.compare("PatchesDepth") == 0)
-		{
-			depth_expert_locations.push_back(location);
-		}
 		else if(module.compare("PatchesCCNF") == 0)
 		{
 			ccnf_expert_locations.push_back(location);
@@ -319,7 +314,7 @@ void CLNF::Read_CLNF(string clnf_location)
 	}
   
 	// Initialise the patch experts
-	patch_experts.Read(intensity_expert_locations, depth_expert_locations, ccnf_expert_locations);
+	patch_experts.Read(intensity_expert_locations, ccnf_expert_locations);
 
 	// Read in a face detector
 	face_detector_HOG = dlib::get_frontal_face_detector();
@@ -564,11 +559,11 @@ void CLNF::Reset(double x, double y)
 }
 
 // The main internal landmark detection call (should not be used externally?)
-bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, const cv::Mat_<float> &depth, FaceModelParameters& params)
+bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& params)
 {
 
 	// Fits from the current estimate of local and global parameters in the model
-	bool fit_success = Fit(image, depth, params.window_sizes_current, params);
+	bool fit_success = Fit(image, params.window_sizes_current, params);
 
 	// Store the landmarks converged on in detected_landmarks
 	pdm.CalcShape2D(detected_landmarks, params_local, params_global);	
@@ -610,7 +605,7 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, const cv::Mat_<float> &
 					this->hierarchical_params[part_model].window_sizes_current = this->hierarchical_params[part_model].window_sizes_init;
 
 					// Do the actual landmark detection
-					hierarchical_models[part_model].DetectLandmarks(image, depth, hierarchical_params[part_model]);
+					hierarchical_models[part_model].DetectLandmarks(image, hierarchical_params[part_model]);
 
 				}
 				else
@@ -675,7 +670,7 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, const cv::Mat_<float> &
 }
 
 //=============================================================================
-bool CLNF::Fit(const cv::Mat_<uchar>& im, const cv::Mat_<float>& depthImg, const std::vector<int>& window_sizes, const FaceModelParameters& parameters)
+bool CLNF::Fit(const cv::Mat_<uchar>& im, const std::vector<int>& window_sizes, const FaceModelParameters& parameters)
 {
 	// Making sure it is a single channel image
 	assert(im.channels() == 1);	
@@ -684,21 +679,7 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const cv::Mat_<float>& depthImg, const
 	cv::Mat_<double> current_shape(2 * pdm.NumberOfPoints() , 1, 0.0);
 
 	int n = pdm.NumberOfPoints(); 
-	
-	cv::Mat_<float> depth_img_no_background;
-	
-	// Background elimination from the depth image
-	if(!depthImg.empty())
-	{
-		bool success = RemoveBackground(depth_img_no_background, depthImg);
-
-		// The attempted background removal can fail leading to tracking failure
-		if(!success)
-		{
-			return false;
-		}
-	}
-
+		
 	int num_scales = patch_experts.patch_scaling.size();
 
 	// Storing the patch expert response maps
@@ -720,15 +701,7 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const cv::Mat_<float>& depthImg, const
 			continue;
 
 		// The patch expert response computation
-		if(scale != window_sizes.size() - 1)
-		{
-			patch_experts.Response(patch_expert_responses, sim_ref_to_img, sim_img_to_ref, im, depth_img_no_background, pdm, params_global, params_local, window_size, scale);
-		}
-		else
-		{
-			// Do not use depth for the final iteration as it is not as accurate
-			patch_experts.Response(patch_expert_responses, sim_ref_to_img, sim_img_to_ref, im, cv::Mat(), pdm, params_global, params_local, window_size, scale);
-		}
+		patch_experts.Response(patch_expert_responses, sim_ref_to_img, sim_img_to_ref, im,  pdm, params_global, params_local, window_size, scale);
 		
 		if(parameters.refine_parameters == true)
 		{
@@ -1111,95 +1084,6 @@ double CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, con
 
 	return loglhood;
 
-}
-
-
-bool CLNF::RemoveBackground(cv::Mat_<float>& out_depth_image, const cv::Mat_<float>& depth_image)
-{
-	// use the current estimate of the face location to determine what is foreground and background
-	double tx = this->params_global[4];
-	double ty = this->params_global[5];
-
-	// if we are too close to the edge fail
-	if(tx - 9 <= 0 || ty - 9 <= 0 || tx + 9 >= depth_image.cols || ty + 9 >= depth_image.rows)
-	{
-		cout << "Face estimate is too close to the edge, tracking failed" << endl;
-		return false;
-	}
-
-	cv::Mat_<double> current_shape;
-
-	pdm.CalcShape2D(current_shape, params_local, params_global);
-
-	double min_x, max_x, min_y, max_y;
-
-	int n = this->pdm.NumberOfPoints();
-
-	cv::minMaxLoc(current_shape(cv::Range(0, n), cv::Range(0,1)), &min_x, &max_x);
-	cv::minMaxLoc(current_shape(cv::Range(n, n*2), cv::Range(0,1)), &min_y, &max_y);
-
-	// the area of interest: size of face with some scaling ( these scalings are fairly ad-hoc)
-	double width = 3 * (max_x - min_x); 
-	double height = 2.5 * (max_y - min_y); 
-
-	// getting the region of interest from the depth image,
-	// so we don't get other objects lying at same depth as head in the image but away from it
-	cv::Rect_<int> roi((int)(tx-width/2), (int)(ty - height/2), (int)width, (int)height);
-
-	// clamp it if it does not lie fully in the image
-	if(roi.x < 0) roi.x = 0;
-	if(roi.y < 0) roi.y = 0;
-	if(roi.width + roi.x >= depth_image.cols) roi.x = depth_image.cols - roi.width;
-	if(roi.height + roi.y >= depth_image.rows) roi.y = depth_image.rows - roi.height;
-		
-	if(width > depth_image.cols)
-	{
-		roi.x = 0; roi.width = depth_image.cols;
-	}
-	if(height > depth_image.rows)
-	{
-		roi.y = 0; roi.height = depth_image.rows;
-	}
-
-	if(roi.width == 0) roi.width = depth_image.cols;
-	if(roi.height == 0) roi.height = depth_image.rows;
-
-	if(roi.x >= depth_image.cols) roi.x = 0;
-	if(roi.y >= depth_image.rows) roi.y = 0;
-
-	// Initialise the mask
-	cv::Mat_<uchar> mask(depth_image.rows, depth_image.cols, (uchar)0);
-
-	cv::Mat_<uchar> valid_pixels = depth_image > 0;
-
-	// check if there is any depth near the estimate
-	if(cv::sum(valid_pixels(cv::Rect((int)tx - 8, (int)ty - 8, 16, 16))/255)[0] > 0)
-	{
-		double Z = cv::mean(depth_image(cv::Rect((int)tx - 8, (int)ty - 8, 16, 16)), valid_pixels(cv::Rect((int)tx - 8, (int)ty - 8, 16, 16)))[0]; // Z offset from the surface of the face
-				
-		// Only operate within region of interest of the depth image
-		cv::Mat dRoi = depth_image(roi);
-
-		cv::Mat mRoi = mask(roi);
-
-		// Filter all pixels further than 20cm away from the current pose depth estimate
-		cv::inRange(dRoi, Z - 200, Z + 200, mRoi);
-		
-		// Convert to be either 0 or 1
-		mask = mask / 255;
-		
-		cv::Mat_<float> maskF;
-		mask.convertTo(maskF, CV_32F);
-
-		//Filter the depth image
-		out_depth_image = depth_image.mul(maskF);
-	}
-	else
-	{
-		cout << "No depth signal found in foreground, tracking failed" << endl;
-		return false;
-	}
-	return true;
 }
 
 // Getting a 3D shape model from the current detected landmarks (in camera space)

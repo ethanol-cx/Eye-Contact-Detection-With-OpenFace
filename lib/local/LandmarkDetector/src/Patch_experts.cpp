@@ -56,7 +56,7 @@
 using namespace LandmarkDetector;
 
 // A copy constructor
-Patch_experts::Patch_experts(const Patch_experts& other) : patch_scaling(other.patch_scaling), centers(other.centers), svr_expert_intensity(other.svr_expert_intensity), svr_expert_depth(other.svr_expert_depth), ccnf_expert_intensity(other.ccnf_expert_intensity)
+Patch_experts::Patch_experts(const Patch_experts& other) : patch_scaling(other.patch_scaling), centers(other.centers), svr_expert_intensity(other.svr_expert_intensity), ccnf_expert_intensity(other.ccnf_expert_intensity)
 {
 
 	// Make sure the matrices are allocated properly
@@ -86,11 +86,11 @@ Patch_experts::Patch_experts(const Patch_experts& other) : patch_scaling(other.p
 	}
 }
 
-// Returns the patch expert responses given a grayscale and an optional depth image.
+// Returns the patch expert responses given a grayscale image.
 // Additionally returns the transform from the image coordinates to the response coordinates (and vice versa).
 // The computation also requires the current landmark locations to compute response around, the PDM corresponding to the desired model, and the parameters describing its instance
 // Also need to provide the size of the area of interest and the desired scale of analysis
-void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, cv::Matx22f& sim_ref_to_img, cv::Matx22d& sim_img_to_ref, const cv::Mat_<uchar>& grayscale_image, const cv::Mat_<float>& depth_image,
+void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, cv::Matx22f& sim_ref_to_img, cv::Matx22d& sim_img_to_ref, const cv::Mat_<uchar>& grayscale_image, 
 							 const PDM& pdm, const cv::Vec6d& params_global, const cv::Mat_<double>& params_local, int window_size, int scale)
 {
 
@@ -125,15 +125,6 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 	sim_ref_to_img(0,1) = (float)sim_ref_to_img_d(0,1);
 	sim_ref_to_img(1,0) = (float)sim_ref_to_img_d(1,0);
 	sim_ref_to_img(1,1) = (float)sim_ref_to_img_d(1,1);
-
-	// Indicates the legal pixels in a depth image, if available (used for CLM-Z area of interest (window) interpolation)
-	cv::Mat_<uchar> mask;
-	if(!depth_image.empty())
-	{
-		mask = depth_image > 0;			
-		mask = mask / 255;
-	}		
-	
 
 	bool use_ccnf = !this->ccnf_expert_intensity.empty();
 
@@ -222,53 +213,6 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 					svr_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
 				}
 			
-				// if we have a corresponding depth patch and it is visible		
-				if(!svr_expert_depth.empty() && !depth_image.empty() && visibilities[scale][view_id].at<int>(i,0))
-				{
-
-					cv::Mat_<float> dProb = patch_expert_responses[i].clone();
-					cv::Mat_<float> depthWindow(area_of_interest_height, area_of_interest_width);
-			
-
-					CvMat dimg_o = depthWindow;
-					cv::Mat maskWindow(area_of_interest_height, area_of_interest_width, CV_32F);
-					CvMat mimg_o = maskWindow;
-
-					IplImage d_o = depth_image;
-					IplImage m_o = mask;
-
-					cvGetQuadrangleSubPix(&d_o,&dimg_o,&sim_o);
-				
-					cvGetQuadrangleSubPix(&m_o,&mimg_o,&sim_o);
-
-					depthWindow.setTo(0, maskWindow < 1);
-
-					svr_expert_depth[scale][view_id][i].ResponseDepth(depthWindow, dProb);
-							
-					// Sum to one
-					double sum = cv::sum(patch_expert_responses[i])[0];
-
-					// To avoid division by 0 issues
-					if(sum == 0)
-					{
-						sum = 1;
-					}
-
-					patch_expert_responses[i] /= sum;
-
-					// Sum to one
-					sum = cv::sum(dProb)[0];
-					// To avoid division by 0 issues
-					if(sum == 0)
-					{
-						sum = 1;
-					}
-
-					dProb /= sum;
-
-					patch_expert_responses[i] = patch_expert_responses[i] + dProb;
-
-				}
 			}
 		}
 	}
@@ -303,7 +247,7 @@ int Patch_experts::GetViewIdx(const cv::Vec6d& params_global, int scale) const
 
 
 //===========================================================================
-void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<string> depth_svr_expert_locations, vector<string> intensity_ccnf_expert_locations)
+void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<string> intensity_ccnf_expert_locations)
 {
 
 	// initialise the SVR intensity patch expert parameters
@@ -339,61 +283,6 @@ void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 		string location = intensity_ccnf_expert_locations[scale];
 		cout << "Reading the intensity CCNF patch experts from: " << location << "....";
 		Read_CCNF_patch_experts(location,  centers[scale], visibilities[scale], ccnf_expert_intensity[scale], patch_scaling[scale]);
-	}
-
-
-	// initialise the SVR depth patch expert parameters
-	int num_depth_scales = depth_svr_expert_locations.size();
-	int num_intensity_scales = centers.size();
-	
-	if(num_depth_scales > 0 && num_intensity_scales != num_depth_scales)
-	{
-		cout << "Intensity and depth patch experts have a different number of scales, can't read depth" << endl;
-		return;
-	}
-
-	// Have these to confirm that depth patch experts have the same number of views and scales and have the same visibilities
-	vector<vector<cv::Vec3d> > centers_depth(num_depth_scales);
-	vector<vector<cv::Mat_<int> > > visibilities_depth(num_depth_scales);
-	vector<double> patch_scaling_depth(num_depth_scales);
-	
-	svr_expert_depth.resize(num_depth_scales);	
-
-	// Reading in SVR intensity patch experts for each scales it is defined in
-	for(int scale = 0; scale < num_depth_scales; ++scale)
-	{		
-		string location = depth_svr_expert_locations[scale];
-		cout << "Reading the depth SVR patch experts from: " << location << "....";
-		Read_SVR_patch_experts(location,  centers_depth[scale], visibilities_depth[scale], svr_expert_depth[scale], patch_scaling_depth[scale]);
-
-		// Check if the scales are identical
-		if(patch_scaling_depth[scale] != patch_scaling[scale])
-		{
-			cout << "Intensity and depth patch experts have a different scales, can't read depth" << endl;
-			svr_expert_depth.clear();
-			return;			
-		}
-
-		int num_views_intensity = centers[scale].size();
-		int num_views_depth = centers_depth[scale].size();
-
-		// Check if the number of views is identical
-		if(num_views_intensity != num_views_depth)
-		{
-			cout << "Intensity and depth patch experts have a different number of scales, can't read depth" << endl;
-			svr_expert_depth.clear();
-			return;			
-		}
-
-		for(int view = 0; view < num_views_depth; ++view)
-		{
-			if(cv::countNonZero(centers_depth[scale][view] != centers[scale][view]) || cv::countNonZero(visibilities[scale][view] != visibilities_depth[scale][view]))
-			{
-				cout << "Intensity and depth patch experts have different visibilities or centers" << endl;
-				svr_expert_depth.clear();
-				return;		
-			}
-		}
 	}
 
 }

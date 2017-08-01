@@ -153,7 +153,7 @@ public:
 	CLNF & operator= (const CLNF&& other);
 
 	// Does the actual work - landmark detection
-	bool DetectLandmarks(const cv::Mat_<uchar> &image, const cv::Mat_<float> &depth, FaceModelParameters& params);
+	bool DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& params);
 	
 	// Gets the shape of the current detected landmarks in camera space (given camera calibration)
 	// Can only be called after a call to DetectLandmarksInVideo or DetectLandmarksInImage
@@ -180,7 +180,7 @@ private:
 	map<int, cv::Mat_<float> >		kde_resp_precalc;
 
 	// The model fitting: patch response computation and optimisation steps
-    bool Fit(const cv::Mat_<uchar>& intensity_image, const cv::Mat_<float>& depth_image, const std::vector<int>& window_sizes, const FaceModelParameters& parameters);
+    bool Fit(const cv::Mat_<uchar>& intensity_image, const std::vector<int>& window_sizes, const FaceModelParameters& parameters);
 
 	// Mean shift computation that uses precalculated kernel density estimators (the one actually used)
 	void NonVectorisedMeanShift_precalc_kde(cv::Mat_<float>& out_mean_shifts, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Mat_<float> &dxs, const cv::Mat_<float> &dys, int resp_size, float a, int scale, int view_id, map<int, cv::Mat_<float> >& mean_shifts);
@@ -188,9 +188,6 @@ private:
 	// The actual model optimisation (update step), returns the model likelihood
     double NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<double>& initial_local,
 		          const cv::Mat_<double>& base_shape, const cv::Matx22d& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_idx, bool rigid, int scale, cv::Mat_<double>& landmark_lhoods, const FaceModelParameters& parameters);
-
-	// Removing background image from the depth
-	bool RemoveBackground(cv::Mat_<float>& out_depth_image, const cv::Mat_<float>& depth_image);
 
 	// Generating the weight matrix for the Weighted least squares
 	void GetWeightMatrix(cv::Mat_<float>& WeightMatrix, int scale, int view_id, const FaceModelParameters& parameters);

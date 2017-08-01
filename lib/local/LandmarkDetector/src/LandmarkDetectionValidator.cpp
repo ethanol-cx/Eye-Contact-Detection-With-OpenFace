@@ -1027,22 +1027,19 @@ double DetectionValidator::CheckCNN_tbb(const cv::Mat_<double>& warped_img, int 
 
 	}
 
-	// First turn to the 0-3 range
+	// Convert the class label to a continuous value
 	double max_val = 0;
 	cv::Point max_loc;
 	cv::minMaxLoc(outputs[0].t(), 0, &max_val, 0, &max_loc);
 	int max_idx = max_loc.y;
-	double max = 3;
-	double min = 0;
+	double max = 1;
+	double min = -1;
 	double bins = (double)outputs[0].cols;
 	// Unquantizing the softmax layer to continuous value
 	double step_size = (max - min) / bins; // This should be saved somewhere
 	double unquantized = min + step_size / 2.0 + max_idx * step_size;
 
-	// Turn it to -1, 1 range
-	double dec = (unquantized - 1.5) / 1.5;
-
-	return dec;
+	return unquantized;
 }
 
 // Convolutional Neural Network

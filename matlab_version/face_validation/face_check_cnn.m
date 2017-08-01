@@ -42,18 +42,17 @@ img_crop = img_crop ./ cnns(view_id).std_ex;
 
 mask = cnns(view_id).mask;
 
-% Normalisation to 0-1
-% img(mask) = img_crop / 255;
 img = zeros(size(mask));
 img(mask) = img_crop;
-% img = cat(3, img, img);
- % [er, bad] = nntest(nn, test_x, test_y);
 
- cnn = cnns(view_id).cnn;
+cnn = cnns(view_id).cnn;
+
 %%
-cnn = cnnff(cnn, img);
+res = vl_simplenn(cnn, single(img), [], []);
+res = gather(res(end).x);
+num_bins = numel(res);
+[~,res] = sort(res, 3, 'descend') ;
+res = squeeze(res);
+res = res(1,:);
 
-decision =   cnn.o(1);
-       
-% normalise decision from ~ 0, 1 to [0,3]
-decision = decision * 3;
+decision = unQuantizeContinuous(res, 0, 3, num_bins)';
