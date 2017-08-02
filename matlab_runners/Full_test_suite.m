@@ -25,7 +25,7 @@ run_AU_prediction_DISFA
 assert(mean(au_res) > 0.7);
 
 run_AU_prediction_SEMAINE
-assert(mean(f1s) > 0.42);
+assert(mean(f1s) > 0.41);
 
 run_AU_prediction_FERA2011
 assert(mean(au_res) > 0.5);

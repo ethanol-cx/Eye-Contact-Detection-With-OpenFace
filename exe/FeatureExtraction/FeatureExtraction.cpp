@@ -226,7 +226,7 @@ int main (int argc, char **argv)
 	boost::filesystem::path parent_path = boost::filesystem::path(arguments[0]).parent_path();
 
 	// Some initial parameters that can be overriden from command line	
-	vector<string> input_files, depth_directories, output_files, tracked_videos_output;
+	vector<string> input_files, output_files, tracked_videos_output;
 	
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);
 	// Always track gaze in feature extraction
@@ -237,7 +237,7 @@ int main (int argc, char **argv)
 	// Indicates that rotation should be with respect to camera or world coordinates
 	bool use_world_coordinates;
 	string output_codec; //not used but should
-	LandmarkDetector::get_video_input_output_params(input_files, depth_directories, output_files, tracked_videos_output, use_world_coordinates, output_codec, arguments);
+	LandmarkDetector::get_video_input_output_params(input_files, output_files, tracked_videos_output, use_world_coordinates, output_codec, arguments);
 
 	bool video_input = true;
 	bool verbose = true;

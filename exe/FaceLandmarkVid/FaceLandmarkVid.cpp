@@ -87,7 +87,7 @@ double fps_tracker = -1.0;
 int64 t0 = 0;
 
 // Visualising the results
-void visualise_tracking(cv::Mat& captured_image, cv::Mat_<float>& depth_image, const LandmarkDetector::CLNF& face_model, const LandmarkDetector::FaceModelParameters& det_parameters, cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, int frame_count, double fx, double fy, double cx, double cy)
+void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& face_model, const LandmarkDetector::FaceModelParameters& det_parameters, cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, int frame_count, double fx, double fy, double cx, double cy)
 {
 
 	// Drawing the facial landmarks on the face and the bounding box around it if tracking is successful and initialised
@@ -142,13 +142,6 @@ void visualise_tracking(cv::Mat& captured_image, cv::Mat_<float>& depth_image, c
 	{
 		cv::namedWindow("tracking_result", 1);
 		cv::imshow("tracking_result", captured_image);
-
-		if (!depth_image.empty())
-		{
-			// Division needed for visualisation purposes
-			imshow("depth", depth_image / 2000.0);
-		}
-
 	}
 }
 
@@ -158,7 +151,7 @@ int main (int argc, char **argv)
 	vector<string> arguments = get_arguments(argc, argv);
 
 	// Some initial parameters that can be overriden from command line	
-	vector<string> files, depth_directories, output_video_files, out_dummy;
+	vector<string> files, output_video_files, out_dummy;
 	
 	// By default try webcam 0
 	int device = 0;
@@ -170,7 +163,7 @@ int main (int argc, char **argv)
 	// Indicates that rotation should be with respect to world or camera coordinates
 	bool u;
 	string output_codec;
-	LandmarkDetector::get_video_input_output_params(files, depth_directories, out_dummy, output_video_files, u, output_codec, arguments);
+	LandmarkDetector::get_video_input_output_params(files, out_dummy, output_video_files, u, output_codec, arguments);
 	
 	// The modules that are being used for tracking
 	LandmarkDetector::CLNF clnf_model(det_parameters.model_location);	
@@ -215,8 +208,6 @@ int main (int argc, char **argv)
 			f_n = 0;
 		}
 		
-		bool use_depth = !depth_directories.empty();	
-
 		// Do some grabbing
 		cv::VideoCapture video_capture;
 		if( current_file.size() > 0 )
@@ -292,7 +283,6 @@ int main (int argc, char **argv)
 		{		
 
 			// Reading the images
-			cv::Mat_<float> depth_image;
 			cv::Mat_<uchar> grayscale_image;
 
 			if(captured_image.channels() == 3)
@@ -303,31 +293,9 @@ int main (int argc, char **argv)
 			{
 				grayscale_image = captured_image.clone();				
 			}
-		
-			// Get depth image
-			if(use_depth)
-			{
-				char* dst = new char[100];
-				std::stringstream sstream;
-
-				sstream << depth_directories[f_n] << "\\depth%05d.png";
-				sprintf(dst, sstream.str().c_str(), frame_count + 1);
-				// Reading in 16-bit png image representing depth
-				cv::Mat_<short> depth_image_16_bit = cv::imread(string(dst), -1);
-
-				// Convert to a floating point depth image
-				if(!depth_image_16_bit.empty())
-				{
-					depth_image_16_bit.convertTo(depth_image, CV_32F);
-				}
-				else
-				{
-					WARN_STREAM( "Can't find depth image" );
-				}
-			}
-			
+					
 			// The actual facial landmark detection / tracking
-			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, depth_image, clnf_model, det_parameters);
+			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, clnf_model, det_parameters);
 			
 			// Visualising the results
 			// Drawing the facial landmarks on the face and the bounding box around it if tracking is successful and initialised
@@ -343,7 +311,7 @@ int main (int argc, char **argv)
 				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
 			}
 
-			visualise_tracking(captured_image, depth_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
+			visualise_tracking(captured_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
 			
 			// output the tracked video
 			if (!output_video_files.empty())

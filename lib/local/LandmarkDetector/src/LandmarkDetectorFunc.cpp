@@ -259,7 +259,7 @@ void CorrectGlobalParametersVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& 
 	
 }
 
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> &depth_image, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, FaceModelParameters& params)
 {
 	// First need to decide if the landmarks should be "detected" or "tracked"
 	// Detected means running face detection and a larger search area, tracked means initialising from previous step
@@ -288,7 +288,8 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 			CorrectGlobalParametersVideo(grayscale_image, clnf_model, params);
 		}
 
-		bool track_success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+		bool track_success = clnf_model.DetectLandmarks(grayscale_image, params);
+		
 		if(!track_success)
 		{
 			// Make a record that tracking failed
@@ -357,7 +358,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 			params.window_sizes_current = params.window_sizes_init;
 
 			// Do the actual landmark detection (and keep it only if successful)
-			bool landmark_detection_success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+			bool landmark_detection_success = clnf_model.DetectLandmarks(grayscale_image, params);
 
 			// If landmark reinitialisation unsucessful continue from previous estimates
 			// if it's initial detection however, do not care if it was successful as the validator might be wrong, so continue trackig
@@ -377,7 +378,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 			}
 			else
 			{
-				clnf_model.failures_in_a_row = -1;				
+				clnf_model.failures_in_a_row = -1;			
 				UpdateTemplate(grayscale_image, clnf_model);
 				return true;
 			}
@@ -400,7 +401,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 	
 }
 
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> &depth_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
 {
 	if(bounding_box.width > 0)
 	{
@@ -412,18 +413,8 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 		clnf_model.tracking_initialised = true;
 	}
 
-	return DetectLandmarksInVideo(grayscale_image, depth_image, clnf_model, params);
+	return DetectLandmarksInVideo(grayscale_image, clnf_model, params);
 
-}
-
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, FaceModelParameters& params)
-{
-	return DetectLandmarksInVideo(grayscale_image, cv::Mat_<float>(), clnf_model, params);
-}
-
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
-{
-	return DetectLandmarksInVideo(grayscale_image, cv::Mat_<float>(), bounding_box, clnf_model, params);
 }
 
 //================================================================================================================
@@ -432,7 +423,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 //================================================================================================================
 
 // This is the one where the actual work gets done, other DetectLandmarksInImage calls lead to this one
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> depth_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
 {
 
 	// Can have multiple hypotheses
@@ -485,7 +476,7 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 		// calculate the local and global parameters from the generated 2D shape (mapping from the 2D to 3D because camera params are unknown)
 		clnf_model.pdm.CalcParams(clnf_model.params_global, bounding_box, clnf_model.params_local, rotation_hypotheses[hypothesis]);
 	
-		bool success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);	
+		bool success = clnf_model.DetectLandmarks(grayscale_image, params);	
 
 		if(hypothesis == 0 || best_likelihood < clnf_model.model_likelihood)
 		{
@@ -530,7 +521,7 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	return best_success;
 }
 
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> depth_image, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, FaceModelParameters& params)
 {
 
 	cv::Rect_<double> bounding_box;
@@ -559,18 +550,6 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	}
 	else
 	{
-		return DetectLandmarksInImage(grayscale_image, depth_image, bounding_box, clnf_model, params);
+		return DetectLandmarksInImage(grayscale_image, bounding_box, clnf_model, params);
 	}
 }
-
-// Versions not using depth images
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
-{
-	return DetectLandmarksInImage(grayscale_image, cv::Mat_<float>(), bounding_box, clnf_model, params);
-}
-
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, FaceModelParameters& params)
-{
-	return DetectLandmarksInImage(grayscale_image, cv::Mat_<float>(), clnf_model, params);
-}
-

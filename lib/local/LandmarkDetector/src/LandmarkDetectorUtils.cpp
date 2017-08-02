@@ -95,8 +95,8 @@ void create_directories(string output_path)
 	}
 }
 
-// Extracting the following command line arguments -f, -fd, -op, -of, -ov (and possible ordered repetitions)
-void get_video_input_output_params(vector<string> &input_video_files, vector<string> &depth_dirs, vector<string> &output_files,
+// Extracting the following command line arguments -f, -op, -of, -ov (and possible ordered repetitions)
+void get_video_input_output_params(vector<string> &input_video_files, vector<string> &output_files,
 	vector<string> &output_video_files, bool& world_coordinates_pose, string& output_codec, vector<string> &arguments)
 {
 	bool* valid = new bool[arguments.size()];
@@ -149,13 +149,6 @@ void get_video_input_output_params(vector<string> &input_video_files, vector<str
 			valid[i+1] = false;			
 			i++;
 		}		
-		else if (arguments[i].compare("-fd") == 0) 
-		{                    
-			depth_dirs.push_back(input_root + arguments[i + 1]);
-			valid[i] = false;
-			valid[i+1] = false;		
-			i++;
-		}
 		else if (arguments[i].compare("-of") == 0)
 		{
 			output_files.push_back(output_root + arguments[i + 1]);
@@ -251,7 +244,7 @@ void get_camera_params(int &device, float &fx, float &fy, float &cx, float &cy, 
 	}
 }
 
-void get_image_input_output_params(vector<string> &input_image_files, vector<string> &input_depth_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
+void get_image_input_output_params(vector<string> &input_image_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
 		vector<cv::Rect_<double>> &input_bounding_boxes, vector<string> &arguments)
 {
 	bool* valid = new bool[arguments.size()];
@@ -294,13 +287,6 @@ void get_image_input_output_params(vector<string> &input_image_files, vector<str
 			valid[i+1] = false;			
 			i++;
 		}		
-		else if (arguments[i].compare("-fd") == 0) 
-		{                    
-			input_depth_files.push_back(input_root + arguments[i + 1]);
-			valid[i] = false;
-			valid[i+1] = false;		
-			i++;
-		}
 		else if (arguments[i].compare("-fdir") == 0) 
 		{                    
 
