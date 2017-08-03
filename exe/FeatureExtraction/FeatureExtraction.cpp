@@ -219,13 +219,13 @@ int main(int argc, char **argv)
 	vector<string> arguments = get_arguments(argc, argv);
 
 	// Some initial parameters that can be overriden from command line	
-	vector<string> input_files, depth_directories, output_files, tracked_videos_output;
-
+	vector<string> input_files, output_files, tracked_videos_output;
+	
 	// Get the input output file parameters
 
 	// Indicates that rotation should be with respect to camera or world coordinates
-	string output_codec; //not used but should
-	LandmarkDetector::get_video_input_output_params(input_files, depth_directories, output_files, tracked_videos_output, output_codec, arguments);
+	string output_codec; //not used but should, TODO
+	LandmarkDetector::get_video_input_output_params(input_files, output_files, tracked_videos_output, output_codec, arguments);
 
 	bool video_input = true;
 	bool verbose = true;
@@ -369,9 +369,10 @@ int main(int argc, char **argv)
 				FATAL_STREAM("No .jpg or .png images in a specified drectory, exiting");
 				return 1;
 			}
-
-		}
-
+			// If image sequence provided, assume the fps is 30
+			fps_vid_in = 30;
+		}	
+		
 		// If optical centers are not defined just use center of image
 		if (cx_undefined)
 		{

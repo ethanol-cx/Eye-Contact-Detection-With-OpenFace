@@ -18,7 +18,7 @@ function [ labels, valid_ids, filenames  ] = extract_FERA2011_labels( FERA2011_d
         [~, filename,~] = fileparts(file);
         filenames{file_id} = filename;
 
-        data = csvread(file); %import annotations for one video file
+        data = dlmread(file); %import annotations for one video file
        
         speech = data(:,end);
 

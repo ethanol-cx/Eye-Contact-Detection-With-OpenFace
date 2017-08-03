@@ -1,38 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016, Carnegie Mellon University and University of Cambridge,
+// Copyright (C) 2017, Carnegie Mellon University and University of Cambridge,
 // all rights reserved.
 //
-// THIS SOFTWARE IS PROVIDED “AS IS” FOR ACADEMIC USE ONLY AND ANY EXPRESS
-// OR IMPLIED WARRANTIES WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-// BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY.
-// OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
+// ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
 //
-// Notwithstanding the license granted herein, Licensee acknowledges that certain components
-// of the Software may be covered by so-called “open source” software licenses (“Open Source
-// Components”), which means any software licenses approved as open source licenses by the
-// Open Source Initiative or any substantially similar licenses, including without limitation any
-// license that, as a condition of distribution of the software licensed under such license,
-// requires that the distributor make the software available in source code format. Licensor shall
-// provide a list of Open Source Components for a particular version of the Software upon
-// Licensee’s request. Licensee will comply with the applicable terms of such licenses and to
-// the extent required by the licenses covering Open Source Components, the terms of such
-// licenses will apply in lieu of the terms of this Agreement. To the extent the terms of the
-// licenses applicable to Open Source Components prohibit any of the restrictions in this
-// License Agreement with respect to such Open Source Component, such restrictions will not
-// apply to such Open Source Component. To the extent the terms of the licenses applicable to
-// Open Source Components require Licensor to make an offer to provide source code or
-// related information in connection with the Software, such offer is hereby made. Any request
-// for source code or related information should be directed to cl-face-tracker-distribution@lists.cam.ac.uk
-// Licensee acknowledges receipt of notices for the Open Source Components for the initial
-// delivery of the Software.
-
+// BY USING OR DOWNLOADING THE SOFTWARE, YOU ARE AGREEING TO THE TERMS OF THIS LICENSE AGREEMENT.  
+// IF YOU DO NOT AGREE WITH THESE TERMS, YOU MAY NOT USE OR DOWNLOAD THE SOFTWARE.
+//
+// License can be found in OpenFace-license.txt
+//
 //     * Any publications arising from the use of this software, including but
 //       not limited to academic journal and conference publications, technical
 //       reports and manuals, must cite at least one of the following works:
@@ -232,7 +208,7 @@ void CorrectGlobalParametersVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& 
 	
 }
 
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> &depth_image, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, FaceModelParameters& params)
 {
 	// First need to decide if the landmarks should be "detected" or "tracked"
 	// Detected means running face detection and a larger search area, tracked means initialising from previous step
@@ -261,7 +237,8 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 			CorrectGlobalParametersVideo(grayscale_image, clnf_model, params);
 		}
 
-		bool track_success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+		bool track_success = clnf_model.DetectLandmarks(grayscale_image, params);
+		
 		if(!track_success)
 		{
 			// Make a record that tracking failed
@@ -330,7 +307,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 			params.window_sizes_current = params.window_sizes_init;
 
 			// Do the actual landmark detection (and keep it only if successful)
-			bool landmark_detection_success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+			bool landmark_detection_success = clnf_model.DetectLandmarks(grayscale_image, params);
 
 			// If landmark reinitialisation unsucessful continue from previous estimates
 			// if it's initial detection however, do not care if it was successful as the validator might be wrong, so continue trackig
@@ -350,7 +327,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 			}
 			else
 			{
-				clnf_model.failures_in_a_row = -1;				
+				clnf_model.failures_in_a_row = -1;			
 				UpdateTemplate(grayscale_image, clnf_model);
 				return true;
 			}
@@ -373,7 +350,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 	
 }
 
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> &depth_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
 {
 	if(bounding_box.width > 0)
 	{
@@ -385,18 +362,8 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 		clnf_model.tracking_initialised = true;
 	}
 
-	return DetectLandmarksInVideo(grayscale_image, depth_image, clnf_model, params);
+	return DetectLandmarksInVideo(grayscale_image, clnf_model, params);
 
-}
-
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, FaceModelParameters& params)
-{
-	return DetectLandmarksInVideo(grayscale_image, cv::Mat_<float>(), clnf_model, params);
-}
-
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
-{
-	return DetectLandmarksInVideo(grayscale_image, cv::Mat_<float>(), bounding_box, clnf_model, params);
 }
 
 //================================================================================================================
@@ -404,7 +371,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 // Optionally can provide a bounding box in which detection is performed (this is useful if multiple faces are to be detected in images)
 //================================================================================================================
 
-bool DetectLandmarksInImageMultiHypBasic(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> depth_image, vector<cv::Vec3d> rotation_hypotheses, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool DetectLandmarksInImageMultiHypBasic(const cv::Mat_<uchar> &grayscale_image, vector<cv::Vec3d> rotation_hypotheses, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
 {
 
 	// Use the initialisation size for the landmark detection
@@ -437,8 +404,8 @@ bool DetectLandmarksInImageMultiHypBasic(const cv::Mat_<uchar> &grayscale_image,
 
 		// calculate the local and global parameters from the generated 2D shape (mapping from the 2D to 3D because camera params are unknown)
 		clnf_model.pdm.CalcParams(clnf_model.params_global, bounding_box, clnf_model.params_local, rotation_hypotheses[hypothesis]);
-
-		bool success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+	
+		bool success = clnf_model.DetectLandmarks(grayscale_image, params);	
 
 		if (hypothesis == 0 || best_likelihood < clnf_model.model_likelihood)
 		{
@@ -499,7 +466,7 @@ template <typename T> std::vector<size_t> sort_indexes(const vector<T> &v) {
 	return idx;
 }
 
-bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> depth_image, vector<cv::Vec3d> rotation_hypotheses, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_image, vector<cv::Vec3d> rotation_hypotheses, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
 {
 	FaceModelParameters old_params(params);
 	
@@ -538,7 +505,7 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 		clnf_model.pdm.CalcParams(clnf_model.params_global, bounding_box, clnf_model.params_local, rotation_hypotheses[hypothesis]);
 
 		// Perform landmark detection in first scale
-		clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+		clnf_model.DetectLandmarks(grayscale_image, params);
 
 		double lhood = clnf_model.model_likelihood * clnf_model.patch_experts.early_term_weights[clnf_model.view_used] + clnf_model.patch_experts.early_term_biases[clnf_model.view_used];
 
@@ -549,7 +516,7 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 			params.window_sizes_current = params.window_sizes_init;
 			params.window_sizes_current[0] = 0;
 			params.validate_detections = old_params.validate_detections;
-			success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+			success = clnf_model.DetectLandmarks(grayscale_image, params);
 			early_term = true;
 			break;
 		}
@@ -603,7 +570,7 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 			}
 	
 			// Perform landmark detection in first scale
-			success = clnf_model.DetectLandmarks(grayscale_image, depth_image, params);
+			success = clnf_model.DetectLandmarks(grayscale_image, params);
 
 			if (i == 0 || best_likelihood < clnf_model.model_likelihood)
 			{
@@ -654,7 +621,7 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 
 
 // This is the one where the actual work gets done, other DetectLandmarksInImage calls lead to this one
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> depth_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
 {
 
 	// Can have multiple hypotheses
@@ -687,16 +654,16 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	// Either use basic multi-hypothesis testing or clever testing if early termination parameters are present
 	if(clnf_model.patch_experts.early_term_biases.size() == 0)
 	{
-		success = DetectLandmarksInImageMultiHypBasic(grayscale_image, depth_image, rotation_hypotheses, bounding_box, clnf_model, params);
+		success = DetectLandmarksInImageMultiHypBasic(grayscale_image, rotation_hypotheses, bounding_box, clnf_model, params);
 	}
 	else
 	{
-		success = DetectLandmarksInImageMultiHypEarlyTerm(grayscale_image, depth_image, rotation_hypotheses, bounding_box, clnf_model, params);
+		success = DetectLandmarksInImageMultiHypEarlyTerm(grayscale_image, rotation_hypotheses, bounding_box, clnf_model, params);
 	}
 	return success;
 }
 
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Mat_<float> depth_image, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, FaceModelParameters& params)
 {
 
 	cv::Rect_<double> bounding_box;
@@ -725,18 +692,6 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	}
 	else
 	{
-		return DetectLandmarksInImage(grayscale_image, depth_image, bounding_box, clnf_model, params);
+		return DetectLandmarksInImage(grayscale_image, bounding_box, clnf_model, params);
 	}
 }
-
-// Versions not using depth images
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
-{
-	return DetectLandmarksInImage(grayscale_image, cv::Mat_<float>(), bounding_box, clnf_model, params);
-}
-
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, FaceModelParameters& params)
-{
-	return DetectLandmarksInImage(grayscale_image, cv::Mat_<float>(), clnf_model, params);
-}
-

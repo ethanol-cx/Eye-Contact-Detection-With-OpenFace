@@ -163,6 +163,9 @@ private:
 	double CheckNN(const cv::Mat_<double>& warped_img, int view_id);
 
 	// Convolutional Neural Network
+	double CheckCNN_tbb(const cv::Mat_<double>& warped_img, int view_id);
+
+	// Convolutional Neural Network
 	double CheckCNN(const cv::Mat_<double>& warped_img, int view_id);
 
 	// Convolutional Neural Network

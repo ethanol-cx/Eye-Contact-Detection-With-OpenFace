@@ -10,9 +10,9 @@ addpath('../CCNF/');
 [clmParams, pdm] = Load_CLM_params_wild();
 
 % An accurate CCNF (or CLNF) model
-% [patches] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*_general.mat', [], [], clmParams);
+[patches] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*_general.mat', [], [], clmParams);
 % A simpler (but less accurate SVR)
-[patches] = Load_Patch_Experts( '../models/general/', 'svr_patches_*_general.mat', [], [], clmParams);
+% [patches] = Load_Patch_Experts( '../models/general/', 'svr_patches_*_general.mat', [], [], clmParams);
 
 % Loading eye PDM and patch experts
 [clmParams_eye, pdm_right_eye, pdm_left_eye] = Load_CLM_params_eye_28();
@@ -31,8 +31,10 @@ clmParams.multi_modal_types  = patches(1).multi_modal_types;
 % root_dir = 'C:\Users\Tadas\Dropbox\AAM\test data\gaze_original\p00/';
 % images = dir([root_dir, '*.jpg']);
 
-root_dir = './sample_eye_imgs/';
-images = dir([root_dir, '/*.png']);
+%root_dir = './sample_eye_imgs/';
+%images = dir([root_dir, '/*.png']);
+root_dir = '../../samples/';
+images = dir([root_dir, '*.jpg']);
 
 verbose = true;
 
@@ -40,14 +42,14 @@ for img=1:numel(images)
     image_orig = imread([root_dir images(img).name]);
 
     % First attempt to use the Matlab one (fastest but not as accurate, if not present use yu et al.)
-%     [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu'});
+    [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu'});
     % Zhu and Ramanan and Yu et al. are slower, but also more accurate 
     % and can be used when vision toolbox is unavailable
-    % [bboxs, det_shapes] = detect_faces(image_orig, {'yu', 'zhu'});
+%     [bboxs, det_shapes] = detect_faces(image_orig, {'yu', 'zhu'});
     
     % The complete set that tries all three detectors starting with fastest
     % and moving onto slower ones if fastest can't detect anything
-    [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu', 'zhu'});
+%     [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu', 'zhu'});
     
     if(size(image_orig,3) == 3)
         image = rgb2gray(image_orig);
@@ -116,11 +118,11 @@ for img=1:numel(images)
 
         [shape_l_eye] = Fitting_from_bb(image, [], bbox, pdm_left_eye, patches_left_eye, clmParams_eye, 'gparam', g_param, 'lparam', l_params);
 
-        plot(shape_l_eye(9:20,1), shape_l_eye(9:20,2), '.g', 'MarkerSize',15);
-        plot(shape_l_eye(1:8,1), shape_l_eye(1:8,2), '.b', 'MarkerSize',15);
+        plot(shape_l_eye(9:20,1), shape_l_eye(9:20,2), '.g', 'MarkerSize',7);
+        plot(shape_l_eye(1:8,1), shape_l_eye(1:8,2), '.b', 'MarkerSize',7);
 
-        plot(shape_r_eye(9:20,1), shape_r_eye(9:20,2), '.g', 'MarkerSize',15);
-        plot(shape_r_eye(1:8,1), shape_r_eye(1:8,2), '.b', 'MarkerSize',15);
+        plot(shape_r_eye(9:20,1), shape_r_eye(9:20,2), '.g', 'MarkerSize',7);
+        plot(shape_r_eye(1:8,1), shape_r_eye(1:8,2), '.b', 'MarkerSize',7);
     end
     hold off;
     

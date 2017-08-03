@@ -5,7 +5,7 @@ else
     executable = '"../../x64/Release/FaceLandmarkImg.exe"';
 end
     
-in_dir  = '../../videos/';
+in_dir  = '../../samples/';
 out_dir = './demo_img/';
 
 if(~exist(out_dir, 'file'))

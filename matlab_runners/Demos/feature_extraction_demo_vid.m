@@ -12,7 +12,7 @@ if(~exist(output, 'file'))
     mkdir(output)
 end
     
-in_files = dir('../../videos/1815_01_008_tony_blair.avi');
+in_files = dir('../../samples/default.wmv');
 % some parameters
 verbose = true;
 
@@ -25,7 +25,7 @@ command = cat(2, command, ' -verbose ');
 % for every video)
 for i=1:numel(in_files)
     
-    inputFile = ['../../videos/', in_files(i).name];
+    inputFile = ['../../samples/', in_files(i).name];
     [~, name, ~] = fileparts(inputFile);
     
     % where to output tracking results

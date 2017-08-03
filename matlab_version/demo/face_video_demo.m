@@ -6,8 +6,8 @@ addpath(genpath('../face_detection'));
 addpath('../CCNF/');
 
 %% 
-vid_dir = '../../videos/';
-vids = dir([vid_dir, '*.avi']);
+vid_dir = '../../samples/';
+vids = cat(1, dir([vid_dir, '*.avi']), dir([vid_dir, '*.wmv']));
 
 %%
 verbose = true;
@@ -27,8 +27,11 @@ record = true;
 clmParams.multi_modal_types  = patches(1).multi_modal_types;
 
 % load the face validator and add its dependency
-load('../face_validation/trained/face_check_cnn_68.mat', 'face_check_cnns');
+load('../face_validation/trained/faceCheckers.mat', 'faceCheckers');
 addpath(genpath('../face_validation'));
+od = cd('../face_validation/');
+setup;
+cd(od);
 
 %%
 for v=1:numel(vids)
@@ -126,7 +129,7 @@ for v=1:numel(vids)
                         % detection
                         shape_new = GetShapeOrtho(pdm.M, pdm.V, params, g_param_n);
                     
-                        dec = face_check_cnn(image, shape_new, g_param, face_check_cnns);
+                        dec = face_check_cnn(image, shape_new, g_param, faceCheckers);
                         
                         if(dec < 0.5)
                             det = true;
@@ -153,7 +156,7 @@ for v=1:numel(vids)
             all_local_params(i,:) = l_param;
             all_global_params(i,:) = g_param;
             
-            dec = face_check_cnn(image, shape, g_param, face_check_cnns);
+            dec = face_check_cnn(image, shape, g_param, faceCheckers);
             
             if(dec < 0.5)
                 clmParams.window_size = [19,19; 17,17;];

@@ -95,9 +95,8 @@ namespace LandmarkDetector
 		}
 	}
 
-	// Extracting the following command line arguments -f, -fd, -op, -of, -ov (and possible ordered repetitions)
-	void get_video_input_output_params(vector<string> &input_video_files, vector<string> &depth_dirs, vector<string> &output_files,
-		vector<string> &output_video_files, string& output_codec, vector<string> &arguments)
+	// Extracting the following command line arguments -f, -op, -of, -ov (and possible ordered repetitions)
+	void get_video_input_output_params(vector<string> &input_video_files, vector<string> &output_files, vector<string> &output_video_files, string& output_codec, vector<string> &arguments)
 	{
 		bool* valid = new bool[arguments.size()];
 
@@ -142,13 +141,6 @@ namespace LandmarkDetector
 			if (arguments[i].compare("-f") == 0)
 			{
 				input_video_files.push_back(input_root + arguments[i + 1]);
-				valid[i] = false;
-				valid[i + 1] = false;
-				i++;
-			}
-			else if (arguments[i].compare("-fd") == 0)
-			{
-				depth_dirs.push_back(input_root + arguments[i + 1]);
 				valid[i] = false;
 				valid[i + 1] = false;
 				i++;
@@ -244,7 +236,7 @@ namespace LandmarkDetector
 		}
 	}
 
-	void get_image_input_output_params(vector<string> &input_image_files, vector<string> &input_depth_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
+	void get_image_input_output_params(vector<string> &input_image_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
 		vector<cv::Rect_<double>> &input_bounding_boxes, vector<string> &arguments)
 	{
 		bool* valid = new bool[arguments.size()];
@@ -287,16 +279,9 @@ namespace LandmarkDetector
 				valid[i + 1] = false;
 				i++;
 			}
-			else if (arguments[i].compare("-fd") == 0)
-			{
-				input_depth_files.push_back(input_root + arguments[i + 1]);
-				valid[i] = false;
-				valid[i + 1] = false;
-				i++;
-			}
+
 			else if (arguments[i].compare("-fdir") == 0)
 			{
-
 				// parse the -fdir directory by reading in all of the .png and .jpg files in it
 				path image_directory(arguments[i + 1]);
 

@@ -17,13 +17,13 @@ addpath('../CCNF/');
 clmParams.multi_modal_types  = patches(1).multi_modal_types;
 
 %%
-
-images = dir('../../videos/*.jpg');
+root_dir = '../../samples/';
+images = dir([root_dir, '*.jpg']);
 
 verbose = true;
 
 for img=1:numel(images)
-    image_orig = imread(['../../videos/' images(img).name]);
+    image_orig = imread([root_dir images(img).name]);
 
     % First attempt to use the Matlab one (fastest but not as accurate, if not present use yu et al.)
     [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu'});

@@ -12,7 +12,7 @@ if(~exist(output, 'file'))
     mkdir(output)
 end
     
-in_files = dir('../../videos/multi_face.avi');
+in_files = dir('../../samples/multi_face.avi');
 % some parameters
 verbose = true;
 
@@ -32,7 +32,7 @@ command = cat(2, command, [' -mloc "', model, '"']);
 % for every video)
 for i=1:numel(in_files)
     
-    inputFile = ['../../videos/', in_files(i).name];
+    inputFile = ['../../samples/', in_files(i).name];
     [~, name, ~] = fileparts(inputFile);
     
     command = cat(2, command, [' -f "' inputFile '" ']);
