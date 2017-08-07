@@ -1,11 +1,5 @@
-clear;
+function [total_bboxes, lmarks, confidence] = detect_face_mtcnn(img)
 
-% Make sure we have the dependencies for convolution
-od = cd('../../face_validation');
-setup;
-cd(od);
-
-img = imread('test1.jpg');
 height_orig = size(img,1);
 width_orig = size(img,2);
 
@@ -63,8 +57,20 @@ end
 if ~isempty(total_bboxes)
     % Non maximum supression accross bounding boxes, and their offset
     % correction
-    total_bboxes = correct_bbox(total_bboxes(:,1:5), total_bboxes(:,6:end), false, true, true); 
+    corrections = total_bboxes(:,6:end);
+    total_bboxes = total_bboxes(:,1:5);
     
+    to_keep = non_maximum_supression(total_bboxes, 0.7, 'Union');
+    total_bboxes = total_bboxes(to_keep, :);
+    corrections = corrections(to_keep, :);
+    
+    total_bboxes = apply_correction(total_bboxes, corrections, false);
+    
+    % Making them into rectangles
+    total_bboxes(:,1:4) = rectify(total_bboxes(:,1:4));
+
+    % Rounding to pixels
+    total_bboxes(:,1:4) = fix(total_bboxes(:,1:4));            
 end
 num_bbox = size(total_bboxes,1);
 
@@ -112,8 +118,18 @@ if num_bbox > 0
 
     if ~isempty(total_bboxes)
         % Non maximum supression accross bounding boxes, and their offset
-        % correction
-        total_bboxes = correct_bbox(total_bboxes, out_correction, true, true, true); 
+        % correction    
+        to_keep = non_maximum_supression(total_bboxes, 0.7, 'Union');
+        total_bboxes = total_bboxes(to_keep, :);
+        out_correction = out_correction(to_keep, :);
+
+        total_bboxes = apply_correction(total_bboxes, out_correction, true);
+
+        % Making them into rectangles
+        total_bboxes(:,1:4) = rectify(total_bboxes(:,1:4));
+
+        % Rounding to pixels
+        total_bboxes(:,1:4) = fix(total_bboxes(:,1:4));        
     end
 end
 
@@ -170,9 +186,14 @@ if num_bbox > 0
     lmarks(:, 6:10) = bbh .* lmarks(:,6:10) + total_bboxes(:,2) - 1;
     
     % Correct the bounding boxes
-    if size(total_bboxes,1)>0				
-        [total_bboxes, to_keep] = correct_bbox(total_bboxes, out_correction, true, false, false);
+    if size(total_bboxes,1)>0	
+        total_bboxes = apply_correction(total_bboxes, out_correction, true);
+        to_keep = non_maximum_supression(total_bboxes, 0.7, 'Min');
+
         lmarks = lmarks(to_keep, :);
+        confidence = total_bboxes(to_keep, 5);
+        total_bboxes = total_bboxes(to_keep, 1:4);
     end
     
+end
 end

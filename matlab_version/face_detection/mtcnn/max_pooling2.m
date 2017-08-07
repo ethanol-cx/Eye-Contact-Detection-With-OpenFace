@@ -22,10 +22,17 @@ function [ output_maps ] = max_pooling2( input_maps, kernel_size, stride)
     to_keep_map = mod(y, stride) == 1 & mod(x, stride) == 1;
     to_keep = find(to_keep_map);
     
+    inds_pooling = im2col_inds(input_maps(1:up_to_rows,1:up_to_cols,1,1), [kernel_size, kernel_size]);
+    inds_pooling = inds_pooling(:, to_keep);
     for m=1:size(input_maps,4)
         for i=1:size(input_maps,3)
-            temp = im2col(input_maps(1:up_to_rows,1:up_to_cols,i,m), [kernel_size, kernel_size], 'sliding');        
-            temp = temp(:,to_keep);
+%             temp = im2col(input_maps(1:up_to_rows,1:up_to_cols,i,m), [kernel_size, kernel_size], 'sliding');     
+%             temp = im2col_mine(input_maps(1:up_to_rows,1:up_to_cols,i,m), [kernel_size, kernel_size]);        
+%             temp = temp(:,to_keep);
+
+            temp = input_maps(1:up_to_rows,1:up_to_cols,i,m);
+            temp = temp(inds_pooling);
+            
             max_val = max(temp);
             output_maps(1:up_to_rows_out,1:up_to_cols_out,i,m) = reshape(max_val, up_to_rows_out, up_to_cols_out);     
         end
@@ -33,10 +40,16 @@ function [ output_maps ] = max_pooling2( input_maps, kernel_size, stride)
     % A bit of a hack for non-even number of rows or columns
     if(orig_cols ~= up_to_cols)
         span = orig_cols - (up_to_cols - kernel_size + stride);
+        inds_pooling = im2col_inds(input_maps(1:up_to_rows,end-span+1:end,i,m), [kernel_size, span]);
+        inds_pooling = inds_pooling(:, 1:stride:end);
         for m=1:size(input_maps,4)
             for i=1:size(input_maps,3)
-                temp = im2col(input_maps(1:up_to_rows,end-span+1:end,i,m), [kernel_size, span], 'sliding');
-                max_val = max(temp(:,1:stride:end));
+%                 temp = im2col(input_maps(1:up_to_rows,end-span+1:end,i,m), [kernel_size, span], 'sliding');
+%                 temp = im2col_mine(input_maps(1:up_to_rows,end-span+1:end,i,m), [kernel_size, span]);
+%                 max_val = max(temp(:,1:stride:end));
+                
+                temp = input_maps(1:up_to_rows,end-span+1:end,i,m);
+                max_val = max(temp(inds_pooling));
                 output_maps(1:up_to_rows_out,end,i,m) = max_val;     
             end        
         end
@@ -44,10 +57,17 @@ function [ output_maps ] = max_pooling2( input_maps, kernel_size, stride)
 
     if(orig_rows ~= up_to_rows)
         span = orig_rows - (up_to_rows - kernel_size + stride);
+        inds_pooling = im2col_inds(input_maps(end-span+1:end, 1:up_to_cols,i,m), [span, kernel_size]);
+        inds_pooling = inds_pooling(:, 1:stride:end);
+
         for m=1:size(input_maps,4)
             for i=1:size(input_maps,3)
-                temp = im2col(input_maps(end-span+1:end, 1:up_to_cols,i,m), [span, kernel_size], 'sliding');
-                max_val = max(temp(:,1:stride:end));
+%                 temp = im2col(input_maps(end-span+1:end, 1:up_to_cols,i,m), [span, kernel_size], 'sliding');
+%                 temp = im2col_mine(input_maps(end-span+1:end, 1:up_to_cols,i,m), [span, kernel_size]);
+%                 max_val = max(temp(:,1:stride:end));
+                temp = input_maps(end-span+1:end, 1:up_to_cols,i,m);
+                max_val = max(temp(inds_pooling));
+                
                 output_maps(end, 1:up_to_cols_out,i,m) = max_val;     
             end   
         end
