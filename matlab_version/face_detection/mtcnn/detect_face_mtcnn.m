@@ -1,4 +1,4 @@
-function [total_bboxes, lmarks, confidence] = detect_face_mtcnn(img)
+function [total_bboxes, lmarks, confidence] = detect_face_mtcnn(img, min_face_size)
 
 height_orig = size(img,1);
 width_orig = size(img,2);
@@ -7,7 +7,9 @@ width_orig = size(img,2);
 img = single(img);
 
 % Minimum face size
-min_face_size = 30;
+if(nargin ==1)
+    min_face_size = 30;
+end
 
 % Image pyramid scaling factor
 factor = 0.709;
@@ -196,4 +198,18 @@ if num_bbox > 0
     end
     
 end
+
+% Correct the bounding boxes to be around the 68 landmark points
+widths = total_bboxes(:,3) - total_bboxes(:,1);
+heights = total_bboxes(:,4) - total_bboxes(:,2);
+txs = total_bboxes(:,1);
+tys = total_bboxes(:,2);
+
+new_widths = widths * 1.0323;
+new_heights = heights * 0.7751;
+new_txs = widths * -0.0075 + txs;
+new_tys = heights * 0.2459 + tys;
+
+total_bboxes = [new_txs, new_tys, new_txs + new_widths, new_tys + new_heights];
+
 end

@@ -8,7 +8,7 @@ cd(od);
 imgs = dir('D:\Datasets\300_W\AFW/*.jpg');
 for i=2:numel(imgs)
     img = imread(['D:\Datasets\300_W\AFW/', imgs(i).name]);
-    [bboxes, lmarks, confidences] = detect_face_mtcnn(img);
+    [bboxes, lmarks, confidences] = detect_face_mtcnn(img, 60);
     hold off
     imshow(img);
     hold on;
