@@ -1,5 +1,10 @@
 function [total_bboxes, lmarks, confidence] = detect_face_mtcnn(img, min_face_size)
 
+% Check if MatConvNet is installed
+if(~exist('vl_nnconv', 'file') == 3)
+    fprintf('Warning MatConvNet is not installed or not setup, face detection will be quite slow\n');
+end
+
 height_orig = size(img,1);
 width_orig = size(img,2);
 
@@ -211,5 +216,7 @@ new_txs = widths * -0.0075 + txs;
 new_tys = heights * 0.2459 + tys;
 
 total_bboxes = [new_txs, new_tys, new_txs + new_widths, new_tys + new_heights];
+total_bboxes = double(total_bboxes);
+lmarks = double(lmarks);
 
 end

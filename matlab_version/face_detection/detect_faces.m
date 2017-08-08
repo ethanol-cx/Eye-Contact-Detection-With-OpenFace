@@ -4,8 +4,8 @@ function [ bboxes, shapes ] = detect_faces( image, types )
 %   image - the image to detect the faces on
 %   type  - cell array of the face detectors to use: 'zhu', 'yu', 'cascade'
 % OUTPUT:
-%   bboxes - a set of bounding boxes describing the detected faces 4 x
-%   num_faces, the format is [min_x; min_y; max_x; max_y];
+%   bboxes - a set of bounding boxes describing the detected faces num_faces x
+%   4, the format is [min_x; min_y; max_x; max_y];
 %   shapes - if the face detector detects landmarks as well, output them
 %   n_points x 2 x num_faces
 
@@ -57,6 +57,6 @@ function [ bboxes, shapes ] = detect_faces( image, types )
     if(use_zhu && isempty(bboxes)) 
         [bboxes, shapes] = Detect_tree_based_zhu(image);
     end
-    
+    bboxes = bboxes'' 
 end
 

@@ -16,6 +16,10 @@ addpath('../CCNF/');
 
 clmParams.multi_modal_types  = patches(1).multi_modal_types;
 
+% Dependencies for face detection (MatConvNet), remove if not present
+setup_mconvnet;
+addpath('../face_detection/mtcnn/');
+
 %%
 root_dir = '../../samples/';
 images = dir([root_dir, '*.jpg']);
@@ -25,8 +29,11 @@ verbose = true;
 for img=1:numel(images)
     image_orig = imread([root_dir images(img).name]);
 
+    % MTCNN face detector
+    [bboxs, det_shapes, confidences] = detect_face_mtcnn(image_orig);
+
     % First attempt to use the Matlab one (fastest but not as accurate, if not present use yu et al.)
-    [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu'});
+    % [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu'});
     % Zhu and Ramanan and Yu et al. are slower, but also more accurate 
     % and can be used when vision toolbox is unavailable
     % [bboxs, det_shapes] = detect_faces(image_orig, {'yu', 'zhu'});
@@ -52,28 +59,14 @@ for img=1:numel(images)
         hold on;
     end
 
-    for i=1:size(bboxs,2)
+    for i=1:size(bboxs,1)
 
         % Convert from the initial detected shape to CLM model parameters,
         % if shape is available
         
-        bbox = bboxs(:,i);
-        
-        if(~isempty(det_shapes))
-            shape = det_shapes(:,:,i);
-            inds = [1:60,62:64,66:68];
-            M = pdm.M([inds, inds+68, inds+68*2]);
-            E = pdm.E;
-            V = pdm.V([inds, inds+68, inds+68*2],:);
-            [ a, R, T, ~, params, err, shapeOrtho] = fit_PDM_ortho_proj_to_2D(M, E, V, shape);
-            g_param = [a; Rot2Euler(R)'; T];
-            l_param = params;
+        bbox = bboxs(i,:);
 
-            % Use the initial global and local params for clm fitting in the image
-            [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams, 'gparam', g_param, 'lparam', l_param);
-        else
-            [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
-        end
+        [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
         
         % shape correction for matlab format
         shape = shape + 1;
