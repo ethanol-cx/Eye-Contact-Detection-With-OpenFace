@@ -1,7 +1,7 @@
 function [total_bboxes, lmarks, confidence] = detect_face_mtcnn(img, min_face_size)
 
 % Check if MatConvNet is installed
-if(~exist('vl_nnconv', 'file') == 3)
+if(exist('vl_nnconv', 'file') ~= 3)
     fprintf('Warning MatConvNet is not installed or not setup, face detection will be quite slow\n');
 end
 
