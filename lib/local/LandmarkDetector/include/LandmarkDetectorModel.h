@@ -85,6 +85,8 @@ public:
 
 	//==================== Helpers for face detection and landmark detection validation =========================================
 
+	// TODO these should be static, and loading should be made easier
+
 	// Haar cascade classifier for face detection
 	cv::CascadeClassifier   face_detector_HAAR;
 	string                  face_detector_location;
