@@ -136,7 +136,7 @@ CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_poo
 	}
 }
 
-cv::Mat_<double> CNN::Inference(const cv::Mat_<uchar>& input_img)
+cv::Mat_<double> CNN::Inference(const cv::Mat_<float>& input_img)
 {
 	if (input_img.channels() == 1)
 	{
@@ -490,4 +490,36 @@ void FaceDetectorMTCNN::Read(string location)
 	}
 }
 
+// The actual MTCNN face detection step
+bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<float>& input_img, std::vector<double>& o_confidences, int min_face_size = 30, double t1 = 0.6, double t2 = 0.7, double t3 = 0.7)
+{
+
+	int height_orig = input_img.rows;
+	int width_orig = input_img.cols;
+
+	// Size ratio of image pyramids
+	double pyramid_factor = 0.709;
+
+	// Face support region is 12x12 px, so from that can work out the largest
+	// scale(which is 12 / min), and work down from there to smallest scale(no smaller than 12x12px)
+	int min_dim = std::min(height_orig, width_orig);
+
+	int face_support = 12;
+	int num_scales = floor(log(min_face_size / min_dim) / log(pyramid_factor)) + 1;
+
+	for (int i = 0; i < num_scales; ++i)
+	{
+		double scale = (face_support / min_face_size)*cv::pow(pyramid_factor, i);
+
+		int h_pyr = ceil(height_orig * scale);
+		int w_pyr = ceil(width_orig * scale);
+
+		cv::Mat_<float> normalised_img;
+		cv::resize(input_img, normalised_img, cv::Size(w_pyr, h_pyr));
+
+		normalised_img = (normalised_img - 127.5) * 0.0078125;
+
+	}
+
+}
 
