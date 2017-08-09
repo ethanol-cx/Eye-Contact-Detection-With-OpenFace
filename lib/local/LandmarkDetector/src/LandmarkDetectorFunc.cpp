@@ -314,8 +314,8 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 		// If the face detector has not been initialised read it in
 		if(clnf_model.face_detector_HAAR.empty())
 		{
-			clnf_model.face_detector_HAAR.load(params.face_detector_location);
-			clnf_model.face_detector_location = params.face_detector_location;
+			clnf_model.face_detector_HAAR.load(params.haar_face_detector_location);
+			clnf_model.haar_face_detector_location = params.haar_face_detector_location;
 		}
 
 		cv::Point preference_det(-1, -1);
@@ -529,8 +529,8 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	// If the face detector has not been initialised read it in
 	if(clnf_model.face_detector_HAAR.empty())
 	{
-		clnf_model.face_detector_HAAR.load(params.face_detector_location);
-		clnf_model.face_detector_location = params.face_detector_location;
+		clnf_model.face_detector_HAAR.load(params.haar_face_detector_location);
+		clnf_model.haar_face_detector_location = params.haar_face_detector_location;
 	}
 		
 	// Detect the face first

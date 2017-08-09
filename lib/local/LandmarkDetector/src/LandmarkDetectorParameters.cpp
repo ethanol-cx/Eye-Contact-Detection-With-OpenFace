@@ -86,7 +86,7 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 		if (arguments[i].compare("-fdloc") ==0)
 		{
 			string face_detector_loc = arguments[i + 1];
-			face_detector_location = face_detector_loc;
+			haar_face_detector_location = face_detector_loc;
 			curr_face_detector = HAAR_DETECTOR;
 			valid[i] = false;
 			valid[i + 1] = false;
@@ -209,6 +209,46 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 	{
 		std::cout << "Could not find the landmark detection model to load" << std::endl;
 	}
+
+	// Make sure face detector location is valid
+	// First check working directory, then the executable's directory, then the config path set by the build process.
+	model_path = boost::filesystem::path(haar_face_detector_location);
+	if (boost::filesystem::exists(model_path))
+	{
+		haar_face_detector_location = model_path.string();
+	}
+	else if (boost::filesystem::exists(root / model_path))
+	{
+		haar_face_detector_location = (root / model_path).string();
+	}
+	else if (boost::filesystem::exists(config_path / model_path))
+	{
+		haar_face_detector_location = (config_path / model_path).string();
+	}
+	else
+	{
+		std::cout << "Could not find the HAAR face detector location" << std::endl;
+	}
+
+	// Make sure face detector location is valid
+	// First check working directory, then the executable's directory, then the config path set by the build process.
+	model_path = boost::filesystem::path(mtcnn_face_detector_location);
+	if (boost::filesystem::exists(model_path))
+	{
+		mtcnn_face_detector_location = model_path.string();
+	}
+	else if (boost::filesystem::exists(root / model_path))
+	{
+		mtcnn_face_detector_location = (root / model_path).string();
+	}
+	else if (boost::filesystem::exists(config_path / model_path))
+	{
+		mtcnn_face_detector_location = (config_path / model_path).string();
+	}
+	else
+	{
+		std::cout << "Could not find the MTCNN face detector location" << std::endl;
+	}
 }
 
 void FaceModelParameters::init()
@@ -262,7 +302,8 @@ void FaceModelParameters::init()
 	reinit_video_every = 4;
 
 	// Face detection
-	face_detector_location = "classifiers/haarcascade_frontalface_alt.xml";
+	haar_face_detector_location = "classifiers/haarcascade_frontalface_alt.xml";
+	mtcnn_face_detector_location = "model/mtcnn_detector/MTCNN_detector.txt";
 	quiet_mode = false;
 
 	// By default use HOG SVM

@@ -90,7 +90,8 @@ struct FaceModelParameters
 	// Also HAAR detector can detect smaller faces while HOG SVM is only capable of detecting faces at least 70px across
 	enum FaceDetector{HAAR_DETECTOR, HOG_SVM_DETECTOR};
 
-	string face_detector_location;
+	string haar_face_detector_location;
+	string mtcnn_face_detector_location;
 	FaceDetector curr_face_detector;
 
 	// Should the results be visualised and reported to console

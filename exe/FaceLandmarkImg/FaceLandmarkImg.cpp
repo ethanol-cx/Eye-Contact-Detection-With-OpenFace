@@ -334,7 +334,7 @@ int main (int argc, char **argv)
 	LandmarkDetector::CLNF clnf_model(det_parameters.model_location);
 	cout << "Model loaded" << endl;
 	
-	cv::CascadeClassifier classifier(det_parameters.face_detector_location);
+	cv::CascadeClassifier classifier(det_parameters.haar_face_detector_location);
 	dlib::frontal_face_detector face_detector_hog = dlib::get_frontal_face_detector();
 
 	// Loading the AU prediction models

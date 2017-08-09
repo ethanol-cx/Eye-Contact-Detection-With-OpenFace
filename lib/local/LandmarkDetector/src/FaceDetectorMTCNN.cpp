@@ -74,6 +74,11 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
+// Boost includes
+#include <filesystem.hpp>
+#include <filesystem/fstream.hpp>
+
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -83,6 +88,50 @@ using namespace LandmarkDetector;
 // Copy constructor
 FaceDetectorMTCNN::FaceDetectorMTCNN(const FaceDetectorMTCNN& other) : PNet(other.PNet), RNet(other.RNet), ONet(other.ONet)
 {
+}
+
+CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_pooling_layers(other.cnn_max_pooling_layers), cnn_convolutional_layers_bias(other.cnn_convolutional_layers_bias)
+{
+	this->cnn_convolutional_layers.resize(other.cnn_convolutional_layers.size());
+	for (size_t l = 0; l < other.cnn_convolutional_layers.size(); ++l)
+	{
+		this->cnn_convolutional_layers[l].resize(other.cnn_convolutional_layers[l].size());
+
+		for (size_t i = 0; i < other.cnn_convolutional_layers[l].size(); ++i)
+		{
+			this->cnn_convolutional_layers[l][i].resize(other.cnn_convolutional_layers[l][i].size());
+
+			for (size_t k = 0; k < other.cnn_convolutional_layers[l][i].size(); ++k)
+			{
+				// Make sure the matrix is copied.
+				this->cnn_convolutional_layers[l][i][k] = other.cnn_convolutional_layers[l][i][k].clone();
+			}
+		}
+	}
+
+	this->cnn_fully_connected_layers_weights.resize(other.cnn_fully_connected_layers_weights.size());
+
+	for (size_t l = 0; l < other.cnn_fully_connected_layers_weights.size(); ++l)
+	{
+		// Make sure the matrix is copied.
+		this->cnn_fully_connected_layers_weights[l] = other.cnn_fully_connected_layers_weights[l].clone();
+	}
+
+	this->cnn_fully_connected_layers_biases.resize(other.cnn_fully_connected_layers_biases.size());
+
+	for (size_t l = 0; l < other.cnn_fully_connected_layers_biases.size(); ++l)
+	{
+		// Make sure the matrix is copied.
+		this->cnn_fully_connected_layers_biases[l] = other.cnn_fully_connected_layers_biases[l].clone();
+	}
+
+	this->cnn_prelu_layer_weights.resize(other.cnn_prelu_layer_weights.size());
+
+	for (size_t l = 0; l < other.cnn_prelu_layer_weights.size(); ++l)
+	{
+		// Make sure the matrix is copied.
+		this->cnn_prelu_layer_weights[l] = other.cnn_prelu_layer_weights[l].clone();
+	}
 }
 
 void ReadMatBin(std::ifstream& stream, cv::Mat &output_mat)
@@ -187,7 +236,7 @@ void CNN::Read(string location)
 				cnn_fully_connected_layers_weights.push_back(weights);
 			}
 
-			else if (layer_type == 4)
+			else if (layer_type == 3)
 			{
 				cv::Mat_<float> weights;
 				ReadMatBin(cnn_stream, weights);
