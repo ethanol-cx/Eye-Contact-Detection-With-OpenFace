@@ -143,7 +143,12 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
         elseif(strcmp(patchExperts(scale).type, 'CCNF'))                        
             responses = PatchResponseCCNF( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
         elseif(strcmp(patchExperts(scale).type, 'CEN'))                        
-            responses = PatchResponseCEN( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
+            
+            % responses_o = PatchResponseCEN( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
+            
+            % A faster (and very slightly less accurate) version of patch
+            % response computation
+            responses = PatchResponseCEN_sparse( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), clmParams.window_size(i,:), patchExperts(scale).normalisationOptionsCol.patchSize);
         end
         
         
