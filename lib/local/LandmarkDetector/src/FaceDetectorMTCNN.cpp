@@ -83,6 +83,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#include "LandmarkDetectorUtils.h"
+
 using namespace LandmarkDetector;
 
 // Copy constructor
@@ -132,6 +134,185 @@ CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_poo
 		// Make sure the matrix is copied.
 		this->cnn_prelu_layer_weights[l] = other.cnn_prelu_layer_weights[l].clone();
 	}
+}
+
+cv::Mat_<double> CNN::Inference(const cv::Mat_<uchar>& input_img)
+{
+	if (input_img.channels() == 1)
+	{
+		cv::cvtColor(input_img, input_img, cv::COLOR_GRAY2BGR);
+	}
+
+	int cnn_layer = 0;
+	int fully_connected_layer = 0;
+	int prelu_layer = 0;
+	int max_pool_layer = 0;
+
+	vector<cv::Mat_<float> > input_maps;
+	input_maps.push_back(input_img);
+
+	vector<cv::Mat_<float> > outputs;
+
+	for (size_t layer = 0; layer < cnn_layer_types.size(); ++layer)
+	{
+		// Determine layer type
+		int layer_type = cnn_layer_types[layer];
+
+		// Convolutional layer
+		if (layer_type == 0)
+		{
+			outputs.clear();
+			for (size_t in = 0; in < input_maps.size(); ++in)
+			{
+				cv::Mat_<float> input_image = input_maps[in];
+
+				// Useful precomputed data placeholders for quick correlation (convolution)
+				cv::Mat_<double> input_image_dft;
+				cv::Mat integral_image;
+				cv::Mat integral_image_sq;
+
+				// TODO can TBB-ify this
+				for (size_t k = 0; k < cnn_convolutional_layers[cnn_layer][in].size(); ++k)
+				{
+					cv::Mat_<float> kernel = cnn_convolutional_layers[cnn_layer][in][k];
+
+					// The convolution (with precomputation)
+					cv::Mat_<float> output;
+					if (cnn_convolutional_layers_dft[cnn_layer][in][k].second.empty())
+					{
+						std::map<int, cv::Mat_<double> > precomputed_dft;
+
+						LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
+
+						cnn_convolutional_layers_dft[cnn_layer][in][k].first = precomputed_dft.begin()->first;
+						cnn_convolutional_layers_dft[cnn_layer][in][k].second = precomputed_dft.begin()->second;
+					}
+					else
+					{
+						std::map<int, cv::Mat_<double> > precomputed_dft;
+						precomputed_dft[cnn_convolutional_layers_dft[cnn_layer][in][k].first] = cnn_convolutional_layers_dft[cnn_layer][in][k].second;
+						LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
+					}
+
+					// Combining the maps
+					if (in == 0)
+					{
+						outputs.push_back(output);
+					}
+					else
+					{
+						outputs[k] = outputs[k] + output;
+					}
+
+				}
+
+			}
+
+			for (size_t k = 0; k < cnn_convolutional_layers[cnn_layer][0].size(); ++k)
+			{
+				outputs[k] = outputs[k] + cnn_convolutional_layers_bias[cnn_layer][k];
+			}
+			cnn_layer++;
+		}
+		if (layer_type == 1)
+		{
+			vector<cv::Mat_<float>> outputs_sub;
+
+			int stride_x = std::get<2>(cnn_max_pooling_layers[max_pool_layer]);
+			int stride_y = std::get<3>(cnn_max_pooling_layers[max_pool_layer]);
+			
+			int kernel_size_x = std::get<0>(cnn_max_pooling_layers[max_pool_layer]);
+			int kernel_size_y = std::get<1>(cnn_max_pooling_layers[max_pool_layer]);
+
+			// Iterate over kernel height and width, based on stride
+			for (size_t in = 0; in < input_maps.size(); ++in)
+			{
+				int out_x = round((input_maps[in].cols - kernel_size_x) / stride_x) + 1;
+				int out_y = round((input_maps[in].rows - kernel_size_y) / stride_y) + 1;
+
+				cv::Mat_<float> sub_out(out_y, out_x, 0.0);
+				cv::Mat_<float> in_map = input_maps[in];
+
+				for (int x = 0; x < input_maps[in].cols; x += stride_x)
+				{
+					for (int y = 0; y < input_maps[in].rows; y += stride_y)
+					{
+						float curr_max = -FLT_MAX;
+						for (int x_in = x; x_in < x + kernel_size_x; ++x_in)
+						{
+							for (int y_in = y; y_in < y + kernel_size_y; ++y_in)
+							{
+								float curr_val = in_map.at<float>(y_in, x_in);
+								if (curr_val > curr_max)
+								{
+									curr_max = curr_val;
+								}
+							}
+						}
+						int x_in_out = floor(x / stride_x);
+						int y_in_out = floor(y / stride_y);
+						sub_out.at<float>(y_in_out, x_in_out) = curr_max;
+					}
+				}
+
+				outputs_sub.push_back(sub_out);
+
+			}
+			outputs = outputs_sub;
+		}
+		if (layer_type == 2)
+		{
+			// Concatenate all the maps
+			cv::Mat_<float> input_concat = input_maps[0].t();
+			input_concat = input_concat.reshape(0, 1);
+
+			for (size_t in = 1; in < input_maps.size(); ++in)
+			{
+				cv::Mat_<float> add = input_maps[in].t();
+				add = add.reshape(0, 1);
+				cv::hconcat(input_concat, add, input_concat);
+			}
+
+			input_concat = input_concat * cnn_fully_connected_layers_weights[fully_connected_layer];
+			input_concat = input_concat + cnn_fully_connected_layers_biases[fully_connected_layer].t();
+
+			outputs.clear();
+			outputs.push_back(input_concat);
+
+			fully_connected_layer++;
+		}
+		if (layer_type == 3) // PReLU, TODO
+		{
+			outputs.clear();
+			for (size_t k = 0; k < input_maps.size(); ++k)
+			{
+				// Apply the ReLU
+				cv::threshold(input_maps[k], input_maps[k], 0, 0, cv::THRESH_TOZERO);
+				outputs.push_back(input_maps[k]);
+
+			}
+		}
+		if (layer_type == 4)
+		{
+			outputs.clear();
+			for (size_t k = 0; k < input_maps.size(); ++k)
+			{
+				// Apply the sigmoid
+				cv::exp(-input_maps[k], input_maps[k]);
+				input_maps[k] = 1.0 / (1.0 + input_maps[k]);
+
+				outputs.push_back(input_maps[k]);
+
+			}
+		}
+		// Set the outputs of this layer to inputs of the next
+		input_maps = outputs;
+
+	}
+
+	
+	return outputs[0];
+
 }
 
 void ReadMatBin(std::ifstream& stream, cv::Mat &output_mat)

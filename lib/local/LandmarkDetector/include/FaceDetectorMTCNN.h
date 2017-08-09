@@ -82,7 +82,7 @@ namespace LandmarkDetector
 		CNN(const CNN& other);
 
 		// Given an image, orientation and detected landmarks output the result of the appropriate regressor
-		cv::Mat_<double> Inference(const cv::Mat_<uchar>& intensity_img);
+		cv::Mat_<double> Inference(const cv::Mat_<uchar>& input_img);
 
 		// Reading in the model
 		void Read(string location);
