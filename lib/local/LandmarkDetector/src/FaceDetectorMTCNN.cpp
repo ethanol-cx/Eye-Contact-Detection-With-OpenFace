@@ -136,7 +136,7 @@ CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_poo
 	}
 }
 
-cv::Mat_<double> CNN::Inference(const cv::Mat_<float>& input_img)
+std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 {
 	if (input_img.channels() == 1)
 	{
@@ -148,13 +148,20 @@ cv::Mat_<double> CNN::Inference(const cv::Mat_<float>& input_img)
 	int prelu_layer = 0;
 	int max_pool_layer = 0;
 
+	// Slit a BGR image into three chnels
+	cv::Mat channels[3]; 
+	cv::split(input_img, channels);  
+
 	vector<cv::Mat_<float> > input_maps;
-	input_maps.push_back(input_img);
+	input_maps.push_back(channels[2]);
+	input_maps.push_back(channels[1]);
+	input_maps.push_back(channels[0]);
 
 	vector<cv::Mat_<float> > outputs;
 
 	for (size_t layer = 0; layer < cnn_layer_types.size(); ++layer)
 	{
+
 		// Determine layer type
 		int layer_type = cnn_layer_types[layer];
 
@@ -216,7 +223,7 @@ cv::Mat_<double> CNN::Inference(const cv::Mat_<float>& input_img)
 		}
 		if (layer_type == 1)
 		{
-			vector<cv::Mat_<float>> outputs_sub;
+			vector<cv::Mat_<float> > outputs_sub;
 
 			int stride_x = std::get<2>(cnn_max_pooling_layers[max_pool_layer]);
 			int stride_y = std::get<3>(cnn_max_pooling_layers[max_pool_layer]);
@@ -270,27 +277,35 @@ cv::Mat_<double> CNN::Inference(const cv::Mat_<float>& input_img)
 			{
 				cv::Mat_<float> add = input_maps[in].t();
 				add = add.reshape(0, 1);
-				cv::hconcat(input_concat, add, input_concat);
+				cv::vconcat(input_concat, add, input_concat);
 			}
 
-			input_concat = input_concat * cnn_fully_connected_layers_weights[fully_connected_layer];
-			input_concat = input_concat + cnn_fully_connected_layers_biases[fully_connected_layer].t();
+			input_concat = input_concat.t() * cnn_fully_connected_layers_weights[fully_connected_layer];
+
+			for (size_t k = 0; k < cnn_fully_connected_layers_biases[fully_connected_layer].rows; ++k)
+			{
+				input_concat.col(k) = input_concat.col(k) + cnn_fully_connected_layers_biases[fully_connected_layer].at<float>(k);
+			}
 
 			outputs.clear();
 			outputs.push_back(input_concat);
 
 			fully_connected_layer++;
 		}
-		if (layer_type == 3) // PReLU, TODO
+		if (layer_type == 3) // PReLU
 		{
 			outputs.clear();
 			for (size_t k = 0; k < input_maps.size(); ++k)
 			{
-				// Apply the ReLU
-				cv::threshold(input_maps[k], input_maps[k], 0, 0, cv::THRESH_TOZERO);
-				outputs.push_back(input_maps[k]);
+				// Apply the PReLU
+				cv::Mat_<float> pos;
+				cv::threshold(input_maps[k], pos, 0, 0, cv::THRESH_TOZERO);
+				cv::Mat_<float> neg;
+				cv::threshold(input_maps[k], neg, 0, 0, cv::THRESH_TOZERO_INV);
+				outputs.push_back(pos + neg * cnn_prelu_layer_weights[prelu_layer].at<float>(k));
 
 			}
+			prelu_layer++;
 		}
 		if (layer_type == 4)
 		{
@@ -307,11 +322,19 @@ cv::Mat_<double> CNN::Inference(const cv::Mat_<float>& input_img)
 		}
 		// Set the outputs of this layer to inputs of the next
 		input_maps = outputs;
+		
+		// TODO rem
+		//cv::Mat to_vis = input_maps[0];
+		//cout << to_vis << endl;
+		//double min, max;
+		//cv::minMaxIdx(to_vis, &min, &max);
+		//cv::imshow("image 1", (to_vis - min)/(max-min));
+		//cv::waitKey(0);
 
 	}
 
 	
-	return outputs[0];
+	return outputs;
 
 }
 
@@ -491,11 +514,11 @@ void FaceDetectorMTCNN::Read(string location)
 }
 
 // The actual MTCNN face detection step
-bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<float>& input_img, std::vector<double>& o_confidences, int min_face_size = 30, double t1 = 0.6, double t2 = 0.7, double t3 = 0.7)
+bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat& input_img, std::vector<double>& o_confidences, int min_face_size, double t1, double t2, double t3)
 {
 
-	int height_orig = input_img.rows;
-	int width_orig = input_img.cols;
+	int height_orig = input_img.size().height;
+	int width_orig = input_img.size().width;
 
 	// Size ratio of image pyramids
 	double pyramid_factor = 0.709;
@@ -505,21 +528,41 @@ bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<float>& i
 	int min_dim = std::min(height_orig, width_orig);
 
 	int face_support = 12;
-	int num_scales = floor(log(min_face_size / min_dim) / log(pyramid_factor)) + 1;
+	int num_scales = floor(log((double)min_face_size / (double)min_dim) / log(pyramid_factor)) + 1;
+
+	if (input_img.channels() == 1)
+	{
+		cv::cvtColor(input_img, input_img, CV_GRAY2RGB);
+	}
+
+	cv::Mat img_float;
+	input_img.convertTo(img_float, CV_32FC3);
 
 	for (int i = 0; i < num_scales; ++i)
 	{
-		double scale = (face_support / min_face_size)*cv::pow(pyramid_factor, i);
+		double scale = ((double)face_support / (double)min_face_size)*cv::pow(pyramid_factor, i);
 
 		int h_pyr = ceil(height_orig * scale);
 		int w_pyr = ceil(width_orig * scale);
 
-		cv::Mat_<float> normalised_img;
-		cv::resize(input_img, normalised_img, cv::Size(w_pyr, h_pyr));
+		cv::Mat normalised_img;
+		cv::resize(img_float, normalised_img, cv::Size(w_pyr, h_pyr));
 
 		normalised_img = (normalised_img - 127.5) * 0.0078125;
 
+		std::vector<cv::Mat_<float> > pnet_out = PNet.Inference(normalised_img);
+		
+		// TODO resize appropriately the output
+
+		cv::Mat_<float> out_prob;
+		cv::exp(pnet_out[0]- pnet_out[1], out_prob);
+		out_prob = 1.0 / (1.0 + out_prob);
+
+		cv::imshow("out_map", out_prob);
+		cv::waitKey(0);
+
 	}
+	return true;
 
 }
 

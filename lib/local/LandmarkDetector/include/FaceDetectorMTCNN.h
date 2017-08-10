@@ -82,7 +82,7 @@ namespace LandmarkDetector
 		CNN(const CNN& other);
 
 		// Given an image, orientation and detected landmarks output the result of the appropriate regressor
-		cv::Mat_<double> Inference(const cv::Mat_<float>& input_img);
+		std::vector<cv::Mat_<float> > Inference(const cv::Mat& input_img);
 
 		// Reading in the model
 		void Read(string location);
@@ -123,7 +123,7 @@ namespace LandmarkDetector
 		FaceDetectorMTCNN(const FaceDetectorMTCNN& other);
 
 		// Given an image, orientation and detected landmarks output the result of the appropriate regressor
-		bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<float>& input_img, std::vector<double>& o_confidences, int min_face = 30, double t1 = 0.6, double t2 = 0.7, double t3 = 0.7);
+		bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat& input_img, std::vector<double>& o_confidences, int min_face = 30, double t1 = 0.6, double t2 = 0.7, double t3 = 0.7);
 
 		// Reading in the model
 		void Read(string location);
