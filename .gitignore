@@ -39,3 +39,4 @@ exe/FaceLandmarkVid/x64/
 exe/FaceLandmarkImg/Debug/
 OpenFace.sdf
 OpenFace.VC.opendb
+matlab_runners/Feature Point Experiments/out_ceclm/

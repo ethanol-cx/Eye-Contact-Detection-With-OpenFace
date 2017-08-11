@@ -432,7 +432,10 @@ namespace LandmarkDetector
 		// Make sure the same number of images and bounding boxes is present, if any bounding boxes are defined
 		if (input_bounding_boxes.size() > 0)
 		{
-			assert(input_bounding_boxes.size() == input_image_files.size());
+			if(input_bounding_boxes.size() != input_image_files.size())
+			{
+				cout << "Warning, the input number of images does not match the input number of bounding boxes\n" << endl;
+			}
 		}
 
 		// Clear up the argument list
