@@ -40,3 +40,5 @@ exe/FaceLandmarkImg/Debug/
 OpenFace.sdf
 OpenFace.VC.opendb
 matlab_runners/Feature Point Experiments/out_ceclm/
+matlab_runners/Feature Point Experiments/out_clnf/
+matlab_runners/Feature Point Experiments/out_svr/
