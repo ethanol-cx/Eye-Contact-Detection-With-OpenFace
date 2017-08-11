@@ -14,8 +14,8 @@ line_width = 6;
 hold on;
 
 load('results/ceclm_errors.mat');
-[error_x, error_y] = cummErrorCurve(ceclm_error_49_cat_1);
-plot(error_x, error_y, 'r', 'DisplayName', 'CE-CLM', 'LineWidth',line_width);
+% [error_x, error_y] = cummErrorCurve(ceclm_error_49_cat_1);
+% plot(error_x, error_y, 'r', 'DisplayName', 'CE-CLM', 'LineWidth',line_width);
 
 load('results/cfss_errors.mat');
 [error_x, error_y] = cummErrorCurve(cfss_error_49_cat_1);
@@ -28,10 +28,10 @@ plot(error_x, error_y, 'DisplayName', 'CLNF', 'LineWidth',line_width);
 load('results/cfan_errors.mat');
 [error_x, error_y] = cummErrorCurve(cfan_error_49_cat_1);
 plot(error_x, error_y, 'DisplayName', 'CFAN', 'LineWidth',line_width);
-
-load('results/iccr_errors.mat');
-[error_x, error_y] = cummErrorCurve(iccr_error_49_cat_1);
-plot(error_x, error_y, 'DisplayName', 'iCCR', 'LineWidth',line_width);
+% 
+% load('results/iccr_errors.mat');
+% [error_x, error_y] = cummErrorCurve(iccr_error_49_cat_1);
+% plot(error_x, error_y, 'DisplayName', 'iCCR', 'LineWidth',line_width);
 
 load('results/drmf_errors.mat');
 [error_x, error_y] = cummErrorCurve(drmf_error_49_cat_1);
@@ -52,7 +52,7 @@ ax.FontSize = 50;
 
 % Make sure CE-CLM is drawn on top
 [error_x, error_y] = cummErrorCurve(ceclm_error_49_cat_1);
-plot(error_x, error_y, 'r', 'LineWidth',line_width);
+plot(error_x, error_y, 'r', 'LineWidth',line_width, 'DisplayName', 'CE-CLM');
 
 print -dpdf results/300VWres_49_cat1.pdf
 
@@ -73,8 +73,8 @@ line_width = 6;
 hold on;
 
 load('results/ceclm_errors.mat');
-[error_x, error_y] = cummErrorCurve(ceclm_error_49_cat_2);
-plot(error_x, error_y, 'r', 'DisplayName', 'CE-CLM', 'LineWidth',line_width);
+% [error_x, error_y] = cummErrorCurve(ceclm_error_49_cat_2);
+% plot(error_x, error_y, 'r', 'DisplayName', 'CE-CLM', 'LineWidth',line_width);
 
 load('results/cfss_errors.mat');
 [error_x, error_y] = cummErrorCurve(cfss_error_49_cat_2);
@@ -88,9 +88,9 @@ load('results/cfan_errors.mat');
 [error_x, error_y] = cummErrorCurve(cfan_error_49_cat_2);
 plot(error_x, error_y, 'DisplayName', 'CFAN', 'LineWidth',line_width);
 
-load('results/iccr_errors.mat');
-[error_x, error_y] = cummErrorCurve(iccr_error_49_cat_2);
-plot(error_x, error_y, 'DisplayName', 'iCCR', 'LineWidth',line_width);
+% load('results/iccr_errors.mat');
+% [error_x, error_y] = cummErrorCurve(iccr_error_49_cat_2);
+% plot(error_x, error_y, 'DisplayName', 'iCCR', 'LineWidth',line_width);
 
 load('results/drmf_errors.mat');
 [error_x, error_y] = cummErrorCurve(drmf_error_49_cat_2);
@@ -111,7 +111,7 @@ ax.FontSize = 50;
 
 % Make sure CE-CLM is drawn on top
 [error_x, error_y] = cummErrorCurve(ceclm_error_49_cat_2);
-plot(error_x, error_y, 'r', 'LineWidth',line_width);
+plot(error_x, error_y, 'r', 'LineWidth',line_width, 'DisplayName', 'CE-CLM');
 
 print -dpdf results/300VWres_49_cat2.pdf
 
@@ -130,10 +130,10 @@ axes1 = axes('Parent',figure1,'FontSize',40,'FontName','Helvetica');
 
 line_width = 6;
 hold on;
-
+% 
 load('results/ceclm_errors.mat');
-[error_x, error_y] = cummErrorCurve(ceclm_error_49_cat_3);
-plot(error_x, error_y, 'r', 'DisplayName', 'CE-CLM', 'LineWidth',line_width);
+% [error_x, error_y] = cummErrorCurve(ceclm_error_49_cat_3);
+% plot(error_x, error_y, 'r', 'DisplayName', 'CE-CLM', 'LineWidth',line_width);
 
 load('results/cfss_errors.mat');
 [error_x, error_y] = cummErrorCurve(cfss_error_49_cat_3);
@@ -147,9 +147,9 @@ load('results/cfan_errors.mat');
 [error_x, error_y] = cummErrorCurve(cfan_error_49_cat_3);
 plot(error_x, error_y, 'DisplayName', 'CFAN', 'LineWidth',line_width);
 
-load('results/iccr_errors.mat');
-[error_x, error_y] = cummErrorCurve(iccr_error_49_cat_3);
-plot(error_x, error_y, 'DisplayName', 'iCCR', 'LineWidth',line_width);
+% load('results/iccr_errors.mat');
+% [error_x, error_y] = cummErrorCurve(iccr_error_49_cat_3);
+% plot(error_x, error_y, 'DisplayName', 'iCCR', 'LineWidth',line_width);
 
 load('results/drmf_errors.mat');
 [error_x, error_y] = cummErrorCurve(drmf_error_49_cat_3);
@@ -170,6 +170,6 @@ ax.FontSize = 50;
 
 % Make sure CE-CLM is drawn on top
 [error_x, error_y] = cummErrorCurve(ceclm_error_49_cat_3);
-plot(error_x, error_y, 'r', 'LineWidth',line_width);
+plot(error_x, error_y, 'r', 'LineWidth',line_width, 'DisplayName', 'CE-CLM');
 
 print -dpdf results/300VWres_49_cat3.pdf

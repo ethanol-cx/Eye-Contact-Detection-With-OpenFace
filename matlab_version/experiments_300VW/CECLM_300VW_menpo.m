@@ -19,8 +19,9 @@ for i=1:numel(vid_locs)
     vid = VideoReader(vid_locs{i});
 
     bounding_boxes = bboxes{i};
-    preds = [];
+       
     n_frames = size(bounding_boxes,1);
+    preds = zeros(68,2,n_frames);
     for f=1:n_frames
         input_image = readFrame(vid);
                         
@@ -63,7 +64,7 @@ for i=1:numel(vid_locs)
             [shape,g_param,l_param,lhood,lmark_lhood,view_used] = Fitting_from_bb(input_image, [], bb, pdm, patches, clmParams, 'gparam', g_param, 'lparam', l_param);
         end        
         
-        preds = cat(3, preds, shape);
+        preds(:,:,f) = shape;
             
         %% plot the result
         imshow(input_image);
