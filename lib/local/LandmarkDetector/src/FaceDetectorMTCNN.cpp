@@ -235,20 +235,26 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 			// Iterate over kernel height and width, based on stride
 			for (size_t in = 0; in < input_maps.size(); ++in)
 			{
-				int out_x = round((input_maps[in].cols - kernel_size_x) / stride_x) + 1;
-				int out_y = round((input_maps[in].rows - kernel_size_y) / stride_y) + 1;
+				// Help with rounding up a bit, to match caffe style output
+				int out_x = round((double)(input_maps[in].cols - kernel_size_x) / (double)stride_x) + 1;
+				int out_y = round((double)(input_maps[in].rows - kernel_size_y) / (double)stride_y) + 1;
 
 				cv::Mat_<float> sub_out(out_y, out_x, 0.0);
 				cv::Mat_<float> in_map = input_maps[in];
-
+				
 				for (int x = 0; x < input_maps[in].cols; x += stride_x)
 				{
+					int max_x = cv::min(input_maps[in].cols, x + kernel_size_x);
+
 					for (int y = 0; y < input_maps[in].rows; y += stride_y)
 					{
+						int max_y = cv::min(input_maps[in].rows, y + kernel_size_y);
+
 						float curr_max = -FLT_MAX;
-						for (int x_in = x; x_in < x + kernel_size_x; ++x_in)
+						
+						for (int x_in = x; x_in < max_x; ++x_in)
 						{
-							for (int y_in = y; y_in < y + kernel_size_y; ++y_in)
+							for (int y_in = y; y_in < max_y; ++y_in)
 							{
 								float curr_val = in_map.at<float>(y_in, x_in);
 								if (curr_val > curr_max)
@@ -634,6 +640,53 @@ void generate_bounding_boxes(vector<cv::Rect_<float> >& o_bounding_boxes, vector
 	
 }
 
+// Converting the bounding boxes to squares
+void rectify(vector<cv::Rect_<float> >& total_bboxes)
+{
+
+	// Apply size and location offsets
+	for (size_t i = 0; i < total_bboxes.size(); ++i)
+	{
+		float height = total_bboxes[i].height;
+		float width = total_bboxes[i].width;
+
+		float max_side = max(width, height);
+
+		// Correct the starts based on new size
+		float new_min_x = total_bboxes[i].x + 0.5 * (width - max_side);
+		float new_min_y = total_bboxes[i].y + 0.5 * (height - max_side);
+
+		total_bboxes[i].x = (int)new_min_x;
+		total_bboxes[i].y = (int)new_min_y;
+		total_bboxes[i].width = (int)max_side;
+		total_bboxes[i].height = (int)max_side;
+	}
+}
+
+void apply_correction(vector<cv::Rect_<float> >& total_bboxes, const vector<cv::Rect_<float> > corrections, bool add1)
+{
+
+	// Apply size and location offsets
+	for (size_t i = 0; i < total_bboxes.size(); ++i)
+	{
+		cv::Rect curr_box = total_bboxes[i];
+		if (add1)
+		{
+			curr_box.width++;
+			curr_box.height++;
+		}
+
+		float new_min_x = curr_box.x + corrections[i].x * curr_box.width;
+		float new_min_y = curr_box.y + corrections[i].y * curr_box.height;
+		float new_max_x = curr_box.x + curr_box.width + curr_box.width * corrections[i].width;
+		float new_max_y = curr_box.y + curr_box.height + curr_box.height * corrections[i].height;
+		total_bboxes[i] = cv::Rect_<float>(new_min_x, new_min_y, new_max_x - new_min_x, new_max_y - new_min_y);
+
+	}
+
+
+}
+
 
 // The actual MTCNN face detection step
 bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat& input_img, std::vector<double>& o_confidences, int min_face_size, double t1, double t2, double t3)
@@ -701,7 +754,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		proposal_boxes_all.insert(proposal_boxes_all.end(), proposal_boxes.begin(), proposal_boxes.end());
 		scores_all.insert(scores_all.end(), scores.begin(), scores.end());
 		proposal_corrections_all.insert(proposal_corrections_all.end(), proposal_corrections.begin(), proposal_corrections.end());
-
+		
 	}
 
 	// Preparation for RNet step
@@ -710,13 +763,42 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	vector<int> to_keep = non_maximum_supression(proposal_boxes_all, scores_all, 0.7);
 	select_subset(to_keep, proposal_boxes_all, scores_all, proposal_corrections_all);
 
-	//total_bboxes = apply_correction(total_bboxes, corrections, false);
+	apply_correction(proposal_boxes_all, proposal_corrections_all, false);
 
-	//% Making them into rectangles
-	//	total_bboxes(:, 1 : 4) = rectify(total_bboxes(:, 1 : 4));
+	// Convert to rectangles and round
+	rectify(proposal_boxes_all);
 
-	//% Rounding to pixels
-	//	
+	// Creating proposal images from previous step detections
+	vector<cv::Mat> proposal_imgs;
+	for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
+	{
+		float width_target = proposal_boxes_all[k].width + 1;
+		float height_target = proposal_boxes_all[k].height + 1;
+
+		// Work out the start and end indices in the original image
+		int start_x_in = cv::max((int)(proposal_boxes_all[k].x - 1), 0);
+		int start_y_in = cv::max((int)(proposal_boxes_all[k].y - 1), 0);
+		int end_x_in = cv::min((int)(proposal_boxes_all[k].x + width_target - 1), width_orig);
+		int end_y_in = cv::min((int)(proposal_boxes_all[k].y + height_target - 1), height_orig);
+
+		// Work out the start and end indices in the target image
+		int	start_x_out = cv::max((int)(-proposal_boxes_all[k].x + 1), 0);
+		int start_y_out = cv::max((int)(-proposal_boxes_all[k].y + 1), 0);
+		int end_x_out = cv::min(width_target - (proposal_boxes_all[k].x + proposal_boxes_all[k].width - width_orig), width_target);
+		int end_y_out = cv::min(height_target - (proposal_boxes_all[k].y + proposal_boxes_all[k].height - height_orig), height_target);
+
+		cv::Mat tmp(height_target, width_target, CV_32FC3);
+
+		img_float(cv::Rect(start_x_in, start_y_in, end_x_in - start_x_in, end_y_in - start_y_in)).copyTo(
+			tmp(cv::Rect(start_x_out, start_y_out, end_x_out - start_x_out, end_y_out - start_y_out)));
+		
+		cv::Mat prop_img;
+		cv::resize(tmp, prop_img, cv::Size(24, 24));
+			
+		prop_img = (prop_img - 127.5) * 0.0078125;
+		
+		proposal_imgs.push_back(prop_img);
+	}
 
 	return true;
 
