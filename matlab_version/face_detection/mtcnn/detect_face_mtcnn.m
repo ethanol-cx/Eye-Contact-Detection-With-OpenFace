@@ -43,7 +43,7 @@ for s = scales
     w_pyr = ceil(width_orig * s);
 
     % Resize the image and normalize to what MTCNN expects it to be
-    im_data=(imresize(img, [h_pyr w_pyr],'bilinear')-127.5)*0.0078125;
+    im_data=(imresize(img, [h_pyr w_pyr],'bilinear','AntiAliasing',false)-127.5)*0.0078125;
 
     [ out_prob, out_correction ] = PNet( im_data, PNet_mlab );
 
@@ -107,7 +107,7 @@ if num_bbox > 0
         tmp(start_y_out:end_y_out,start_x_out:end_x_out,:) = ...
             img(start_y_in:end_y_in, start_x_in:end_x_in,:);
         
-        proposal_imgs(:,:,:,k) = imresize(tmp, [24 24], 'bilinear');
+        proposal_imgs(:,:,:,k) = imresize(tmp, [24 24], 'bilinear','AntiAliasing',false);
     end
     
     % Normalize the proposal images
@@ -168,7 +168,7 @@ if num_bbox > 0
         tmp(start_y_out:end_y_out,start_x_out:end_x_out,:) = ...
             img(start_y_in:end_y_in, start_x_in:end_x_in,:);
         
-        proposal_imgs(:,:,:,k) = imresize(tmp, [48 48], 'bilinear');
+        proposal_imgs(:,:,:,k) = imresize(tmp, [48 48], 'bilinear','AntiAliasing',false);
     end
     
     % Normalize the proposal images
