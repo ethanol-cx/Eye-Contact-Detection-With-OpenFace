@@ -298,22 +298,37 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 					cv::vconcat(input_concat, add, input_concat);
 				}
 
-				input_concat = input_concat.t() * cnn_fully_connected_layers_weights[fully_connected_layer];
-
-				// Add biases
-				for (size_t k = 0; k < cnn_fully_connected_layers_biases[fully_connected_layer].rows; ++k)
+				// Treat the input as separate feature maps
+				if(input_concat.rows == cnn_fully_connected_layers_weights[fully_connected_layer].rows)
 				{
-					input_concat.col(k) = input_concat.col(k) + cnn_fully_connected_layers_biases[fully_connected_layer].at<float>(k);
+					input_concat = input_concat.t() * cnn_fully_connected_layers_weights[fully_connected_layer];
+					// Add biases
+					for (size_t k = 0; k < cnn_fully_connected_layers_biases[fully_connected_layer].rows; ++k)
+					{
+						input_concat.col(k) = input_concat.col(k) + cnn_fully_connected_layers_biases[fully_connected_layer].at<float>(k);
+					}
+
+					outputs.clear();
+					// Resize and add as output
+					for (size_t k = 0; k < cnn_fully_connected_layers_biases[fully_connected_layer].rows; ++k)
+					{
+						cv::Mat_<float> reshaped = input_concat.col(k).clone();
+						reshaped = reshaped.reshape(1, orig_size.width).t();
+						outputs.push_back(reshaped);
+					}
+				}
+				else
+				{
+					// Flatten the input
+					input_concat = input_concat.reshape(0, 1);
+
+					input_concat = input_concat * cnn_fully_connected_layers_weights[fully_connected_layer] + cnn_fully_connected_layers_biases[fully_connected_layer].t();
+	
+					outputs.clear();
+					outputs.push_back(input_concat.t());
+
 				}
 
-				outputs.clear();
-				// Resize and add as output
-				for (size_t k = 0; k < cnn_fully_connected_layers_biases[fully_connected_layer].rows; ++k)
-				{
-					cv::Mat_<float> reshaped = input_concat.col(k).clone();
-					reshaped = reshaped.reshape(1, orig_size.width).t();
-					outputs.push_back(reshaped);
-				}
 			}
 			else
 			{
@@ -327,14 +342,31 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 		if (layer_type == 3) // PReLU
 		{
 			outputs.clear();
-			for (size_t k = 0; k < input_maps.size(); ++k)
+			if(input_maps.size() > 1)
 			{
-				// Apply the PReLU
-				cv::Mat_<float> pos;
-				cv::threshold(input_maps[k], pos, 0, 0, cv::THRESH_TOZERO);
-				cv::Mat_<float> neg;
-				cv::threshold(input_maps[k], neg, 0, 0, cv::THRESH_TOZERO_INV);
-				outputs.push_back(pos + neg * cnn_prelu_layer_weights[prelu_layer].at<float>(k));
+				for (size_t k = 0; k < input_maps.size(); ++k)
+				{
+					// Apply the PReLU
+					cv::Mat_<float> pos;
+					cv::threshold(input_maps[k], pos, 0, 0, cv::THRESH_TOZERO);
+					cv::Mat_<float> neg;
+					cv::threshold(input_maps[k], neg, 0, 0, cv::THRESH_TOZERO_INV);
+					outputs.push_back(pos + neg * cnn_prelu_layer_weights[prelu_layer].at<float>(k));
+
+				}
+			}
+			else
+			{
+				cv::Mat_<float> pos(input_maps[0].size(), 0.0);
+				cv::Mat_<float> neg(input_maps[0].size(), 0.0);
+				for (size_t k = 0; k < cnn_prelu_layer_weights[prelu_layer].rows; ++k)
+				{
+					// Apply the PReLU
+					cv::threshold(input_maps[0].row(k), pos.row(k), 0, 0, cv::THRESH_TOZERO);
+					cv::threshold(input_maps[0].row(k), neg.row(k), 0, 0, cv::THRESH_TOZERO_INV);
+					neg.row(k) = neg.row(k) * cnn_prelu_layer_weights[prelu_layer].at<float>(k);
+				}
+				outputs.push_back(pos + neg);
 
 			}
 			prelu_layer++;
@@ -776,7 +808,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	rectify(proposal_boxes_all);
 
 	// Creating proposal images from previous step detections
-	vector<cv::Mat> proposal_imgs;
+	to_keep.clear();
 	for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
 	{
 		float width_target = proposal_boxes_all[k].width + 1;
@@ -804,11 +836,88 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 			
 		prop_img = (prop_img - 127.5) * 0.0078125;
 		
-		proposal_imgs.push_back(prop_img);
-
 		// Perform RNet on the proposal image
 		std::vector<cv::Mat_<float> > rnet_out = RNet.Inference(prop_img);
+
+		float prob = 1.0 / (1.0 + cv::exp(rnet_out[0].at<float>(0) - rnet_out[0].at<float>(1)));
+		scores_all[k] = prob;
+		proposal_corrections_all[k].x = rnet_out[0].at<float>(2);
+		proposal_corrections_all[k].y = rnet_out[0].at<float>(3);
+		proposal_corrections_all[k].width = rnet_out[0].at<float>(4);
+		proposal_corrections_all[k].height = rnet_out[0].at<float>(5);
+		if(prob >= t2)
+		{
+			to_keep.push_back(k);
+		}
 	}
+
+	// Pick only the bounding boxes above the threshold
+	select_subset(to_keep, proposal_boxes_all, scores_all, proposal_corrections_all);
+
+	// Non maximum supression accross bounding boxes, and their offset correction
+	to_keep = non_maximum_supression(proposal_boxes_all, scores_all, 0.7);
+	select_subset(to_keep, proposal_boxes_all, scores_all, proposal_corrections_all);
+
+	apply_correction(proposal_boxes_all, proposal_corrections_all, false);
+
+	// Convert to rectangles and round
+	rectify(proposal_boxes_all);
+
+	// Preparing for the ONet stage
+	to_keep.clear();
+	for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
+	{
+		float width_target = proposal_boxes_all[k].width + 1;
+		float height_target = proposal_boxes_all[k].height + 1;
+
+		// Work out the start and end indices in the original image
+		int start_x_in = cv::max((int)(proposal_boxes_all[k].x - 1), 0);
+		int start_y_in = cv::max((int)(proposal_boxes_all[k].y - 1), 0);
+		int end_x_in = cv::min((int)(proposal_boxes_all[k].x + width_target - 1), width_orig);
+		int end_y_in = cv::min((int)(proposal_boxes_all[k].y + height_target - 1), height_orig);
+
+		// Work out the start and end indices in the target image
+		int	start_x_out = cv::max((int)(-proposal_boxes_all[k].x + 1), 0);
+		int start_y_out = cv::max((int)(-proposal_boxes_all[k].y + 1), 0);
+		int end_x_out = cv::min(width_target - (proposal_boxes_all[k].x + proposal_boxes_all[k].width - width_orig), width_target);
+		int end_y_out = cv::min(height_target - (proposal_boxes_all[k].y + proposal_boxes_all[k].height - height_orig), height_target);
+
+		cv::Mat tmp(height_target, width_target, CV_32FC3);
+
+		img_float(cv::Rect(start_x_in, start_y_in, end_x_in - start_x_in, end_y_in - start_y_in)).copyTo(
+			tmp(cv::Rect(start_x_out, start_y_out, end_x_out - start_x_out, end_y_out - start_y_out)));
+
+		cv::Mat prop_img;
+		cv::resize(tmp, prop_img, cv::Size(48, 48));
+
+		prop_img = (prop_img - 127.5) * 0.0078125;
+
+		// Perform RNet on the proposal image
+		std::vector<cv::Mat_<float> > onet_out = ONet.Inference(prop_img);
+
+		float prob = 1.0 / (1.0 + cv::exp(onet_out[0].at<float>(0) - onet_out[0].at<float>(1)));
+		scores_all[k] = prob;
+		proposal_corrections_all[k].x = onet_out[0].at<float>(2);
+		proposal_corrections_all[k].y = onet_out[0].at<float>(3);
+		proposal_corrections_all[k].width = onet_out[0].at<float>(4);
+		proposal_corrections_all[k].height = onet_out[0].at<float>(5);
+		if (prob >= t3)
+		{
+			to_keep.push_back(k);
+		}
+	}
+
+	// Pick only the bounding boxes above the threshold
+	select_subset(to_keep, proposal_boxes_all, scores_all, proposal_corrections_all);
+	apply_correction(proposal_boxes_all, proposal_corrections_all, true);
+
+	// Non maximum supression accross bounding boxes, and their offset correction
+	to_keep = non_maximum_supression(proposal_boxes_all, scores_all, 0.7);
+	select_subset(to_keep, proposal_boxes_all, scores_all, proposal_corrections_all);
+
+	// TODO diff selection criteria for supression
+
+	// TODO correct the box to expectation
 
 	return true;
 
