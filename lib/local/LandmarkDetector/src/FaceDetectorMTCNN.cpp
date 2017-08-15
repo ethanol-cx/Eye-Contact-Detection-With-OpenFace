@@ -245,9 +245,18 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 				for (int x = 0; x < input_maps[in].cols; x += stride_x)
 				{
 					int max_x = cv::min(input_maps[in].cols, x + kernel_size_x);
+					int x_in_out = floor(x / stride_x);
+
+					if (x_in_out >= out_x)
+						continue;
 
 					for (int y = 0; y < input_maps[in].rows; y += stride_y)
 					{
+						int y_in_out = floor(y / stride_y);
+
+						if (y_in_out >= out_y)
+							continue;
+
 						int max_y = cv::min(input_maps[in].rows, y + kernel_size_y);
 
 						float curr_max = -FLT_MAX;
@@ -263,8 +272,6 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 								}
 							}
 						}
-						int x_in_out = floor(x / stride_x);
-						int y_in_out = floor(y / stride_y);
 						sub_out.at<float>(y_in_out, x_in_out) = curr_max;
 					}
 				}
@@ -798,6 +805,9 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		prop_img = (prop_img - 127.5) * 0.0078125;
 		
 		proposal_imgs.push_back(prop_img);
+
+		// Perform RNet on the proposal image
+		std::vector<cv::Mat_<float> > rnet_out = RNet.Inference(prop_img);
 	}
 
 	return true;
