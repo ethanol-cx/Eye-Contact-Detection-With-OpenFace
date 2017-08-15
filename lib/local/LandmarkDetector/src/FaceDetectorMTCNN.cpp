@@ -570,7 +570,7 @@ void FaceDetectorMTCNN::Read(string location)
 }
 
 // Perform non maximum supression on proposal bounding boxes prioritizing boxes with high score/confidence
-std::vector<int> non_maximum_supression(const std::vector<cv::Rect_<float> >& original_bb, const std::vector<float>& scores, float thresh)
+std::vector<int> non_maximum_supression(const std::vector<cv::Rect_<float> >& original_bb, const std::vector<float>& scores, float thresh, bool minimum)
 {
 
 	// Sort the input bounding boxes by the detection score, using the nice trick of multimap always being sorted internally
@@ -600,7 +600,15 @@ std::vector<int> non_maximum_supression(const std::vector<cv::Rect_<float> >& or
 			const cv::Rect& rect2 = original_bb[pos->second];
 
 			float intArea = (rect1 & rect2).area();
-			float unionArea = rect1.area() + rect2.area() - intArea;
+			float unionArea;
+			if (minimum)
+			{
+				unionArea = cv::min(rect1.area(), rect2.area());
+			}
+			else 
+			{
+				unionArea = rect1.area() + rect2.area() - intArea;
+			}
 			float overlap = intArea / unionArea;
 
 			// Remove the bounding boxes with less confidence but with significant overlap with the current one
@@ -787,7 +795,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		generate_bounding_boxes(proposal_boxes, scores, proposal_corrections, prob_heatmap, corrections_heatmap, scale, t1, face_support);
 
 		// Perform non-maximum supression on proposals in this scale
-		vector<int> to_keep = non_maximum_supression(proposal_boxes, scores, 0.5);
+		vector<int> to_keep = non_maximum_supression(proposal_boxes, scores, 0.5, false);
 		select_subset(to_keep, proposal_boxes, scores, proposal_corrections);
 
 		proposal_boxes_all.insert(proposal_boxes_all.end(), proposal_boxes.begin(), proposal_boxes.end());
@@ -799,7 +807,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	// Preparation for RNet step
 
 	// Non maximum supression accross bounding boxes, and their offset correction
-	vector<int> to_keep = non_maximum_supression(proposal_boxes_all, scores_all, 0.7);
+	vector<int> to_keep = non_maximum_supression(proposal_boxes_all, scores_all, 0.7, false);
 	select_subset(to_keep, proposal_boxes_all, scores_all, proposal_corrections_all);
 
 	apply_correction(proposal_boxes_all, proposal_corrections_all, false);
@@ -855,7 +863,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	select_subset(to_keep, proposal_boxes_all, scores_all, proposal_corrections_all);
 
 	// Non maximum supression accross bounding boxes, and their offset correction
-	to_keep = non_maximum_supression(proposal_boxes_all, scores_all, 0.7);
+	to_keep = non_maximum_supression(proposal_boxes_all, scores_all, 0.7, false);
 	select_subset(to_keep, proposal_boxes_all, scores_all, proposal_corrections_all);
 
 	apply_correction(proposal_boxes_all, proposal_corrections_all, false);
@@ -912,12 +920,20 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	apply_correction(proposal_boxes_all, proposal_corrections_all, true);
 
 	// Non maximum supression accross bounding boxes, and their offset correction
-	to_keep = non_maximum_supression(proposal_boxes_all, scores_all, 0.7);
+	to_keep = non_maximum_supression(proposal_boxes_all, scores_all, 0.7, true);
 	select_subset(to_keep, proposal_boxes_all, scores_all, proposal_corrections_all);
 
-	// TODO diff selection criteria for supression
+	// Correct the box to expectation to be tight around facial landmarks
+	for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
+	{
+		proposal_boxes_all[k].x = proposal_boxes_all[k].width * -0.0075 + proposal_boxes_all[k].x;
+		proposal_boxes_all[k].y = proposal_boxes_all[k].height * 0.2459 + proposal_boxes_all[k].y;
+		proposal_boxes_all[k].width = 1.0323 * proposal_boxes_all[k].width;
+		proposal_boxes_all[k].height = 0.7751 * proposal_boxes_all[k].height;
 
-	// TODO correct the box to expectation
+		o_regions.push_back(cv::Rect_<double>(proposal_boxes_all[k].x, proposal_boxes_all[k].y, proposal_boxes_all[k].width, proposal_boxes_all[k].height));
+		o_confidences.push_back(scores_all[k]);
+	}
 
 	return true;
 
