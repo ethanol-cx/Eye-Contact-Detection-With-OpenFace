@@ -136,8 +136,43 @@ CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_poo
 	}
 }
 
+void PReLU(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, cv::Mat_<float> prelu_weights)
+{
+	outputs.clear();
+	if (input_maps.size() > 1)
+	{
+		for (size_t k = 0; k < input_maps.size(); ++k)
+		{
+			// Apply the PReLU
+			cv::Mat_<float> pos;
+			cv::threshold(input_maps[k], pos, 0, 0, cv::THRESH_TOZERO);
+			cv::Mat_<float> neg;
+			cv::threshold(input_maps[k], neg, 0, 0, cv::THRESH_TOZERO_INV);
+			outputs.push_back(pos + neg * prelu_weights.at<float>(k));
+
+		}
+	}
+	else
+	{
+		cv::Mat_<float> pos(input_maps[0].size(), 0.0);
+		cv::Mat_<float> neg(input_maps[0].size(), 0.0);
+		for (size_t k = 0; k < prelu_weights.rows; ++k)
+		{
+			// Apply the PReLU
+			cv::threshold(input_maps[0].row(k), pos.row(k), 0, 0, cv::THRESH_TOZERO);
+			cv::threshold(input_maps[0].row(k), neg.row(k), 0, 0, cv::THRESH_TOZERO_INV);
+			neg.row(k) = neg.row(k) * prelu_weights.at<float>(k);
+		}
+		outputs.push_back(pos + neg);
+
+	}
+
+}
+
 void fully_connected(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, cv::Mat_<float> weights, cv::Mat_<float> biases)
 {
+	outputs.clear();
+
 	if (input_maps.size() > 1)
 	{
 		// Concatenate all the maps
@@ -335,7 +370,6 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 		// Convolutional layer
 		if (layer_type == 0)		
 		{
-			outputs.clear();
 			convolution_fft(outputs, input_maps, cnn_convolutional_layers[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_dft[cnn_layer]);
 
 			cnn_layer++;
@@ -354,48 +388,12 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 		}
 		if (layer_type == 2)
 		{
-
 			fully_connected(outputs, input_maps, cnn_fully_connected_layers_weights[fully_connected_layer], cnn_fully_connected_layers_biases[fully_connected_layer]);
 			fully_connected_layer++;
 		}
 		if (layer_type == 3) // PReLU
 		{
-			outputs.clear();
-			if(input_maps.size() > 1)
-			{
-				for (size_t k = 0; k < input_maps.size(); ++k)
-				{
-					// Apply the PReLU
-					cv::Mat_<float> pos;
-					cv::threshold(input_maps[k], pos, 0, 0, cv::THRESH_TOZERO);
-					cv::Mat_<float> neg;
-					cv::threshold(input_maps[k], neg, 0, 0, cv::THRESH_TOZERO_INV);
-					outputs.push_back(pos + neg * cnn_prelu_layer_weights[prelu_layer].at<float>(k));
-
-				}
-			}
-			else
-			{
-				cv::Mat_<float> pos(input_maps[0].size(), 0.0);
-				cv::Mat_<float> neg(input_maps[0].size(), 0.0);
-				for (size_t k = 0; k < cnn_prelu_layer_weights[prelu_layer].rows; ++k)
-				{
-					// Apply the PReLU
-					cv::threshold(input_maps[0].row(k), pos.row(k), 0, 0, cv::THRESH_TOZERO);
-					cv::threshold(input_maps[0].row(k), neg.row(k), 0, 0, cv::THRESH_TOZERO_INV);
-					neg.row(k) = neg.row(k) * cnn_prelu_layer_weights[prelu_layer].at<float>(k);
-				}
-				outputs.push_back(pos + neg);
-
-			}
-
-			//float diff = 0.0;
-			//for (size_t k = 0; k < outs.size(); ++k)
-			//{
-			//	diff += cv::mean(cv::abs(outputs[k] - outs[k]))[0];
-			//}
-			//cout << diff << endl;
-
+			PReLU(outputs, input_maps, cnn_prelu_layer_weights[prelu_layer]);
 			prelu_layer++;
 		}
 		if (layer_type == 4)
@@ -668,7 +666,7 @@ void select_subset(const vector<int>& to_keep, vector<cv::Rect_<float> >& boundi
 		scores_tmp.push_back(scores[to_keep[i]]);
 		corrections_tmp.push_back(corrections[to_keep[i]]);
 	}
-
+	
 	bounding_boxes = bounding_boxes_tmp;
 	scores = scores_tmp;
 	corrections = corrections_tmp;
@@ -805,7 +803,19 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 
 		// Actual PNet CNN step
 		std::vector<cv::Mat_<float> > pnet_out = PNet.Inference(normalised_img);
-		
+	
+		// Clear the precomputations, as the image sizes will be different (TODO could be useful for videos)
+		for (size_t k1 = 0; k1 < PNet.cnn_convolutional_layers_dft.size(); ++k1)
+		{
+			for (size_t k2 = 0; k2 < PNet.cnn_convolutional_layers_dft[k1].size(); ++k2)
+			{
+				for (size_t k3 = 0; k3 < PNet.cnn_convolutional_layers_dft[k1][k2].size(); ++k3)
+				{
+					PNet.cnn_convolutional_layers_dft[k1][k2][k3].second = cv::Mat_<double>(0, 0, 0.0);
+				}
+			}
+		}
+
 		// Extract the probabilities from PNet response
 		cv::Mat_<float> prob_heatmap;
 		cv::exp(pnet_out[0]- pnet_out[1], prob_heatmap);
@@ -860,7 +870,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		int end_x_out = cv::min(width_target - (proposal_boxes_all[k].x + proposal_boxes_all[k].width - width_orig), width_target);
 		int end_y_out = cv::min(height_target - (proposal_boxes_all[k].y + proposal_boxes_all[k].height - height_orig), height_target);
 
-		cv::Mat tmp(height_target, width_target, CV_32FC3);
+		cv::Mat tmp(height_target, width_target, CV_32FC3, cv::Scalar(0.0f,0.0f,0.0f));
 
 		img_float(cv::Rect(start_x_in, start_y_in, end_x_in - start_x_in, end_y_in - start_y_in)).copyTo(
 			tmp(cv::Rect(start_x_out, start_y_out, end_x_out - start_x_out, end_y_out - start_y_out)));
@@ -883,6 +893,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		{
 			to_keep.push_back(k);
 		}
+
 	}
 
 	// Pick only the bounding boxes above the threshold
@@ -899,6 +910,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 
 	// Preparing for the ONet stage
 	to_keep.clear();
+
 	for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
 	{
 		float width_target = proposal_boxes_all[k].width + 1;
@@ -916,7 +928,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		int end_x_out = cv::min(width_target - (proposal_boxes_all[k].x + proposal_boxes_all[k].width - width_orig), width_target);
 		int end_y_out = cv::min(height_target - (proposal_boxes_all[k].y + proposal_boxes_all[k].height - height_orig), height_target);
 
-		cv::Mat tmp(height_target, width_target, CV_32FC3);
+		cv::Mat tmp(height_target, width_target, CV_32FC3, cv::Scalar(0.0f, 0.0f, 0.0f));
 
 		img_float(cv::Rect(start_x_in, start_y_in, end_x_in - start_x_in, end_y_in - start_y_in)).copyTo(
 			tmp(cv::Rect(start_x_out, start_y_out, end_x_out - start_x_out, end_y_out - start_y_out)));
@@ -966,7 +978,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		cv::rectangle(disp_img, proposal_boxes_all[k], cv::Scalar(255, 0, 0), 3);
 	}
 	cv::imshow("detections", disp_img);
-	cv::waitKey(5);
+	cv::waitKey(20);
 
 	if(o_regions.size() > 0)
 	{

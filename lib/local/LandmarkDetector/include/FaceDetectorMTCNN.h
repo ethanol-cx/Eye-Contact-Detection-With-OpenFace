@@ -87,15 +87,17 @@ namespace LandmarkDetector
 		// Reading in the model
 		void Read(string location);
 
+		// Precomputations for faster convolution
+		vector<vector<vector<pair<int, cv::Mat_<double> > > > > cnn_convolutional_layers_dft;
+
 	private:
 		//==========================================
 		// Convolutional Neural Network
 
 		// CNN layers
 		// layer -> input maps -> kernels
-		vector<vector<vector<cv::Mat_<float> > > > cnn_convolutional_layers;
 		// Bit ugly with so much nesting, but oh well
-		vector<vector<vector<pair<int, cv::Mat_<double> > > > > cnn_convolutional_layers_dft;
+		vector<vector<vector<cv::Mat_<float> > > > cnn_convolutional_layers;
 		vector<vector<float > > cnn_convolutional_layers_bias;
 		vector<cv::Mat_<float> >  cnn_fully_connected_layers_weights;
 		vector<cv::Mat_<float> > cnn_fully_connected_layers_biases;
