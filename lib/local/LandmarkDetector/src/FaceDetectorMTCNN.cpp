@@ -136,6 +136,116 @@ CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_poo
 	}
 }
 
+void max_pooling(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, int stride_x, int stride_y, int kernel_size_x, int kernel_size_y)
+{
+	vector<cv::Mat_<float> > outputs_sub;
+
+	// Iterate over kernel height and width, based on stride
+	for (size_t in = 0; in < input_maps.size(); ++in)
+	{
+		// Help with rounding up a bit, to match caffe style output
+		int out_x = round((double)(input_maps[in].cols - kernel_size_x) / (double)stride_x) + 1;
+		int out_y = round((double)(input_maps[in].rows - kernel_size_y) / (double)stride_y) + 1;
+
+		cv::Mat_<float> sub_out(out_y, out_x, 0.0);
+		cv::Mat_<float> in_map = input_maps[in];
+
+		for (int x = 0; x < input_maps[in].cols; x += stride_x)
+		{
+			int max_x = cv::min(input_maps[in].cols, x + kernel_size_x);
+			int x_in_out = floor(x / stride_x);
+
+			if (x_in_out >= out_x)
+				continue;
+
+			for (int y = 0; y < input_maps[in].rows; y += stride_y)
+			{
+				int y_in_out = floor(y / stride_y);
+
+				if (y_in_out >= out_y)
+					continue;
+
+				int max_y = cv::min(input_maps[in].rows, y + kernel_size_y);
+
+				float curr_max = -FLT_MAX;
+
+				for (int x_in = x; x_in < max_x; ++x_in)
+				{
+					for (int y_in = y; y_in < max_y; ++y_in)
+					{
+						float curr_val = in_map.at<float>(y_in, x_in);
+						if (curr_val > curr_max)
+						{
+							curr_max = curr_val;
+						}
+					}
+				}
+				sub_out.at<float>(y_in_out, x_in_out) = curr_max;
+			}
+		}
+
+		outputs_sub.push_back(sub_out);
+
+	}
+	outputs = outputs_sub;
+
+}
+
+void convolution_fft(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const std::vector<std::vector<cv::Mat_<float> > >& kernels, const std::vector<float >& biases, vector<vector<pair<int, cv::Mat_<double> > > >& precomp_dfts)
+{
+	outputs.clear();
+	for (size_t in = 0; in < input_maps.size(); ++in)
+	{
+		cv::Mat_<float> input_image = input_maps[in];
+
+		// Useful precomputed data placeholders for quick correlation (convolution)
+		cv::Mat_<double> input_image_dft;
+		cv::Mat integral_image;
+		cv::Mat integral_image_sq;
+
+		// TODO can TBB-ify this
+		for (size_t k = 0; k < kernels[in].size(); ++k)
+		{
+			cv::Mat_<float> kernel = kernels[in][k];
+
+			// The convolution (with precomputation)
+			cv::Mat_<float> output;
+			if (precomp_dfts[in][k].second.empty())
+			{
+				std::map<int, cv::Mat_<double> > precomputed_dft;
+
+				LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
+
+				precomp_dfts[in][k].first = precomputed_dft.begin()->first;
+				precomp_dfts[in][k].second = precomputed_dft.begin()->second;
+			}
+			else
+			{
+				std::map<int, cv::Mat_<double> > precomputed_dft;
+				precomputed_dft[precomp_dfts[in][k].first] = precomp_dfts[in][k].second;
+				LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
+			}
+
+			// Combining the maps
+			if (in == 0)
+			{
+				outputs.push_back(output);
+			}
+			else
+			{
+				outputs[k] = outputs[k] + output;
+			}
+
+		}
+
+	}
+
+	for (size_t k = 0; k < biases.size(); ++k)
+	{
+		outputs[k] = outputs[k] + biases[k];
+	}
+}
+
 std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 {
 	if (input_img.channels() == 1)
@@ -167,64 +277,15 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 		int layer_type = cnn_layer_types[layer];
 
 		// Convolutional layer
-		if (layer_type == 0)
+		if (layer_type == 0)		
 		{
 			outputs.clear();
-			for (size_t in = 0; in < input_maps.size(); ++in)
-			{
-				cv::Mat_<float> input_image = input_maps[in];
+			convolution_fft(outputs, input_maps, cnn_convolutional_layers[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_dft[cnn_layer]);
 
-				// Useful precomputed data placeholders for quick correlation (convolution)
-				cv::Mat_<double> input_image_dft;
-				cv::Mat integral_image;
-				cv::Mat integral_image_sq;
-
-				// TODO can TBB-ify this
-				for (size_t k = 0; k < cnn_convolutional_layers[cnn_layer][in].size(); ++k)
-				{
-					cv::Mat_<float> kernel = cnn_convolutional_layers[cnn_layer][in][k];
-
-					// The convolution (with precomputation)
-					cv::Mat_<float> output;
-					if (cnn_convolutional_layers_dft[cnn_layer][in][k].second.empty())
-					{
-						std::map<int, cv::Mat_<double> > precomputed_dft;
-
-						LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
-
-						cnn_convolutional_layers_dft[cnn_layer][in][k].first = precomputed_dft.begin()->first;
-						cnn_convolutional_layers_dft[cnn_layer][in][k].second = precomputed_dft.begin()->second;
-					}
-					else
-					{
-						std::map<int, cv::Mat_<double> > precomputed_dft;
-						precomputed_dft[cnn_convolutional_layers_dft[cnn_layer][in][k].first] = cnn_convolutional_layers_dft[cnn_layer][in][k].second;
-						LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
-					}
-
-					// Combining the maps
-					if (in == 0)
-					{
-						outputs.push_back(output);
-					}
-					else
-					{
-						outputs[k] = outputs[k] + output;
-					}
-
-				}
-
-			}
-
-			for (size_t k = 0; k < cnn_convolutional_layers[cnn_layer][0].size(); ++k)
-			{
-				outputs[k] = outputs[k] + cnn_convolutional_layers_bias[cnn_layer][k];
-			}
 			cnn_layer++;
 		}
 		if (layer_type == 1)
 		{
-			vector<cv::Mat_<float> > outputs_sub;
 
 			int stride_x = std::get<2>(cnn_max_pooling_layers[max_pool_layer]);
 			int stride_y = std::get<3>(cnn_max_pooling_layers[max_pool_layer]);
@@ -232,54 +293,8 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 			int kernel_size_x = std::get<0>(cnn_max_pooling_layers[max_pool_layer]);
 			int kernel_size_y = std::get<1>(cnn_max_pooling_layers[max_pool_layer]);
 
-			// Iterate over kernel height and width, based on stride
-			for (size_t in = 0; in < input_maps.size(); ++in)
-			{
-				// Help with rounding up a bit, to match caffe style output
-				int out_x = round((double)(input_maps[in].cols - kernel_size_x) / (double)stride_x) + 1;
-				int out_y = round((double)(input_maps[in].rows - kernel_size_y) / (double)stride_y) + 1;
-
-				cv::Mat_<float> sub_out(out_y, out_x, 0.0);
-				cv::Mat_<float> in_map = input_maps[in];
-				
-				for (int x = 0; x < input_maps[in].cols; x += stride_x)
-				{
-					int max_x = cv::min(input_maps[in].cols, x + kernel_size_x);
-					int x_in_out = floor(x / stride_x);
-
-					if (x_in_out >= out_x)
-						continue;
-
-					for (int y = 0; y < input_maps[in].rows; y += stride_y)
-					{
-						int y_in_out = floor(y / stride_y);
-
-						if (y_in_out >= out_y)
-							continue;
-
-						int max_y = cv::min(input_maps[in].rows, y + kernel_size_y);
-
-						float curr_max = -FLT_MAX;
-						
-						for (int x_in = x; x_in < max_x; ++x_in)
-						{
-							for (int y_in = y; y_in < max_y; ++y_in)
-							{
-								float curr_val = in_map.at<float>(y_in, x_in);
-								if (curr_val > curr_max)
-								{
-									curr_max = curr_val;
-								}
-							}
-						}
-						sub_out.at<float>(y_in_out, x_in_out) = curr_max;
-					}
-				}
-
-				outputs_sub.push_back(sub_out);
-
-			}
-			outputs = outputs_sub;
+			max_pooling(outputs, input_maps, stride_x, stride_y, kernel_size_x, kernel_size_y);
+			max_pool_layer++;
 		}
 		if (layer_type == 2)
 		{
@@ -338,6 +353,14 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 			}
 
 			fully_connected_layer++;
+
+			//float diff = 0.0;
+			//for (size_t k = 0; k < input_maps.size(); ++k)
+			//{
+			//	diff += cv::mean(cv::abs(outputs[k] - outs[k]))[0];
+			//}
+			//cout << diff << endl;
+
 		}
 		if (layer_type == 3) // PReLU
 		{
@@ -923,6 +946,9 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	to_keep = non_maximum_supression(proposal_boxes_all, scores_all, 0.7, true);
 	select_subset(to_keep, proposal_boxes_all, scores_all, proposal_corrections_all);
 
+	// TODO rem
+	cv::Mat disp_img = input_img.clone();
+
 	// Correct the box to expectation to be tight around facial landmarks
 	for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
 	{
@@ -933,9 +959,19 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 
 		o_regions.push_back(cv::Rect_<double>(proposal_boxes_all[k].x, proposal_boxes_all[k].y, proposal_boxes_all[k].width, proposal_boxes_all[k].height));
 		o_confidences.push_back(scores_all[k]);
+
+		cv::rectangle(disp_img, proposal_boxes_all[k], cv::Scalar(255, 0, 0), 3);
 	}
+	cv::imshow("detections", disp_img);
+	cv::waitKey(5);
 
-	return true;
-
+	if(o_regions.size() > 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
