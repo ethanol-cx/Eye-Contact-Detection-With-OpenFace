@@ -136,6 +136,62 @@ CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_poo
 	}
 }
 
+void fully_connected(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, cv::Mat_<float> weights, cv::Mat_<float> biases)
+{
+	if (input_maps.size() > 1)
+	{
+		// Concatenate all the maps
+		cv::Size orig_size = input_maps[0].size();
+		cv::Mat_<float> input_concat = input_maps[0].t();
+		input_concat = input_concat.reshape(0, 1);
+
+		for (size_t in = 1; in < input_maps.size(); ++in)
+		{
+			cv::Mat_<float> add = input_maps[in].t();
+			add = add.reshape(0, 1);
+			cv::vconcat(input_concat, add, input_concat);
+		}
+
+		// Treat the input as separate feature maps
+		if (input_concat.rows == weights.rows)
+		{
+			input_concat = input_concat.t() * weights;
+			// Add biases
+			for (size_t k = 0; k < biases.rows; ++k)
+			{
+				input_concat.col(k) = input_concat.col(k) + biases.at<float>(k);
+			}
+
+			outputs.clear();
+			// Resize and add as output
+			for (size_t k = 0; k < biases.rows; ++k)
+			{
+				cv::Mat_<float> reshaped = input_concat.col(k).clone();
+				reshaped = reshaped.reshape(1, orig_size.width).t();
+				outputs.push_back(reshaped);
+			}
+		}
+		else
+		{
+			// Flatten the input
+			input_concat = input_concat.reshape(0, 1);
+
+			input_concat = input_concat * weights + biases.t();
+
+			outputs.clear();
+			outputs.push_back(input_concat.t());
+		}
+
+	}
+	else
+	{
+		cv::Mat out = input_maps[0].t() * weights + biases.t();
+		outputs.clear();
+		outputs.push_back(out);
+	}
+
+}
+
 void max_pooling(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, int stride_x, int stride_y, int kernel_size_x, int kernel_size_y)
 {
 	vector<cv::Mat_<float> > outputs_sub;
@@ -299,68 +355,8 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 		if (layer_type == 2)
 		{
 
-			if(input_maps.size() > 1)
-			{
-				// Concatenate all the maps
-				cv::Size orig_size = input_maps[0].size();
-				cv::Mat_<float> input_concat = input_maps[0].t();
-				input_concat = input_concat.reshape(0, 1);
-
-				for (size_t in = 1; in < input_maps.size(); ++in)
-				{
-					cv::Mat_<float> add = input_maps[in].t();
-					add = add.reshape(0, 1);
-					cv::vconcat(input_concat, add, input_concat);
-				}
-
-				// Treat the input as separate feature maps
-				if(input_concat.rows == cnn_fully_connected_layers_weights[fully_connected_layer].rows)
-				{
-					input_concat = input_concat.t() * cnn_fully_connected_layers_weights[fully_connected_layer];
-					// Add biases
-					for (size_t k = 0; k < cnn_fully_connected_layers_biases[fully_connected_layer].rows; ++k)
-					{
-						input_concat.col(k) = input_concat.col(k) + cnn_fully_connected_layers_biases[fully_connected_layer].at<float>(k);
-					}
-
-					outputs.clear();
-					// Resize and add as output
-					for (size_t k = 0; k < cnn_fully_connected_layers_biases[fully_connected_layer].rows; ++k)
-					{
-						cv::Mat_<float> reshaped = input_concat.col(k).clone();
-						reshaped = reshaped.reshape(1, orig_size.width).t();
-						outputs.push_back(reshaped);
-					}
-				}
-				else
-				{
-					// Flatten the input
-					input_concat = input_concat.reshape(0, 1);
-
-					input_concat = input_concat * cnn_fully_connected_layers_weights[fully_connected_layer] + cnn_fully_connected_layers_biases[fully_connected_layer].t();
-	
-					outputs.clear();
-					outputs.push_back(input_concat.t());
-
-				}
-
-			}
-			else
-			{
-				cv::Mat out = input_maps[0].t() * cnn_fully_connected_layers_weights[fully_connected_layer] + cnn_fully_connected_layers_biases[fully_connected_layer].t();
-				outputs.clear();
-				outputs.push_back(out);
-			}
-
+			fully_connected(outputs, input_maps, cnn_fully_connected_layers_weights[fully_connected_layer], cnn_fully_connected_layers_biases[fully_connected_layer]);
 			fully_connected_layer++;
-
-			//float diff = 0.0;
-			//for (size_t k = 0; k < input_maps.size(); ++k)
-			//{
-			//	diff += cv::mean(cv::abs(outputs[k] - outs[k]))[0];
-			//}
-			//cout << diff << endl;
-
 		}
 		if (layer_type == 3) // PReLU
 		{
@@ -392,6 +388,14 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 				outputs.push_back(pos + neg);
 
 			}
+
+			//float diff = 0.0;
+			//for (size_t k = 0; k < outs.size(); ++k)
+			//{
+			//	diff += cv::mean(cv::abs(outputs[k] - outs[k]))[0];
+			//}
+			//cout << diff << endl;
+
 			prelu_layer++;
 		}
 		if (layer_type == 4)
@@ -407,9 +411,8 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 
 			}
 		}
-		// Set the outputs of this layer to inputs of the next
-		input_maps = outputs;
-		
+		// Set the outputs of this layer to inputs of the next one
+		input_maps = outputs;		
 	}
 
 	
