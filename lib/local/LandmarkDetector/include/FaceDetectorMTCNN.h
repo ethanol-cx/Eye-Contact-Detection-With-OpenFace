@@ -89,6 +89,7 @@ namespace LandmarkDetector
 
 		// Precomputations for faster convolution
 		vector<vector<vector<pair<int, cv::Mat_<double> > > > > cnn_convolutional_layers_dft;
+		vector<vector<map<int, vector<cv::Mat_<double> > > > > cnn_convolutional_layers_dft2;
 
 	private:
 		//==========================================
@@ -98,6 +99,7 @@ namespace LandmarkDetector
 		// layer -> input maps -> kernels
 		// Bit ugly with so much nesting, but oh well
 		vector<vector<vector<cv::Mat_<float> > > > cnn_convolutional_layers;
+		vector<vector<vector<cv::Mat_<float> > > > cnn_convolutional_layers_rearr;
 		vector<vector<float > > cnn_convolutional_layers_bias;
 		vector<cv::Mat_<float> >  cnn_fully_connected_layers_weights;
 		vector<cv::Mat_<float> > cnn_fully_connected_layers_biases;

@@ -111,6 +111,23 @@ CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_poo
 		}
 	}
 
+	this->cnn_convolutional_layers_rearr.resize(other.cnn_convolutional_layers_rearr.size());
+	for (size_t l = 0; l < other.cnn_convolutional_layers_rearr.size(); ++l)
+	{
+		this->cnn_convolutional_layers_rearr[l].resize(other.cnn_convolutional_layers_rearr[l].size());
+
+		for (size_t i = 0; i < other.cnn_convolutional_layers_rearr[l].size(); ++i)
+		{
+			this->cnn_convolutional_layers_rearr[l][i].resize(other.cnn_convolutional_layers_rearr[l][i].size());
+
+			for (size_t k = 0; k < other.cnn_convolutional_layers_rearr[l][i].size(); ++k)
+			{
+				// Make sure the matrix is copied.
+				this->cnn_convolutional_layers_rearr[l][i][k] = other.cnn_convolutional_layers_rearr[l][i][k].clone();
+			}
+		}
+	}
+
 	this->cnn_fully_connected_layers_weights.resize(other.cnn_fully_connected_layers_weights.size());
 
 	for (size_t l = 0; l < other.cnn_fully_connected_layers_weights.size(); ++l)
@@ -282,6 +299,166 @@ void max_pooling(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::M
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void convolution_single_kern_fft(const vector<cv::Mat_<float> >& input_imgs, vector<cv::Mat_<double> >& img_dfts, const vector<cv::Mat_<float> >&  _templs, map<int, vector<cv::Mat_<double> > >& _templ_dfts, cv::Mat_<float>& result)
+{
+	// Assume result is defined properly
+	if (result.empty())
+	{
+		cv::Size corrSize(input_imgs[0].cols - _templs[0].cols + 1, input_imgs[0].rows - _templs[0].rows + 1);
+		result.create(corrSize);
+	}
+
+	// Our model will always be under min block size so can ignore this
+	//const double blockScale = 4.5;
+	//const int minBlockSize = 256;
+
+	int maxDepth = CV_64F;
+
+	cv::Size dftsize;
+
+	dftsize.width = cv::getOptimalDFTSize(result.cols + _templs[0].cols - 1);
+	dftsize.height = cv::getOptimalDFTSize(result.rows + _templs[0].rows - 1);
+
+	// Compute block size
+	cv::Size blocksize;
+	blocksize.width = dftsize.width - _templs[0].cols + 1;
+	blocksize.width = MIN(blocksize.width, result.cols);
+	blocksize.height = dftsize.height - _templs[0].rows + 1;
+	blocksize.height = MIN(blocksize.height, result.rows);
+
+	vector<cv::Mat_<double>> dftTempl;
+
+	// if this has not been precomputed, precompute it, otherwise use it
+	if (_templ_dfts.find(dftsize.width) == _templ_dfts.end())
+	{
+		dftTempl.resize(_templs.size());
+		for (size_t k = 0; k < _templs.size(); ++k)
+		{
+			dftTempl[k].create(dftsize.height, dftsize.width);
+
+			cv::Mat_<float> src = _templs[k];
+
+			cv::Mat_<double> dst(dftTempl[k], cv::Rect(0, 0, dftsize.width, dftsize.height));
+
+			cv::Mat_<double> dst1(dftTempl[k], cv::Rect(0, 0, _templs[k].cols, _templs[k].rows));
+
+			if (dst1.data != src.data)
+				src.convertTo(dst1, dst1.depth());
+
+			if (dst.cols > _templs[k].cols)
+			{
+				cv::Mat_<double> part(dst, cv::Range(0, _templs[k].rows), cv::Range(_templs[k].cols, dst.cols));
+				part.setTo(0);
+			}
+
+			// Perform DFT of the template
+			dft(dst, dst, 0, _templs[k].rows);
+
+		}
+		// TODO is a deep copy needed
+		_templ_dfts[dftsize.width] = dftTempl;
+
+	}
+	else
+	{
+		dftTempl = _templ_dfts[dftsize.width];
+	}
+
+	cv::Size bsz(std::min(blocksize.width, result.cols), std::min(blocksize.height, result.rows));
+	cv::Mat src;
+
+	cv::Mat cdst(result, cv::Rect(0, 0, bsz.width, bsz.height));
+
+	vector<cv::Mat_<double> > dftImgs;
+	dftImgs.resize(input_imgs.size());
+
+	if (img_dfts.empty())
+	{
+		for(size_t k = 0; k < input_imgs.size(); ++k)
+		{
+			dftImgs[k].create(dftsize);
+			dftImgs[k].setTo(0.0);
+
+			cv::Size dsz(bsz.width + _templs[k].cols - 1, bsz.height + _templs[k].rows - 1);
+
+			int x2 = std::min(input_imgs[k].cols, dsz.width);
+			int y2 = std::min(input_imgs[k].rows, dsz.height);
+
+			cv::Mat src0(input_imgs[k], cv::Range(0, y2), cv::Range(0, x2));
+			cv::Mat dst(dftImgs[k], cv::Rect(0, 0, dsz.width, dsz.height));
+			cv::Mat dst1(dftImgs[k], cv::Rect(0, 0, x2, y2));
+
+			src = src0;
+
+			if (dst1.data != src.data)
+				src.convertTo(dst1, dst1.depth());
+
+			dft(dftImgs[k], dftImgs[k], 0, dsz.height);
+			img_dfts.push_back(dftImgs[k].clone());
+		}
+	}
+
+	cv::Mat_<double> dft_img(img_dfts[0].rows, img_dfts[0].cols, 0.0);
+	for (size_t k = 0; k < input_imgs.size(); ++k)
+	{
+		cv::Mat dftTempl1(dftTempl[k], cv::Rect(0, 0, dftsize.width, dftsize.height));
+		cv::mulSpectrums(img_dfts[k], dftTempl1, dftImgs[k], 0, true);
+		dft_img = dft_img + dftImgs[k];
+	}
+
+
+	cv::dft(dft_img, dft_img, cv::DFT_INVERSE + cv::DFT_SCALE, bsz.height);
+
+	src = dft_img(cv::Rect(0, 0, bsz.width, bsz.height));
+
+	src.convertTo(cdst, CV_32F);
+
+}
+
+
+void convolution_fft2(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const std::vector<std::vector<cv::Mat_<float> > >& kernels, const std::vector<float >& biases, vector<map<int, vector<cv::Mat_<double> > > >& precomp_dfts)
+{
+	outputs.clear();
+
+	// Useful precomputed data placeholders for quick correlation (convolution)
+	vector<cv::Mat_<double> > input_image_dft;
+
+	for (size_t k = 0; k < kernels.size(); ++k)
+	{
+
+		// The convolution (with precomputation)
+		cv::Mat_<float> output;
+		convolution_single_kern_fft(input_maps, input_image_dft, kernels[k], precomp_dfts[k], output);
+
+		// Combining the maps
+		outputs.push_back(output + biases[k]);
+
+	}
+}
+
+//void convolution_fft2_tiled(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const std::vector<std::vector<cv::Mat_<float> > >& kernels, const std::vector<float >& biases, vector<cv::Mat_<double> >& precomp_dfts)
+//{
+//	outputs.clear();
+//
+//	// Useful precomputed data placeholders for quick correlation (convolution)
+//	cv::Mat_<double> input_image_dft_tiled;
+//
+//	for (size_t k = 0; k < kernels.size(); ++k)
+//	{
+//
+//		// The convolution (with precomputation)
+//		cv::Mat_<float> output;
+//		convolution_single_kern_fft_tiled(input_maps, input_image_dft, kernels[k], precomp_dfts[k], output);
+//
+//		// Combining the maps
+//		outputs.push_back(output + biases[k]);
+//
+//	}
+//}
+
+
 void convolution_fft(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const std::vector<std::vector<cv::Mat_<float> > >& kernels, const std::vector<float >& biases, vector<vector<pair<int, cv::Mat_<double> > > >& precomp_dfts)
 {
 	outputs.clear();
@@ -370,7 +547,18 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 		// Convolutional layer
 		if (layer_type == 0)		
 		{
-			convolution_fft(outputs, input_maps, cnn_convolutional_layers[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_dft[cnn_layer]);
+
+			convolution_fft2(outputs, input_maps, cnn_convolutional_layers_rearr[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_dft2[cnn_layer]);
+
+			//vector<cv::Mat_<float> > outs;
+			//convolution_fft(outs, input_maps, cnn_convolutional_layers[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_dft[cnn_layer]);
+
+			//double diff = 0;
+			//for (size_t i = 0; i < outs.size(); ++i)
+			//{
+			//	diff += cv::mean(cv::abs(outs[i] - outputs[i]))[0];
+			//}
+			//cout << diff << endl;
 
 			cnn_layer++;
 		}
@@ -498,6 +686,26 @@ void CNN::Read(string location)
 
 				cnn_convolutional_layers.push_back(kernels);
 				cnn_convolutional_layers_dft.push_back(kernel_dfts);
+
+				vector<map<int, vector<cv::Mat_<double> > > > cnn_convolutional_layers_dft2_curr_layer;
+				cnn_convolutional_layers_dft2_curr_layer.resize(num_kernels);
+				cnn_convolutional_layers_dft2.push_back(cnn_convolutional_layers_dft2_curr_layer);
+
+				// Rearrange the kernels for faster inference with FFT
+				vector<vector<cv::Mat_<float> > > kernels_rearr;
+				kernels_rearr.resize(num_kernels);
+
+				// Fill up the rearranged layer
+				for (int k = 0; k < num_kernels; ++k)
+				{
+					for (int in = 0; in < num_in_maps; ++in)
+					{
+						kernels_rearr[k].push_back(kernels[in][k]);
+					}
+				}
+
+				cnn_convolutional_layers_rearr.push_back(kernels_rearr);
+
 			}
 			else if (layer_type == 1)
 			{
@@ -815,6 +1023,15 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 				}
 			}
 		}
+
+		for (size_t k1 = 0; k1 < PNet.cnn_convolutional_layers_dft2.size(); ++k1)
+		{
+			for (size_t k2 = 0; k2 < PNet.cnn_convolutional_layers_dft2[k1].size(); ++k2)
+			{
+				PNet.cnn_convolutional_layers_dft2[k1][k2].clear();
+			}
+		}
+
 
 		// Extract the probabilities from PNet response
 		cv::Mat_<float> prob_heatmap;
