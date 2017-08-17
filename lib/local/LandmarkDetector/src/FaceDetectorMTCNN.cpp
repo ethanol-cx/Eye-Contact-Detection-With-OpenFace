@@ -94,6 +94,14 @@ FaceDetectorMTCNN::FaceDetectorMTCNN(const FaceDetectorMTCNN& other) : PNet(othe
 
 CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_pooling_layers(other.cnn_max_pooling_layers), cnn_convolutional_layers_bias(other.cnn_convolutional_layers_bias)
 {
+
+	this->cnn_convolutional_layers_weights.resize(other.cnn_convolutional_layers_weights.size());
+	for (size_t l = 0; l < other.cnn_convolutional_layers_weights.size(); ++l)
+	{
+		// Make sure the matrix is copied.
+		this->cnn_convolutional_layers_weights[l] = other.cnn_convolutional_layers_weights[l].clone();
+	}
+
 	this->cnn_convolutional_layers.resize(other.cnn_convolutional_layers.size());
 	for (size_t l = 0; l < other.cnn_convolutional_layers.size(); ++l)
 	{
@@ -107,30 +115,6 @@ CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_poo
 			{
 				// Make sure the matrix is copied.
 				this->cnn_convolutional_layers[l][i][k] = other.cnn_convolutional_layers[l][i][k].clone();
-			}
-		}
-	}
-
-	this->cnn_convolutional_layers_weights.resize(other.cnn_convolutional_layers_weights.size());
-	for (size_t l = 0; l < other.cnn_convolutional_layers_weights.size(); ++l)
-	{
-		// Make sure the matrix is copied.
-		this->cnn_convolutional_layers_weights[l] = other.cnn_convolutional_layers_weights[l].clone();
-	}
-
-	this->cnn_convolutional_layers_rearr.resize(other.cnn_convolutional_layers_rearr.size());
-	for (size_t l = 0; l < other.cnn_convolutional_layers_rearr.size(); ++l)
-	{
-		this->cnn_convolutional_layers_rearr[l].resize(other.cnn_convolutional_layers_rearr[l].size());
-
-		for (size_t i = 0; i < other.cnn_convolutional_layers_rearr[l].size(); ++i)
-		{
-			this->cnn_convolutional_layers_rearr[l][i].resize(other.cnn_convolutional_layers_rearr[l][i].size());
-
-			for (size_t k = 0; k < other.cnn_convolutional_layers_rearr[l][i].size(); ++k)
-			{
-				// Make sure the matrix is copied.
-				this->cnn_convolutional_layers_rearr[l][i][k] = other.cnn_convolutional_layers_rearr[l][i][k].clone();
 			}
 		}
 	}
@@ -642,11 +626,11 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img, bool direc
 			// Either perform direct convolution through matrix multiplication or use an FFT optimized version, which one is optimal depends on the kernel and input sizes
 			if (direct)
 			{
-				convolution_direct(outputs, input_maps, cnn_convolutional_layers_weights[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_rearr[cnn_layer][0][0].rows, cnn_convolutional_layers_rearr[cnn_layer][0][0].cols);
+				convolution_direct(outputs, input_maps, cnn_convolutional_layers_weights[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers[cnn_layer][0][0].rows, cnn_convolutional_layers[cnn_layer][0][0].cols);
 			}
 			else
 			{
-				convolution_fft2(outputs, input_maps, cnn_convolutional_layers_rearr[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_dft2[cnn_layer]);
+				convolution_fft2(outputs, input_maps, cnn_convolutional_layers[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_dft[cnn_layer]);
 			}
 			//vector<cv::Mat_<float> > outs;
 			//convolution_fft(outs, input_maps, cnn_convolutional_layers[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_dft[cnn_layer]);
@@ -719,6 +703,17 @@ void ReadMatBin(std::ifstream& stream, cv::Mat &output_mat)
 
 }
 
+void CNN::ClearPrecomp()
+{
+	for (size_t k1 = 0; k1 < cnn_convolutional_layers_dft.size(); ++k1)
+	{
+		for (size_t k2 = 0; k2 < cnn_convolutional_layers_dft[k1].size(); ++k2)
+		{
+			cnn_convolutional_layers_dft[k1][k2].clear();
+		}
+	}
+}
+
 void CNN::Read(string location)
 {
 	ifstream cnn_stream(location, ios::in | ios::binary);
@@ -753,10 +748,8 @@ void CNN::Read(string location)
 				cnn_stream.read((char*)&num_kernels, 4);
 
 				vector<vector<cv::Mat_<float> > > kernels;
-				vector<vector<pair<int, cv::Mat_<double> > > > kernel_dfts;
 
 				kernels.resize(num_in_maps);
-				kernel_dfts.resize(num_in_maps);
 
 				vector<float> biases;
 				for (int k = 0; k < num_kernels; ++k)
@@ -772,7 +765,6 @@ void CNN::Read(string location)
 				for (int in = 0; in < num_in_maps; ++in)
 				{
 					kernels[in].resize(num_kernels);
-					kernel_dfts[in].resize(num_kernels);
 
 					// For every kernel on that input map
 					for (int k = 0; k < num_kernels; ++k)
@@ -781,14 +773,6 @@ void CNN::Read(string location)
 
 					}
 				}
-
-				cnn_convolutional_layers.push_back(kernels);
-				cnn_convolutional_layers_dft.push_back(kernel_dfts);
-
-
-				vector<map<int, vector<cv::Mat_<double> > > > cnn_convolutional_layers_dft2_curr_layer;
-				cnn_convolutional_layers_dft2_curr_layer.resize(num_kernels);
-				cnn_convolutional_layers_dft2.push_back(cnn_convolutional_layers_dft2_curr_layer);
 
 				// Rearrange the kernels for faster inference with FFT
 				vector<vector<cv::Mat_<float> > > kernels_rearr;
@@ -803,7 +787,12 @@ void CNN::Read(string location)
 					}
 				}
 
-				cnn_convolutional_layers_rearr.push_back(kernels_rearr);
+				cnn_convolutional_layers.push_back(kernels_rearr);
+
+				// Place-holders for DFT precomputation
+				vector<map<int, vector<cv::Mat_<double> > > > cnn_convolutional_layers_dft_curr_layer;
+				cnn_convolutional_layers_dft_curr_layer.resize(num_kernels);
+				cnn_convolutional_layers_dft.push_back(cnn_convolutional_layers_dft_curr_layer);
 
 				// Rearrange the flattened kernels into weight matrices for direct convolution computation
 				cv::Mat_<float> weight_matrix(num_in_maps * kernels_rearr[0][0].rows * kernels_rearr[0][0].cols, num_kernels);
@@ -1126,25 +1115,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		std::vector<cv::Mat_<float> > pnet_out = PNet.Inference(normalised_img, true);
 
 		// Clear the precomputations, as the image sizes will be different (TODO could be useful for videos)
-		for (size_t k1 = 0; k1 < PNet.cnn_convolutional_layers_dft.size(); ++k1)
-		{
-			for (size_t k2 = 0; k2 < PNet.cnn_convolutional_layers_dft[k1].size(); ++k2)
-			{
-				for (size_t k3 = 0; k3 < PNet.cnn_convolutional_layers_dft[k1][k2].size(); ++k3)
-				{
-					PNet.cnn_convolutional_layers_dft[k1][k2][k3].second = cv::Mat_<double>(0, 0, 0.0);
-				}
-			}
-		}
-
-		for (size_t k1 = 0; k1 < PNet.cnn_convolutional_layers_dft2.size(); ++k1)
-		{
-			for (size_t k2 = 0; k2 < PNet.cnn_convolutional_layers_dft2[k1].size(); ++k2)
-			{
-				PNet.cnn_convolutional_layers_dft2[k1][k2].clear();
-			}
-		}
-
+		PNet.ClearPrecomp();
 
 		// Extract the probabilities from PNet response
 		cv::Mat_<float> prob_heatmap;

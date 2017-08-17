@@ -87,25 +87,27 @@ namespace LandmarkDetector
 		// Reading in the model
 		void Read(string location);
 
-		// Precomputations for faster convolution
-		vector<vector<vector<pair<int, cv::Mat_<double> > > > > cnn_convolutional_layers_dft;
-		vector<vector<map<int, vector<cv::Mat_<double> > > > > cnn_convolutional_layers_dft2;
+		// Clearing precomputed DFTs
+		void ClearPrecomp();
 
 	private:
 		//==========================================
 		// Convolutional Neural Network
 
 		// CNN layers
-		// layer -> input maps -> kernels
-		// Bit ugly with so much nesting, but oh well
-		vector<vector<vector<cv::Mat_<float> > > > cnn_convolutional_layers;
+		// Layer -> Weight matrix
 		vector<cv::Mat_<float> > cnn_convolutional_layers_weights;
-		vector<vector<vector<cv::Mat_<float> > > > cnn_convolutional_layers_rearr;
+		// Layer -> kernel -> input maps
+		vector<vector<vector<cv::Mat_<float> > > > cnn_convolutional_layers;
 		vector<vector<float > > cnn_convolutional_layers_bias;
+		// Layer matrix + bas
 		vector<cv::Mat_<float> >  cnn_fully_connected_layers_weights;
 		vector<cv::Mat_<float> > cnn_fully_connected_layers_biases;
 		vector<cv::Mat_<float> >  cnn_prelu_layer_weights;
 		vector<std::tuple<int, int, int, int> > cnn_max_pooling_layers;
+
+		// Precomputations for faster convolution
+		vector<vector<map<int, vector<cv::Mat_<double> > > > > cnn_convolutional_layers_dft;
 
 		// CNN: 0 - convolutional, 1 - max pooling, 2 - fully connected, 3 - prelu, 4 - sigmoid
 		vector<int > cnn_layer_types;
