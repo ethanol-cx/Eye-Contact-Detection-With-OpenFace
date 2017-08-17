@@ -81,8 +81,8 @@ namespace LandmarkDetector
 		// Copy constructor
 		CNN(const CNN& other);
 
-		// Given an image, orientation and detected landmarks output the result of the appropriate regressor
-		std::vector<cv::Mat_<float> > Inference(const cv::Mat& input_img);
+		// Given an image apply a CNN on it, the boolean direct controls if direct convolution is used (through matrix multiplication) or an FFT optimization
+		std::vector<cv::Mat_<float> > Inference(const cv::Mat& input_img, bool direct = true);
 
 		// Reading in the model
 		void Read(string location);
@@ -99,6 +99,7 @@ namespace LandmarkDetector
 		// layer -> input maps -> kernels
 		// Bit ugly with so much nesting, but oh well
 		vector<vector<vector<cv::Mat_<float> > > > cnn_convolutional_layers;
+		vector<cv::Mat_<float> > cnn_convolutional_layers_weights;
 		vector<vector<vector<cv::Mat_<float> > > > cnn_convolutional_layers_rearr;
 		vector<vector<float > > cnn_convolutional_layers_bias;
 		vector<cv::Mat_<float> >  cnn_fully_connected_layers_weights;

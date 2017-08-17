@@ -111,6 +111,13 @@ CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_poo
 		}
 	}
 
+	this->cnn_convolutional_layers_weights.resize(other.cnn_convolutional_layers_weights.size());
+	for (size_t l = 0; l < other.cnn_convolutional_layers_weights.size(); ++l)
+	{
+		// Make sure the matrix is copied.
+		this->cnn_convolutional_layers_weights[l] = other.cnn_convolutional_layers_weights[l].clone();
+	}
+
 	this->cnn_convolutional_layers_rearr.resize(other.cnn_convolutional_layers_rearr.size());
 	for (size_t l = 0; l < other.cnn_convolutional_layers_rearr.size(); ++l)
 	{
@@ -404,10 +411,16 @@ void convolution_single_kern_fft(const vector<cv::Mat_<float> >& input_imgs, vec
 	for (size_t k = 0; k < input_imgs.size(); ++k)
 	{
 		cv::Mat dftTempl1(dftTempl[k], cv::Rect(0, 0, dftsize.width, dftsize.height));
-		cv::mulSpectrums(img_dfts[k], dftTempl1, dftImgs[k], 0, true);
-		dft_img = dft_img + dftImgs[k];
+		if (k == 0)
+		{
+			cv::mulSpectrums(img_dfts[k], dftTempl1, dft_img, 0, true);
+		}
+		else
+		{
+			cv::mulSpectrums(img_dfts[k], dftTempl1, dftImgs[k], 0, true);
+			dft_img = dft_img + dftImgs[k];
+		}
 	}
-
 
 	cv::dft(dft_img, dft_img, cv::DFT_INVERSE + cv::DFT_SCALE, bsz.height);
 
@@ -417,6 +430,105 @@ void convolution_single_kern_fft(const vector<cv::Mat_<float> >& input_imgs, vec
 
 }
 
+void im2colBias(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
+{
+
+	int m = input.rows;
+	int n = input.cols;
+
+	// determine how many blocks there will be with a sliding window of width x height in the input
+	int yB = m - height + 1;
+	int xB = n - width + 1;
+
+	// Allocate the output size
+	if (output.rows != xB*yB && output.cols != width * height + 1)
+	{
+		output = cv::Mat::ones(xB*yB, width * height + 1, CV_32F);
+	}
+
+	// Iterate over the blocks
+	for (int i = 0; i< yB; i++)
+	{
+		for (int j = 0; j< xB; j++)
+		{
+			// here yours is in different order than I first thought:
+			//int rowIdx = j + i*xB;    // my intuition how to index the result
+			int rowIdx = i + j*yB;
+
+			for (unsigned int yy = 0; yy < height; ++yy)
+				for (unsigned int xx = 0; xx < width; ++xx)
+				{
+					int colIdx = xx*height + yy;
+					output.at<float>(rowIdx, colIdx + 1) = input.at<float>(i + yy, j + xx);
+				}
+		}
+	}
+}
+
+void im2col(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
+{
+
+	int m = input.rows;
+	int n = input.cols;
+
+	// determine how many blocks there will be with a sliding window of width x height in the input
+	int yB = m - height + 1;
+	int xB = n - width + 1;
+
+	// Allocate the output size
+	if (output.rows != xB*yB && output.cols != width * height + 1)
+	{
+		output = cv::Mat::ones(xB*yB, width * height, CV_32F);
+	}
+
+	// Iterate over the blocks
+	for (int i = 0; i< yB; i++)
+	{
+		for (int j = 0; j< xB; j++)
+		{
+			int rowIdx = i + j*yB;
+
+			for (unsigned int yy = 0; yy < height; ++yy)
+				for (unsigned int xx = 0; xx < width; ++xx)
+				{
+					int colIdx = xx*height + yy;
+					output.at<float>(rowIdx, colIdx) = input.at<float>(i + yy, j + xx);
+				}
+		}
+	}
+}
+
+void convolution_direct(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, const std::vector<float >& biases, int height_k, int width_k)
+{
+	outputs.clear();
+
+	int height_in = input_maps[0].rows;
+	int width_n = input_maps[0].cols;
+
+	// determine how many blocks there will be with a sliding window of width x height in the input
+	int yB = height_in - height_k + 1;
+	int xB = width_n - width_k + 1;
+
+	cv::Mat_<float> input_matrix(yB * xB, input_maps.size() * height_k * width_k);
+
+	// Comibine im2col accross channels to prepare for matrix multiplication
+	for (size_t i = 0; i < input_maps.size(); ++i)
+	{
+		im2col(input_maps[i], width_k, height_k, input_matrix(cv::Rect(i * height_k * width_k, 0, height_k * width_k, yB * xB)));
+	}
+
+	// Actual multiplication
+	cv::Mat_<float> out = input_matrix * weight_matrix;
+
+	// Move back to vectors and reshape accordingly (also add the bias)
+	for (size_t k = 0; k < weight_matrix.cols; ++k)
+	{
+		cv::Mat_<float> reshaped = out.col(k).clone() + biases[k];
+		reshaped = reshaped.reshape(1, xB).t();
+		outputs.push_back(reshaped);
+	}
+
+}
 
 void convolution_fft2(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const std::vector<std::vector<cv::Mat_<float> > >& kernels, const std::vector<float >& biases, vector<map<int, vector<cv::Mat_<double> > > >& precomp_dfts)
 {
@@ -437,27 +549,6 @@ void convolution_fft2(std::vector<cv::Mat_<float> >& outputs, const std::vector<
 
 	}
 }
-
-//void convolution_fft2_tiled(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const std::vector<std::vector<cv::Mat_<float> > >& kernels, const std::vector<float >& biases, vector<cv::Mat_<double> >& precomp_dfts)
-//{
-//	outputs.clear();
-//
-//	// Useful precomputed data placeholders for quick correlation (convolution)
-//	cv::Mat_<double> input_image_dft_tiled;
-//
-//	for (size_t k = 0; k < kernels.size(); ++k)
-//	{
-//
-//		// The convolution (with precomputation)
-//		cv::Mat_<float> output;
-//		convolution_single_kern_fft_tiled(input_maps, input_image_dft, kernels[k], precomp_dfts[k], output);
-//
-//		// Combining the maps
-//		outputs.push_back(output + biases[k]);
-//
-//	}
-//}
-
 
 void convolution_fft(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const std::vector<std::vector<cv::Mat_<float> > >& kernels, const std::vector<float >& biases, vector<vector<pair<int, cv::Mat_<double> > > >& precomp_dfts)
 {
@@ -514,7 +605,7 @@ void convolution_fft(std::vector<cv::Mat_<float> >& outputs, const std::vector<c
 	}
 }
 
-std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
+std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img, bool direct)
 {
 	if (input_img.channels() == 1)
 	{
@@ -548,8 +639,15 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img)
 		if (layer_type == 0)		
 		{
 
-			convolution_fft2(outputs, input_maps, cnn_convolutional_layers_rearr[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_dft2[cnn_layer]);
-
+			// Either perform direct convolution through matrix multiplication or use an FFT optimized version, which one is optimal depends on the kernel and input sizes
+			if (direct)
+			{
+				convolution_direct(outputs, input_maps, cnn_convolutional_layers_weights[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_rearr[cnn_layer][0][0].rows, cnn_convolutional_layers_rearr[cnn_layer][0][0].cols);
+			}
+			else
+			{
+				convolution_fft2(outputs, input_maps, cnn_convolutional_layers_rearr[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_dft2[cnn_layer]);
+			}
 			//vector<cv::Mat_<float> > outs;
 			//convolution_fft(outs, input_maps, cnn_convolutional_layers[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_dft[cnn_layer]);
 
@@ -687,6 +785,7 @@ void CNN::Read(string location)
 				cnn_convolutional_layers.push_back(kernels);
 				cnn_convolutional_layers_dft.push_back(kernel_dfts);
 
+
 				vector<map<int, vector<cv::Mat_<double> > > > cnn_convolutional_layers_dft2_curr_layer;
 				cnn_convolutional_layers_dft2_curr_layer.resize(num_kernels);
 				cnn_convolutional_layers_dft2.push_back(cnn_convolutional_layers_dft2_curr_layer);
@@ -705,6 +804,20 @@ void CNN::Read(string location)
 				}
 
 				cnn_convolutional_layers_rearr.push_back(kernels_rearr);
+
+				// Rearrange the flattened kernels into weight matrices for direct convolution computation
+				cv::Mat_<float> weight_matrix(num_in_maps * kernels_rearr[0][0].rows * kernels_rearr[0][0].cols, num_kernels);
+				for (size_t k = 0; k < num_kernels; ++k)
+				{
+					for (size_t i = 0; i < num_in_maps; ++i)
+					{
+						// Flatten the kernel
+						cv::Mat_<float> k_flat = kernels_rearr[k][i].t();
+						k_flat = k_flat.reshape(0, 1).t();
+						k_flat.copyTo(weight_matrix(cv::Rect(k, i * kernels_rearr[0][0].rows * kernels_rearr[0][0].cols, 1, kernels_rearr[0][0].rows * kernels_rearr[0][0].cols)));
+					}
+				}
+				cnn_convolutional_layers_weights.push_back(weight_matrix);
 
 			}
 			else if (layer_type == 1)
@@ -1010,8 +1123,8 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		normalised_img = (normalised_img - 127.5) * 0.0078125;
 
 		// Actual PNet CNN step
-		std::vector<cv::Mat_<float> > pnet_out = PNet.Inference(normalised_img);
-	
+		std::vector<cv::Mat_<float> > pnet_out = PNet.Inference(normalised_img, true);
+
 		// Clear the precomputations, as the image sizes will be different (TODO could be useful for videos)
 		for (size_t k1 = 0; k1 < PNet.cnn_convolutional_layers_dft.size(); ++k1)
 		{
@@ -1098,7 +1211,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		prop_img = (prop_img - 127.5) * 0.0078125;
 		
 		// Perform RNet on the proposal image
-		std::vector<cv::Mat_<float> > rnet_out = RNet.Inference(prop_img);
+		std::vector<cv::Mat_<float> > rnet_out = RNet.Inference(prop_img, true);
 
 		float prob = 1.0 / (1.0 + cv::exp(rnet_out[0].at<float>(0) - rnet_out[0].at<float>(1)));
 		scores_all[k] = prob;
@@ -1156,7 +1269,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		prop_img = (prop_img - 127.5) * 0.0078125;
 
 		// Perform RNet on the proposal image
-		std::vector<cv::Mat_<float> > onet_out = ONet.Inference(prop_img);
+		std::vector<cv::Mat_<float> > onet_out = ONet.Inference(prop_img, true);
 
 		float prob = 1.0 / (1.0 + cv::exp(onet_out[0].at<float>(0) - onet_out[0].at<float>(1)));
 		scores_all[k] = prob;
