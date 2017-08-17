@@ -348,7 +348,6 @@ void convolution_single_kern_fft(const vector<cv::Mat_<float> >& input_imgs, vec
 			dft(dst, dst, 0, _templs[k].rows);
 
 		}
-		// TODO is a deep copy needed
 		_templ_dfts[dftsize.width] = dftTempl;
 
 	}
@@ -546,7 +545,6 @@ void convolution_fft(std::vector<cv::Mat_<float> >& outputs, const std::vector<c
 		cv::Mat integral_image;
 		cv::Mat integral_image_sq;
 
-		// TODO can TBB-ify this
 		for (size_t k = 0; k < kernels[in].size(); ++k)
 		{
 			cv::Mat_<float> kernel = kernels[in][k];
@@ -1098,7 +1096,13 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	vector<float> scores_all;
 	vector<cv::Rect_<float> > proposal_corrections_all;
 
-	for (int i = 0; i < num_scales; ++i)
+	// As the scales will be done in parallel have some containers for them
+	vector<vector<cv::Rect_<float> > > proposal_boxes_cross_scale(num_scales);
+	vector<vector<float> > scores_cross_scale(num_scales);
+	vector<vector<cv::Rect_<float> > > proposal_corrections_cross_scale(num_scales);
+
+	tbb::parallel_for(0, (int)num_scales, [&](int i) {
+	//for (int i = 0; i < num_scales; ++i)
 	{
 		double scale = ((double)face_support / (double)min_face_size)*cv::pow(pyramid_factor, i);
 
@@ -1114,7 +1118,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		// Actual PNet CNN step
 		std::vector<cv::Mat_<float> > pnet_out = PNet.Inference(normalised_img, true);
 
-		// Clear the precomputations, as the image sizes will be different (TODO could be useful for videos)
+		// Clear the precomputations, as the image sizes will be different
 		PNet.ClearPrecomp();
 
 		// Extract the probabilities from PNet response
@@ -1131,14 +1135,21 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		vector<cv::Rect_<float> > proposal_corrections;
 		generate_bounding_boxes(proposal_boxes, scores, proposal_corrections, prob_heatmap, corrections_heatmap, scale, t1, face_support);
 
-		// Perform non-maximum supression on proposals in this scale
-		vector<int> to_keep = non_maximum_supression(proposal_boxes, scores, 0.5, false);
-		select_subset(to_keep, proposal_boxes, scores, proposal_corrections);
+		proposal_boxes_cross_scale[i] = proposal_boxes;
+		scores_cross_scale[i] = scores;
+		proposal_corrections_cross_scale[i] = proposal_corrections;
+	}
+	});
 
-		proposal_boxes_all.insert(proposal_boxes_all.end(), proposal_boxes.begin(), proposal_boxes.end());
-		scores_all.insert(scores_all.end(), scores.begin(), scores.end());
-		proposal_corrections_all.insert(proposal_corrections_all.end(), proposal_corrections.begin(), proposal_corrections.end());
-		
+	// Perform non-maximum supression on proposals accross scales and combine them
+	for (int i = 0; i < num_scales; ++i)
+	{
+		vector<int> to_keep = non_maximum_supression(proposal_boxes_cross_scale[i], scores_cross_scale[i], 0.5, false);
+		select_subset(to_keep, proposal_boxes_cross_scale[i], scores_cross_scale[i], proposal_corrections_cross_scale[i]);
+
+		proposal_boxes_all.insert(proposal_boxes_all.end(), proposal_boxes_cross_scale[i].begin(), proposal_boxes_cross_scale[i].end());
+		scores_all.insert(scores_all.end(), scores_cross_scale[i].begin(), scores_cross_scale[i].end());
+		proposal_corrections_all.insert(proposal_corrections_all.end(), proposal_corrections_cross_scale[i].begin(), proposal_corrections_cross_scale[i].end());
 	}
 
 	// Preparation for RNet step
@@ -1153,8 +1164,9 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	rectify(proposal_boxes_all);
 
 	// Creating proposal images from previous step detections
-	to_keep.clear();
-	for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
+	vector<bool> above_thresh(proposal_boxes_all.size());
+	tbb::parallel_for(0, (int)proposal_boxes_all.size(), [&](int k) {
+	//for (size_t k = 0; k < proposal_boxes_all.size(); ++k) 
 	{
 		float width_target = proposal_boxes_all[k].width + 1;
 		float height_target = proposal_boxes_all[k].height + 1;
@@ -1192,9 +1204,23 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		proposal_corrections_all[k].height = rnet_out[0].at<float>(5);
 		if(prob >= t2)
 		{
-			to_keep.push_back(k);
+			above_thresh[k] = true;
+		}
+		else
+		{
+			above_thresh[k] = false;
 		}
 
+	}
+	});
+
+	to_keep.clear();
+	for (size_t i = 0; i < above_thresh.size(); ++i)
+	{
+		if (above_thresh[i])
+		{
+			to_keep.push_back(i);
+		}
 	}
 
 	// Pick only the bounding boxes above the threshold
@@ -1210,9 +1236,10 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	rectify(proposal_boxes_all);
 
 	// Preparing for the ONet stage
-	to_keep.clear();
-
-	for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
+	above_thresh.clear();
+	above_thresh.resize(proposal_boxes_all.size());
+	tbb::parallel_for(0, (int)proposal_boxes_all.size(), [&](int k) {
+	//for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
 	{
 		float width_target = proposal_boxes_all[k].width + 1;
 		float height_target = proposal_boxes_all[k].height + 1;
@@ -1250,7 +1277,21 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		proposal_corrections_all[k].height = onet_out[0].at<float>(5);
 		if (prob >= t3)
 		{
-			to_keep.push_back(k);
+			above_thresh[k] = true;
+		}
+		else
+		{
+			above_thresh[k] = false;
+		}
+	}
+	});
+
+	to_keep.clear();
+	for (size_t i = 0; i < above_thresh.size(); ++i)
+	{
+		if (above_thresh[i])
+		{
+			to_keep.push_back(i);
 		}
 	}
 
