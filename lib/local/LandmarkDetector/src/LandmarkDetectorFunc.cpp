@@ -259,11 +259,22 @@ void CorrectGlobalParametersVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& 
 	
 }
 
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_model, FaceModelParameters& params)
 {
 	// First need to decide if the landmarks should be "detected" or "tracked"
 	// Detected means running face detection and a larger search area, tracked means initialising from previous step
 	// and using a smaller search area
+
+	cv::Mat grayscale_image;
+	if (image.channels() == 3)
+	{
+		cv::cvtColor(image, grayscale_image, CV_BGR2GRAY);
+	}
+	else
+	{
+		grayscale_image = image.clone();
+	}
+
 
 	// Indicating that this is a first detection in video sequence or after restart
 	bool initial_detection = !clnf_model.tracking_initialised;
@@ -344,7 +355,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 		else if (params.curr_face_detector == FaceModelParameters::MTCNN_DETECTOR)
 		{
 			double confidence;
-			face_detection_success = LandmarkDetector::DetectSingleFaceMTCNN(bounding_box, grayscale_image, clnf_model.face_detector_MTCNN, confidence, preference_det);
+			face_detection_success = LandmarkDetector::DetectSingleFaceMTCNN(bounding_box, image, clnf_model.face_detector_MTCNN, confidence, preference_det);
 		}
 
 		// Attempt to detect landmarks using the detected face (if unseccessful the detection will be ignored)
@@ -411,7 +422,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 	
 }
 
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
 {
 	if(bounding_box.width > 0)
 	{
@@ -423,7 +434,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 		clnf_model.tracking_initialised = true;
 	}
 
-	return DetectLandmarksInVideo(grayscale_image, clnf_model, params);
+	return DetectLandmarksInVideo(image, clnf_model, params);
 
 }
 
@@ -433,8 +444,18 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 //================================================================================================================
 
 // This is the one where the actual work gets done, other DetectLandmarksInImage calls lead to this one
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
 {
+
+	cv::Mat grayscale_image;
+	if (image.channels() == 3)
+	{
+		cv::cvtColor(image, grayscale_image, CV_BGR2GRAY);
+	}
+	else
+	{
+		grayscale_image = image.clone();
+	}
 
 	// Can have multiple hypotheses
 	vector<cv::Vec3d> rotation_hypotheses;
@@ -531,8 +552,17 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	return best_success;
 }
 
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, CLNF& clnf_model, FaceModelParameters& params)
 {
+	cv::Mat grayscale_image;
+	if (image.channels() == 3)
+	{
+		cv::cvtColor(image, grayscale_image, CV_BGR2GRAY);
+	}
+	else
+	{
+		grayscale_image = image.clone();
+	}
 
 	cv::Rect_<double> bounding_box;
 
@@ -556,7 +586,12 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	}
 	else if(params.curr_face_detector == FaceModelParameters::HAAR_DETECTOR)
 	{
-		LandmarkDetector::DetectSingleFace(bounding_box, grayscale_image, clnf_model.face_detector_HAAR);
+		LandmarkDetector::DetectSingleFace(bounding_box, image, clnf_model.face_detector_HAAR);
+	}
+	else if (params.curr_face_detector == FaceModelParameters::MTCNN_DETECTOR)
+	{
+		double confidence;
+		LandmarkDetector::DetectSingleFaceMTCNN(bounding_box, image, clnf_model.face_detector_MTCNN, confidence);
 	}
 
 	if(bounding_box.width == 0)
@@ -565,6 +600,6 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	}
 	else
 	{
-		return DetectLandmarksInImage(grayscale_image, bounding_box, clnf_model, params);
+		return DetectLandmarksInImage(image, bounding_box, clnf_model, params);
 	}
 }

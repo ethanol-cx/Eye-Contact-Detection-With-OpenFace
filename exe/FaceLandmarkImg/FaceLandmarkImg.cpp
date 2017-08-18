@@ -442,7 +442,7 @@ int main (int argc, char **argv)
 			else
 			{
 				vector<double> confidences;
-				LandmarkDetector::DetectFacesMTCNN(face_detections, grayscale_image, face_detector_mtcnn, confidences);
+				LandmarkDetector::DetectFacesMTCNN(face_detections, read_image, face_detector_mtcnn, confidences);
 			}
 			// Detect landmarks around detected faces
 			int face_det = 0;

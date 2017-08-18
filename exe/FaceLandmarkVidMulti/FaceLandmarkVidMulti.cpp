@@ -141,7 +141,9 @@ int main (int argc, char **argv)
 	LandmarkDetector::CLNF clnf_model(det_parameters[0].model_location);
 	clnf_model.face_detector_HAAR.load(det_parameters[0].haar_face_detector_location);
 	clnf_model.haar_face_detector_location = det_parameters[0].haar_face_detector_location;
-	
+	clnf_model.face_detector_MTCNN.Read(det_parameters[0].mtcnn_face_detector_location);
+	clnf_model.mtcnn_face_detector_location = det_parameters[0].mtcnn_face_detector_location;
+
 	clnf_models.reserve(num_faces_max);
 
 	clnf_models.push_back(clnf_model);
@@ -278,7 +280,7 @@ int main (int argc, char **argv)
 				else
 				{
 					vector<double> confidences;
-					LandmarkDetector::DetectFacesMTCNN(face_detections, grayscale_image, clnf_models[0].face_detector_MTCNN, confidences);
+					LandmarkDetector::DetectFacesMTCNN(face_detections, captured_image, clnf_models[0].face_detector_MTCNN, confidences);
 				}
 			}
 

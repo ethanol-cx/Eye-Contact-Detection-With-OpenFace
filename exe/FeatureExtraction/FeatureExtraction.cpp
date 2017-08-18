@@ -523,29 +523,17 @@ int main (int argc, char **argv)
 				// if loading images assume 30fps
 				time_stamp = (double)frame_count * (1.0 / 30.0);
 			}
-
-			// Reading the images
-			cv::Mat_<uchar> grayscale_image;
-
-			if(captured_image.channels() == 3)
-			{
-				cvtColor(captured_image, grayscale_image, CV_BGR2GRAY);				
-			}
-			else
-			{
-				grayscale_image = captured_image.clone();				
-			}
 		
 			// The actual facial landmark detection / tracking
 			bool detection_success;
 			
 			if(video_input || images_as_video)
 			{
-				detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
+				detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_model, det_parameters);
 			}
 			else
 			{
-				detection_success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_model, det_parameters);
+				detection_success = LandmarkDetector::DetectLandmarksInImage(captured_image, face_model, det_parameters);
 			}
 			
 			// Gaze tracking, absolute gaze direction
