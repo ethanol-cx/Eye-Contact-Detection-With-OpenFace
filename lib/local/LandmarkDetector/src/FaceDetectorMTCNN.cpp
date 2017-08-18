@@ -87,6 +87,11 @@
 
 using namespace LandmarkDetector;
 
+// Constructor from model file location
+FaceDetectorMTCNN::FaceDetectorMTCNN(const string& location)
+{
+	this->Read(location);
+}
 // Copy constructor
 FaceDetectorMTCNN::FaceDetectorMTCNN(const FaceDetectorMTCNN& other) : PNet(other.PNet), RNet(other.RNet), ONet(other.ONet)
 {
@@ -438,8 +443,8 @@ void im2colBias(const cv::Mat_<float>& input, int width, int height, cv::Mat_<fl
 			//int rowIdx = j + i*xB;    // my intuition how to index the result
 			int rowIdx = i + j*yB;
 
-			for (unsigned int yy = 0; yy < height; ++yy)
-				for (unsigned int xx = 0; xx < width; ++xx)
+			for (int yy = 0; yy < height; ++yy)
+				for (int xx = 0; xx < width; ++xx)
 				{
 					int colIdx = xx*height + yy;
 					output.at<float>(rowIdx, colIdx + 1) = input.at<float>(i + yy, j + xx);
@@ -712,7 +717,7 @@ void CNN::ClearPrecomp()
 	}
 }
 
-void CNN::Read(string location)
+void CNN::Read(const string& location)
 {
 	ifstream cnn_stream(location, ios::in | ios::binary);
 	if (cnn_stream.is_open())
@@ -844,7 +849,7 @@ void CNN::Read(string location)
 
 //===========================================================================
 // Read in the MTCNN detector
-void FaceDetectorMTCNN::Read(string location)
+void FaceDetectorMTCNN::Read(const string& location)
 {
 
 	cout << "Reading the MTCNN face detector from: " << location << endl;
@@ -1068,11 +1073,11 @@ void apply_correction(vector<cv::Rect_<float> >& total_bboxes, const vector<cv::
 
 
 // The actual MTCNN face detection step
-bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat& input_img, std::vector<double>& o_confidences, int min_face_size, double t1, double t2, double t3)
+bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat& img_in, std::vector<double>& o_confidences, int min_face_size, double t1, double t2, double t3)
 {
 
-	int height_orig = input_img.size().height;
-	int width_orig = input_img.size().width;
+	int height_orig = img_in.size().height;
+	int width_orig = img_in.size().width;
 
 	// Size ratio of image pyramids
 	double pyramid_factor = 0.709;
@@ -1084,9 +1089,15 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	int face_support = 12;
 	int num_scales = floor(log((double)min_face_size / (double)min_dim) / log(pyramid_factor)) + 1;
 
-	if (input_img.channels() == 1)
+	cv::Mat input_img;
+
+	if (img_in.channels() == 1)
 	{
-		cv::cvtColor(input_img, input_img, CV_GRAY2RGB);
+		cv::cvtColor(img_in, input_img, CV_GRAY2RGB);
+	}
+	else
+	{
+		input_img = img_in;
 	}
 
 	cv::Mat img_float;

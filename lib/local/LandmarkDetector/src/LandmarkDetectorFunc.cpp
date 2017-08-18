@@ -317,6 +317,11 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 			clnf_model.face_detector_HAAR.load(params.haar_face_detector_location);
 			clnf_model.haar_face_detector_location = params.haar_face_detector_location;
 		}
+		if (clnf_model.face_detector_MTCNN.empty())
+		{
+			clnf_model.face_detector_MTCNN.Read(params.mtcnn_face_detector_location);
+			clnf_model.mtcnn_face_detector_location = params.haar_face_detector_location;
+		}
 
 		cv::Point preference_det(-1, -1);
 		if(clnf_model.preference_det.x != -1 && clnf_model.preference_det.y != -1)
@@ -335,6 +340,11 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 		else if(params.curr_face_detector == FaceModelParameters::HAAR_DETECTOR)
 		{
 			face_detection_success = LandmarkDetector::DetectSingleFace(bounding_box, grayscale_image, clnf_model.face_detector_HAAR, preference_det);
+		}
+		else if (params.curr_face_detector == FaceModelParameters::MTCNN_DETECTOR)
+		{
+			double confidence;
+			face_detection_success = LandmarkDetector::DetectSingleFaceMTCNN(bounding_box, grayscale_image, clnf_model.face_detector_MTCNN, confidence, preference_det);
 		}
 
 		// Attempt to detect landmarks using the detected face (if unseccessful the detection will be ignored)
@@ -527,12 +537,17 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	cv::Rect_<double> bounding_box;
 
 	// If the face detector has not been initialised read it in
-	if(clnf_model.face_detector_HAAR.empty())
+	if(clnf_model.face_detector_HAAR.empty() && params.curr_face_detector == FaceModelParameters::HAAR_DETECTOR)
 	{
 		clnf_model.face_detector_HAAR.load(params.haar_face_detector_location);
 		clnf_model.haar_face_detector_location = params.haar_face_detector_location;
 	}
-		
+	
+	if (clnf_model.face_detector_MTCNN.empty() && params.curr_face_detector == FaceModelParameters::MTCNN_DETECTOR)
+	{
+		clnf_model.face_detector_MTCNN.Read(params.mtcnn_face_detector_location);
+	}
+
 	// Detect the face first
 	if(params.curr_face_detector == FaceModelParameters::HOG_SVM_DETECTOR)
 	{

@@ -35,6 +35,8 @@
 
 #include "LandmarkCoreIncludes.h"
 
+#include "FaceDetectorMTCNN.h"
+
 // System includes
 #include <fstream>
 
@@ -336,6 +338,7 @@ int main (int argc, char **argv)
 	
 	cv::CascadeClassifier classifier(det_parameters.haar_face_detector_location);
 	dlib::frontal_face_detector face_detector_hog = dlib::get_frontal_face_detector();
+	LandmarkDetector::FaceDetectorMTCNN face_detector_mtcnn(det_parameters.mtcnn_face_detector_location);
 
 	// Loading the AU prediction models
 	string au_loc = "AU_predictors/AU_all_static.txt";
@@ -432,11 +435,15 @@ int main (int argc, char **argv)
 				vector<double> confidences;
 				LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, face_detector_hog, confidences);
 			}
-			else
+			else if(det_parameters.curr_face_detector == LandmarkDetector::FaceModelParameters::HAAR_DETECTOR)
 			{
 				LandmarkDetector::DetectFaces(face_detections, grayscale_image, classifier);
 			}
-
+			else
+			{
+				vector<double> confidences;
+				LandmarkDetector::DetectFacesMTCNN(face_detections, grayscale_image, face_detector_mtcnn, confidences);
+			}
 			// Detect landmarks around detected faces
 			int face_det = 0;
 			// perform landmark detection for every face detected

@@ -120,7 +120,7 @@ int main (int argc, char **argv)
 	// This is so that the model would not try re-initialising itself
 	det_params.reinit_video_every = -1;
 
-	det_params.curr_face_detector = LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR;
+	det_params.curr_face_detector = LandmarkDetector::FaceModelParameters::MTCNN_DETECTOR;
 
 	vector<LandmarkDetector::FaceModelParameters> det_parameters;
 	det_parameters.push_back(det_params);
@@ -271,11 +271,15 @@ int main (int argc, char **argv)
 					vector<double> confidences;
 					LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, clnf_models[0].face_detector_HOG, confidences);
 				}
-				else
+				else if(det_parameters[0].curr_face_detector == LandmarkDetector::FaceModelParameters::HAAR_DETECTOR)
 				{
 					LandmarkDetector::DetectFaces(face_detections, grayscale_image, clnf_models[0].face_detector_HAAR);
 				}
-
+				else
+				{
+					vector<double> confidences;
+					LandmarkDetector::DetectFacesMTCNN(face_detections, grayscale_image, clnf_models[0].face_detector_MTCNN, confidences);
+				}
 			}
 
 			// Keep only non overlapping detections (also convert to a concurrent vector

@@ -41,6 +41,8 @@
 
 #include "LandmarkDetectorModel.h"
 
+#include "FaceDetectorMTCNN.h"
+
 using namespace std;
 
 namespace LandmarkDetector
@@ -129,6 +131,11 @@ namespace LandmarkDetector
 	bool DetectFacesHOG(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, dlib::frontal_face_detector& classifier, std::vector<double>& confidences);
 	// The preference point allows for disambiguation if multiple faces are present (pick the closest one), if it is not set the biggest face is chosen
 	bool DetectSingleFaceHOG(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& intensity, dlib::frontal_face_detector& classifier, double& confidence, const cv::Point preference = cv::Point(-1,-1));
+
+	// Face detection using Multi-task Convolutional Neural Network
+	bool DetectFacesMTCNN(vector<cv::Rect_<double> >& o_regions, const cv::Mat& image, LandmarkDetector::FaceDetectorMTCNN& detector, std::vector<double>& confidences);
+	// The preference point allows for disambiguation if multiple faces are present (pick the closest one), if it is not set the biggest face is chosen
+	bool DetectSingleFaceMTCNN(cv::Rect_<double>& o_region, const cv::Mat& image, LandmarkDetector::FaceDetectorMTCNN& detector, double& confidence, const cv::Point preference = cv::Point(-1, -1));
 
 	//============================================================================
 	// Matrix reading functionality

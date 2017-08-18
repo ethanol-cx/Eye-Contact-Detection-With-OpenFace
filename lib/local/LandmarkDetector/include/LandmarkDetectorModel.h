@@ -47,6 +47,7 @@
 #include "Patch_experts.h"
 #include "LandmarkDetectionValidator.h"
 #include "LandmarkDetectorParameters.h"
+#include "FaceDetectorMTCNN.h"
 
 using namespace std;
 
@@ -90,11 +91,12 @@ public:
 	// Haar cascade classifier for face detection
 	cv::CascadeClassifier   face_detector_HAAR;
 	string                  haar_face_detector_location;
-	string                  mtcnn_face_detector_location;
-
+	
 	// A HOG SVM-struct based face detector
 	dlib::frontal_face_detector face_detector_HOG;
 
+	FaceDetectorMTCNN		face_detector_MTCNN;
+	string                  mtcnn_face_detector_location;
 
 	// Validate if the detected landmarks are correct using an SVR regressor
 	DetectionValidator	landmark_validator; 

@@ -85,10 +85,12 @@ namespace LandmarkDetector
 		std::vector<cv::Mat_<float> > Inference(const cv::Mat& input_img, bool direct = true);
 
 		// Reading in the model
-		void Read(string location);
+		void Read(const string& location);
 
 		// Clearing precomputed DFTs
 		void ClearPrecomp();
+
+		size_t NumberOfLayers() { return cnn_layer_types.size(); }
 
 	private:
 		//==========================================
@@ -126,14 +128,19 @@ namespace LandmarkDetector
 		// Default constructor
 		FaceDetectorMTCNN() { ; }
 
+		FaceDetectorMTCNN(const string& location);
+
 		// Copy constructor
 		FaceDetectorMTCNN(const FaceDetectorMTCNN& other);
 
 		// Given an image, orientation and detected landmarks output the result of the appropriate regressor
-		bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat& input_img, std::vector<double>& o_confidences, int min_face = 30, double t1 = 0.6, double t2 = 0.7, double t3 = 0.7);
+		bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat& input_img, std::vector<double>& o_confidences, int min_face = 60, double t1 = 0.6, double t2 = 0.7, double t3 = 0.7);
 
 		// Reading in the model
-		void Read(string location);
+		void Read(const string& location);
+
+		// Indicate if the model has been read in
+		bool empty() { return PNet.NumberOfLayers() == 0 || RNet.NumberOfLayers() == 0 || ONet.NumberOfLayers() == 0; };
 
 	private:
 		//==========================================

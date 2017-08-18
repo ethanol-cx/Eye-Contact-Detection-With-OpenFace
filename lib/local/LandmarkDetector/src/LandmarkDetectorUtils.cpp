@@ -1474,6 +1474,80 @@ bool DetectSingleFaceHOG(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& int
 	return detect_success;
 }
 
+bool DetectFacesMTCNN(vector<cv::Rect_<double> >& o_regions, const cv::Mat& image, LandmarkDetector::FaceDetectorMTCNN& detector, std::vector<double>& o_confidences)
+{
+	detector.DetectFaces(o_regions, image, o_confidences);
+
+	return o_regions.size() > 0;
+}
+
+bool DetectSingleFaceMTCNN(cv::Rect_<double>& o_region, const cv::Mat& image, LandmarkDetector::FaceDetectorMTCNN& detector, double& confidence, cv::Point preference)
+{
+	// The tracker can return multiple faces
+	vector<cv::Rect_<double> > face_detections;
+	vector<double> confidences;
+
+	detector.DetectFaces(face_detections, image, confidences);
+
+	bool detect_success = face_detections.size() > 0;
+	if (detect_success)
+	{
+
+		bool use_preferred = (preference.x != -1) && (preference.y != -1);
+
+		// keep the most confident one or the one closest to preference point if set
+		double best_so_far;
+		if (use_preferred)
+		{
+			best_so_far = sqrt((preference.x - (face_detections[0].width / 2 + face_detections[0].x)) * (preference.x - (face_detections[0].width / 2 + face_detections[0].x)) +
+				(preference.y - (face_detections[0].height / 2 + face_detections[0].y)) * (preference.y - (face_detections[0].height / 2 + face_detections[0].y)));
+		}
+		else
+		{
+			best_so_far = confidences[0];
+		}
+		int bestIndex = 0;
+
+		for (size_t i = 1; i < face_detections.size(); ++i)
+		{
+
+			double dist;
+			bool better;
+
+			if (use_preferred)
+			{
+				dist = sqrt((preference.x - (face_detections[0].width / 2 + face_detections[0].x)) * (preference.x - (face_detections[0].width / 2 + face_detections[0].x)) +
+					(preference.y - (face_detections[0].height / 2 + face_detections[0].y)) * (preference.y - (face_detections[0].height / 2 + face_detections[0].y)));
+				better = dist < best_so_far;
+			}
+			else
+			{
+				dist = confidences[i];
+				better = dist > best_so_far;
+			}
+
+			// Pick a closest face
+			if (better)
+			{
+				best_so_far = dist;
+				bestIndex = i;
+			}
+		}
+
+		o_region = face_detections[bestIndex];
+		confidence = confidences[bestIndex];
+	}
+	else
+	{
+		// if not detected
+		o_region = cv::Rect_<double>(0, 0, 0, 0);
+		// A completely unreliable detection (shouldn't really matter what is returned here)
+		confidence = -2;
+	}
+	return detect_success;
+}
+
+
 //============================================================================
 // Matrix reading functionality
 //============================================================================

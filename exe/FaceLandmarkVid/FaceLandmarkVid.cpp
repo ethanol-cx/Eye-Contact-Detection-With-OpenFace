@@ -37,9 +37,6 @@
 #include "LandmarkCoreIncludes.h"
 #include "GazeEstimation.h"
 
-// TODO rem
-#include "FaceDetectorMTCNN.h"
-
 #include <fstream>
 #include <sstream>
 
@@ -160,14 +157,6 @@ int main (int argc, char **argv)
 	int device = 0;
 
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);
-
-	// Testing out the MTCNN readin
-	cv::Mat in_img = cv::imread("C:/Users/tbaltrus/Documents/OpenFace/matlab_version/face_detection/mtcnn/test1.jpg", 1);
-	LandmarkDetector::FaceDetectorMTCNN face_detector;
-	face_detector.Read(det_parameters.mtcnn_face_detector_location);
-	std::vector<cv::Rect_<double> > regions;
-	std::vector<double> confs;
-	face_detector.DetectFaces(regions, in_img, confs, 30);
 
 	// Get the input output file parameters
 	

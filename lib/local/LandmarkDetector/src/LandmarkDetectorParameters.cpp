@@ -176,7 +176,7 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 			valid[i] = false;
 
 			// For in-the-wild images use an in-the wild detector				
-			curr_face_detector = HOG_SVM_DETECTOR;
+			curr_face_detector = MTCNN_DETECTOR;
 
 		}
 	}
@@ -306,8 +306,8 @@ void FaceModelParameters::init()
 	mtcnn_face_detector_location = "model/mtcnn_detector/MTCNN_detector.txt";
 	quiet_mode = false;
 
-	// By default use HOG SVM
-	curr_face_detector = HOG_SVM_DETECTOR;
+	// By default use MTCNN
+	curr_face_detector = MTCNN_DETECTOR;
 
 	// The gaze tracking has to be explicitly initialised
 	track_gaze = false;
