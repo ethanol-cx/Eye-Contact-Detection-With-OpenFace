@@ -149,34 +149,49 @@ CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_poo
 	}
 }
 
-void PReLU(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, cv::Mat_<float> prelu_weights)
+void PReLU(std::vector<cv::Mat_<float> >& input_output_maps, cv::Mat_<float> prelu_weights)
 {
-	outputs.clear();
-	if (input_maps.size() > 1)
+
+	if (input_output_maps.size() > 1)
 	{
-		for (size_t k = 0; k < input_maps.size(); ++k)
+		int h = input_output_maps[0].rows;
+		int w = input_output_maps[0].cols;
+		size_t size_in = h * w;
+
+		for (size_t k = 0; k < input_output_maps.size(); ++k)
 		{
 			// Apply the PReLU
-			cv::Mat_<float> pos;
-			cv::threshold(input_maps[k], pos, 0, 0, cv::THRESH_TOZERO);
-			cv::Mat_<float> neg;
-			cv::threshold(input_maps[k], neg, 0, 0, cv::THRESH_TOZERO_INV);
-			outputs.push_back(pos + neg * prelu_weights.at<float>(k));
+			auto iter = input_output_maps[k].begin();
 
+			float neg_mult = prelu_weights.at<float>(k);
+
+			for(size_t i = 0; i < size_in; ++i)
+			{
+				float in_val = *iter;
+
+				// The prelu step
+				*iter++ = in_val >= 0 ? in_val : in_val * neg_mult;
+
+			}
 		}
 	}
 	else
 	{
-		cv::Mat_<float> pos(input_maps[0].size(), 0.0);
-		cv::Mat_<float> neg(input_maps[0].size(), 0.0);
+		
+		int w = input_output_maps[0].cols;
+
 		for (size_t k = 0; k < prelu_weights.rows; ++k)
 		{
-			// Apply the PReLU
-			cv::threshold(input_maps[0].row(k), pos.row(k), 0, 0, cv::THRESH_TOZERO);
-			cv::threshold(input_maps[0].row(k), neg.row(k), 0, 0, cv::THRESH_TOZERO_INV);
-			neg.row(k) = neg.row(k) * prelu_weights.at<float>(k);
+			auto iter = input_output_maps[0].row(k).begin();
+			float neg_mult = prelu_weights.at<float>(k);
+
+			for (size_t i = 0; i < w; ++i)
+			{
+				float in_val = *iter;
+				// Apply the PReLU
+				*iter++ = in_val >= 0 ? in_val : in_val * neg_mult;
+			}
 		}
-		outputs.push_back(pos + neg);
 
 	}
 
@@ -699,7 +714,9 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img, bool direc
 		}
 		if (layer_type == 3) // PReLU
 		{
-			PReLU(outputs, input_maps, cnn_prelu_layer_weights[prelu_layer]);
+			// In place prelu computation
+			PReLU(input_maps, cnn_prelu_layer_weights[prelu_layer]);
+			outputs = input_maps;
 			prelu_layer++;
 		}
 		if (layer_type == 4)
