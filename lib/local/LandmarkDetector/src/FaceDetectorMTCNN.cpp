@@ -453,6 +453,46 @@ void im2colBias(const cv::Mat_<float>& input, int width, int height, cv::Mat_<fl
 	}
 }
 
+void im2col_bias(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
+{
+
+	int m = input.cols;
+	int n = input.rows;
+
+	// determine how many blocks there will be with a sliding window of width x height in the input
+	int yB = m - height + 1;
+	int xB = n - width + 1;
+
+	// Allocate the output size
+	if (output.rows != width * height && output.cols != xB*yB)
+	{
+		output = cv::Mat::ones(width * height, xB*yB, CV_32F);
+	}
+
+	// Iterate over the whole image
+	for (int i = 0; i< yB; i++)
+	{
+		int rowIdx = i;
+		for (int j = 0; j< xB; j++)
+		{
+			//int rowIdx = i; +j*yB;
+			// iterate over the blocks within the image
+			for (unsigned int yy = 0; yy < height; ++yy)
+			{
+				// Faster iteration over the image
+				const float* Mi = input.ptr<float>(j + yy);
+				for (unsigned int xx = 0; xx < width; ++xx)
+				{
+					int colIdx = xx*height + yy;
+
+					output.at<float>(colIdx, rowIdx) = Mi[i + xx];
+				}
+			}
+			rowIdx += yB;
+
+		}
+	}
+}
 void im2col(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
 {
 
@@ -464,7 +504,7 @@ void im2col(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>
 	int xB = n - width + 1;
 
 	// Allocate the output size
-	if (output.rows != xB*yB && output.cols != width * height + 1)
+	if (output.rows != xB*yB && output.cols != width * height)
 	{
 		output = cv::Mat::ones(xB*yB, width * height, CV_32F);
 	}
@@ -497,22 +537,22 @@ void convolution_direct(std::vector<cv::Mat_<float> >& outputs, const std::vecto
 	int yB = height_in - height_k + 1;
 	int xB = width_n - width_k + 1;
 
-	cv::Mat_<float> input_matrix(yB * xB, input_maps.size() * height_k * width_k);
+	cv::Mat_<float> input_matrix(input_maps.size() * height_k * width_k, yB * xB);
 
 	// Comibine im2col accross channels to prepare for matrix multiplication
 	for (size_t i = 0; i < input_maps.size(); ++i)
 	{
-		im2col(input_maps[i], width_k, height_k, input_matrix(cv::Rect(i * height_k * width_k, 0, height_k * width_k, yB * xB)));
+		im2col_bias(input_maps[i], width_k, height_k, input_matrix(cv::Rect(0, i * height_k * width_k, yB * xB, height_k * width_k)));
 	}
 
 	// Actual multiplication
-	cv::Mat_<float> out = input_matrix * weight_matrix;
+	cv::Mat_<float> out = weight_matrix * input_matrix;
 
 	// Move back to vectors and reshape accordingly (also add the bias)
-	for (size_t k = 0; k < weight_matrix.cols; ++k)
+	for (size_t k = 0; k < out.rows; ++k)
 	{
-		cv::Mat_<float> reshaped = out.col(k).clone() + biases[k];
-		reshaped = reshaped.reshape(1, xB).t();
+		cv::Mat_<float> reshaped = out.row(k) + biases[k];
+		reshaped = reshaped.reshape(1, yB);
 		outputs.push_back(reshaped);
 	}
 
@@ -638,12 +678,7 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img, bool direc
 			//vector<cv::Mat_<float> > outs;
 			//convolution_fft(outs, input_maps, cnn_convolutional_layers[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers_dft[cnn_layer]);
 
-			//double diff = 0;
-			//for (size_t i = 0; i < outs.size(); ++i)
-			//{
-			//	diff += cv::mean(cv::abs(outs[i] - outputs[i]))[0];
-			//}
-			//cout << diff << endl;
+
 
 			cnn_layer++;
 		}
@@ -809,7 +844,8 @@ void CNN::Read(const string& location)
 						k_flat.copyTo(weight_matrix(cv::Rect(k, i * kernels_rearr[0][0].rows * kernels_rearr[0][0].cols, 1, kernels_rearr[0][0].rows * kernels_rearr[0][0].cols)));
 					}
 				}
-				cnn_convolutional_layers_weights.push_back(weight_matrix);
+				// Transpose the weight matrix for more convenient computation
+				cnn_convolutional_layers_weights.push_back(weight_matrix.t());
 
 			}
 			else if (layer_type == 1)
@@ -1112,8 +1148,8 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	vector<vector<float> > scores_cross_scale(num_scales);
 	vector<vector<cv::Rect_<float> > > proposal_corrections_cross_scale(num_scales);
 
-	tbb::parallel_for(0, (int)num_scales, [&](int i) {
-	//for (int i = 0; i < num_scales; ++i)
+	//tbb::parallel_for(0, (int)num_scales, [&](int i) {
+	for (int i = 0; i < num_scales; ++i)
 	{
 		double scale = ((double)face_support / (double)min_face_size)*cv::pow(pyramid_factor, i);
 
@@ -1150,7 +1186,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		scores_cross_scale[i] = scores;
 		proposal_corrections_cross_scale[i] = proposal_corrections;
 	}
-	});
+	//});
 
 	// Perform non-maximum supression on proposals accross scales and combine them
 	for (int i = 0; i < num_scales; ++i)
@@ -1176,8 +1212,8 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 
 	// Creating proposal images from previous step detections
 	vector<bool> above_thresh(proposal_boxes_all.size());
-	tbb::parallel_for(0, (int)proposal_boxes_all.size(), [&](int k) {
-	//for (size_t k = 0; k < proposal_boxes_all.size(); ++k) 
+	//tbb::parallel_for(0, (int)proposal_boxes_all.size(), [&](int k) {
+	for (size_t k = 0; k < proposal_boxes_all.size(); ++k) 
 	{
 		float width_target = proposal_boxes_all[k].width + 1;
 		float height_target = proposal_boxes_all[k].height + 1;
@@ -1223,7 +1259,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		}
 
 	}
-	});
+	//});
 
 	to_keep.clear();
 	for (size_t i = 0; i < above_thresh.size(); ++i)
@@ -1249,8 +1285,8 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	// Preparing for the ONet stage
 	above_thresh.clear();
 	above_thresh.resize(proposal_boxes_all.size());
-	tbb::parallel_for(0, (int)proposal_boxes_all.size(), [&](int k) {
-	//for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
+	//tbb::parallel_for(0, (int)proposal_boxes_all.size(), [&](int k) {
+	for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
 	{
 		float width_target = proposal_boxes_all[k].width + 1;
 		float height_target = proposal_boxes_all[k].height + 1;
@@ -1295,7 +1331,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 			above_thresh[k] = false;
 		}
 	}
-	});
+	//});
 
 	to_keep.clear();
 	for (size_t i = 0; i < above_thresh.size(); ++i)
