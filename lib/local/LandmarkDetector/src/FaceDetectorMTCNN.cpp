@@ -205,52 +205,58 @@ void fully_connected(std::vector<cv::Mat_<float> >& outputs, const std::vector<c
 	{
 		// Concatenate all the maps
 		cv::Size orig_size = input_maps[0].size();
-		cv::Mat_<float> input_concat = input_maps[0].t();
-		input_concat = input_concat.reshape(0, 1);
+		cv::Mat_<float> input_concat(input_maps.size(), input_maps[0].cols * input_maps[0].rows);
 
-		for (size_t in = 1; in < input_maps.size(); ++in)
+		for (size_t in = 0; in < input_maps.size(); ++in)
 		{
-			cv::Mat_<float> add = input_maps[in].t();
+			cv::Mat_<float> add = input_maps[in];
+			
+			// Reshape if all of the data will be flattened
+			if (input_concat.rows != weights.cols)
+			{
+				add = add.t();
+			}
+
 			add = add.reshape(0, 1);
-			cv::vconcat(input_concat, add, input_concat);
+			add.copyTo(input_concat.row(in));
 		}
 
 		// Treat the input as separate feature maps
-		if (input_concat.rows == weights.rows)
+		if (input_concat.rows == weights.cols)
 		{
-			input_concat = input_concat.t() * weights;
+			input_concat = weights * input_concat;
 			// Add biases
 			for (size_t k = 0; k < biases.rows; ++k)
 			{
-				input_concat.col(k) = input_concat.col(k) + biases.at<float>(k);
+				input_concat.row(k) = input_concat.row(k) + biases.at<float>(k);
 			}
 
 			outputs.clear();
 			// Resize and add as output
 			for (size_t k = 0; k < biases.rows; ++k)
 			{
-				cv::Mat_<float> reshaped = input_concat.col(k).clone();
-				reshaped = reshaped.reshape(1, orig_size.width).t();
+				cv::Mat_<float> reshaped = input_concat.row(k).clone();
+				reshaped = reshaped.reshape(1, orig_size.height);
 				outputs.push_back(reshaped);
 			}
 		}
 		else
 		{
 			// Flatten the input
-			input_concat = input_concat.reshape(0, 1);
+			input_concat = input_concat.reshape(0, input_concat.rows * input_concat.cols);
 
-			input_concat = input_concat * weights + biases.t();
+			input_concat = weights * input_concat + biases;
 
 			outputs.clear();
-			outputs.push_back(input_concat.t());
+			outputs.push_back(input_concat);
 		}
 
 	}
 	else
 	{
-		cv::Mat out = input_maps[0].t() * weights + biases.t();
+		cv::Mat out = weights * input_maps[0] + biases;
 		outputs.clear();
-		outputs.push_back(out);
+		outputs.push_back(out.t());
 	}
 
 }
@@ -892,7 +898,7 @@ void CNN::Read(const string& location)
 				// Fully connected layer
 				cv::Mat_<float> weights;
 				ReadMatBin(cnn_stream, weights);
-				cnn_fully_connected_layers_weights.push_back(weights);
+				cnn_fully_connected_layers_weights.push_back(weights.t());
 			}
 
 			else if (layer_type == 3)
