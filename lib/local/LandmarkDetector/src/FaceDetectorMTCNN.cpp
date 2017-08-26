@@ -1315,9 +1315,6 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 	to_keep = non_maximum_supression(proposal_boxes_all, scores_all, 0.7, true);
 	select_subset(to_keep, proposal_boxes_all, scores_all, proposal_corrections_all);
 
-	// TODO rem
-	cv::Mat disp_img = input_img.clone();
-
 	// Correct the box to expectation to be tight around facial landmarks
 	for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
 	{
@@ -1329,10 +1326,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		o_regions.push_back(cv::Rect_<double>(proposal_boxes_all[k].x, proposal_boxes_all[k].y, proposal_boxes_all[k].width, proposal_boxes_all[k].height));
 		o_confidences.push_back(scores_all[k]);
 
-		cv::rectangle(disp_img, proposal_boxes_all[k], cv::Scalar(255, 0, 0), 3);
 	}
-	cv::imshow("detections", disp_img);
-	cv::waitKey(20);
 
 	if(o_regions.size() > 0)
 	{
