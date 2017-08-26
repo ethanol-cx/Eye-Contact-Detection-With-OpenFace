@@ -135,7 +135,7 @@ void create_directory_from_file(string output_path)
 }
 
 // This will only be accurate when camera parameters are accurate, useful for work on 3D data
-void write_out_pose_landmarks(const string& outfeatures, const cv::Mat_<double>& shape3D, const cv::Vec6d& pose, const cv::Point3f& gaze0, const cv::Point3f& gaze1)
+void write_out_3D_output(const string& outfeatures, const cv::Mat_<double>& shape3D, const cv::Vec6d& pose, const cv::Point3f& gaze0, const cv::Point3f& gaze1)
 {
 	create_directory_from_file(outfeatures);
 	std::ofstream featuresFile;
@@ -170,7 +170,7 @@ void write_out_pose_landmarks(const string& outfeatures, const cv::Mat_<double>&
 	}
 }
 
-void write_out_landmarks(const string& outfeatures, const LandmarkDetector::CLNF& clnf_model, const cv::Vec6d& pose, const cv::Point3f& gaze0, const cv::Point3f& gaze1, std::vector<std::pair<std::string, double>> au_intensities, std::vector<std::pair<std::string, double>> au_occurences)
+void write_out_2D_output(const string& outfeatures, const LandmarkDetector::CLNF& clnf_model, const cv::Vec6d& pose, const cv::Point3f& gaze0, const cv::Point3f& gaze1, std::vector<std::pair<std::string, double>> au_intensities, std::vector<std::pair<std::string, double>> au_occurences)
 {
 	create_directory_from_file(outfeatures);
 	std::ofstream featuresFile;
@@ -231,7 +231,7 @@ void write_out_landmarks(const string& outfeatures, const LandmarkDetector::CLNF
 	}
 }
 
-void create_display_image(const cv::Mat& orig, cv::Mat& display_image, LandmarkDetector::CLNF& clnf_model)
+void create_display_image_cropped(const cv::Mat& orig, cv::Mat& display_image, LandmarkDetector::CLNF& clnf_model)
 {
 
 	// Draw head pose if present and draw eye gaze as well
@@ -304,12 +304,12 @@ int main(int argc, char **argv)
 	boost::filesystem::path parent_path = boost::filesystem::path(arguments[0]).parent_path();
 
 	// Some initial parameters that can be overriden from command line
-	vector<string> files, output_images, output_landmark_locations, output_pose_locations;
+	vector<string> files, output_images, output_2D_locations, output_3D_locations;
 
 	// Bounding boxes for a face in each image (optional)
 	vector<cv::Rect_<double> > bounding_boxes;
 
-	LandmarkDetector::get_image_input_output_params(files, output_landmark_locations, output_pose_locations, output_images, bounding_boxes, arguments);
+	LandmarkDetector::get_image_input_output_params(files, output_2D_locations, output_3D_locations, output_images, bounding_boxes, arguments);
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);
 
 	// No need to validate detections, as we're not doing tracking
@@ -406,6 +406,9 @@ int main(int argc, char **argv)
 				LandmarkDetector::DetectFacesMTCNN(face_detections, read_image, face_detector_mtcnn, confidences);
 			}
 
+			// For writing out the image with detections
+			cv::Mat display_image_full = read_image.clone();
+
 			// Detect landmarks around detected faces
 			int face_det = 0;
 			// perform landmark detection for every face detected
@@ -431,7 +434,7 @@ int main(int argc, char **argv)
 				auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model.detected_landmarks, false);
 
 				// Writing out the detected landmarks (in an OS independent manner)
-				if (!output_landmark_locations.empty())
+				if (!output_2D_locations.empty())
 				{
 					char name[100];
 					// append detection number (in case multiple faces are detected)
@@ -441,15 +444,15 @@ int main(int argc, char **argv)
 					boost::filesystem::path slash("/");
 					std::string preferredSlash = slash.make_preferred().string();
 
-					boost::filesystem::path out_feat_path(output_landmark_locations.at(i));
+					boost::filesystem::path out_feat_path(output_2D_locations.at(i));
 					boost::filesystem::path dir = out_feat_path.parent_path();
 					boost::filesystem::path fname = out_feat_path.filename().replace_extension("");
 					boost::filesystem::path ext = out_feat_path.extension();
 					string outfeatures = dir.string() + preferredSlash + fname.string() + string(name) + ext.string();
-					write_out_landmarks(outfeatures, clnf_model, headPose, gazeDirection0, gazeDirection1, ActionUnits.first, ActionUnits.second);
+					write_out_2D_output(outfeatures, clnf_model, headPose, gazeDirection0, gazeDirection1, ActionUnits.first, ActionUnits.second);
 				}
 
-				if (!output_pose_locations.empty())
+				if (!output_3D_locations.empty())
 				{
 					char name[100];
 					// append detection number (in case multiple faces are detected)
@@ -459,12 +462,12 @@ int main(int argc, char **argv)
 					boost::filesystem::path slash("/");
 					std::string preferredSlash = slash.make_preferred().string();
 
-					boost::filesystem::path out_pose_path(output_pose_locations.at(i));
+					boost::filesystem::path out_pose_path(output_3D_locations.at(i));
 					boost::filesystem::path dir = out_pose_path.parent_path();
 					boost::filesystem::path fname = out_pose_path.filename().replace_extension("");
 					boost::filesystem::path ext = out_pose_path.extension();
 					string outfeatures = dir.string() + preferredSlash + fname.string() + string(name) + ext.string();
-					write_out_pose_landmarks(outfeatures, clnf_model.GetShape(fx, fy, cx, cy), headPose, gazeDirection0, gazeDirection1);
+					write_out_3D_output(outfeatures, clnf_model.GetShape(fx, fy, cx, cy), headPose, gazeDirection0, gazeDirection1);
 
 				}
 
@@ -478,12 +481,14 @@ int main(int argc, char **argv)
 				}
 
 				// displaying detected landmarks
-				cv::Mat display_image;
-				create_display_image(read_image, display_image, clnf_model);
+				LandmarkDetector::Draw(display_image_full, clnf_model);
+
+				cv::Mat display_image_cropped;
+				create_display_image_cropped(read_image, display_image_cropped, clnf_model);
 
 				if (visualise && success)
 				{
-					imshow("colour", display_image);
+					imshow("colour", display_image_cropped);
 					cv::waitKey(1);
 				}
 
@@ -506,7 +511,7 @@ int main(int argc, char **argv)
 						boost::filesystem::path ext = out_feat_path.extension();
 						outimage = dir.string() + preferredSlash + fname.string() + string(name) + ext.string();
 						create_directory_from_file(outimage);
-						bool write_success = cv::imwrite(outimage, display_image);
+						bool write_success = cv::imwrite(outimage, display_image_cropped);
 
 						if (!write_success)
 						{
@@ -523,6 +528,21 @@ int main(int argc, char **argv)
 					face_det++;
 				}
 
+			}
+
+			// If outputting images
+			if (!output_images.empty())
+			{
+				string outimage = output_images.at(i);
+
+				create_directory_from_file(output_images.at(i));
+				bool write_success = cv::imwrite(output_images.at(i), display_image_full);
+
+				if (!write_success)
+				{
+					cout << "Could not output a processed image" << endl;
+					return 1;
+				}
 			}
 		}
 		else
@@ -546,17 +566,17 @@ int main(int argc, char **argv)
 			auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model.detected_landmarks, false);
 
 			// Writing out the detected landmarks
-			if (!output_landmark_locations.empty())
+			if (!output_2D_locations.empty())
 			{
-				string outfeatures = output_landmark_locations.at(i);
-				write_out_landmarks(outfeatures, clnf_model, headPose, gazeDirection0, gazeDirection1, ActionUnits.first, ActionUnits.second);
+				string outfeatures = output_2D_locations.at(i);
+				write_out_2D_output(outfeatures, clnf_model, headPose, gazeDirection0, gazeDirection1, ActionUnits.first, ActionUnits.second);
 			}
 
 			// Writing out the detected landmarks
-			if (!output_pose_locations.empty())
+			if (!output_3D_locations.empty())
 			{
-				string outfeatures = output_pose_locations.at(i);
-				write_out_pose_landmarks(outfeatures, clnf_model.GetShape(fx, fy, cx, cy), headPose, gazeDirection0, gazeDirection1);
+				string outfeatures = output_3D_locations.at(i);
+				write_out_3D_output(outfeatures, clnf_model.GetShape(fx, fy, cx, cy), headPose, gazeDirection0, gazeDirection1);
 			}
 
 			// displaying detected stuff
@@ -571,7 +591,7 @@ int main(int argc, char **argv)
 				GazeAnalysis::DrawGaze(read_image, clnf_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
 			}
 
-			create_display_image(read_image, display_image, clnf_model);
+			create_display_image_cropped(read_image, display_image, clnf_model);
 
 			if (visualise)
 			{

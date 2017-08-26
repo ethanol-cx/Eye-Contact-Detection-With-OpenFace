@@ -236,7 +236,7 @@ namespace LandmarkDetector
 		}
 	}
 
-	void get_image_input_output_params(vector<string> &input_image_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
+	void get_image_input_output_params(vector<string> &input_image_files, vector<string> &output_feature_files, vector<string> &output_3D_files, vector<string> &output_image_files,
 		vector<cv::Rect_<double>> &input_bounding_boxes, vector<string> &arguments)
 	{
 		bool* valid = new bool[arguments.size()];
@@ -364,7 +364,7 @@ namespace LandmarkDetector
 			}
 			else if (arguments[i].compare("-op") == 0)
 			{
-				output_pose_files.push_back(output_root + arguments[i + 1]);
+				output_3D_files.push_back(output_root + arguments[i + 1]);
 				valid[i] = false;
 				valid[i + 1] = false;
 				i++;
@@ -424,9 +424,9 @@ namespace LandmarkDetector
 
 				path fname = image_loc.filename();
 				fname = fname.replace_extension("pose");
-				output_pose_files.push_back(out_pose_dir + "/" + fname.string());
+				output_3D_files.push_back(out_pose_dir + "/" + fname.string());
 			}
-			create_directory_from_file(output_pose_files[0]);
+			create_directory_from_file(output_3D_files[0]);
 		}
 
 		// Make sure the same number of images and bounding boxes is present, if any bounding boxes are defined

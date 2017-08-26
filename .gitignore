@@ -42,3 +42,10 @@ OpenFace.VC.opendb
 matlab_runners/Feature Point Experiments/out_ceclm/
 matlab_runners/Feature Point Experiments/out_clnf/
 matlab_runners/Feature Point Experiments/out_svr/
+exe/FaceLandmarkImg/Release/
+exe/FaceLandmarkVidMulti/Release/
+exe/FeatureExtraction/Release/
+exe/Recording/Release/
+lib/local/GazeAnalyser/Release/
+exe/FaceLandmarkImg/menpo_out/
+/Release/
