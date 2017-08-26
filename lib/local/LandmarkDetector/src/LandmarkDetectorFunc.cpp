@@ -215,15 +215,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_m
 	// and using a smaller search area
 
 	cv::Mat grayscale_image;
-	if (image.channels() == 3)
-	{
-		cv::cvtColor(image, grayscale_image, CV_BGR2GRAY);
-	}
-	else
-	{
-		grayscale_image = image.clone();
-	}
-
+	convert_to_grayscale(image, grayscale_image);
 
 	// Indicating that this is a first detection in video sequence or after restart
 	bool initial_detection = !clnf_model.tracking_initialised;
@@ -646,14 +638,7 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, const cv::Re
 {
 
 	cv::Mat grayscale_image;
-	if (image.channels() == 3)
-	{
-		cv::cvtColor(image, grayscale_image, CV_BGR2GRAY);
-	}
-	else
-	{
-		grayscale_image = image.clone();
-	}
+	convert_to_grayscale(image, grayscale_image);
 
 	// Can have multiple hypotheses
 	vector<cv::Vec3d> rotation_hypotheses;
@@ -697,14 +682,7 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, const cv::Re
 bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, CLNF& clnf_model, FaceModelParameters& params)
 {
 	cv::Mat grayscale_image;
-	if (image.channels() == 3)
-	{
-		cv::cvtColor(image, grayscale_image, CV_BGR2GRAY);
-	}
-	else
-	{
-		grayscale_image = image.clone();
-	}
+	convert_to_grayscale(image, grayscale_image);
 
 	cv::Rect_<double> bounding_box;
 

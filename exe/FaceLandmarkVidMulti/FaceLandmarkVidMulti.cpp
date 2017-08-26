@@ -239,20 +239,11 @@ int main(int argc, char **argv)
 		while (!captured_image.empty())
 		{
 
-			// Reading the images
-			cv::Mat_<float> depth_image;
+			// Preparing the images
 			cv::Mat_<uchar> grayscale_image;
+			LandmarkDetector::convert_to_grayscale(captured_image, grayscale_image);
 
 			cv::Mat disp_image = captured_image.clone();
-
-			if (captured_image.channels() == 3)
-			{
-				cv::cvtColor(captured_image, grayscale_image, CV_BGR2GRAY);
-			}
-			else
-			{
-				grayscale_image = captured_image.clone();
-			}
 
 			vector<cv::Rect_<double> > face_detections;
 
@@ -407,11 +398,6 @@ int main(int argc, char **argv)
 				cv::namedWindow("tracking_result", 1);
 				cv::imshow("tracking_result", disp_image);
 
-				if (!depth_image.empty())
-				{
-					// Division needed for visualisation purposes
-					imshow("depth", depth_image / 2000.0);
-				}
 			}
 
 			// output the tracked video

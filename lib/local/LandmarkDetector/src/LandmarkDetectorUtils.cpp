@@ -1724,4 +1724,46 @@ void SkipComments(std::ifstream& stream)
 	}
 }
 
+// Some other utility functions
+void convert_to_grayscale(const cv::Mat& in, cv::Mat& out)
+{
+	if (in.channels() == 3)
+	{
+		// Make sure it's in a correct format
+		if (in.depth() != CV_8U)
+		{
+			if (in.depth() == CV_16U)
+			{
+				cv::Mat tmp = in / 256;
+				tmp.convertTo(tmp, CV_8U);
+				cv::cvtColor(tmp, out, CV_BGR2GRAY);
+			}
+		}
+		else
+		{
+			cv::cvtColor(in, out, CV_BGR2GRAY);
+		}
+	}
+	else if (in.channels() == 4)
+	{
+		cv::cvtColor(in, out, CV_BGRA2GRAY);
+	}
+	else
+	{
+		if (in.depth() == CV_16U)
+		{
+			cv::Mat tmp = in / 256;
+			out = tmp.clone();
+		}
+		else if (in.depth() != CV_8U)
+		{
+			in.convertTo(out, CV_8U);
+		}
+		else
+		{
+			out = in.clone();
+		}
+	}
+}
+
 }

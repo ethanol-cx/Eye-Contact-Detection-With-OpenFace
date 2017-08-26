@@ -74,47 +74,6 @@ vector<string> get_arguments(int argc, char **argv)
 	return arguments;
 }
 
-void convert_to_grayscale(const cv::Mat& in, cv::Mat& out)
-{
-	if (in.channels() == 3)
-	{
-		// Make sure it's in a correct format
-		if (in.depth() != CV_8U)
-		{
-			if (in.depth() == CV_16U)
-			{
-				cv::Mat tmp = in / 256;
-				tmp.convertTo(tmp, CV_8U);
-				cv::cvtColor(tmp, out, CV_BGR2GRAY);
-			}
-		}
-		else
-		{
-			cv::cvtColor(in, out, CV_BGR2GRAY);
-		}
-	}
-	else if (in.channels() == 4)
-	{
-		cv::cvtColor(in, out, CV_BGRA2GRAY);
-	}
-	else
-	{
-		if (in.depth() == CV_16U)
-		{
-			cv::Mat tmp = in / 256;
-			out = tmp.clone();
-		}
-		else if (in.depth() != CV_8U)
-		{
-			in.convertTo(out, CV_8U);
-		}
-		else
-		{
-			out = in.clone();
-		}
-	}
-}
-
 // Useful utility for creating directories for storing the output files
 void create_directory_from_file(string output_path)
 {
@@ -362,9 +321,9 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
-		// Making sure the image is in uchar grayscale
+		// Making sure the image is in uchar grayscale, TODO proper conversion, move out the function
 		cv::Mat_<uchar> grayscale_image;
-		convert_to_grayscale(read_image, grayscale_image);
+		LandmarkDetector::convert_to_grayscale(read_image, grayscale_image);
 
 
 		// If optical centers are not defined just use center of image

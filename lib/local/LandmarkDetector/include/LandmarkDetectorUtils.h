@@ -155,5 +155,10 @@ namespace LandmarkDetector
 	// Skipping comments (lines starting with # symbol)
 	void SkipComments(std::ifstream& stream);
 
+	//============================================================================
+	// General utilty functions
+	//============================================================================
+	void convert_to_grayscale(const cv::Mat& in, cv::Mat& out);
+
 }
 #endif
