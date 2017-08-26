@@ -67,9 +67,9 @@ CLNF::CLNF(string fname)
 
 // Copy constructor (makes a deep copy of CLNF)
 CLNF::CLNF(const CLNF& other): pdm(other.pdm), params_local(other.params_local.clone()), params_global(other.params_global), detected_landmarks(other.detected_landmarks.clone()),
-	landmark_likelihoods(other.landmark_likelihoods.clone()), patch_experts(other.patch_experts), landmark_validator(other.landmark_validator), face_detector_location(other.face_detector_location),
-	hierarchical_mapping(other.hierarchical_mapping), hierarchical_models(other.hierarchical_models), hierarchical_model_names(other.hierarchical_model_names),
-	hierarchical_params(other.hierarchical_params), eye_model(other.eye_model)
+	landmark_likelihoods(other.landmark_likelihoods.clone()), patch_experts(other.patch_experts), landmark_validator(other.landmark_validator), haar_face_detector_location(other.haar_face_detector_location),
+	mtcnn_face_detector_location(other.mtcnn_face_detector_location), hierarchical_mapping(other.hierarchical_mapping), hierarchical_models(other.hierarchical_models), hierarchical_model_names(other.hierarchical_model_names),
+	hierarchical_params(other.hierarchical_params), eye_model(other.eye_model), face_detector_MTCNN(other.face_detector_MTCNN)
 {
 	this->detection_success = other.detection_success;
 	this->tracking_initialised = other.tracking_initialised;
@@ -78,9 +78,9 @@ CLNF::CLNF(const CLNF& other): pdm(other.pdm), params_local(other.params_local.c
 	this->failures_in_a_row = other.failures_in_a_row;
 
 	// Load the CascadeClassifier (as it does not have a proper copy constructor)
-	if(!face_detector_location.empty())
+	if(!haar_face_detector_location.empty())
 	{
-		this->face_detector_HAAR.load(face_detector_location);
+		this->face_detector_HAAR.load(haar_face_detector_location);
 	}
 	// Make sure the matrices are allocated properly
 	this->triangulations.resize(other.triangulations.size());
@@ -114,7 +114,8 @@ CLNF & CLNF::operator= (const CLNF& other)
 		landmark_likelihoods =other.landmark_likelihoods.clone();
 		patch_experts = Patch_experts(other.patch_experts);
 		landmark_validator = DetectionValidator(other.landmark_validator);
-		face_detector_location = other.face_detector_location;
+		haar_face_detector_location = other.haar_face_detector_location;
+		mtcnn_face_detector_location = other.mtcnn_face_detector_location;
 
 		this->detection_success = other.detection_success;
 		this->tracking_initialised = other.tracking_initialised;
@@ -125,9 +126,9 @@ CLNF & CLNF::operator= (const CLNF& other)
 		this->eye_model = other.eye_model;
 
 		// Load the CascadeClassifier (as it does not have a proper copy constructor)
-		if(!face_detector_location.empty())
+		if(!haar_face_detector_location.empty())
 		{
-			this->face_detector_HAAR.load(face_detector_location);
+			this->face_detector_HAAR.load(haar_face_detector_location);
 		}
 		// Make sure the matrices are allocated properly
 		this->triangulations.resize(other.triangulations.size());
@@ -149,9 +150,12 @@ CLNF & CLNF::operator= (const CLNF& other)
 		this->hierarchical_models = other.hierarchical_models;
 		this->hierarchical_model_names = other.hierarchical_model_names;
 		this->hierarchical_params = other.hierarchical_params;
+
+		mtcnn_face_detector_location = other.mtcnn_face_detector_location;
+		face_detector_MTCNN = other.face_detector_MTCNN;
 	}
 
-	face_detector_HOG = dlib::get_frontal_face_detector();
+	face_detector_HOG = dlib::get_frontal_face_detector();	
 
 	return *this;
 }
@@ -172,7 +176,8 @@ CLNF::CLNF(const CLNF&& other)
 	landmark_likelihoods = other.landmark_likelihoods;
 	patch_experts = other.patch_experts;
 	landmark_validator = other.landmark_validator;
-	face_detector_location = other.face_detector_location;
+	haar_face_detector_location = other.haar_face_detector_location;
+	mtcnn_face_detector_location = other.mtcnn_face_detector_location;
 
 	face_detector_HAAR = other.face_detector_HAAR;
 
@@ -180,6 +185,8 @@ CLNF::CLNF(const CLNF&& other)
 	kde_resp_precalc = other.kde_resp_precalc;
 
 	face_detector_HOG = dlib::get_frontal_face_detector();
+
+	face_detector_MTCNN = other.face_detector_MTCNN;
 
 	// Copy over the hierarchical models
 	this->hierarchical_mapping = other.hierarchical_mapping;
@@ -207,7 +214,8 @@ CLNF & CLNF::operator= (const CLNF&& other)
 	landmark_likelihoods = other.landmark_likelihoods;
 	patch_experts = other.patch_experts;
 	landmark_validator = other.landmark_validator;
-	face_detector_location = other.face_detector_location;
+	haar_face_detector_location = other.haar_face_detector_location;
+	mtcnn_face_detector_location = other.mtcnn_face_detector_location;
 
 	face_detector_HAAR = other.face_detector_HAAR;
 
@@ -215,6 +223,8 @@ CLNF & CLNF::operator= (const CLNF&& other)
 	kde_resp_precalc = other.kde_resp_precalc;
 
 	face_detector_HOG = dlib::get_frontal_face_detector();
+
+	face_detector_MTCNN = other.face_detector_MTCNN;
 
 	// Copy over the hierarchical models
 	this->hierarchical_mapping = other.hierarchical_mapping;

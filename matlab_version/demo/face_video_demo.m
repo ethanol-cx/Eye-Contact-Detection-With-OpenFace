@@ -33,6 +33,12 @@ od = cd('../face_validation/');
 setup;
 cd(od);
 
+% Setup the face detector (remove the setup mconvnet if not using
+% MatConvNet)
+setup_mconvnet;
+addpath('../face_detection/mtcnn/');
+
+
 %%
 for v=1:numel(vids)
     % load the video
@@ -66,8 +72,9 @@ for v=1:numel(vids)
         image_orig = read(vr, i);
         if((~det && mod(i,4) == 0) || ~initialised)
             
+            [bboxs, det_shapes, confidences] = detect_face_mtcnn(image_orig);            
             % First attempt to use the Matlab one (fastest but not as accurate, if not present use yu et al.)
-            [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu'});
+            % [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu'});
             % Zhu and Ramanan and Yu et al. are slower, but also more accurate
             % and can be used when vision toolbox is unavailable
             % [bboxs, det_shapes] = detect_faces(image_orig, {'yu', 'zhu'});
@@ -75,8 +82,8 @@ for v=1:numel(vids)
             if(~isempty(bboxs))
 
                 % Pick the biggest face for tracking
-                [~,ind] = max(bboxs(3,:) - bboxs(1,:));                    
-                bbox = bboxs(:,ind);
+                [~,ind] = max(bboxs(:,3) - bboxs(:,1));                    
+                bbox = bboxs(ind,:);
                 
                 % Discard overly small detections
                 if(bbox(3) - bbox(1) > 40)
@@ -84,39 +91,27 @@ for v=1:numel(vids)
                     % Either infer the local and global shape parameters
                     % from the detected landmarks or just using the
                     % bounding box
-                    if(~isempty(det_shapes))
-                        shape = det_shapes(:,:,ind);                                        
-
-                        inds = [1:60,62:64,66:68];
-                        M = pdm.M([inds, inds+68, inds+68*2]);
-                        E = pdm.E;
-                        V = pdm.V([inds, inds+68, inds+68*2],:);
-                        [ a, R, T, ~, params, err] = fit_PDM_ortho_proj_to_2D(M, E, V, shape);
-                        g_param_n = [a; Rot2Euler(R)'; T];
-                        l_param_n = params;
-                    else
                         
-                        num_points = numel(pdm.M) / 3;
+                    num_points = numel(pdm.M) / 3;
 
-                        M = reshape(pdm.M, num_points, 3);
-                        width_model = max(M(:,1)) - min(M(:,1));
-                        height_model = max(M(:,2)) - min(M(:,2));
+                    M = reshape(pdm.M, num_points, 3);
+                    width_model = max(M(:,1)) - min(M(:,1));
+                    height_model = max(M(:,2)) - min(M(:,2));
 
-                        a = (((bbox(3) - bbox(1)) / width_model) + ((bbox(4) - bbox(2))/ height_model)) / 2;
+                    a = (((bbox(3) - bbox(1)) / width_model) + ((bbox(4) - bbox(2))/ height_model)) / 2;
 
-                        tx = (bbox(3) + bbox(1))/2;
-                        ty = (bbox(4) + bbox(2))/2;
+                    tx = (bbox(3) + bbox(1))/2;
+                    ty = (bbox(4) + bbox(2))/2;
 
-                        % correct it so that the bounding box is just around the minimum
-                        % and maximum point in the initialised face
-                        tx = tx - a*(min(M(:,1)) + max(M(:,1)))/2;
-                        ty = ty + a*(min(M(:,2)) + max(M(:,2)))/2;
+                    % correct it so that the bounding box is just around the minimum
+                    % and maximum point in the initialised face
+                    tx = tx - a*(min(M(:,1)) + max(M(:,1)))/2;
+                    ty = ty + a*(min(M(:,2)) + max(M(:,2)))/2;
 
-                        % visualisation
-                        g_param_n = [a, 0, 0, 0, tx, ty]';
+                    % visualisation
+                    g_param_n = [a, 0, 0, 0, tx, ty]';
 
-                        l_param_n = zeros(size(pdm.E));
-                    end
+                    l_param_n = zeros(size(pdm.E));
                     
                     % If tracking has not started trust the detection
                     if(~initialised)
@@ -186,7 +181,7 @@ for v=1:numel(vids)
             end
             hold off;
             drawnow expose;
-            pause(0.05);
+            pause(0.01);
 
             if(record)
                 frame = getframe;

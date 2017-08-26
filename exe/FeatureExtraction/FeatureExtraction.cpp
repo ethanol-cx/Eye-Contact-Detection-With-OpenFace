@@ -220,7 +220,7 @@ int main(int argc, char **argv)
 
 	// Some initial parameters that can be overriden from command line	
 	vector<string> input_files, output_files, tracked_videos_output;
-	
+
 	// Get the input output file parameters
 
 	// Indicates that rotation should be with respect to camera or world coordinates
@@ -371,8 +371,8 @@ int main(int argc, char **argv)
 			}
 			// If image sequence provided, assume the fps is 30
 			fps_vid_in = 30;
-		}	
-		
+		}
+
 		// If optical centers are not defined just use center of image
 		if (cx_undefined)
 		{
@@ -450,29 +450,17 @@ int main(int argc, char **argv)
 				// if loading images assume 30fps
 				time_stamp = (double)frame_count * (1.0 / 30.0);
 			}
-
-			// Reading the images
-			cv::Mat_<uchar> grayscale_image;
-
-			if (captured_image.channels() == 3)
-			{
-				cvtColor(captured_image, grayscale_image, CV_BGR2GRAY);
-			}
-			else
-			{
-				grayscale_image = captured_image.clone();
-			}
-
+			
 			// The actual facial landmark detection / tracking
 			bool detection_success;
 
 			if (video_input || images_as_video)
 			{
-				detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
+				detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_model, det_parameters);
 			}
 			else
 			{
-				detection_success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_model, det_parameters);
+				detection_success = LandmarkDetector::DetectLandmarksInImage(captured_image, face_model, det_parameters);
 			}
 
 

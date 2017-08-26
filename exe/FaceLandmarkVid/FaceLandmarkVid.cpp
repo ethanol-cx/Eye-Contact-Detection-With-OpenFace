@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 
 	// Some initial parameters that can be overriden from command line	
 	vector<string> files, output_video_files, out_dummy;
-	
+
 	// By default try webcam 0
 	int device = 0;
 
@@ -281,20 +281,8 @@ int main(int argc, char **argv)
 		while (!captured_image.empty())
 		{
 
-			// Reading the images
-			cv::Mat_<uchar> grayscale_image;
-
-			if (captured_image.channels() == 3)
-			{
-				cv::cvtColor(captured_image, grayscale_image, CV_BGR2GRAY);
-			}
-			else
-			{
-				grayscale_image = captured_image.clone();
-			}
-					
 			// The actual facial landmark detection / tracking
-			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, clnf_model, det_parameters);
+			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, clnf_model, det_parameters);
 
 			// Visualising the results
 			// Drawing the facial landmarks on the face and the bounding box around it if tracking is successful and initialised
@@ -311,7 +299,7 @@ int main(int argc, char **argv)
 			}
 
 			visualise_tracking(captured_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
-			
+
 			// output the tracked video
 			if (!output_video_files.empty())
 			{

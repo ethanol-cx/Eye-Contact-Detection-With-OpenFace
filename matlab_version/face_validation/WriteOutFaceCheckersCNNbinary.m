@@ -83,7 +83,7 @@ function WriteOutFaceCheckersCNNbinary(locationTxt, faceCheckers)
 
                     for k=1:num_in_map                                        
                         for k2=1:num_out_kerns
-                            % Write out the bias term                                                
+                            % Write out the kernel                              
                             W = squeeze(cnn.layers{layers}.weights{1}(:,:,k,k2));
                             writeMatrixBin(faceCheckerFile, W, 5);                
                         end

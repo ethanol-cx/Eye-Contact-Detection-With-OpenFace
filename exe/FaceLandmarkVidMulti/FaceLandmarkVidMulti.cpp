@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 	// This is so that the model would not try re-initialising itself
 	det_params.reinit_video_every = -1;
 
-	det_params.curr_face_detector = LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR;
+	det_params.curr_face_detector = LandmarkDetector::FaceModelParameters::MTCNN_DETECTOR;
 
 	vector<LandmarkDetector::FaceModelParameters> det_parameters;
 	det_parameters.push_back(det_params);
@@ -139,8 +139,10 @@ int main(int argc, char **argv)
 	int num_faces_max = 4;
 
 	LandmarkDetector::CLNF clnf_model(det_parameters[0].model_location);
-	clnf_model.face_detector_HAAR.load(det_parameters[0].face_detector_location);
-	clnf_model.face_detector_location = det_parameters[0].face_detector_location;
+	clnf_model.face_detector_HAAR.load(det_parameters[0].haar_face_detector_location);
+	clnf_model.haar_face_detector_location = det_parameters[0].haar_face_detector_location;
+	clnf_model.face_detector_MTCNN.Read(det_parameters[0].mtcnn_face_detector_location);
+	clnf_model.mtcnn_face_detector_location = det_parameters[0].mtcnn_face_detector_location;
 
 	clnf_models.reserve(num_faces_max);
 
@@ -271,9 +273,14 @@ int main(int argc, char **argv)
 					vector<double> confidences;
 					LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, clnf_models[0].face_detector_HOG, confidences);
 				}
-				else
+				else if (det_parameters[0].curr_face_detector == LandmarkDetector::FaceModelParameters::HAAR_DETECTOR)
 				{
 					LandmarkDetector::DetectFaces(face_detections, grayscale_image, clnf_models[0].face_detector_HAAR);
+				}
+				else
+				{
+					vector<double> confidences;
+					LandmarkDetector::DetectFacesMTCNN(face_detections, captured_image, clnf_models[0].face_detector_MTCNN, confidences);
 				}
 
 			}

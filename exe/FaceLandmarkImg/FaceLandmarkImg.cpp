@@ -35,6 +35,8 @@
 
 #include "LandmarkCoreIncludes.h"
 
+#include "FaceDetectorMTCNN.h"
+
 // System includes
 #include <fstream>
 
@@ -306,9 +308,9 @@ int main(int argc, char **argv)
 
 	// Bounding boxes for a face in each image (optional)
 	vector<cv::Rect_<double> > bounding_boxes;
-	
+
 	LandmarkDetector::get_image_input_output_params(files, output_landmark_locations, output_pose_locations, output_images, bounding_boxes, arguments);
-	LandmarkDetector::FaceModelParameters det_parameters(arguments);	
+	LandmarkDetector::FaceModelParameters det_parameters(arguments);
 
 	// No need to validate detections, as we're not doing tracking
 	det_parameters.validate_detections = false;
@@ -335,8 +337,9 @@ int main(int argc, char **argv)
 	LandmarkDetector::CLNF clnf_model(det_parameters.model_location);
 	cout << "Model loaded" << endl;
 
-	cv::CascadeClassifier classifier(det_parameters.face_detector_location);
+	cv::CascadeClassifier classifier(det_parameters.haar_face_detector_location);
 	dlib::frontal_face_detector face_detector_hog = dlib::get_frontal_face_detector();
+	LandmarkDetector::FaceDetectorMTCNN face_detector_mtcnn(det_parameters.mtcnn_face_detector_location);
 
 	// Load facial feature extractor and AU analyser (make sure it is static)
 	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
@@ -393,9 +396,14 @@ int main(int argc, char **argv)
 				vector<double> confidences;
 				LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, face_detector_hog, confidences);
 			}
-			else
+			else if (det_parameters.curr_face_detector == LandmarkDetector::FaceModelParameters::HAAR_DETECTOR)
 			{
 				LandmarkDetector::DetectFaces(face_detections, grayscale_image, classifier);
+			}
+			else
+			{
+				vector<double> confidences;
+				LandmarkDetector::DetectFacesMTCNN(face_detections, read_image, face_detector_mtcnn, confidences);
 			}
 
 			// Detect landmarks around detected faces
@@ -414,7 +422,7 @@ int main(int argc, char **argv)
 				cv::Point3f gazeDirection1(0, 0, -1);
 
 				if (success && det_parameters.track_gaze)
-				{					
+				{
 					GazeAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
 					GazeAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
 

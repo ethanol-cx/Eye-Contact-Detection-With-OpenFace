@@ -208,11 +208,22 @@ void CorrectGlobalParametersVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& 
 	
 }
 
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_model, FaceModelParameters& params)
 {
 	// First need to decide if the landmarks should be "detected" or "tracked"
 	// Detected means running face detection and a larger search area, tracked means initialising from previous step
 	// and using a smaller search area
+
+	cv::Mat grayscale_image;
+	if (image.channels() == 3)
+	{
+		cv::cvtColor(image, grayscale_image, CV_BGR2GRAY);
+	}
+	else
+	{
+		grayscale_image = image.clone();
+	}
+
 
 	// Indicating that this is a first detection in video sequence or after restart
 	bool initial_detection = !clnf_model.tracking_initialised;
@@ -263,8 +274,13 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 		// If the face detector has not been initialised read it in
 		if(clnf_model.face_detector_HAAR.empty())
 		{
-			clnf_model.face_detector_HAAR.load(params.face_detector_location);
-			clnf_model.face_detector_location = params.face_detector_location;
+			clnf_model.face_detector_HAAR.load(params.haar_face_detector_location);
+			clnf_model.haar_face_detector_location = params.haar_face_detector_location;
+		}
+		if (clnf_model.face_detector_MTCNN.empty())
+		{
+			clnf_model.face_detector_MTCNN.Read(params.mtcnn_face_detector_location);
+			clnf_model.mtcnn_face_detector_location = params.haar_face_detector_location;
 		}
 
 		cv::Point preference_det(-1, -1);
@@ -284,6 +300,11 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 		else if(params.curr_face_detector == FaceModelParameters::HAAR_DETECTOR)
 		{
 			face_detection_success = LandmarkDetector::DetectSingleFace(bounding_box, grayscale_image, clnf_model.face_detector_HAAR, preference_det);
+		}
+		else if (params.curr_face_detector == FaceModelParameters::MTCNN_DETECTOR)
+		{
+			double confidence;
+			face_detection_success = LandmarkDetector::DetectSingleFaceMTCNN(bounding_box, image, clnf_model.face_detector_MTCNN, confidence, preference_det);
 		}
 
 		// Attempt to detect landmarks using the detected face (if unseccessful the detection will be ignored)
@@ -350,7 +371,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 	
 }
 
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
 {
 	if(bounding_box.width > 0)
 	{
@@ -362,7 +383,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat_<uchar> &grayscale_i
 		clnf_model.tracking_initialised = true;
 	}
 
-	return DetectLandmarksInVideo(grayscale_image, clnf_model, params);
+	return DetectLandmarksInVideo(image, clnf_model, params);
 
 }
 
@@ -621,8 +642,18 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 
 
 // This is the one where the actual work gets done, other DetectLandmarksInImage calls lead to this one
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
 {
+
+	cv::Mat grayscale_image;
+	if (image.channels() == 3)
+	{
+		cv::cvtColor(image, grayscale_image, CV_BGR2GRAY);
+	}
+	else
+	{
+		grayscale_image = image.clone();
+	}
 
 	// Can have multiple hypotheses
 	vector<cv::Vec3d> rotation_hypotheses;
@@ -654,27 +685,41 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	// Either use basic multi-hypothesis testing or clever testing if early termination parameters are present
 	if(clnf_model.patch_experts.early_term_biases.size() == 0)
 	{
-		success = DetectLandmarksInImageMultiHypBasic(grayscale_image, rotation_hypotheses, bounding_box, clnf_model, params);
+		success = DetectLandmarksInImageMultiHypBasic(image, rotation_hypotheses, bounding_box, clnf_model, params);
 	}
 	else
 	{
-		success = DetectLandmarksInImageMultiHypEarlyTerm(grayscale_image, rotation_hypotheses, bounding_box, clnf_model, params);
+		success = DetectLandmarksInImageMultiHypEarlyTerm(image, rotation_hypotheses, bounding_box, clnf_model, params);
 	}
 	return success;
 }
 
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, CLNF& clnf_model, FaceModelParameters& params)
 {
+	cv::Mat grayscale_image;
+	if (image.channels() == 3)
+	{
+		cv::cvtColor(image, grayscale_image, CV_BGR2GRAY);
+	}
+	else
+	{
+		grayscale_image = image.clone();
+	}
 
 	cv::Rect_<double> bounding_box;
 
 	// If the face detector has not been initialised read it in
-	if(clnf_model.face_detector_HAAR.empty())
+	if(clnf_model.face_detector_HAAR.empty() && params.curr_face_detector == FaceModelParameters::HAAR_DETECTOR)
 	{
-		clnf_model.face_detector_HAAR.load(params.face_detector_location);
-		clnf_model.face_detector_location = params.face_detector_location;
+		clnf_model.face_detector_HAAR.load(params.haar_face_detector_location);
+		clnf_model.haar_face_detector_location = params.haar_face_detector_location;
 	}
-		
+	
+	if (clnf_model.face_detector_MTCNN.empty() && params.curr_face_detector == FaceModelParameters::MTCNN_DETECTOR)
+	{
+		clnf_model.face_detector_MTCNN.Read(params.mtcnn_face_detector_location);
+	}
+
 	// Detect the face first
 	if(params.curr_face_detector == FaceModelParameters::HOG_SVM_DETECTOR)
 	{
@@ -683,7 +728,12 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	}
 	else if(params.curr_face_detector == FaceModelParameters::HAAR_DETECTOR)
 	{
-		LandmarkDetector::DetectSingleFace(bounding_box, grayscale_image, clnf_model.face_detector_HAAR);
+		LandmarkDetector::DetectSingleFace(bounding_box, image, clnf_model.face_detector_HAAR);
+	}
+	else if (params.curr_face_detector == FaceModelParameters::MTCNN_DETECTOR)
+	{
+		double confidence;
+		LandmarkDetector::DetectSingleFaceMTCNN(bounding_box, image, clnf_model.face_detector_MTCNN, confidence);
 	}
 
 	if(bounding_box.width == 0)
@@ -692,6 +742,6 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 	}
 	else
 	{
-		return DetectLandmarksInImage(grayscale_image, bounding_box, clnf_model, params);
+		return DetectLandmarksInImage(image, bounding_box, clnf_model, params);
 	}
 }

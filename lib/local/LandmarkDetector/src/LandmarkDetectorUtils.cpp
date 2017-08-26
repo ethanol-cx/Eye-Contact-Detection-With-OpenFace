@@ -1560,94 +1560,168 @@ namespace LandmarkDetector
 		return detect_success;
 	}
 
-	//============================================================================
-	// Matrix reading functionality
-	//============================================================================
+bool DetectFacesMTCNN(vector<cv::Rect_<double> >& o_regions, const cv::Mat& image, LandmarkDetector::FaceDetectorMTCNN& detector, std::vector<double>& o_confidences)
+{
+	detector.DetectFaces(o_regions, image, o_confidences);
 
-	// Reading in a matrix from a stream
-	void ReadMat(std::ifstream& stream, cv::Mat &output_mat)
+	return o_regions.size() > 0;
+}
+
+bool DetectSingleFaceMTCNN(cv::Rect_<double>& o_region, const cv::Mat& image, LandmarkDetector::FaceDetectorMTCNN& detector, double& confidence, cv::Point preference)
+{
+	// The tracker can return multiple faces
+	vector<cv::Rect_<double> > face_detections;
+	vector<double> confidences;
+
+	detector.DetectFaces(face_detections, image, confidences);
+
+	bool detect_success = face_detections.size() > 0;
+	if (detect_success)
 	{
-		// Read in the number of rows, columns and the data type
-		int row, col, type;
 
-		stream >> row >> col >> type;
+		bool use_preferred = (preference.x != -1) && (preference.y != -1);
 
-		output_mat = cv::Mat(row, col, type);
-
-		switch (output_mat.type())
+		// keep the most confident one or the one closest to preference point if set
+		double best_so_far;
+		if (use_preferred)
 		{
-		case CV_64FC1:
+			best_so_far = sqrt((preference.x - (face_detections[0].width / 2 + face_detections[0].x)) * (preference.x - (face_detections[0].width / 2 + face_detections[0].x)) +
+				(preference.y - (face_detections[0].height / 2 + face_detections[0].y)) * (preference.y - (face_detections[0].height / 2 + face_detections[0].y)));
+		}
+		else
 		{
-			cv::MatIterator_<double> begin_it = output_mat.begin<double>();
-			cv::MatIterator_<double> end_it = output_mat.end<double>();
+			best_so_far = confidences[0];
+		}
+		int bestIndex = 0;
 
-			while (begin_it != end_it)
+		for (size_t i = 1; i < face_detections.size(); ++i)
+		{
+
+			double dist;
+			bool better;
+
+			if (use_preferred)
 			{
-				stream >> *begin_it++;
+				dist = sqrt((preference.x - (face_detections[0].width / 2 + face_detections[0].x)) * (preference.x - (face_detections[0].width / 2 + face_detections[0].x)) +
+					(preference.y - (face_detections[0].height / 2 + face_detections[0].y)) * (preference.y - (face_detections[0].height / 2 + face_detections[0].y)));
+				better = dist < best_so_far;
+			}
+			else
+			{
+				dist = confidences[i];
+				better = dist > best_so_far;
+			}
+
+			// Pick a closest face
+			if (better)
+			{
+				best_so_far = dist;
+				bestIndex = i;
 			}
 		}
-		break;
-		case CV_32FC1:
-		{
-			cv::MatIterator_<float> begin_it = output_mat.begin<float>();
-			cv::MatIterator_<float> end_it = output_mat.end<float>();
 
-			while (begin_it != end_it)
-			{
-				stream >> *begin_it++;
-			}
-		}
-		break;
-		case CV_32SC1:
-		{
-			cv::MatIterator_<int> begin_it = output_mat.begin<int>();
-			cv::MatIterator_<int> end_it = output_mat.end<int>();
-			while (begin_it != end_it)
-			{
-				stream >> *begin_it++;
-			}
-		}
-		break;
-		case CV_8UC1:
-		{
-			cv::MatIterator_<uchar> begin_it = output_mat.begin<uchar>();
-			cv::MatIterator_<uchar> end_it = output_mat.end<uchar>();
-			while (begin_it != end_it)
-			{
-				stream >> *begin_it++;
-			}
-		}
-		break;
-		default:
-			printf("ERROR(%s,%d) : Unsupported Matrix type %d!\n", __FILE__, __LINE__, output_mat.type()); abort();
+		o_region = face_detections[bestIndex];
+		confidence = confidences[bestIndex];
+	}
+	else
+	{
+		// if not detected
+		o_region = cv::Rect_<double>(0, 0, 0, 0);
+		// A completely unreliable detection (shouldn't really matter what is returned here)
+		confidence = -2;
+	}
+	return detect_success;
+}
 
 
+//============================================================================
+// Matrix reading functionality
+//============================================================================
+
+// Reading in a matrix from a stream
+void ReadMat(std::ifstream& stream, cv::Mat &output_mat)
+{
+	// Read in the number of rows, columns and the data type
+	int row, col, type;
+
+	stream >> row >> col >> type;
+
+	output_mat = cv::Mat(row, col, type);
+
+	switch (output_mat.type())
+	{
+	case CV_64FC1:
+	{
+		cv::MatIterator_<double> begin_it = output_mat.begin<double>();
+		cv::MatIterator_<double> end_it = output_mat.end<double>();
+
+		while (begin_it != end_it)
+		{
+			stream >> *begin_it++;
 		}
 	}
-
-	void ReadMatBin(std::ifstream& stream, cv::Mat &output_mat)
+	break;
+	case CV_32FC1:
 	{
-		// Read in the number of rows, columns and the data type
-		int row, col, type;
+		cv::MatIterator_<float> begin_it = output_mat.begin<float>();
+		cv::MatIterator_<float> end_it = output_mat.end<float>();
 
-		stream.read((char*)&row, 4);
-		stream.read((char*)&col, 4);
-		stream.read((char*)&type, 4);
-
-		output_mat = cv::Mat(row, col, type);
-		int size = output_mat.rows * output_mat.cols * output_mat.elemSize();
-		stream.read((char *)output_mat.data, size);
-
-	}
-
-	// Skipping lines that start with # (together with empty lines)
-	void SkipComments(std::ifstream& stream)
-	{
-		while (stream.peek() == '#' || stream.peek() == '\n' || stream.peek() == ' ' || stream.peek() == '\r')
+		while (begin_it != end_it)
 		{
-			std::string skipped;
-			std::getline(stream, skipped);
+			stream >> *begin_it++;
 		}
 	}
+	break;
+	case CV_32SC1:
+	{
+		cv::MatIterator_<int> begin_it = output_mat.begin<int>();
+		cv::MatIterator_<int> end_it = output_mat.end<int>();
+		while (begin_it != end_it)
+		{
+			stream >> *begin_it++;
+		}
+	}
+	break;
+	case CV_8UC1:
+	{
+		cv::MatIterator_<uchar> begin_it = output_mat.begin<uchar>();
+		cv::MatIterator_<uchar> end_it = output_mat.end<uchar>();
+		while (begin_it != end_it)
+		{
+			stream >> *begin_it++;
+		}
+	}
+	break;
+	default:
+		printf("ERROR(%s,%d) : Unsupported Matrix type %d!\n", __FILE__, __LINE__, output_mat.type()); abort();
+
+
+	}
+}
+
+void ReadMatBin(std::ifstream& stream, cv::Mat &output_mat)
+{
+	// Read in the number of rows, columns and the data type
+	int row, col, type;
+
+	stream.read((char*)&row, 4);
+	stream.read((char*)&col, 4);
+	stream.read((char*)&type, 4);
+
+	output_mat = cv::Mat(row, col, type);
+	int size = output_mat.rows * output_mat.cols * output_mat.elemSize();
+	stream.read((char *)output_mat.data, size);
+
+}
+
+// Skipping lines that start with # (together with empty lines)
+void SkipComments(std::ifstream& stream)
+{
+	while (stream.peek() == '#' || stream.peek() == '\n' || stream.peek() == ' ' || stream.peek() == '\r')
+	{
+		std::string skipped;
+		std::getline(stream, skipped);
+	}
+}
 
 }
