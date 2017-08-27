@@ -21,9 +21,12 @@ verbose = true;
 %model = 'model/main_clm_wild.txt';
 
 % Trained on in the wild and multi-pie data (more accurate CLNF model)
-model = 'model/main_dclm_general.txt';
+%model = 'model/main_clnf_general.txt';
 % Trained on in-the-wild
 %model = 'model/main_clnf_wild.txt';
+
+% Trained on in the wild and multi-pie data (most accurate CE-CLM model)
+model = 'model/main_ceclm_general.txt';
 
 command = executable;
 
