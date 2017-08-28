@@ -470,11 +470,10 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 		float* m1 = (float*)response_blas.data;
 		float* m2 = (float*)weights[layer].data;
 
-		cv::Mat_<float> resp_blas(response_blas.rows, weights[layer].cols, 1.0);
+		cv::Mat_<float> resp_blas(response_blas.rows, weights[layer].cols);
 		float* m3 = (float*)resp_blas.data;
 
-
-		// TODO check speed
+		// Perform matrix multiplication
 		float alpha = 1.0;
 		float beta = 0.0;
 		sgemm_("N", "N", &weights[layer].cols, &response.rows, &response.cols, &alpha, m2, &weights[layer].cols, m1, &response.cols, &beta, m3, &weights[layer].cols);
@@ -490,16 +489,25 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 			response(cv::Rect(0, y, response.cols, 1)) = response(cv::Rect(0, y, response.cols, 1)) + biases[layer];
 		}
 
-		// Perform activation		
+		// Perform activation	
 		if (activation_function[layer] == 0) // Sigmoid
 		{
-			for (cv::MatIterator_<float> p = response.begin(); p != response.end(); p++)
+
+			size_t resp_size = response.rows * response.cols;
+
+			// Iterate over the data directly
+			float* data = (float*)response.data;
+				
+			for (size_t counter = 0; counter < resp_size; ++counter)
 			{
-				*p = 1.0 / (1.0 + exp(-(*p)));
+				float in = *data;
+				*data++ = 1.0 / (1.0 + exp(-(in)));
 			}
+
 		}
 		else if (activation_function[layer] == 2)// ReLU
 		{
+			// TODO this could be spedup by iterating over it
 			cv::threshold(response, response, 0, 0, cv::THRESH_TOZERO);
 		}
 
