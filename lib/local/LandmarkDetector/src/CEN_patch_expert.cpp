@@ -456,7 +456,7 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 	// Extract im2col but in a sparse way
 	im2colBiasSparse(area_of_interest, width, height, input_col);
 
-	// Mean and standard deviation normalization
+	// Mean and standard deviation normalization, TODO can combine with above
 	contrastNorm(input_col, response);
 
 	cv::Mat_<float> response_blas = response.clone();
@@ -480,13 +480,20 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 
 		// The above is a faster version of this, by calling the fortran version directly
 		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, weights[layer].cols, response.rows, response.cols, 1, m2, weights[layer].cols, m1, response.cols, 0.0, m3, weights[layer].cols);
-
+		
+		// Adding the bias (bit ugly, but the fastest way to do this)
 		response = resp_blas;
-
-		// TODO bias could be pre-allocated to the window size so that addition could be quicker
-		for (size_t y = 0; y < response.rows; ++y)
+		float* data = (float*)response.data;
+		size_t height = response.rows;
+		size_t width = response.cols;
+		float* data_b = (float*)biases[layer].data;
+		for (size_t y = 0; y < height; ++y)
 		{
-			response(cv::Rect(0, y, response.cols, 1)) = response(cv::Rect(0, y, response.cols, 1)) + biases[layer];
+			for (size_t x = 0; x < width; ++x)
+			{
+				float in = *data;
+				*data++ = in + data_b[x];
+			}
 		}
 
 		// Perform activation	
