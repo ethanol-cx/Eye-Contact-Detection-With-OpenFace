@@ -279,6 +279,87 @@ void CEN_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat
 
 }
 
+// Perform im2col, while at the same time doing contrast normalization and adding a bias term (also skip every other region)
+void im2colBiasSparseContrastNorm(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
+{
+	int m = input.rows;
+	int n = input.cols;
+
+	// determine how many blocks there will be with a sliding window of width x height in the input
+	int yB = m - height + 1;
+	int xB = n - width + 1;
+
+	// As we will be skipping half of the outputs
+	int out_size = (yB*xB - 1) / 2;
+
+	// Allocate the output size
+	if (output.rows != out_size && output.cols != width * height + 1)
+	{
+		output = cv::Mat::ones(out_size, width * height + 1, CV_32F);
+	}
+
+	// Iterate over the blocks, skipping every second block
+	int rowIdx = 0;
+	int skipCounter = 0;
+	for (int j = 0; j< xB; j++)
+	{
+		for (int i = 0; i< yB; i++)
+		{
+			float* Mo = output.ptr<float>(rowIdx);
+
+			// Skip every second row
+			skipCounter++;
+			if ((skipCounter + 1) % 2 == 0)
+			{
+				continue;
+			}
+
+			float sum = 0;
+
+			for (unsigned int yy = 0; yy < height; ++yy)
+			{
+				const float* Mi = input.ptr<float>(i + yy);
+				for (unsigned int xx = 0; xx < width; ++xx)
+				{
+					int colIdx = xx*height + yy;
+					float in = Mi[j + xx];
+					sum += in;
+
+					Mo[colIdx+1] = in;
+				}
+			}
+
+			// Working out the mean
+			float mean = sum / (float)(width * height);
+
+			float sum_sq = 0;
+
+			// Working out the sum squared and subtracting the mean
+			for (size_t x = 1; x < width*height+1; ++x)
+			{
+				float in = Mo[x] - mean;
+				Mo[x] = in;
+				sum_sq += in * in;
+			}
+
+			float norm = sqrt(sum_sq);
+
+			// Avoiding division by 0
+			if (norm == 0)
+			{
+				norm = 1;
+			}
+
+			for (size_t x = 1; x < width*height + 1; ++x)
+			{
+				Mo[x] /= norm;
+			}
+
+			rowIdx++;
+		}
+	}
+}
+
 void im2colBiasSparse(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
 {
 
@@ -452,23 +533,13 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 	int response_height = area_of_interest.rows - height + 1;
 	int response_width = area_of_interest.cols - width + 1;
 
-	cv::Mat_<float> input_col;
-	// Extract im2col but in a sparse way
-	im2colBiasSparse(area_of_interest, width, height, input_col);
-
-	// Mean and standard deviation normalization, TODO can combine with above
-	contrastNorm(input_col, response);
-
-	//cv::Mat_<float> response_blas;// = response.clone();
+	// Extract im2col but in a sparse way and contrast normalize
+	im2colBiasSparseContrastNorm(area_of_interest, width, height, response);
 
 	for (size_t layer = 0; layer < activation_function.size(); ++layer)
 	{
 
-		// We are performing response = response * weights[layers], but in OpenBLAS as that is significantly quicker than OpenCV
-
-		// TODO is the cloning needed
-		//response_blas = response.clone();
-
+		// We are performing response = response * weights[layers], but in OpenBLAS as that is significantly quicker than OpenCV		
 		float* m1 = (float*)response.data;
 		float* m2 = (float*)weights[layer].data;
 
@@ -523,7 +594,7 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 	}
 	
 	// Restructure the output with interpolation
-	cv::Mat_<float> mapMatrix(response.rows, response_height * response_width, 0.0f);
+	cv::Mat_<float> mapMatrix(response.rows, response_height * response_width, 0.0f); //TODO move this out
 
 	// Find a mapping from indices in the computed sparse response and the original full response
 	cv::Mat_<int> value_id_matrix(response_width, response_height, 0);
