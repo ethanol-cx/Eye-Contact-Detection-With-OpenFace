@@ -459,18 +459,20 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 	// Mean and standard deviation normalization, TODO can combine with above
 	contrastNorm(input_col, response);
 
-	cv::Mat_<float> response_blas = response.clone();
+	//cv::Mat_<float> response_blas;// = response.clone();
 
 	for (size_t layer = 0; layer < activation_function.size(); ++layer)
 	{
 
 		// We are performing response = response * weights[layers], but in OpenBLAS as that is significantly quicker than OpenCV
-		response_blas = response.clone();
 
-		float* m1 = (float*)response_blas.data;
+		// TODO is the cloning needed
+		//response_blas = response.clone();
+
+		float* m1 = (float*)response.data;
 		float* m2 = (float*)weights[layer].data;
 
-		cv::Mat_<float> resp_blas(response_blas.rows, weights[layer].cols);
+		cv::Mat_<float> resp_blas(response.rows, weights[layer].cols);
 		float* m3 = (float*)resp_blas.data;
 
 		// Perform matrix multiplication
