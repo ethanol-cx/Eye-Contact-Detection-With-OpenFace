@@ -79,8 +79,12 @@ namespace LandmarkDetector
 		void Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
 
 		// Faster version of the response that only considers a subset of the area_of_interest
-		void ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
+		void ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix);
+
 
 	};
+
+	void interpolationMatrix(cv::Mat_<float>& mapMatrix, int response_height, int response_width, int input_width, int input_height);
+
 }
 #endif

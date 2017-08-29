@@ -162,6 +162,19 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 
 	}
 
+	// If using CEN precalculate interpolation matrix
+	cv::Mat_<float> interp_mat;
+	if (use_cen)
+	{
+		// Assuming the same size for all experts
+		int support_region = 11;
+		int area_of_interest_width = window_size + support_region - 1;
+		int area_of_interest_height = window_size + support_region - 1;
+		int resp_size = area_of_interest_height - support_region + 1;
+		interpolationMatrix(interp_mat, resp_size, resp_size, area_of_interest_width, area_of_interest_height);
+		interp_mat = interp_mat.t();
+	}
+
 	// calculate the patch responses for every landmark, Actual work happens here. If openMP is turned on it is possible to do this in parallel,
 	// this might work well on some machines, while potentially have an adverse effect on others
 #ifdef _OPENMP
@@ -214,7 +227,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				// Get intensity response either from the SVR, CCNF, or CEN patch experts (prefer CEN as they are the most accurate so far)
 				if (!cen_expert_intensity.empty())
 				{
-					cen_expert_intensity[scale][view_id][i].ResponseSparse(area_of_interest, patch_expert_responses[i]);				
+					cen_expert_intensity[scale][view_id][i].ResponseSparse(area_of_interest, patch_expert_responses[i], interp_mat);
 				}
 				else if (!ccnf_expert_intensity.empty())
 				{

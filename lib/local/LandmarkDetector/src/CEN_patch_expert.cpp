@@ -305,14 +305,14 @@ void im2colBiasSparseContrastNorm(const cv::Mat_<float>& input, int width, int h
 	{
 		for (int i = 0; i< yB; i++)
 		{
-			float* Mo = output.ptr<float>(rowIdx);
-
 			// Skip every second row
 			skipCounter++;
 			if ((skipCounter + 1) % 2 == 0)
 			{
 				continue;
 			}
+
+			float* Mo = output.ptr<float>(rowIdx);
 
 			float sum = 0;
 
@@ -526,8 +526,83 @@ void im2colBiasSparse(const cv::Mat_<float>& input, int width, int height, cv::M
 //	response = response.t();
 //}
 
+// As the sparse patch expert output with interpolation, this function creates an interpolation matrix
+void LandmarkDetector::interpolationMatrix(cv::Mat_<float>& mapMatrix, int response_height, int response_width, int input_width, int input_height)
+{
+	int m = input_height;
+	int n = input_width;
+
+	// determine how many blocks there will be with a sliding window of width x height in the input
+	int yB = m - 11 + 1;
+	int xB = n - 11 + 1;
+
+	// As we will be skipping half of the outputs
+	int out_size = (yB*xB - 1) / 2;
+
+	mapMatrix.create(out_size, response_height * response_width);
+	mapMatrix.setTo(0.0f);
+
+	// Find a mapping from indices in the computed sparse response and the original full response
+	cv::Mat_<int> value_id_matrix(response_width, response_height, 0);
+
+	int ind = 0;
+	for (int k = 0; k < value_id_matrix.rows * value_id_matrix.cols; ++k)
+	{
+		if (k % 2 != 0)
+		{
+			value_id_matrix.at<int>(k) = ind;
+			ind++;
+		}
+	}
+	value_id_matrix = value_id_matrix.t();
+
+	int skip_counter = 0;
+	for (int x = 0; x < response_width; ++x)
+	{
+		for (int y = 0; y < response_height; ++y)
+		{
+			int mapping_col = x * response_height + y;
+			skip_counter++;
+			if (skip_counter % 2 == 0)
+			{
+				int val_id = value_id_matrix.at<int>(y, x);
+				mapMatrix.at<float>(val_id, mapping_col) = 1;
+				continue;
+			}
+
+			double num_neigh = 0.0;
+			vector<int> val_ids;
+			if (x - 1 >= 0)
+			{
+				num_neigh++;
+				val_ids.push_back(value_id_matrix.at<int>(y, x - 1));
+			}
+			if (y - 1 >= 0)
+			{
+				num_neigh++;
+				val_ids.push_back(value_id_matrix.at<int>(y - 1, x));
+			}
+			if (x + 1 < response_width)
+			{
+				num_neigh++;
+				val_ids.push_back(value_id_matrix.at<int>(y, x + 1));
+			}
+			if (y + 1 < response_height)
+			{
+				num_neigh++;
+				val_ids.push_back(value_id_matrix.at<int>(y + 1, x));
+			}
+
+			for (size_t k = 0; k < val_ids.size(); ++k)
+			{
+				mapMatrix.at<float>(val_ids[k], mapping_col) = 1.0 / num_neigh;
+			}
+		}
+	}
+}
+
 //===========================================================================
-void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response)
+void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix)
 {
 
 	int response_height = area_of_interest.rows - height + 1;
@@ -593,69 +668,9 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 
 	}
 	
-	// Restructure the output with interpolation
-	cv::Mat_<float> mapMatrix(response.rows, response_height * response_width, 0.0f); //TODO move this out
-
-	// Find a mapping from indices in the computed sparse response and the original full response
-	cv::Mat_<int> value_id_matrix(response_width, response_height, 0);
-
-	int ind = 0;
-	for (int k = 0; k < value_id_matrix.rows * value_id_matrix.cols; ++k)
-	{
-		if(k % 2 != 0)
-		{
-			value_id_matrix.at<int>(k) = ind;
-			ind++;
-		}
-	}
-	value_id_matrix = value_id_matrix.t();
-
-	int skip_counter = 0;
-	for (int x = 0; x < response_width; ++x)
-	{
-		for (int y = 0; y < response_height; ++y)
-		{
-			int mapping_col = x * response_height + y;
-			skip_counter++;
-			if (skip_counter % 2 == 0)
-			{
-				int val_id = value_id_matrix.at<int>(y, x);
-				mapMatrix.at<float>(val_id, mapping_col) = 1;
-				continue;
-			}
-
-			double num_neigh = 0.0;
-			vector<int> val_ids;
-			if (x - 1 >= 0)
-			{
-				num_neigh++;
-				val_ids.push_back(value_id_matrix.at<int>(y, x - 1));
-			}
-			if (y - 1 >= 0)
-			{
-				num_neigh++;
-				val_ids.push_back(value_id_matrix.at<int>(y - 1, x));
-			}
-			if (x + 1 < response_width)
-			{
-				num_neigh++;
-				val_ids.push_back(value_id_matrix.at<int>(y, x + 1));
-			}
-			if (y + 1 < response_height)
-			{
-				num_neigh++;
-				val_ids.push_back(value_id_matrix.at<int>(y+1, x));
-			}
-
-			for (size_t k = 0; k < val_ids.size(); ++k)
-			{
-				mapMatrix.at<float>(val_ids[k], mapping_col) = 1.0 / num_neigh;
-			}
-		}
-	}
-
-	response = response.t() * mapMatrix;
-	response = response.t();
+	//response = response.t() * mapMatrix;
+	//response = response.t();
+	response = mapMatrix * response;
 	response = response.reshape(1, response_height);
 	response = response.t();
 }
