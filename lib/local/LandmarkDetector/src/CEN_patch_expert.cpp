@@ -134,7 +134,7 @@ void CEN_patch_expert::Read(ifstream &stream)
 		cv::Mat_<double> weight;
 		LandmarkDetector::ReadMatBin(stream, weight);
 
-		weights[i] = weight;
+		weights[i] = weight.t();
 		biases[i] = bias;
 	}
 
@@ -250,6 +250,8 @@ void CEN_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat
 		float alpha = 1.0;
 		float beta = 0.0;
 		sgemm_("N", "N", &weights[layer].cols, &response.rows, &response.cols, &alpha, m2, &weights[layer].cols, m1, &response.cols, &beta, m3, &weights[layer].cols);
+
+		// TODO correct this with weight transpose
 
 		response = resp_blas;
 
@@ -406,126 +408,6 @@ void im2colBiasSparse(const cv::Mat_<float>& input, int width, int height, cv::M
 	}
 }
 
-//===========================================================================
-//void CEN_patch_expert::ResponseSparse_ocv(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response)
-//{
-//
-//	int response_height = area_of_interest.rows - height + 1;
-//	int response_width = area_of_interest.cols - width + 1;
-//
-//	cv::Mat_<float> input_col;
-//	// Extract im2col but in a sparse way
-//	im2colBiasSparse(area_of_interest, width, height, input_col);
-//
-//	// Mean and standard deviation normalization
-//	contrastNorm(input_col, response);
-//
-//	cv::Mat_<float> response_blas = response.clone();
-//
-//	for (size_t layer = 0; layer < activation_function.size(); ++layer)
-//	{
-//
-//		// We are performing response = response * weights[layers], but in OpenBLAS as that is significantly quicker than OpenCV
-//		response_blas = response.clone();
-//
-//		float* m1 = (float*)response_blas.data;
-//		float* m2 = (float*)weights[layer].data;
-//
-//		cv::Mat_<float> resp_blas(response_blas.rows, weights[layer].cols, 1.0);
-//		float* m3 = (float*)resp_blas.data;
-//
-//		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, weights[layer].cols, response.rows, response.cols, 1, m2, weights[layer].cols, m1, response.cols, 0.0, m3, weights[layer].cols);
-//
-//		response = resp_blas;
-//
-//		// TODO bias could be pre-allocated to the window size so that addition could be quicker
-//		for (size_t y = 0; y < response.rows; ++y)
-//		{
-//			response(cv::Rect(0, y, response.cols, 1)) = response(cv::Rect(0, y, response.cols, 1)) + biases[layer];
-//		}
-//
-//		// Perform activation		
-//		if (activation_function[layer] == 0) // Sigmoid
-//		{
-//			for (cv::MatIterator_<float> p = response.begin(); p != response.end(); p++)
-//			{
-//				*p = 1.0 / (1.0 + exp(-(*p)));
-//			}
-//		}
-//		else if (activation_function[layer] == 2)// ReLU
-//		{
-//			cv::threshold(response, response, 0, 0, cv::THRESH_TOZERO);
-//		}
-//
-//	}
-//
-//	// Restructure the output with interpolation
-//	cv::Mat_<float> mapMatrix(response.rows, response_height * response_width, 0.0f);
-//
-//	// Find a mapping from indices in the computed sparse response and the original full response
-//	cv::Mat_<int> value_id_matrix(response_width, response_height, 0);
-//
-//	int ind = 0;
-//	for (int k = 0; k < value_id_matrix.rows * value_id_matrix.cols; ++k)
-//	{
-//		if (k % 2 != 0)
-//		{
-//			value_id_matrix.at<int>(k) = ind;
-//			ind++;
-//		}
-//	}
-//	value_id_matrix = value_id_matrix.t();
-//
-//	int skip_counter = 0;
-//	for (int x = 0; x < response_width; ++x)
-//	{
-//		for (int y = 0; y < response_height; ++y)
-//		{
-//			int mapping_col = x * response_height + y;
-//			skip_counter++;
-//			if (skip_counter % 2 == 0)
-//			{
-//				int val_id = value_id_matrix.at<int>(y, x);
-//				mapMatrix.at<float>(val_id, mapping_col) = 1;
-//				continue;
-//			}
-//
-//			double num_neigh = 0.0;
-//			vector<int> val_ids;
-//			if (x - 1 >= 0)
-//			{
-//				num_neigh++;
-//				val_ids.push_back(value_id_matrix.at<int>(y, x - 1));
-//			}
-//			if (y - 1 >= 0)
-//			{
-//				num_neigh++;
-//				val_ids.push_back(value_id_matrix.at<int>(y - 1, x));
-//			}
-//			if (x + 1 < response_width)
-//			{
-//				num_neigh++;
-//				val_ids.push_back(value_id_matrix.at<int>(y, x + 1));
-//			}
-//			if (y + 1 < response_height)
-//			{
-//				num_neigh++;
-//				val_ids.push_back(value_id_matrix.at<int>(y + 1, x));
-//			}
-//
-//			for (size_t k = 0; k < val_ids.size(); ++k)
-//			{
-//				mapMatrix.at<float>(val_ids[k], mapping_col) = 1.0 / num_neigh;
-//			}
-//		}
-//	}
-//
-//	response = response.t() * mapMatrix;
-//	response = response.t();
-//	response = response.reshape(1, response_height);
-//	response = response.t();
-//}
-
 // As the sparse patch expert output with interpolation, this function creates an interpolation matrix
 void LandmarkDetector::interpolationMatrix(cv::Mat_<float>& mapMatrix, int response_height, int response_width, int input_width, int input_height)
 {
@@ -610,41 +492,46 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 
 	// Extract im2col but in a sparse way and contrast normalize
 	im2colBiasSparseContrastNorm(area_of_interest, width, height, response);
+	response = response.t();
 
 	for (size_t layer = 0; layer < activation_function.size(); ++layer)
 	{
 
-		// We are performing response = response * weights[layers], but in OpenBLAS as that is significantly quicker than OpenCV		
-		float* m1 = (float*)response.data;
-		float* m2 = (float*)weights[layer].data;
+		// We are performing response = weights[layers] * response(t), but in OpenBLAS as that is significantly quicker than OpenCV		
+		cv::Mat_<float> resp = response;
+		float* m1 = (float*)resp.data;
+		cv::Mat_<float> weight = weights[layer];
+		float* m2 = (float*)weight.data;
 
-		cv::Mat_<float> resp_blas(response.rows, weights[layer].cols);
+		cv::Mat_<float> resp_blas(weight.rows, resp.cols);
 		float* m3 = (float*)resp_blas.data;
 
-		// Perform matrix multiplication
-		float alpha = 1.0;
-		float beta = 0.0;
-		sgemm_("N", "N", &weights[layer].cols, &response.rows, &response.cols, &alpha, m2, &weights[layer].cols, m1, &response.cols, &beta, m3, &weights[layer].cols);
+		// Perform matrix multiplication in OpenBLAS (fortran call)
+		float alpha1 = 1.0;
+		float beta1 = 0.0;
+		sgemm_("N", "N", &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
 
 		// The above is a faster version of this, by calling the fortran version directly
-		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, weights[layer].cols, response.rows, response.cols, 1, m2, weights[layer].cols, m1, response.cols, 0.0, m3, weights[layer].cols);
+		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, resp.cols, weight.rows, weight.cols, 1, m1, resp.cols, m2, weight.cols, 0.0, m3, resp.cols);
 		
 		// Adding the bias (bit ugly, but the fastest way to do this)
 		response = resp_blas;
+
 		float* data = (float*)response.data;
 		size_t height = response.rows;
 		size_t width = response.cols;
 		float* data_b = (float*)biases[layer].data;
 		for (size_t y = 0; y < height; ++y)
 		{
+			float bias = data_b[y];
 			for (size_t x = 0; x < width; ++x)
 			{
-				float in = *data;
-				*data++ = in + data_b[x];
+				float in = *data + bias;
+				*data++ = in;
 			}
 		}
 
-		// Perform activation	
+		// Perform activation and add bias at the same time	
 		if (activation_function[layer] == 0) // Sigmoid
 		{
 
@@ -662,15 +549,13 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 		}
 		else if (activation_function[layer] == 2)// ReLU
 		{
-			// TODO this could be spedup by iterating over it
 			cv::threshold(response, response, 0, 0, cv::THRESH_TOZERO);
 		}
 
 	}
 	
-	//response = response.t() * mapMatrix;
-	//response = response.t();
-	response = mapMatrix * response;
+	response =  response * mapMatrix;
+	response = response.t();
 	response = response.reshape(1, response_height);
 	response = response.t();
 }

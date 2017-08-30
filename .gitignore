@@ -53,3 +53,4 @@ matlab_runners/Demos/demo_img/
 matlab_runners/Demos/demo_vid/
 matlab_runners/Demos/output_features_seq/
 matlab_runners/Demos/output_features_vid/
+exe/FeatureExtraction/experiments/

@@ -85,6 +85,9 @@
 
 #include "LandmarkDetectorUtils.h"
 
+// CNN includes
+#include "CNN_utils.h"
+
 // OpenBLAS
 #include <cblas.h>
 #include <f77blas.h>
@@ -153,623 +156,240 @@ CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_poo
 	}
 }
 
-void PReLU(std::vector<cv::Mat_<float> >& input_output_maps, cv::Mat_<float> prelu_weights)
-{
-
-	if (input_output_maps.size() > 1)
-	{
-		int h = input_output_maps[0].rows;
-		int w = input_output_maps[0].cols;
-		size_t size_in = h * w;
-
-		for (size_t k = 0; k < input_output_maps.size(); ++k)
-		{
-			// Apply the PReLU
-			auto iter = input_output_maps[k].begin();
-
-			float neg_mult = prelu_weights.at<float>(k);
-
-			for(size_t i = 0; i < size_in; ++i)
-			{
-				float in_val = *iter;
-
-				// The prelu step
-				*iter++ = in_val >= 0 ? in_val : in_val * neg_mult;
-
-			}
-		}
-	}
-	else
-	{
-		
-		int w = input_output_maps[0].cols;
-
-		for (size_t k = 0; k < prelu_weights.rows; ++k)
-		{
-			auto iter = input_output_maps[0].row(k).begin();
-			float neg_mult = prelu_weights.at<float>(k);
-
-			for (size_t i = 0; i < w; ++i)
-			{
-				float in_val = *iter;
-				// Apply the PReLU
-				*iter++ = in_val >= 0 ? in_val : in_val * neg_mult;
-			}
-		}
-
-	}
-
-}
-
-void fully_connected(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, cv::Mat_<float> weights, cv::Mat_<float> biases)
-{
-	outputs.clear();
-
-	if (input_maps.size() > 1)
-	{
-		// Concatenate all the maps
-		cv::Size orig_size = input_maps[0].size();
-		cv::Mat_<float> input_concat(input_maps.size(), input_maps[0].cols * input_maps[0].rows);
-
-		for (size_t in = 0; in < input_maps.size(); ++in)
-		{
-			cv::Mat_<float> add = input_maps[in];
-			
-			// Reshape if all of the data will be flattened
-			if (input_concat.rows != weights.cols)
-			{
-				add = add.t();
-			}
-
-			add = add.reshape(0, 1);
-			add.copyTo(input_concat.row(in));
-		}
-
-		// Treat the input as separate feature maps
-		if (input_concat.rows == weights.cols)
-		{
-			input_concat = weights * input_concat;
-			// Add biases
-			for (size_t k = 0; k < biases.rows; ++k)
-			{
-				input_concat.row(k) = input_concat.row(k) + biases.at<float>(k);
-			}
-
-			outputs.clear();
-			// Resize and add as output
-			for (size_t k = 0; k < biases.rows; ++k)
-			{
-				cv::Mat_<float> reshaped = input_concat.row(k).clone();
-				reshaped = reshaped.reshape(1, orig_size.height);
-				outputs.push_back(reshaped);
-			}
-		}
-		else
-		{
-			// Flatten the input
-			input_concat = input_concat.reshape(0, input_concat.rows * input_concat.cols);
-
-			input_concat = weights * input_concat + biases;
-
-			outputs.clear();
-			outputs.push_back(input_concat);
-		}
-
-	}
-	else
-	{
-		cv::Mat out = weights * input_maps[0] + biases;
-		outputs.clear();
-		outputs.push_back(out.t());
-	}
-
-}
-
-void max_pooling(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, int stride_x, int stride_y, int kernel_size_x, int kernel_size_y)
-{
-	vector<cv::Mat_<float> > outputs_sub;
-
-	// Iterate over kernel height and width, based on stride
-	for (size_t in = 0; in < input_maps.size(); ++in)
-	{
-		// Help with rounding up a bit, to match caffe style output
-		int out_x = round((double)(input_maps[in].cols - kernel_size_x) / (double)stride_x) + 1;
-		int out_y = round((double)(input_maps[in].rows - kernel_size_y) / (double)stride_y) + 1;
-
-		cv::Mat_<float> sub_out(out_y, out_x, 0.0);
-		cv::Mat_<float> in_map = input_maps[in];
-
-		for (int x = 0; x < input_maps[in].cols; x += stride_x)
-		{
-			int max_x = cv::min(input_maps[in].cols, x + kernel_size_x);
-			int x_in_out = floor(x / stride_x);
-
-			if (x_in_out >= out_x)
-				continue;
-
-			for (int y = 0; y < input_maps[in].rows; y += stride_y)
-			{
-				int y_in_out = floor(y / stride_y);
-
-				if (y_in_out >= out_y)
-					continue;
-
-				int max_y = cv::min(input_maps[in].rows, y + kernel_size_y);
-
-				float curr_max = -FLT_MAX;
-
-				for (int x_in = x; x_in < max_x; ++x_in)
-				{
-					for (int y_in = y; y_in < max_y; ++y_in)
-					{
-						float curr_val = in_map.at<float>(y_in, x_in);
-						if (curr_val > curr_max)
-						{
-							curr_max = curr_val;
-						}
-					}
-				}
-				sub_out.at<float>(y_in_out, x_in_out) = curr_max;
-			}
-		}
-
-		outputs_sub.push_back(sub_out);
-
-	}
-	outputs = outputs_sub;
-
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void convolution_single_kern_fft(const vector<cv::Mat_<float> >& input_imgs, vector<cv::Mat_<double> >& img_dfts, const vector<cv::Mat_<float> >&  _templs, map<int, vector<cv::Mat_<double> > >& _templ_dfts, cv::Mat_<float>& result)
-{
-	// Assume result is defined properly
-	if (result.empty())
-	{
-		cv::Size corrSize(input_imgs[0].cols - _templs[0].cols + 1, input_imgs[0].rows - _templs[0].rows + 1);
-		result.create(corrSize);
-	}
 
-	// Our model will always be under min block size so can ignore this
-	//const double blockScale = 4.5;
-	//const int minBlockSize = 256;
-
-	int maxDepth = CV_64F;
-
-	cv::Size dftsize;
-
-	dftsize.width = cv::getOptimalDFTSize(result.cols + _templs[0].cols - 1);
-	dftsize.height = cv::getOptimalDFTSize(result.rows + _templs[0].rows - 1);
-
-	// Compute block size
-	cv::Size blocksize;
-	blocksize.width = dftsize.width - _templs[0].cols + 1;
-	blocksize.width = MIN(blocksize.width, result.cols);
-	blocksize.height = dftsize.height - _templs[0].rows + 1;
-	blocksize.height = MIN(blocksize.height, result.rows);
-
-	vector<cv::Mat_<double>> dftTempl;
-
-	// if this has not been precomputed, precompute it, otherwise use it
-	if (_templ_dfts.find(dftsize.width) == _templ_dfts.end())
-	{
-		dftTempl.resize(_templs.size());
-		for (size_t k = 0; k < _templs.size(); ++k)
-		{
-			dftTempl[k].create(dftsize.height, dftsize.width);
-
-			cv::Mat_<float> src = _templs[k];
-
-			cv::Mat_<double> dst(dftTempl[k], cv::Rect(0, 0, dftsize.width, dftsize.height));
-
-			cv::Mat_<double> dst1(dftTempl[k], cv::Rect(0, 0, _templs[k].cols, _templs[k].rows));
-
-			if (dst1.data != src.data)
-				src.convertTo(dst1, dst1.depth());
-
-			if (dst.cols > _templs[k].cols)
-			{
-				cv::Mat_<double> part(dst, cv::Range(0, _templs[k].rows), cv::Range(_templs[k].cols, dst.cols));
-				part.setTo(0);
-			}
-
-			// Perform DFT of the template
-			dft(dst, dst, 0, _templs[k].rows);
-
-		}
-		_templ_dfts[dftsize.width] = dftTempl;
-
-	}
-	else
-	{
-		dftTempl = _templ_dfts[dftsize.width];
-	}
-
-	cv::Size bsz(std::min(blocksize.width, result.cols), std::min(blocksize.height, result.rows));
-	cv::Mat src;
-
-	cv::Mat cdst(result, cv::Rect(0, 0, bsz.width, bsz.height));
-
-	vector<cv::Mat_<double> > dftImgs;
-	dftImgs.resize(input_imgs.size());
-
-	if (img_dfts.empty())
-	{
-		for(size_t k = 0; k < input_imgs.size(); ++k)
-		{
-			dftImgs[k].create(dftsize);
-			dftImgs[k].setTo(0.0);
-
-			cv::Size dsz(bsz.width + _templs[k].cols - 1, bsz.height + _templs[k].rows - 1);
-
-			int x2 = std::min(input_imgs[k].cols, dsz.width);
-			int y2 = std::min(input_imgs[k].rows, dsz.height);
-
-			cv::Mat src0(input_imgs[k], cv::Range(0, y2), cv::Range(0, x2));
-			cv::Mat dst(dftImgs[k], cv::Rect(0, 0, dsz.width, dsz.height));
-			cv::Mat dst1(dftImgs[k], cv::Rect(0, 0, x2, y2));
-
-			src = src0;
-
-			if (dst1.data != src.data)
-				src.convertTo(dst1, dst1.depth());
-
-			dft(dftImgs[k], dftImgs[k], 0, dsz.height);
-			img_dfts.push_back(dftImgs[k].clone());
-		}
-	}
-
-	cv::Mat_<double> dft_img(img_dfts[0].rows, img_dfts[0].cols, 0.0);
-	for (size_t k = 0; k < input_imgs.size(); ++k)
-	{
-		cv::Mat dftTempl1(dftTempl[k], cv::Rect(0, 0, dftsize.width, dftsize.height));
-		if (k == 0)
-		{
-			cv::mulSpectrums(img_dfts[k], dftTempl1, dft_img, 0, true);
-		}
-		else
-		{
-			cv::mulSpectrums(img_dfts[k], dftTempl1, dftImgs[k], 0, true);
-			dft_img = dft_img + dftImgs[k];
-		}
-	}
-
-	cv::dft(dft_img, dft_img, cv::DFT_INVERSE + cv::DFT_SCALE, bsz.height);
-
-	src = dft_img(cv::Rect(0, 0, bsz.width, bsz.height));
-
-	src.convertTo(cdst, CV_32F);
-
-}
-
-void im2col_t(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
-{
-
-	int m = input.cols;
-	int n = input.rows;
-
-	// determine how many blocks there will be with a sliding window of width x height in the input
-	int yB = m - height + 1;
-	int xB = n - width + 1;
-
-	// Allocate the output size
-	if (output.rows != width * height && output.cols != xB*yB)
-	{
-		output = cv::Mat::ones(width * height, xB*yB, CV_32F);
-	}
-
-	// Iterate over the whole image
-	for (int i = 0; i< yB; i++)
-	{
-		int rowIdx = i;
-		for (int j = 0; j< xB; j++)
-		{
-			//int rowIdx = i; +j*yB;
-			// iterate over the blocks within the image
-			for (unsigned int yy = 0; yy < height; ++yy)
-			{
-				// Faster iteration over the image
-				const float* Mi = input.ptr<float>(j + yy);
-				for (unsigned int xx = 0; xx < width; ++xx)
-				{
-					int colIdx = xx*height + yy;
-
-					output.at<float>(colIdx, rowIdx) = Mi[i + xx];
-				}
-			}
-			rowIdx += yB;
-
-		}
-	}
-}
-
-void im2col_multimap(const vector<cv::Mat_<float> >& inputs, int width, int height, cv::Mat_<float>& output)
-{
-
-	int m = inputs[0].rows;
-	int n = inputs[0].cols;
-
-	// determine how many blocks there will be with a sliding window of width x height in the input
-	int yB = m - height + 1;
-	int xB = n - width + 1;
-
-	int stride = height * width;
-
-	size_t num_maps = inputs.size();
-
-	// Allocate the output size
-	if (output.cols != width * height * inputs.size() + 1 && output.rows != xB*yB)
-	{
-		output = cv::Mat::ones(xB*yB, width * height * num_maps + 1, CV_32F);
-	}
-
-	// Iterate over the whole image
-	for (int i = 0; i< yB; i++)
-	{
-		int rowIdx = i*xB;
-		for (int j = 0; j< xB; j++)
-		{
-
-			float* Mo = output.ptr<float>(rowIdx);
-
-			// iterate over the blocks within the image
-			for (unsigned int yy = 0; yy < height; ++yy)
-			{
-				for (unsigned int in_maps = 0; in_maps < num_maps; ++in_maps)
-				{
-					// Faster iteration over the image
-					const float* Mi = inputs[in_maps].ptr<float>(i + yy);
-
-					for (unsigned int xx = 0; xx < width; ++xx)
-					{
-						int colIdx = xx*height + yy + in_maps * stride;
-						//output.at<float>(rowIdx, colIdx) = Mi[j + xx]; //input.at<float>(i + yy, j + xx);
-						Mo[colIdx] = Mi[j + xx];
-					}
-				}
-			}
-			rowIdx++;
-
-		}
-	}
-}
-
-
-void im2col(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
-{
-
-	int m = input.rows;
-	int n = input.cols;
-
-	// determine how many blocks there will be with a sliding window of width x height in the input
-	int yB = m - height + 1;
-	int xB = n - width + 1;
-
-	// Allocate the output size
-	if (output.cols != width * height && output.rows != xB*yB)
-	{
-		output = cv::Mat::ones(xB*yB, width * height, CV_32F);
-	}
-
-	// Iterate over the whole image
-	for (int i = 0; i< yB; i++)
-	{
-		int rowIdx = i*xB;
-		for (int j = 0; j< xB; j++)
-		{
-
-			float* Mo = output.ptr<float>(rowIdx);
-
-			// iterate over the blocks within the image
-			for (unsigned int yy = 0; yy < height; ++yy)
-			{
-				// Faster iteration over the image
-				const float* Mi = input.ptr<float>(i + yy);
-
-				for (unsigned int xx = 0; xx < width; ++xx)
-				{
-					int colIdx = xx*height + yy;
-					//output.at<float>(rowIdx, colIdx) = Mi[j + xx]; //input.at<float>(i + yy, j + xx);
-					Mo[colIdx] = Mi[j + xx];
-				}
-			}
-			rowIdx++;
-
-		}
-	}
-}
-
-void convolution_direct(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, const std::vector<float >& biases, int height_k, int width_k)
-{
-	outputs.clear();
-
-	int height_in = input_maps[0].rows;
-	int width_n = input_maps[0].cols;
-
-	// determine how many blocks there will be with a sliding window of width x height in the input
-	int yB = height_in - height_k + 1;
-	int xB = width_n - width_k + 1;
-
-	cv::Mat_<float> input_matrix(input_maps.size() * height_k * width_k + 1.0, yB * xB, 1.0f);
-
-	// Comibine im2col accross channels to prepare for matrix multiplication
-	for (size_t i = 0; i < input_maps.size(); ++i)
-	{
-		im2col_t(input_maps[i], width_k, height_k, input_matrix(cv::Rect(0, i * height_k * width_k, yB * xB, height_k * width_k)));
-	}
-
-	// Actual convolution (through multiplication)
-	cv::Mat_<float> out = weight_matrix * input_matrix;
-
-	// Move back to vectors and reshape accordingly (also add the bias)
-	for (size_t k = 0; k < out.rows; ++k)
-	{
-		outputs.push_back(out.row(k).reshape(1, yB));
-	}
-
-}
-
-void convolution_direct_blas(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, const std::vector<float >& biases, int height_k, int width_k)
-{
-	outputs.clear();
-
-	int height_in = input_maps[0].rows;
-	int width_n = input_maps[0].cols;
-
-	// determine how many blocks there will be with a sliding window of width x height in the input
-	int yB = height_in - height_k + 1;
-	int xB = width_n - width_k + 1;
-
-	cv::Mat_<float> input_matrix(input_maps.size() * height_k * width_k + 1.0, yB * xB, 1.0f);
-
-	// Comibine im2col accross channels to prepare for matrix multiplication
-	for (size_t i = 0; i < input_maps.size(); ++i)
-	{
-		im2col_t(input_maps[i], width_k, height_k, input_matrix(cv::Rect(0, i * height_k * width_k, yB * xB, height_k * width_k)));
-	}
-
-	float* m1 = (float*)weight_matrix.data;
-	float* m2 = (float*)input_matrix.data;
-
-	cv::Mat_<float> out(weight_matrix.rows, input_matrix.cols, 1.0);
-	float* m3 = (float*)out.data;
-
-	cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, input_matrix.cols, weight_matrix.rows, weight_matrix.cols, 1, m2, input_matrix.cols, m1, weight_matrix.cols, 0.0, m3, input_matrix.cols);
-
-	// Move back to vectors and reshape accordingly (also add the bias)
-	for (size_t k = 0; k < out.rows; ++k)
-	{
-		outputs.push_back(out.row(k).reshape(1, yB));
-	}
-
-}
-
-void convolution_direct_blas2(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, const std::vector<float >& biases, int height_k, int width_k)
-{
-	outputs.clear();
-
-	int height_in = input_maps[0].rows;
-	int width_n = input_maps[0].cols;
-
-	// determine how many blocks there will be with a sliding window of width x height in the input
-	int yB = height_in - height_k + 1;
-	int xB = width_n - width_k + 1;
-
-	// TODO this could (should) be pre-allocated
-	cv::Mat_<float> input_matrix(input_maps.size() * height_k * width_k + 1.0, yB * xB, 1.0f);
-	//cv::Mat_<float> input_matrix_t(yB * xB, input_maps.size() * height_k * width_k + 1.0, 1.0f);
-
-	// Comibine im2col accross channels to prepare for matrix multiplication
-	for (size_t i = 0; i < input_maps.size(); ++i)
-	{
-		im2col_t(input_maps[i], width_k, height_k, input_matrix(cv::Rect(0, i * height_k * width_k, yB * xB, height_k * width_k)));
-		//im2col(input_maps[i], width_k, height_k, input_matrix_t(cv::Rect(i * height_k * width_k, 0, height_k * width_k, yB * xB)));
-
-	}
-
-	cv::Mat_<float> input_matrix_mm;
-	im2col_multimap(input_maps, width_k, height_k, input_matrix_mm);
-	//input_matrix_mm = input_matrix_mm.t();
-
-	float* m1 = (float*)weight_matrix.data;
-	float* m2 = (float*)input_matrix.data;
-
-	cv::Mat_<float> out(weight_matrix.rows, input_matrix.cols, 1.0);
-	float* m3 = (float*)out.data;
-
-	cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, input_matrix.cols, weight_matrix.rows, weight_matrix.cols, 1, m2, input_matrix.cols, m1, weight_matrix.cols, 0.0, m3, input_matrix.cols);
-
-	cv::Mat_<float> out2(weight_matrix.rows, input_matrix.cols, 1.0);
-	float* m31 = (float*)out2.data;
-
-	float* m21 = (float*)input_matrix_mm.data;
-	cblas_sgemm(CblasColMajor, CblasNoTrans, CblasTrans, input_matrix_mm.cols, weight_matrix.rows, weight_matrix.cols, 1, m21, input_matrix_mm.cols, m1, weight_matrix.cols, 0.0, m31, input_matrix_mm.cols);
-	// TOODO call fortran directly
-	//sgemm_("N","N", )
-	cout << cv::mean(cv::abs(out - out2))[0] << endl;
-
-	// Move back to vectors and reshape accordingly (also add the bias)
-	for (size_t k = 0; k < out.rows; ++k)
-	{
-		outputs.push_back(out.row(k).reshape(1, yB));
-	}
-
-}
-
-void convolution_fft2(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const std::vector<std::vector<cv::Mat_<float> > >& kernels, const std::vector<float >& biases, vector<map<int, vector<cv::Mat_<double> > > >& precomp_dfts)
-{
-	outputs.clear();
-
-	// Useful precomputed data placeholders for quick correlation (convolution)
-	vector<cv::Mat_<double> > input_image_dft;
-
-	for (size_t k = 0; k < kernels.size(); ++k)
-	{
-
-		// The convolution (with precomputation)
-		cv::Mat_<float> output;
-		convolution_single_kern_fft(input_maps, input_image_dft, kernels[k], precomp_dfts[k], output);
-
-		// Combining the maps
-		outputs.push_back(output + biases[k]);
-
-	}
-}
-
-void convolution_fft(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const std::vector<std::vector<cv::Mat_<float> > >& kernels, const std::vector<float >& biases, vector<vector<pair<int, cv::Mat_<double> > > >& precomp_dfts)
-{
-	outputs.clear();
-	for (size_t in = 0; in < input_maps.size(); ++in)
-	{
-		cv::Mat_<float> input_image = input_maps[in];
-
-		// Useful precomputed data placeholders for quick correlation (convolution)
-		cv::Mat_<double> input_image_dft;
-		cv::Mat integral_image;
-		cv::Mat integral_image_sq;
-
-		for (size_t k = 0; k < kernels[in].size(); ++k)
-		{
-			cv::Mat_<float> kernel = kernels[in][k];
-
-			// The convolution (with precomputation)
-			cv::Mat_<float> output;
-			if (precomp_dfts[in][k].second.empty())
-			{
-				std::map<int, cv::Mat_<double> > precomputed_dft;
-
-				LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
-
-				precomp_dfts[in][k].first = precomputed_dft.begin()->first;
-				precomp_dfts[in][k].second = precomputed_dft.begin()->second;
-			}
-			else
-			{
-				std::map<int, cv::Mat_<double> > precomputed_dft;
-				precomputed_dft[precomp_dfts[in][k].first] = precomp_dfts[in][k].second;
-				LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
-			}
-
-			// Combining the maps
-			if (in == 0)
-			{
-				outputs.push_back(output);
-			}
-			else
-			{
-				outputs[k] = outputs[k] + output;
-			}
-
-		}
-
-	}
-
-	for (size_t k = 0; k < biases.size(); ++k)
-	{
-		outputs[k] = outputs[k] + biases[k];
-	}
-}
+//void im2col_multimap(const vector<cv::Mat_<float> >& inputs, int width, int height, cv::Mat_<float>& output)
+//{
+//
+//	int m = inputs[0].rows;
+//	int n = inputs[0].cols;
+//
+//	// determine how many blocks there will be with a sliding window of width x height in the input
+//	int yB = m - height + 1;
+//	int xB = n - width + 1;
+//
+//	int stride = height * width;
+//
+//	size_t num_maps = inputs.size();
+//
+//	// Allocate the output size
+//	if (output.cols != width * height * inputs.size() + 1 && output.rows != xB*yB)
+//	{
+//		output = cv::Mat::ones(xB*yB, width * height * num_maps + 1, CV_32F);
+//	}
+//
+//	// Iterate over the whole image
+//	for (int i = 0; i< yB; i++)
+//	{
+//		int rowIdx = i*xB;
+//		for (int j = 0; j< xB; j++)
+//		{
+//
+//			float* Mo = output.ptr<float>(rowIdx);
+//
+//			// iterate over the blocks within the image
+//			for (unsigned int yy = 0; yy < height; ++yy)
+//			{
+//				for (unsigned int in_maps = 0; in_maps < num_maps; ++in_maps)
+//				{
+//					// Faster iteration over the image
+//					const float* Mi = inputs[in_maps].ptr<float>(i + yy);
+//
+//					for (unsigned int xx = 0; xx < width; ++xx)
+//					{
+//						int colIdx = xx*height + yy + in_maps * stride;
+//						//output.at<float>(rowIdx, colIdx) = Mi[j + xx]; //input.at<float>(i + yy, j + xx);
+//						Mo[colIdx] = Mi[j + xx];
+//					}
+//				}
+//			}
+//			rowIdx++;
+//
+//		}
+//	}
+//}
+//
+//void im2col(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
+//{
+//
+//	int m = input.rows;
+//	int n = input.cols;
+//
+//	// determine how many blocks there will be with a sliding window of width x height in the input
+//	int yB = m - height + 1;
+//	int xB = n - width + 1;
+//
+//	// Allocate the output size
+//	if (output.cols != width * height && output.rows != xB*yB)
+//	{
+//		output = cv::Mat::ones(xB*yB, width * height, CV_32F);
+//	}
+//
+//	// Iterate over the whole image
+//	for (int i = 0; i< yB; i++)
+//	{
+//		int rowIdx = i*xB;
+//		for (int j = 0; j< xB; j++)
+//		{
+//
+//			float* Mo = output.ptr<float>(rowIdx);
+//
+//			// iterate over the blocks within the image
+//			for (unsigned int yy = 0; yy < height; ++yy)
+//			{
+//				// Faster iteration over the image
+//				const float* Mi = input.ptr<float>(i + yy);
+//
+//				for (unsigned int xx = 0; xx < width; ++xx)
+//				{
+//					int colIdx = xx*height + yy;
+//					//output.at<float>(rowIdx, colIdx) = Mi[j + xx]; //input.at<float>(i + yy, j + xx);
+//					Mo[colIdx] = Mi[j + xx];
+//				}
+//			}
+//			rowIdx++;
+//
+//		}
+//	}
+//}
+//
+//void convolution_direct(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, const std::vector<float >& biases, int height_k, int width_k)
+//{
+//	outputs.clear();
+//
+//	int height_in = input_maps[0].rows;
+//	int width_n = input_maps[0].cols;
+//
+//	// determine how many blocks there will be with a sliding window of width x height in the input
+//	int yB = height_in - height_k + 1;
+//	int xB = width_n - width_k + 1;
+//
+//	cv::Mat_<float> input_matrix(input_maps.size() * height_k * width_k + 1.0, yB * xB, 1.0f);
+//
+//	// Comibine im2col accross channels to prepare for matrix multiplication
+//	for (size_t i = 0; i < input_maps.size(); ++i)
+//	{
+//		im2col_t(input_maps[i], width_k, height_k, input_matrix(cv::Rect(0, i * height_k * width_k, yB * xB, height_k * width_k)));
+//	}
+//
+//	// Actual convolution (through multiplication)
+//	cv::Mat_<float> out = weight_matrix * input_matrix;
+//
+//	// Move back to vectors and reshape accordingly (also add the bias)
+//	for (size_t k = 0; k < out.rows; ++k)
+//	{
+//		outputs.push_back(out.row(k).reshape(1, yB));
+//	}
+//
+//}
+//
+//
+//void convolution_direct_blas2(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, const std::vector<float >& biases, int height_k, int width_k)
+//{
+//	outputs.clear();
+//
+//	int height_in = input_maps[0].rows;
+//	int width_n = input_maps[0].cols;
+//
+//	// determine how many blocks there will be with a sliding window of width x height in the input
+//	int yB = height_in - height_k + 1;
+//	int xB = width_n - width_k + 1;
+//
+//	// TODO this could (should) be pre-allocated
+//	cv::Mat_<float> input_matrix(input_maps.size() * height_k * width_k + 1.0, yB * xB, 1.0f);
+//	//cv::Mat_<float> input_matrix_t(yB * xB, input_maps.size() * height_k * width_k + 1.0, 1.0f);
+//
+//	// Comibine im2col accross channels to prepare for matrix multiplication
+//	for (size_t i = 0; i < input_maps.size(); ++i)
+//	{
+//		im2col_t(input_maps[i], width_k, height_k, input_matrix(cv::Rect(0, i * height_k * width_k, yB * xB, height_k * width_k)));
+//		//im2col(input_maps[i], width_k, height_k, input_matrix_t(cv::Rect(i * height_k * width_k, 0, height_k * width_k, yB * xB)));
+//
+//	}
+//
+//	cv::Mat_<float> input_matrix_mm;
+//	im2col_multimap(input_maps, width_k, height_k, input_matrix_mm);
+//	//input_matrix_mm = input_matrix_mm.t();
+//
+//	float* m1 = (float*)weight_matrix.data;
+//	float* m2 = (float*)input_matrix.data;
+//
+//	cv::Mat_<float> out(weight_matrix.rows, input_matrix.cols, 1.0);
+//	float* m3 = (float*)out.data;
+//
+//	cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, input_matrix.cols, weight_matrix.rows, weight_matrix.cols, 1, m2, input_matrix.cols, m1, weight_matrix.cols, 0.0, m3, input_matrix.cols);
+//
+//	cv::Mat_<float> out2(weight_matrix.rows, input_matrix.cols, 1.0);
+//	float* m31 = (float*)out2.data;
+//
+//	float* m21 = (float*)input_matrix_mm.data;
+//	cblas_sgemm(CblasColMajor, CblasNoTrans, CblasTrans, input_matrix_mm.cols, weight_matrix.rows, weight_matrix.cols, 1, m21, input_matrix_mm.cols, m1, weight_matrix.cols, 0.0, m31, input_matrix_mm.cols);
+//	// TOODO call fortran directly
+//	//sgemm_("N","N", )
+//	cout << cv::mean(cv::abs(out - out2))[0] << endl;
+//
+//	// Move back to vectors and reshape accordingly (also add the bias)
+//	for (size_t k = 0; k < out.rows; ++k)
+//	{
+//		outputs.push_back(out.row(k).reshape(1, yB));
+//	}
+//
+//}
+//
+//void convolution_fft(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const std::vector<std::vector<cv::Mat_<float> > >& kernels, const std::vector<float >& biases, vector<vector<pair<int, cv::Mat_<double> > > >& precomp_dfts)
+//{
+//	outputs.clear();
+//	for (size_t in = 0; in < input_maps.size(); ++in)
+//	{
+//		cv::Mat_<float> input_image = input_maps[in];
+//
+//		// Useful precomputed data placeholders for quick correlation (convolution)
+//		cv::Mat_<double> input_image_dft;
+//		cv::Mat integral_image;
+//		cv::Mat integral_image_sq;
+//
+//		for (size_t k = 0; k < kernels[in].size(); ++k)
+//		{
+//			cv::Mat_<float> kernel = kernels[in][k];
+//
+//			// The convolution (with precomputation)
+//			cv::Mat_<float> output;
+//			if (precomp_dfts[in][k].second.empty())
+//			{
+//				std::map<int, cv::Mat_<double> > precomputed_dft;
+//
+//				LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
+//
+//				precomp_dfts[in][k].first = precomputed_dft.begin()->first;
+//				precomp_dfts[in][k].second = precomputed_dft.begin()->second;
+//			}
+//			else
+//			{
+//				std::map<int, cv::Mat_<double> > precomputed_dft;
+//				precomputed_dft[precomp_dfts[in][k].first] = precomp_dfts[in][k].second;
+//				LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
+//			}
+//
+//			// Combining the maps
+//			if (in == 0)
+//			{
+//				outputs.push_back(output);
+//			}
+//			else
+//			{
+//				outputs[k] = outputs[k] + output;
+//			}
+//
+//		}
+//
+//	}
+//
+//	for (size_t k = 0; k < biases.size(); ++k)
+//	{
+//		outputs[k] = outputs[k] + biases[k];
+//	}
+//}
 
 std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img, bool direct)
 {
