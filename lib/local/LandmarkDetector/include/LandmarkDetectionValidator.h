@@ -116,8 +116,9 @@ public:
 	// Convolutional Neural Network
 
 	// CNN layers for each view
-	// view -> layer -> input maps -> kernels
+	// view -> layer
 	vector<vector<vector<vector<cv::Mat_<float> > > > > cnn_convolutional_layers;
+	vector<vector<cv::Mat_<float> > > cnn_convolutional_layers_weights;
 	// Bit ugly with so much nesting, but oh well
 	vector<vector<vector<vector<pair<int, cv::Mat_<double> > > > > > cnn_convolutional_layers_dft;
 	vector<vector<vector<float > > > cnn_convolutional_layers_bias;
@@ -163,7 +164,7 @@ private:
 	double CheckNN(const cv::Mat_<double>& warped_img, int view_id);
 
 	// Convolutional Neural Network
-	double CheckCNN_tbb(const cv::Mat_<double>& warped_img, int view_id);
+	double DetectionValidator::CheckCNN_fast(const cv::Mat_<double>& warped_img, int view_id);
 
 	// Convolutional Neural Network
 	double CheckCNN(const cv::Mat_<double>& warped_img, int view_id);

@@ -428,7 +428,7 @@ std::vector<cv::Mat_<float>> CNN::Inference(const cv::Mat& input_img, bool direc
 			// Either perform direct convolution through matrix multiplication or use an FFT optimized version, which one is optimal depends on the kernel and input sizes
 			if (direct)
 			{
-				convolution_direct_blas(outputs, input_maps, cnn_convolutional_layers_weights[cnn_layer], cnn_convolutional_layers_bias[cnn_layer], cnn_convolutional_layers[cnn_layer][0][0].rows, cnn_convolutional_layers[cnn_layer][0][0].cols);
+				convolution_direct_blas(outputs, input_maps, cnn_convolutional_layers_weights[cnn_layer], cnn_convolutional_layers[cnn_layer][0][0].rows, cnn_convolutional_layers[cnn_layer][0][0].cols);
 			}
 			else
 			{

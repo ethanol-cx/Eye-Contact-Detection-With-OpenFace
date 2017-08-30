@@ -175,14 +175,14 @@ namespace LandmarkDetector
 			for (int x = 0; x < input_maps[in].cols; x += stride_x)
 			{
 				int max_x = cv::min(input_maps[in].cols, x + kernel_size_x);
-				int x_in_out = floor(x / stride_x);
+				int x_in_out = int(x / stride_x);
 
 				if (x_in_out >= out_x)
 					continue;
 
 				for (int y = 0; y < input_maps[in].rows; y += stride_y)
 				{
-					int y_in_out = floor(y / stride_y);
+					int y_in_out = int(y / stride_y);
 
 					if (y_in_out >= out_y)
 						continue;
@@ -396,7 +396,7 @@ namespace LandmarkDetector
 	}
 
 
-	void convolution_direct_blas(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, const std::vector<float >& biases, int height_k, int width_k)
+	void convolution_direct_blas(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k)
 	{
 		outputs.clear();
 
