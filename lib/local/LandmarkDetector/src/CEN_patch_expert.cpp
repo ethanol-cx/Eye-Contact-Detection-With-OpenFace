@@ -230,52 +230,69 @@ void CEN_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat
 
 	// Mean and standard deviation normalization
 	contrastNorm(input_col, response);
-	cv::Mat_<float> response_blas = response.clone();
+	response = response.t();
 
 	for (size_t layer = 0; layer < activation_function.size(); ++layer)
 	{
 
-		// We are performing response = response * weights[layers], but in OpenBLAS as that is significantly quicker than OpenCV
-		response_blas = response.clone();
+		// We are performing response = weights[layers] * response(t), but in OpenBLAS as that is significantly quicker than OpenCV		
+		cv::Mat_<float> resp = response;
+		float* m1 = (float*)resp.data;
+		cv::Mat_<float> weight = weights[layer];
+		float* m2 = (float*)weight.data;
 
-		float* m1 = (float*)response_blas.data;
-		float* m2 = (float*)weights[layer].data;
-		
-		cv::Mat_<float> resp_blas(response_blas.rows, weights[layer].cols, 1.0);
+		cv::Mat_<float> resp_blas(weight.rows, resp.cols);
 		float* m3 = (float*)resp_blas.data;
 
-		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, weights[layer].cols, response.rows, response.cols, 1, m2, weights[layer].cols, m1, response.cols, 0.0, m3, weights[layer].cols);
+		// Perform matrix multiplication in OpenBLAS (fortran call)
+		float alpha1 = 1.0;
+		float beta1 = 0.0;
+		sgemm_("N", "N", &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
 
-		// TODO check speed
-		float alpha = 1.0;
-		float beta = 0.0;
-		sgemm_("N", "N", &weights[layer].cols, &response.rows, &response.cols, &alpha, m2, &weights[layer].cols, m1, &response.cols, &beta, m3, &weights[layer].cols);
+		// The above is a faster version of this, by calling the fortran version directly
+		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, resp.cols, weight.rows, weight.cols, 1, m1, resp.cols, m2, weight.cols, 0.0, m3, resp.cols);
 
-		// TODO correct this with weight transpose
-
+		// Adding the bias (bit ugly, but the fastest way to do this)
 		response = resp_blas;
 
-		// TODO bias could be pre-allocated to the window size so that addition could be quicker
-		for (size_t y = 0; y < response.rows; ++y)
+		float* data = (float*)response.data;
+		size_t height = response.rows;
+		size_t width = response.cols;
+		float* data_b = (float*)biases[layer].data;
+		for (size_t y = 0; y < height; ++y)
 		{
-			response(cv::Rect(0, y, response.cols, 1)) = response(cv::Rect(0, y, response.cols, 1)) + biases[layer];
-		}
-
-		// Perform activation		
-		if (activation_function[layer] == 0) // Sigmoid
-		{			
-			for (cv::MatIterator_<float> p = response.begin(); p != response.end(); p++)
+			float bias = data_b[y];
+			for (size_t x = 0; x < width; ++x)
 			{
-				*p = 1.0 / (1.0 + exp(-(*p)));
+				float in = *data + bias;
+				*data++ = in;
 			}
 		}
-		else if(activation_function[layer] == 2)// ReLU
+
+		// Perform activation and add bias at the same time	
+		if (activation_function[layer] == 0) // Sigmoid
+		{
+
+			size_t resp_size = response.rows * response.cols;
+
+			// Iterate over the data directly
+			float* data = (float*)response.data;
+
+			for (size_t counter = 0; counter < resp_size; ++counter)
+			{
+				float in = *data;
+				*data++ = 1.0 / (1.0 + exp(-(in)));
+			}
+
+		}
+		else if (activation_function[layer] == 2)// ReLU
 		{
 			cv::threshold(response, response, 0, 0, cv::THRESH_TOZERO);
 		}
 
 	}
 
+	response = response.t();
 	response = response.reshape(1, response_height);
 	response = response.t();
 

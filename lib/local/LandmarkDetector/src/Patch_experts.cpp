@@ -226,7 +226,12 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				// Get intensity response either from the SVR, CCNF, or CEN patch experts (prefer CEN as they are the most accurate so far)
 				if (!cen_expert_intensity.empty())
 				{
+
 					cen_expert_intensity[scale][view_id][i].ResponseSparse(area_of_interest, patch_expert_responses[i], interp_mat);
+
+					// A slower, but slightly more accurate version
+					//cen_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
+
 				}
 				else if (!ccnf_expert_intensity.empty())
 				{
