@@ -172,7 +172,6 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 		int area_of_interest_height = window_size + support_region - 1;
 		int resp_size = area_of_interest_height - support_region + 1;
 		interpolationMatrix(interp_mat, resp_size, resp_size, area_of_interest_width, area_of_interest_height);
-		interp_mat = interp_mat.t();
 	}
 
 	// calculate the patch responses for every landmark, Actual work happens here. If openMP is turned on it is possible to do this in parallel,
