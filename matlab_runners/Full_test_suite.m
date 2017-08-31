@@ -9,7 +9,7 @@ assert(median(all_errors_biwi_OF(:)) < 3.0);
 assert(median(all_errors_bu_OF(:)) < 1.9);
 assert(median(all_errors_ict_OF(:)) < 2.1);
 run_head_pose_tests_OpenFace;
-assert(median(all_errors_biwi_OF(:)) < 2.8);
+assert(median(all_errors_biwi_OF(:)) < 2.7);
 assert(median(all_errors_bu_OF(:)) < 2.0);
 assert(median(all_errors_ict_OF(:)) < 2.0);
 cd('../');

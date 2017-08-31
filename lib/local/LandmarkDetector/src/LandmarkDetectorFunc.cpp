@@ -319,8 +319,15 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_m
 			// Make sure the search size is large
 			params.window_sizes_current = params.window_sizes_init;
 
+			// TODO rem (should the multi-hyp version be only for CEN and not CLNF?), otherwise poss too slow, and poss not accurate
+			//bool landmark_detection_success = clnf_model.DetectLandmarks(grayscale_image, params);
+
 			// Do the actual landmark detection (and keep it only if successful)
-			bool landmark_detection_success = clnf_model.DetectLandmarks(grayscale_image, params);
+			// Perform multi-hypothesis detection here (as face detector can pick up multiple of them)
+			params.multi_view = true;
+			bool landmark_detection_success = DetectLandmarksInImage(grayscale_image, bounding_box, clnf_model, params);
+			params.multi_view = false;
+
 
 			// If landmark reinitialisation unsucessful continue from previous estimates
 			// if it's initial detection however, do not care if it was successful as the validator might be wrong, so continue trackig
