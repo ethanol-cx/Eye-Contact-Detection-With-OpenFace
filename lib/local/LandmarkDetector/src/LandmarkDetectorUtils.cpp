@@ -1590,7 +1590,7 @@ bool DetectSingleFaceMTCNN(cv::Rect_<double>& o_region, const cv::Mat& image, La
 		}
 		else
 		{
-			best_so_far = confidences[0];
+			best_so_far = face_detections[0].width;
 		}
 		int bestIndex = 0;
 
@@ -1608,7 +1608,7 @@ bool DetectSingleFaceMTCNN(cv::Rect_<double>& o_region, const cv::Mat& image, La
 			}
 			else
 			{
-				dist = confidences[i];
+				dist = face_detections[i].width;
 				better = dist > best_so_far;
 			}
 
