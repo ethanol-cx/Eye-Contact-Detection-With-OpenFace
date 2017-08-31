@@ -1,14 +1,16 @@
 clear;
 
 %%
-% Run the BU test with clnf
+% Find the dataset location
 if exist('D:/Datasets/HeadPose', 'file')
     database_root = 'D:/Datasets/HeadPose/';    
 elseif(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
     database_root = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
-elseif(exist([getenv('USERPROFILE') 'F:/Dropbox/Dropbox/AAM/test data/'], 'file'))
+elseif(exist(['F:/Dropbox/Dropbox/AAM/test data/'], 'file'))
     database_root = 'F:/Dropbox/Dropbox/AAM/test data/';
-else
+elseif(exist(['F:/Dropbox/AAM/test data/'], 'file'))
+    database_root = 'F:/Dropbox/AAM/test data/';
+else    
     database_root = '/multicomp/datasets/head_pose_dbs/';
 end
 
