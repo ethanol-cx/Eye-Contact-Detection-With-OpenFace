@@ -482,7 +482,7 @@ void CNN::Read(const string& location)
 				}
 				weight_matrix.copyTo(W(cv::Rect(0, 0, weight_matrix.cols, weight_matrix.rows)));
 
-				cnn_convolutional_layers_weights.push_back(W);
+				cnn_convolutional_layers_weights.push_back(W.t());
 				conv_layer_pre_alloc_im2col.push_back(cv::Mat_<float>());
 
 			}
