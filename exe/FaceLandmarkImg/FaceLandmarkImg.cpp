@@ -315,6 +315,19 @@ int main(int argc, char **argv)
 		// Loading image
 		cv::Mat read_image = cv::imread(file, -1);
 
+		// Deal with 16 bit images (TODO this should be a proper conversion code pulled out)
+		if (read_image.type() == CV_16UC3 || read_image.type() == CV_16UC1)
+		{
+			if(read_image.channels() == 3)
+			{
+				read_image.convertTo(read_image, CV_8UC3, 1.0 / 256.0);
+			}
+			else if(read_image.channels() == 1)
+			{
+				read_image.convertTo(read_image, CV_8UC1, 1.0 / 256.0);
+			}
+		}
+
 		if (read_image.empty())
 		{
 			cout << "Could not read the input image" << endl;
