@@ -365,7 +365,7 @@ namespace LandmarkDetector
 		int xB = n - width + 1;
 
 		// Allocate the output size
-		if (output.rows != width * height && output.cols != xB*yB)
+		if (output.rows != width * height || output.cols != xB*yB)
 		{
 			output = cv::Mat::ones(width * height, xB*yB, CV_32F);
 		}
@@ -430,5 +430,135 @@ namespace LandmarkDetector
 		}
 
 	}
+
+	void im2col(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
+	{
+	
+		int m = input.rows;
+		int n = input.cols;
+	
+		// determine how many blocks there will be with a sliding window of width x height in the input
+		int yB = m - height + 1;
+		int xB = n - width + 1;
+	
+		// Allocate the output size
+		if (output.cols != width * height || output.rows != xB*yB)
+		{
+			output = cv::Mat::ones(xB*yB, width * height, CV_32F);
+		}
+	
+		// Iterate over the whole image
+		for (int i = 0; i< yB; i++)
+		{
+			int rowIdx = i*xB;
+			for (int j = 0; j< xB; j++)
+			{
+	
+				float* Mo = output.ptr<float>(rowIdx);
+	
+				// iterate over the blocks within the image
+				for (unsigned int yy = 0; yy < height; ++yy)
+				{
+					// Faster iteration over the image
+					const float* Mi = input.ptr<float>(i + yy);
+	
+					for (unsigned int xx = 0; xx < width; ++xx)
+					{
+						int colIdx = xx*height + yy;
+						//output.at<float>(rowIdx, colIdx) = Mi[j + xx]; //input.at<float>(i + yy, j + xx);
+						Mo[colIdx] = Mi[j + xx];
+					}
+				}
+				rowIdx++;
+	
+			}
+		}
+	}
+
+	void im2col_multimap(const vector<cv::Mat_<float> >& inputs, int width, int height, cv::Mat_<float>& output)
+	{
+	
+		int m = inputs[0].rows;
+		int n = inputs[0].cols;
+	
+		// determine how many blocks there will be with a sliding window of width x height in the input
+		int yB = m - height + 1;
+		int xB = n - width + 1;
+	
+		int stride = height * width;
+	
+		size_t num_maps = inputs.size();
+	
+		// Allocate the output size
+		if (output.cols != width * height * inputs.size() + 1 || output.rows < xB*yB)
+		{
+			output = cv::Mat::ones(xB*yB, width * height * num_maps + 1, CV_32F);
+		}
+	
+		// Iterate over the whole image
+		for (int i = 0; i< yB; i++)
+		{
+			int rowIdx = i*xB;
+			for (int j = 0; j< xB; j++)
+			{
+	
+				float* Mo = output.ptr<float>(rowIdx);
+	
+				// iterate over the blocks within the image
+				for (unsigned int yy = 0; yy < height; ++yy)
+				{
+					for (unsigned int in_maps = 0; in_maps < num_maps; ++in_maps)
+					{
+						// Faster iteration over the image
+						const float* Mi = inputs[in_maps].ptr<float>(i + yy);
+	
+						for (unsigned int xx = 0; xx < width; ++xx)
+						{
+							int colIdx = xx*height + yy + in_maps * stride;
+							//output.at<float>(rowIdx, colIdx) = Mi[j + xx]; //input.at<float>(i + yy, j + xx);
+							Mo[colIdx] = Mi[j + xx];
+						}
+					}
+				}
+				rowIdx++;
+	
+			}
+		}
+	}
+
+	// A non thread safe but faster convolution
+	void convolution_direct_blas_nts(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k, cv::Mat_<float>& pre_alloc_im2col)
+	{
+		outputs.clear();
+	
+		int height_in = input_maps[0].rows;
+		int width_n = input_maps[0].cols;
+	
+		// determine how many blocks there will be with a sliding window of width x height in the input
+		int yB = height_in - height_k + 1;
+		int xB = width_n - width_k + 1;
+	
+		// Instead of re-allocating data use the first rows of already allocated data and re-allocate only if not enough rows are present
+		im2col_multimap(input_maps, width_k, height_k, pre_alloc_im2col);
+		
+		//input_matrix_mm = input_matrix_mm.t();
+		cv::Mat_<float> weight_t = weight_matrix.t();
+		float* m1 = (float*)pre_alloc_im2col.data;
+		float* m2 = (float*)weight_t.data;
+
+		cv::Mat_<float> out(yB * xB, weight_t.cols, 1.0);
+		float* m3 = (float*)out.data;
+		
+		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, weight_t.cols, yB * xB, pre_alloc_im2col.cols, 1, m2, weight_t.cols, m1, pre_alloc_im2col.cols, 0.0, m3, weight_t.cols);
+		out = out.t();
+
+		// Move back to vectors and reshape accordingly
+		for (size_t k = 0; k < out.rows; ++k)
+		{
+			outputs.push_back(out.row(k).reshape(1, yB));
+		}
+	
+	}
+
 
 }

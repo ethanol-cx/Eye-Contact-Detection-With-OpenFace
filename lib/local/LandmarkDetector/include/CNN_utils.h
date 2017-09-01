@@ -60,5 +60,7 @@ namespace LandmarkDetector
 	// Convolution using matrix multiplication and OpenBLAS optimization
 	void convolution_direct_blas(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k);
 
+	// Convolution using matrix multiplication and OpenBLAS optimization (non thread safe but faster)
+	void convolution_direct_blas_nts(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k, cv::Mat_<float>& pre_alloc_im2col);
 }
 #endif

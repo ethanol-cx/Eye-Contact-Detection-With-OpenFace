@@ -82,7 +82,7 @@ namespace LandmarkDetector
 		CNN(const CNN& other);
 
 		// Given an image apply a CNN on it, the boolean direct controls if direct convolution is used (through matrix multiplication) or an FFT optimization
-		std::vector<cv::Mat_<float> > Inference(const cv::Mat& input_img, bool direct = true);
+		std::vector<cv::Mat_<float> > Inference(const cv::Mat& input_img, bool direct = true, bool thread_safe = false);
 
 		// Reading in the model
 		void Read(const string& location);
@@ -99,6 +99,10 @@ namespace LandmarkDetector
 		// CNN layers
 		// Layer -> Weight matrix
 		vector<cv::Mat_<float> > cnn_convolutional_layers_weights;
+
+		// Keeping some pre-allocated im2col data as malloc is a significant time cost (not thread safe though)
+		vector<cv::Mat_<float> > conv_layer_pre_alloc_im2col;
+
 		// Layer -> kernel -> input maps
 		vector<vector<vector<cv::Mat_<float> > > > cnn_convolutional_layers;
 		vector<vector<float > > cnn_convolutional_layers_bias;
