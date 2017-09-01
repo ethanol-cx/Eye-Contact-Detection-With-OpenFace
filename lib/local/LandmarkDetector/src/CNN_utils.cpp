@@ -537,7 +537,8 @@ namespace LandmarkDetector
 		// determine how many blocks there will be with a sliding window of width x height in the input
 		int yB = height_in - height_k + 1;
 		int xB = width_n - width_k + 1;
-	
+		int num_rows = yB * xB;
+
 		// Instead of re-allocating data use the first rows of already allocated data and re-allocate only if not enough rows are present
 		im2col_multimap(input_maps, width_k, height_k, pre_alloc_im2col);
 		
@@ -546,10 +547,14 @@ namespace LandmarkDetector
 		float* m1 = (float*)pre_alloc_im2col.data;
 		float* m2 = (float*)weight_t.data;
 
-		cv::Mat_<float> out(yB * xB, weight_t.cols, 1.0);
+		cv::Mat_<float> out(num_rows, weight_t.cols, 1.0);
 		float* m3 = (float*)out.data;
 		
-		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, weight_t.cols, yB * xB, pre_alloc_im2col.cols, 1, m2, weight_t.cols, m1, pre_alloc_im2col.cols, 0.0, m3, weight_t.cols);
+		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, weight_t.cols, yB * xB, pre_alloc_im2col.cols, 1, m2, weight_t.cols, m1, pre_alloc_im2col.cols, 0.0, m3, weight_t.cols);
+		float alpha = 1.0f;
+		float beta = 0.0f;
+		// Call fortran directly (faster)
+		sgemm_("N", "N", &weight_t.cols, &num_rows, &pre_alloc_im2col.cols, &alpha, m2, &weight_t.cols, m1, &pre_alloc_im2col.cols, &beta, m3, &weight_t.cols);
 		out = out.t();
 
 		// Move back to vectors and reshape accordingly
