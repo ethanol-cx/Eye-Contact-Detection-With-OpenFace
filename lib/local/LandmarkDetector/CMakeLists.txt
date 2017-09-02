@@ -5,9 +5,11 @@ include_directories(${BOOST_INCLUDE_DIR})
 
 SET(SOURCE
     src/CCNF_patch_expert.cpp
+	src/CEN_patch_expert.cpp
+	src/CNN_utils.cpp
+	src/FaceDetectorMTCNN.cpp
 	src/LandmarkDetectionValidator.cpp
     src/LandmarkDetectorFunc.cpp
-	src/CEN_patch_expert.cpp
 	src/LandmarkDetectorModel.cpp
     src/LandmarkDetectorUtils.cpp
 	src/LandmarkDetectorParameters.cpp
@@ -20,8 +22,10 @@ SET(SOURCE
 
 SET(HEADERS
     include/CCNF_patch_expert.h	
-    include/LandmarkCoreIncludes.h
 	include/CEN_patch_expert.h
+    include/CNN_utils.h
+	include/FaceDetectorMTCNN.h
+    include/LandmarkCoreIncludes.h
 	include/LandmarkDetectionValidator.h
     include/LandmarkDetectorFunc.h
 	include/LandmarkDetectorModel.h
