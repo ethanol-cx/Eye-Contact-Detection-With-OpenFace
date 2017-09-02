@@ -1766,4 +1766,45 @@ void convert_to_grayscale(const cv::Mat& in, cv::Mat& out)
 	}
 }
 
+void convert_to_8bit_bgr_or_grayscale(cv::Mat& in_out)
+{
+	if (in_out.channels() == 3)
+	{
+		// Make sure it's in a correct format
+		if (in_out.depth() != CV_8U)
+		{
+			if (in_out.depth() == CV_16U)
+			{
+				in_out = in_out / 256;
+				in_out.convertTo(in_out, CV_8UC3);
+			}
+			else if (in_out.depth() != CV_8U)
+			{
+				in_out.convertTo(in_out, CV_8U);
+			}
+		}
+	}
+	else if (in_out.channels() == 4)
+	{
+		cv::cvtColor(in_out, in_out, CV_BGRA2BGR);
+
+		if (in_out.depth() == CV_16U)
+		{
+			in_out = in_out / 256;
+			in_out.convertTo(in_out, CV_8UC3);
+		}
+	}
+	else
+	{
+		if (in_out.depth() == CV_16U)
+		{
+			in_out = in_out / 256;
+		}
+		else if (in_out.depth() != CV_8U)
+		{
+			in_out.convertTo(in_out, CV_8U);
+		}
+	}
+}
+
 }

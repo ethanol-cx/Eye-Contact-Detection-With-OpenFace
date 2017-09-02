@@ -158,7 +158,12 @@ namespace LandmarkDetector
 	//============================================================================
 	// General utilty functions
 	//============================================================================
+
+	// Convert an image to grayscale
 	void convert_to_grayscale(const cv::Mat& in, cv::Mat& out);
+
+	// Convert an image to an 8bit one with one channel (Grayscale) or three channels (BGR), depending on number of original channels
+	void convert_to_8bit_bgr_or_grayscale(cv::Mat& in_out);
 
 }
 #endif

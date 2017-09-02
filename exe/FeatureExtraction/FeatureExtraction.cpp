@@ -363,6 +363,9 @@ int main(int argc, char **argv)
 			{
 				string curr_img_file = input_image_files[f_n][curr_img];
 				captured_image = cv::imread(curr_img_file, -1);
+				// Deal with 16 bit images
+				LandmarkDetector::convert_to_8bit_bgr_or_grayscale(captured_image);
+
 			}
 			else
 			{
@@ -562,6 +565,9 @@ int main(int argc, char **argv)
 				{
 					string curr_img_file = input_image_files[f_n][curr_img];
 					captured_image = cv::imread(curr_img_file, -1);
+					// Deal with 16 bit images
+					LandmarkDetector::convert_to_8bit_bgr_or_grayscale(captured_image);
+
 				}
 				else
 				{

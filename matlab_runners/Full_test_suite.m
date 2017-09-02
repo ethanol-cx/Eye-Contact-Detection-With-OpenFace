@@ -22,6 +22,21 @@ assert(median(err_clnf) < 0.039);
 run_yt_dataset;
 assert(median(ceclm_error) < 0.045);
 assert(median(clnf_error) < 0.053);
+run_300VW_dataset_OpenFace;
+assert(median(ceclm_error_49_cat_1) < 0.025);
+assert(median(ceclm_error_49_cat_2) < 0.027);
+assert(median(ceclm_error_49_cat_3) < 0.032);
+assert(median(ceclm_error_66_cat_1) < 0.032);
+assert(median(ceclm_error_66_cat_2) < 0.036);
+assert(median(ceclm_error_66_cat_3) < 0.041);
+
+assert(median(clnf_error_49_cat_1) < 0.029);
+assert(median(clnf_error_49_cat_2) < 0.035);
+assert(median(clnf_error_49_cat_3) < 0.040);
+assert(median(clnf_error_66_cat_1) < 0.039);
+assert(median(clnf_error_66_cat_2) < 0.044);
+assert(median(clnf_error_66_cat_3) < 0.049);
+
 cd('../');
 
 %% AUs
