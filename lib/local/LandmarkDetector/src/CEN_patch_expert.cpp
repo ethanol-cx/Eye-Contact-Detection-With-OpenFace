@@ -92,11 +92,8 @@ void CEN_patch_expert::Read(ifstream &stream)
 {
 
 	// Setting up OpenBLAS
-	#if _WIN32 || _WIN64
-		openblas_set_num_threads(1);
-	#endif
-
-
+	openblas_set_num_threads(1);
+	
 	// Sanity check
 	int read_type;
 
