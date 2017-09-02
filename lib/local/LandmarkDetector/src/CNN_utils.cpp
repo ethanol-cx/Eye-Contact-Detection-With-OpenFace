@@ -412,7 +412,8 @@ namespace LandmarkDetector
 		// Comibine im2col accross channels to prepare for matrix multiplication
 		for (size_t i = 0; i < input_maps.size(); ++i)
 		{
-			im2col_t(input_maps[i], width_k, height_k, input_matrix(cv::Rect(0, i * height_k * width_k, yB * xB, height_k * width_k)));
+			cv::Mat_<float> tmp = input_matrix(cv::Rect(0, i * height_k * width_k, yB * xB, height_k * width_k));
+			im2col_t(input_maps[i], width_k, height_k, tmp);
 		}
 
 		float* m1 = (float*)weight_matrix.data;
