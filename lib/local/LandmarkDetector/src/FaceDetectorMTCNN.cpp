@@ -104,7 +104,7 @@ FaceDetectorMTCNN::FaceDetectorMTCNN(const FaceDetectorMTCNN& other) : PNet(othe
 {
 }
 
-CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_pooling_layers(other.cnn_max_pooling_layers), cnn_convolutional_layers_bias(other.cnn_convolutional_layers_bias)
+CNN::CNN(const CNN& other) : cnn_layer_types(other.cnn_layer_types), cnn_max_pooling_layers(other.cnn_max_pooling_layers), cnn_convolutional_layers_bias(other.cnn_convolutional_layers_bias), conv_layer_pre_alloc_im2col(other.conv_layer_pre_alloc_im2col)
 {
 
 	this->cnn_convolutional_layers_weights.resize(other.cnn_convolutional_layers_weights.size());
