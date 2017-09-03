@@ -85,7 +85,8 @@ using namespace LandmarkDetector;
 
 // Copy constructor
 DetectionValidator::DetectionValidator(const DetectionValidator& other) : orientations(other.orientations), paws(other.paws),
-cnn_subsampling_layers(other.cnn_subsampling_layers), cnn_layer_types(other.cnn_layer_types), cnn_convolutional_layers_im2cold_precomp(other.cnn_convolutional_layers_im2cold_precomp)
+cnn_subsampling_layers(other.cnn_subsampling_layers), cnn_layer_types(other.cnn_layer_types), cnn_convolutional_layers_im2col_precomp(other.cnn_convolutional_layers_im2col_precomp),
+cnn_convolutional_layers_weights(other.cnn_convolutional_layers_weights)
 {
 
 	this->cnn_convolutional_layers.resize(other.cnn_convolutional_layers.size());
@@ -191,7 +192,7 @@ void DetectionValidator::Read(string location)
 		paws.resize(n);
 
 		cnn_convolutional_layers_weights.resize(n);
-		cnn_convolutional_layers_im2cold_precomp.resize(n);
+		cnn_convolutional_layers_im2col_precomp.resize(n);
 		cnn_convolutional_layers.resize(n);
 		cnn_fully_connected_layers_weights.resize(n);
 		cnn_layer_types.resize(n);
@@ -309,7 +310,7 @@ void DetectionValidator::Read(string location)
 						weight_matrix.copyTo(W(cv::Rect(0, 0, weight_matrix.cols, weight_matrix.rows)));
 
 						cnn_convolutional_layers_weights[i].push_back(W.t());
-						cnn_convolutional_layers_im2cold_precomp[i].push_back(cv::Mat_<float>());
+						cnn_convolutional_layers_im2col_precomp[i].push_back(cv::Mat_<float>());
 					}
 					else if (layer_type == 2)
 					{
@@ -405,7 +406,7 @@ double DetectionValidator::CheckCNN(const cv::Mat_<float>& warped_img, int view_
 		if (layer_type == 0)
 		{
 
-			convolution_direct_blas_nts(outputs, input_maps, cnn_convolutional_layers_weights[view_id][cnn_layer], cnn_convolutional_layers[view_id][cnn_layer][0][0].rows, cnn_convolutional_layers[view_id][cnn_layer][0][0].cols, cnn_convolutional_layers_im2cold_precomp[view_id][cnn_layer]);
+			convolution_direct_blas_nts(outputs, input_maps, cnn_convolutional_layers_weights[view_id][cnn_layer], cnn_convolutional_layers[view_id][cnn_layer][0][0].rows, cnn_convolutional_layers[view_id][cnn_layer][0][0].cols, cnn_convolutional_layers_im2col_precomp[view_id][cnn_layer]);
 
 			cnn_layer++;
 		}

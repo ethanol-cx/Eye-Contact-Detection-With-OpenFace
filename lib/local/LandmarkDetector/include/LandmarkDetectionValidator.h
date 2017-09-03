@@ -96,7 +96,7 @@ public:
 	// view -> layer
 	vector<vector<vector<vector<cv::Mat_<float> > > > > cnn_convolutional_layers;
 	vector<vector<cv::Mat_<float> > > cnn_convolutional_layers_weights;
-	vector<vector<cv::Mat_<float> > > cnn_convolutional_layers_im2cold_precomp;
+	vector<vector<cv::Mat_<float> > > cnn_convolutional_layers_im2col_precomp;
 
 	vector< vector<int> > cnn_subsampling_layers;
 	vector< vector<cv::Mat_<float> > > cnn_fully_connected_layers_weights;
