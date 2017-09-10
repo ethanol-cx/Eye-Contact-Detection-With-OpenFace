@@ -45,7 +45,7 @@ before_install:
       if [ ${TRAVIS_OS_NAME} = linux ]; then  
         $CXX --version;
         sudo sed -i -e 's/^Defaults\tsecure_path.*$//' /etc/sudoers;
-        sudo cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF ..;
+        sudo cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF -D WITH_TBB=ON ..;
       fi
     fi
 
@@ -69,7 +69,7 @@ script:
   - $CXX --version
   - mkdir build
   - cd build
-  - cmake -D CMAKE_BUILD_TYPE=RELEASE .. 
+  - cmake -D CMAKE_BUILD_TYPE=RELEASE -std=c++11 -stdlib=libc++ .. 
   - make -j2
   - ../build/bin/FaceLandmarkImg -fdir "../samples/" -ofdir "./demo_img/" -oidir "./demo_img/" -wild -q
   - ../build/bin/FaceLandmarkImg -inroot ../samples -f sample1.jpg -outroot data -of sample1.txt -op sample1.3d -oi sample1.bmp -multi_view 1 -wild -q
