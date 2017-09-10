@@ -486,11 +486,8 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 			best_detected_landmarks = clnf_model.detected_landmarks.clone();
 			best_landmark_likelihoods = clnf_model.landmark_likelihoods.clone();
 			best_success = success;
-		}
 
-		for (size_t part = 0; part < clnf_model.hierarchical_models.size(); ++part)
-		{
-			if (hypothesis == 0 || best_likelihood < clnf_model.hierarchical_models[part].model_likelihood)
+			for (size_t part = 0; part < clnf_model.hierarchical_models.size(); ++part)
 			{
 				best_likelihood_h[part] = clnf_model.hierarchical_models[part].model_likelihood;
 				best_global_parameters_h[part] = clnf_model.hierarchical_models[part].params_global;
@@ -499,7 +496,6 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat_<uchar> &grayscale_i
 				best_landmark_likelihoods_h[part] = clnf_model.hierarchical_models[part].landmark_likelihoods.clone();
 			}
 		}
-
 	}
 
 	// Store the best estimates in the clnf_model
