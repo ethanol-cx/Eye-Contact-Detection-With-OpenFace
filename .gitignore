@@ -58,3 +58,7 @@ matlab_runners/Feature Point Experiments/300VW_features/ceclm/
 matlab_runners/Feature Point Experiments/300VW_features/clnf/
 matlab_runners/Feature Point Experiments/yt_features_clm/
 matlab_runners/Feature Point Experiments/yt_features_clnf/
+matlab_runners/Action Unit Experiments/out_DISFA/
+matlab_runners/Action Unit Experiments/out_fera/
+matlab_runners/Action Unit Experiments/out_SEMAINE/
+matlab_runners/Gaze Experiments/mpii_out/

@@ -1,16 +1,16 @@
 clear
 features_exe = '"..\..\..\x64\Release\FeatureExtraction.exe"';
 
-ck_loc = 'D:\Datasets\ck+\cohn-kanade-images\';
+ck_loc = 'E:\Datasets\ck+\cohn-kanade-images\';
 
-out_loc = 'D:\datasets\face_datasets/hog_aligned_rigid\';
-out_loc_params = 'D:\datasets\face_datasets/clm_params\';
+out_loc = 'E:\datasets\face_datasets/hog_aligned_rigid\';
+out_loc_params = 'E:\datasets\face_datasets/clm_params\';
 
 % Go two levels deep
 ck_dirs = dir(ck_loc);
 ck_dirs = ck_dirs(3:end);
 
-parfor f1=1:numel(ck_dirs)
+for f1=1:numel(ck_dirs)
 
     ck_dirs_level_2 = dir([ck_loc, ck_dirs(f1).name]);
     ck_dirs_level_2 = ck_dirs_level_2(3:end);

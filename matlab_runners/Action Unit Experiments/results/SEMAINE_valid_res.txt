@@ -1,6 +1,6 @@
-AU2 class, Precision - 0.360, Recall - 0.743, F1 - 0.485
-AU12 class, Precision - 0.427, Recall - 0.782, F1 - 0.553
-AU17 class, Precision - 0.114, Recall - 0.819, F1 - 0.201
-AU25 class, Precision - 0.337, Recall - 0.523, F1 - 0.410
-AU28 class, Precision - 0.443, Recall - 0.482, F1 - 0.462
-AU45 class, Precision - 0.293, Recall - 0.615, F1 - 0.397
+AU2 class, Precision - 0.339, Recall - 0.750, F1 - 0.467
+AU12 class, Precision - 0.421, Recall - 0.856, F1 - 0.565
+AU17 class, Precision - 0.124, Recall - 0.845, F1 - 0.216
+AU25 class, Precision - 0.338, Recall - 0.561, F1 - 0.422
+AU28 class, Precision - 0.314, Recall - 0.391, F1 - 0.349
+AU45 class, Precision - 0.292, Recall - 0.596, F1 - 0.392

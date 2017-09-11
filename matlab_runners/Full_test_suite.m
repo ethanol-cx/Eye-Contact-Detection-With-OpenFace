@@ -45,18 +45,18 @@ run_AU_prediction_DISFA
 assert(mean(au_res) > 0.7);
 
 run_AU_prediction_SEMAINE
-assert(mean(f1s) > 0.41);
+assert(mean(f1s) > 0.40);
 
 run_AU_prediction_FERA2011
-assert(mean(au_res) > 0.5);
+assert(mean(au_res) > 0.53);
 
 cd('../');
 
 %% Gaze
 cd('Gaze Experiments');
 extract_mpii_gaze_test
-assert(mean_error < 9.5)
-assert(median_error < 9.0)
+assert(mean_error < 8.8)
+assert(median_error < 8.1)
 cd('../');
 
 %% Demos

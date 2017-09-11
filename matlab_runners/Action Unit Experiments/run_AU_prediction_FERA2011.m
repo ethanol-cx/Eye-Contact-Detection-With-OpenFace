@@ -18,7 +18,7 @@ end
 
 fera_dirs = dir([FERA2011_dir, 'train*']);
 
-parfor f1=1:numel(fera_dirs)
+for f1=1:numel(fera_dirs)
 
     vid_files = dir([FERA2011_dir, fera_dirs(f1).name, '/*.avi']);
 

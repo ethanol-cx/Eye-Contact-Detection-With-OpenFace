@@ -8,8 +8,12 @@ end
 
 if(exist('D:/Datasets/DISFA/Videos_LeftCamera/', 'file'))   
     DISFA_dir = 'D:/Datasets/DISFA/Videos_LeftCamera/';  
-else
+elseif(exist('E:/datasets/DISFA/Videos_LeftCamera/', 'file'))
+    DISFA_dir = 'E:/datasets/DISFA//Videos_LeftCamera/';
+elseif(exist('/multicomp/datasets/face_datasets/DISFA/Videos_LeftCamera/', 'file'))
     DISFA_dir = '/multicomp/datasets/face_datasets/DISFA/Videos_LeftCamera/';
+else
+   fprintf('Disfa not found'); 
 end
 
 
@@ -23,7 +27,7 @@ end
 %%
 % Do it in parrallel for speed (replace the parfor with for if no parallel
 % toolbox is available)
-parfor v = 1:numel(videos)
+for v = 1:numel(videos)
    
     vid_file = [DISFA_dir, videos(v).name];
     
@@ -31,7 +35,7 @@ parfor v = 1:numel(videos)
     
     % where to output tracking results
     output_file = [output name '_au.txt'];
-    command = [executable ' -f "' vid_file '" -of "' output_file '" -q -no2Dfp -no3Dfp -noMparams -noPose -noGaze'];
+    command = [executable ' -f "' vid_file '" -of "' output_file '" -no2Dfp -no3Dfp -noMparams -noPose -noGaze'];
         
     if(isunix)
         unix(command, '-echo');

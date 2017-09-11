@@ -1,10 +1,10 @@
 clear
 features_exe = '"..\..\..\x64\Release\FeatureExtraction.exe"';
 
-fera_loc = 'D:\Datasets\fera\';
+fera_loc = 'E:\Datasets\fera\';
 
-out_loc = 'D:\Datasets\face_datasets\hog_aligned_rigid\';
-out_loc_params = 'D:\Datasets\face_datasets\model_params\';
+out_loc = 'E:\Datasets\face_datasets\hog_aligned_rigid\';
+out_loc_params = 'E:\Datasets\face_datasets\model_params\';
 
 % Go two levels deep
 fera_dirs = dir(fera_loc);
@@ -19,7 +19,7 @@ for f1=1:numel(fera_dirs)
 
         vid_files = dir([fera_loc, fera_dirs(f1).name, '/', fera_dirs_level_2(f2).name, '/*.avi']);
         
-        parfor v=1:numel(vid_files)
+        for v=1:numel(vid_files)
             
             command = features_exe;
             
@@ -35,7 +35,7 @@ for f1=1:numel(fera_dirs)
             command = cat(2, command, [' -rigid -f "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
             command = cat(2, command, [' -hogalign "' output_hog '"']);
     
-            command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze -q']);
+            command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze ']);
     
             dos(command);
             

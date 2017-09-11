@@ -15,7 +15,7 @@ else
     executable = '"../../x64/Release/FeatureExtraction.exe"';
 end
 %%
-parfor f1=1:numel(devel_recs)
+for f1=1:numel(devel_recs)
 
 
     if(isdir([SEMAINE_dir, devel_recs{f1}]))

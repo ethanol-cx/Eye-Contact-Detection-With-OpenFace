@@ -8,6 +8,20 @@ if(~exist(out_loc, 'dir'))
     mkdir(out_loc);
 end
 
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
+end
+
+if(exist('D:/Datasets/FERA_2015/BP4D/BP4D-training/', 'file'))   
+    bp4d_loc = 'D:/Datasets/FERA_2015/BP4D/BP4D-training//';  
+elseif(exist('E:/datasets/FERA_2015/BP4D/BP4D/BP4D-training/', 'file'))
+    bp4d_loc = 'E:/datasets/FERA_2015/BP4D/BP4D/BP4D-training/';
+else
+    bp4d_loc = '/multicomp/datasets/face_datasets/FERA_2015/BP4D/BP4D/BP4D-training/';
+end
+
 %%
 executable = '"../../x64/Release/FeatureExtraction.exe"';
 

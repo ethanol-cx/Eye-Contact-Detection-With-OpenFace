@@ -30,7 +30,7 @@ parfor f1=1:numel(semaine_dirs)
 
             command = cat(2, command, [' -rigid -f "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
             command = cat(2, command, [' -hogalign "' output_hog '"']);
-            command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze -q']);
+            command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze ']);
             dos(command);
 
         end
@@ -63,7 +63,7 @@ parfor f1=1:numel(semaine_dirs)
 
             command = cat(2, command, [' -rigid -f "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
             command = cat(2, command, [' -hogalign "' output_hog '"']);
-            command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze -q']);
+            command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze ']);
             dos(command);
 
         end

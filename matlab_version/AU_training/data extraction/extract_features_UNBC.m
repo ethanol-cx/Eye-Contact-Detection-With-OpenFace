@@ -1,9 +1,9 @@
 clear
 features_exe = '"..\..\..\x64\Release\FeatureExtraction.exe"';
 
-unbc_loc = 'D:\Datasets\UNBC\Images/';
+unbc_loc = 'E:\Datasets\UNBC\Images/';
 
-out_loc = 'D:\Datasets\face_datasets/';
+out_loc = 'E:\Datasets\face_datasets/';
 
 % Go two levels deep
 unbc_dirs = dir(unbc_loc);

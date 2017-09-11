@@ -8,7 +8,7 @@ BP4D_dir = [BP4D_dir '\..\BP4D-training\'];
 bp4d_dirs = train_recs;
 out_loc = [BP4D_dir '\..\processed_data\train\'];
 
-parfor f1=1:numel(bp4d_dirs)
+for f1=1:numel(bp4d_dirs)
 
     if(isdir([BP4D_dir, bp4d_dirs{f1}]))
         
@@ -30,7 +30,7 @@ parfor f1=1:numel(bp4d_dirs)
                 output_hog = [out_loc name '.hog'];
                 output_params = [out_loc name '.params.txt'];
                 
-                command = cat(2, command, [' -fx 2000 -fy 2000 -rigid -q -asvid -fdir "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
+                command = cat(2, command, [' -fx 2000 -fy 2000 -rigid -asvid -fdir "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
                 command = cat(2, command, [' -hogalign "' output_hog '"']);
                 command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze']);
                 dos(command);
@@ -41,7 +41,7 @@ end
 
 bp4d_dirs = devel_recs;
 out_loc = [BP4D_dir '\..\processed_data\devel\'];
-parfor f1=1:numel(bp4d_dirs)
+for f1=1:numel(bp4d_dirs)
 
     if(isdir([BP4D_dir, bp4d_dirs{f1}]))
         
