@@ -62,3 +62,4 @@ matlab_runners/Action Unit Experiments/out_DISFA/
 matlab_runners/Action Unit Experiments/out_fera/
 matlab_runners/Action Unit Experiments/out_SEMAINE/
 matlab_runners/Gaze Experiments/mpii_out/
+*.vspx

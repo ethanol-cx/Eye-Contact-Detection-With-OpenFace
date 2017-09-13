@@ -6,4 +6,4 @@ ICCR	3.37	3.45	4.46
 CFAN	3.93	4.43	6.39
 ------------------------------
 OpenFace CLNF	3.78	4.23	4.78
-OpenFace CE-CLM	3.05	3.52	3.99
+OpenFace CE-CLM	3.15	3.54	4.12

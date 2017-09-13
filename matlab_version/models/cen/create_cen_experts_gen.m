@@ -109,5 +109,5 @@ for s=scales
     end
     trainingScale = str2num(s{1});
     save(['cen_patches_', s{1} '_general.mat'], 'trainingScale', 'centers', 'visiIndex', 'patch_experts', 'normalisationOptions');
-%     write_patch_expert_bin(['cen_patches_', s{1} '_general.dat'], trainingScale, centers, visiIndex, patch_experts);
+
 end

@@ -5,9 +5,9 @@ tic
 %% Head pose
 cd('Head Pose Experiments');
 run_head_pose_tests_OpenFace_CECLM;
-assert(median(all_errors_biwi_OF(:)) < 3.0);
-assert(median(all_errors_bu_OF(:)) < 1.9);
-assert(median(all_errors_ict_OF(:)) < 2.1);
+assert(median(all_errors_biwi_OF(:)) < 2.7);
+assert(median(all_errors_bu_OF(:)) < 1.85);
+assert(median(all_errors_ict_OF(:)) < 1.9);
 run_head_pose_tests_OpenFace;
 assert(median(all_errors_biwi_OF(:)) < 2.7);
 assert(median(all_errors_bu_OF(:)) < 2.0);
@@ -17,10 +17,10 @@ cd('../');
 %% Features
 cd('Feature Point Experiments');
 run_OpenFace_feature_point_tests_300W;
-assert(median(err_ceclm) < 0.036);
+assert(median(err_ceclm) < 0.035);
 assert(median(err_clnf) < 0.039);
 run_yt_dataset;
-assert(median(ceclm_error) < 0.045);
+assert(median(ceclm_error) < 0.048);
 assert(median(clnf_error) < 0.053);
 run_300VW_dataset_OpenFace;
 assert(median(ceclm_error_49_cat_1) < 0.025);

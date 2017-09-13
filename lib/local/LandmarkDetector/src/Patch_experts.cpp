@@ -226,9 +226,15 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				// Get intensity response either from the SVR, CCNF, or CEN patch experts (prefer CEN as they are the most accurate so far)
 				if (!cen_expert_intensity.empty())
 				{
-
-					cen_expert_intensity[scale][view_id][i].ResponseSparse(area_of_interest, patch_expert_responses[i], interp_mat);
-
+					// For space and memory saving use a mirrored patch expert
+					if(!cen_expert_intensity[scale][view_id][i].biases.empty())
+					{
+						cen_expert_intensity[scale][view_id][i].ResponseSparse(area_of_interest, patch_expert_responses[i], interp_mat);
+					}
+					else
+					{
+						cen_expert_intensity[scale][mirror_views.at<int>(view_id)][mirror_inds.at<int>(i)].ResponseSparse_mirror(area_of_interest, patch_expert_responses[i], interp_mat);
+					}
 					// A slower, but slightly more accurate version
 					//cen_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
 
@@ -546,6 +552,9 @@ void Patch_experts::Read_CEN_patch_experts(string expert_location, std::vector<c
 		}
 		int numberOfPoints = visibility[0].rows;
 		
+		LandmarkDetector::ReadMatBin(patchesFile, mirror_inds);
+		LandmarkDetector::ReadMatBin(patchesFile, mirror_views);
+
 		// read the patches themselves
 		for (size_t i = 0; i < patches.size(); i++)
 		{

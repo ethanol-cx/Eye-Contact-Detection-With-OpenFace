@@ -25,7 +25,7 @@ function write_patch_expert_bin(location, trainingScale, centers, visiIndex, pat
     for i=1:n_views
         for j=1:n_landmarks
 
-            % Write out that we're writing a dpn patch expert of 11x11 support region
+            % Write out that we're writing a CEN patch expert of 11x11 support region
             fwrite(patches_file, 6, 'int');
             fwrite(patches_file, 11, 'int');
             fwrite(patches_file, 11, 'int');

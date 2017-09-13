@@ -76,6 +76,9 @@ public:
 	// Landmark visibilities for each scale and view
     vector<vector<cv::Mat_<int> > >          visibilities;
 
+	cv::Mat_<int>							mirror_inds;
+	cv::Mat_<int>							mirror_views;
+
 	// Early termination calibration values, useful for CE-CLM model to speed up the multi-hypothesis setup
 	vector<double> early_term_weights;
 	vector<double> early_term_biases;
