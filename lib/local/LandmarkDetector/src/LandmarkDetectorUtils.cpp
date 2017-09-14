@@ -1436,6 +1436,10 @@ namespace LandmarkDetector
 
 	bool DetectFacesHOG(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, dlib::frontal_face_detector& detector, std::vector<double>& o_confidences, double min_width, cv::Rect_<double> roi)
 	{
+		if (detector.num_detectors() == 0)
+		{
+			detector = dlib::get_frontal_face_detector();
+		}
 
 		cv::Mat_<uchar> upsampled_intensity;
 
@@ -1485,6 +1489,12 @@ namespace LandmarkDetector
 
 	bool DetectSingleFaceHOG(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& intensity_img, dlib::frontal_face_detector& detector, double& confidence, cv::Point preference, double min_width, cv::Rect_<double> roi)
 	{
+
+		if (detector.num_detectors() == 0)
+		{
+			detector = dlib::get_frontal_face_detector();
+		}
+
 		// The tracker can return multiple faces
 		vector<cv::Rect_<double> > face_detections;
 		vector<double> confidences;

@@ -297,7 +297,7 @@ int main(int argc, char **argv)
 	cout << "Model loaded" << endl;
 
 	cv::CascadeClassifier classifier(det_parameters.haar_face_detector_location);
-	dlib::frontal_face_detector face_detector_hog = dlib::get_frontal_face_detector();
+	dlib::frontal_face_detector face_detector_hog;
 	LandmarkDetector::FaceDetectorMTCNN face_detector_mtcnn(det_parameters.mtcnn_face_detector_location);
 
 	// Load facial feature extractor and AU analyser (make sure it is static)

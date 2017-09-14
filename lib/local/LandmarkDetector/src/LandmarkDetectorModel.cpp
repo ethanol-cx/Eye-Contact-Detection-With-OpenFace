@@ -97,8 +97,6 @@ CLNF::CLNF(const CLNF& other): pdm(other.pdm), params_local(other.params_local.c
 		this->kde_resp_precalc.insert(std::pair<int, cv::Mat_<float>>(it->first, it->second.clone()));
 	}
 
-	this->face_detector_HOG = dlib::get_frontal_face_detector();
-
 }
 
 // Assignment operator for lvalues (makes a deep copy of CLNF)
@@ -155,8 +153,6 @@ CLNF & CLNF::operator= (const CLNF& other)
 		face_detector_MTCNN = other.face_detector_MTCNN;
 	}
 
-	face_detector_HOG = dlib::get_frontal_face_detector();	
-
 	return *this;
 }
 
@@ -183,8 +179,6 @@ CLNF::CLNF(const CLNF&& other)
 
 	triangulations = other.triangulations;
 	kde_resp_precalc = other.kde_resp_precalc;
-
-	face_detector_HOG = dlib::get_frontal_face_detector();
 
 	face_detector_MTCNN = other.face_detector_MTCNN;
 
@@ -221,8 +215,6 @@ CLNF & CLNF::operator= (const CLNF&& other)
 
 	triangulations = other.triangulations;
 	kde_resp_precalc = other.kde_resp_precalc;
-
-	face_detector_HOG = dlib::get_frontal_face_detector();
 
 	face_detector_MTCNN = other.face_detector_MTCNN;
 
@@ -335,9 +327,6 @@ void CLNF::Read_CLNF(string clnf_location)
   
 	// Initialise the patch experts
 	patch_experts.Read(intensity_expert_locations, ccnf_expert_locations, cen_expert_locations, early_term_loc);
-
-	// Read in a face detector
-	face_detector_HOG = dlib::get_frontal_face_detector();
 
 }
 

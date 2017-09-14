@@ -59,7 +59,8 @@ using namespace LandmarkDetector;
 
 Patch_experts::Patch_experts(const Patch_experts& other) : patch_scaling(other.patch_scaling), centers(other.centers), svr_expert_intensity(other.svr_expert_intensity), 
 														ccnf_expert_intensity(other.ccnf_expert_intensity), cen_expert_intensity(other.cen_expert_intensity),
-														early_term_weights(other.early_term_weights), early_term_biases(other.early_term_biases), early_term_cutoffs(other.early_term_cutoffs)
+														early_term_weights(other.early_term_weights), early_term_biases(other.early_term_biases), early_term_cutoffs(other.early_term_cutoffs),
+														mirror_inds(other.mirror_inds),mirror_views(other.mirror_views)
 {
 
 	// Make sure the matrices are allocated properly
