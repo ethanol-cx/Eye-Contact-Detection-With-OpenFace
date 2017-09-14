@@ -220,32 +220,71 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				IplImage im_o = grayscale_image;
 				cvGetQuadrangleSubPix(&im_o, &area_of_interest_o, &sim_o);
 
-				// get the correct size response window			
-				patch_expert_responses[i] = cv::Mat_<float>(window_size, window_size);
 
 				// Get intensity response either from the SVR, CCNF, or CEN patch experts (prefer CEN as they are the most accurate so far)
 				if (!cen_expert_intensity.empty())
 				{
-					// For space and memory saving use a mirrored patch expert
-					if(!cen_expert_intensity[scale][view_id][i].biases.empty())
+
+					// If frontal view we can do mirrored landmarks together
+					if (view_id == 0)
 					{
-						cen_expert_intensity[scale][view_id][i].ResponseSparse(area_of_interest, patch_expert_responses[i], interp_mat);
+						// If the patch expert does not have values, means it's a mirrored version and will be done in another part of a loop
+						if (!cen_expert_intensity[scale][view_id][i].biases.empty())
+						{
+							// No mirrored expert, so do normally
+							int mirror_id = mirror_inds.at<int>(i);
+							if (mirror_id == i)
+							{
+								cen_expert_intensity[scale][view_id][i].ResponseSparse(area_of_interest, patch_expert_responses[i], interp_mat);
+							}
+							else
+							{
+
+								// Grab mirrored area of interest
+								cv::Mat sim_r = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<double>(mirror_id, 0), b1, a1, landmark_locations.at<double>(mirror_id + n, 0));
+
+								// Extract the region of interest around the current landmark location
+								cv::Mat_<float> area_of_interest_r(area_of_interest_height, area_of_interest_width);
+								// Using C style openCV as it does what we need
+								CvMat area_of_interest_o_r = area_of_interest_r;
+								CvMat sim_o_r = sim_r;
+								IplImage im_o_r = grayscale_image;
+								cvGetQuadrangleSubPix(&im_o_r, &area_of_interest_o_r, &sim_o_r);
+
+								cen_expert_intensity[scale][view_id][i].ResponseSparse_mirror_joint(area_of_interest, area_of_interest_r, patch_expert_responses[i], patch_expert_responses[mirror_id], interp_mat);
+
+							}
+						}
 					}
 					else
 					{
-						cen_expert_intensity[scale][mirror_views.at<int>(view_id)][mirror_inds.at<int>(i)].ResponseSparse_mirror(area_of_interest, patch_expert_responses[i], interp_mat);
+						// For space and memory saving use a mirrored patch expert
+						if(!cen_expert_intensity[scale][view_id][i].biases.empty())
+						{
+							cen_expert_intensity[scale][view_id][i].ResponseSparse(area_of_interest, patch_expert_responses[i], interp_mat);
+							// A slower, but slightly more accurate version
+							//cen_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
+						}
+						else
+						{
+							cen_expert_intensity[scale][mirror_views.at<int>(view_id)][mirror_inds.at<int>(i)].ResponseSparse_mirror(area_of_interest, patch_expert_responses[i], interp_mat);
+						}
 					}
-					// A slower, but slightly more accurate version
-					//cen_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
+
 
 				}
 				else if (!ccnf_expert_intensity.empty())
 				{
+					// get the correct size response window			
+					patch_expert_responses[i] = cv::Mat_<float>(window_size, window_size);
 
 					ccnf_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
 				}
 				else
-				{
+				{				
+					// get the correct size response window			
+					patch_expert_responses[i] = cv::Mat_<float>(window_size, window_size);
+
 					svr_expert_intensity[scale][view_id][i].Response(area_of_interest, patch_expert_responses[i]);
 				}
 			}

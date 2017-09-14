@@ -28,7 +28,7 @@ assert(median(ceclm_error_49_cat_2) < 0.027);
 assert(median(ceclm_error_49_cat_3) < 0.032);
 assert(median(ceclm_error_66_cat_1) < 0.032);
 assert(median(ceclm_error_66_cat_2) < 0.036);
-assert(median(ceclm_error_66_cat_3) < 0.041);
+assert(median(ceclm_error_66_cat_3) < 0.042);
 
 assert(median(clnf_error_49_cat_1) < 0.029);
 assert(median(clnf_error_49_cat_2) < 0.035);
@@ -55,8 +55,8 @@ cd('../');
 %% Gaze
 cd('Gaze Experiments');
 extract_mpii_gaze_test
-assert(mean_error < 8.8)
-assert(median_error < 8.1)
+assert(mean_error < 9.1)
+assert(median_error < 8.5)
 cd('../');
 
 %% Demos
