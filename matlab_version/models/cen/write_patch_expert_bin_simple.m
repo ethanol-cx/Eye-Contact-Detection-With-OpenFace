@@ -66,7 +66,7 @@ function write_patch_expert_bin_simple(location, trainingScale, centers, visiInd
 
                     % the actual bias/weight matrix
                     writeMatrixBin(patches_file, bias, 5);
-                    writeMatrixBin(patches_file, weights, 5);
+                    writeMatrixBin(patches_file, weights', 5);
                 end
                 
                 % finally write out the confidence

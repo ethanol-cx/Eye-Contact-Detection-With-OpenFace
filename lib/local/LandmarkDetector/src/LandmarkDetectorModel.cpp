@@ -43,6 +43,10 @@
 // TBB includes
 #include <tbb/tbb.h>
 
+// OpenBLAS
+#include <cblas.h>
+#include <f77blas.h>
+
 // Local includes
 #include <LandmarkDetectorUtils.h>
 
@@ -1052,11 +1056,15 @@ double CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, con
 			J_w_t_m(cv::Rect(0,6,1, m)) = J_w_t_m(cv::Rect(0,6,1, m)) - regTerm(cv::Rect(6,6, m, m)) * current_local;
 		}
 
-		// Calculating the Hessian approximation
-		cv::Mat_<float> Hessian = J_w_t * J;
+		cv::Mat_<float> Hessian = regTerm.clone();
 
-		// Add the Tikhonov regularisation
-		Hessian = Hessian + regTerm;
+		// Perform matrix multiplication in OpenBLAS (fortran call)
+		float alpha1 = 1.0;
+		float beta1 = 1.0;
+		sgemm_("N", "N", &J.cols, &J_w_t.rows, &J_w_t.cols, &alpha1, (float*)J.data, &J.cols, (float*)J_w_t.data, &J_w_t.cols, &beta1, (float*)Hessian.data, &J.cols);
+
+		// Above is a fast (but ugly) version of 
+		// cv::Mat_<float> Hessian = J_w_t * J + regTerm;
 
 		// Solve for the parameter update (from Baltrusaitis 2013 based on eq (36) Saragih 2011)
 		cv::Mat_<float> param_update;

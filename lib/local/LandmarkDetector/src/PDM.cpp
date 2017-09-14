@@ -44,6 +44,10 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
+// OpenBLAS
+#include <cblas.h>
+#include <f77blas.h>
+
 #ifndef M_PI
 	#define M_PI 3.14159265358979323846
 #endif
@@ -634,11 +638,16 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, const cv::Mat_<double>& out_p
 		// Add the regularisation term
 		J_w_t_m(cv::Rect(0,6,1, m)) = J_w_t_m(cv::Rect(0,6,1, m)) - regularisations(cv::Rect(6,6, m, m)) * loc_params;
 
-		cv::Mat_<float> Hessian = J_w_t * J;
+		cv::Mat_<float> Hessian = regularisations.clone();
 
-		// Add the Tikhonov regularisation
-		Hessian = Hessian + regularisations;
+		// Perform matrix multiplication in OpenBLAS (fortran call)
+		float alpha1 = 1.0;
+		float beta1 = 1.0;
+		sgemm_("N", "N", &J.cols, &J_w_t.rows, &J_w_t.cols, &alpha1, (float*)J.data, &J.cols, (float*)J_w_t.data, &J_w_t.cols, &beta1, (float*)Hessian.data, &J.cols);
 
+		// Above is a fast (but ugly) version of 
+		// cv::Mat_<float> Hessian2 = J_w_t * J + regularisations;
+		
 		// Solve for the parameter update (from Baltrusaitis 2013 based on eq (36) Saragih 2011)
 		cv::Mat_<float> param_update;
 		cv::solve(Hessian, J_w_t_m, param_update, CV_CHOLESKY);

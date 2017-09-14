@@ -129,7 +129,7 @@ void CEN_patch_expert::Read(ifstream &stream)
 		cv::Mat_<double> weight;
 		LandmarkDetector::ReadMatBin(stream, weight);
 
-		weights[i] = weight.t();
+		weights[i] = weight;
 		biases[i] = bias;
 	}
 
@@ -589,7 +589,7 @@ void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_inte
 	for (size_t layer = 0; layer < activation_function.size(); ++layer)
 	{
 
-		// We are performing response = weights[layers] * response(t), but in OpenBLAS as that is significantly quicker than OpenCV		
+		// We are performing response = weights[layers] * response, but in OpenBLAS as that is significantly quicker than OpenCV		
 		cv::Mat_<float> resp = response;
 		float* m1 = (float*)resp.data;
 		cv::Mat_<float> weight = weights[layer];
