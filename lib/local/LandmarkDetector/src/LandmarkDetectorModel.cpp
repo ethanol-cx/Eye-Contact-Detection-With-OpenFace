@@ -741,13 +741,20 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const std::vector<int>& window_sizes, 
 		this->view_used = view_id;
 
 		// the actual optimisation step
-		this->NU_RLMS(params_global, params_local, patch_expert_responses, cv::Vec6d(params_global), params_local.clone(), current_shape, sim_img_to_ref, sim_ref_to_img, window_size, view_id, true, scale, this->landmark_likelihoods, tmp_parameters);
+		this->NU_RLMS(params_global, params_local, patch_expert_responses, cv::Vec6d(params_global), params_local.clone(), current_shape, sim_img_to_ref, sim_ref_to_img, window_size, view_id, true, scale, this->landmark_likelihoods, tmp_parameters, false);
 
 		// non-rigid optimisation
-		this->model_likelihood = this->NU_RLMS(params_global, params_local, patch_expert_responses, cv::Vec6d(params_global), params_local.clone(), current_shape, sim_img_to_ref, sim_ref_to_img, window_size, view_id, false, scale, this->landmark_likelihoods, tmp_parameters);
-		
+		if(scale == num_scales - 1)
+		{
+			this->model_likelihood = this->NU_RLMS(params_global, params_local, patch_expert_responses, cv::Vec6d(params_global), params_local.clone(), current_shape, sim_img_to_ref, sim_ref_to_img, window_size, view_id, false, scale, this->landmark_likelihoods, tmp_parameters, true);
+		}
+		else
+		{
+			this->NU_RLMS(params_global, params_local, patch_expert_responses, cv::Vec6d(params_global), params_local.clone(), current_shape, sim_img_to_ref, sim_ref_to_img, window_size, view_id, false, scale, this->landmark_likelihoods, tmp_parameters, false);
+		}
+
 		// Can't track very small images reliably (less than ~30px across)
-		if(params_global[0] < 0.25)
+		if (params_global[0] < 0.25)
 		{
 			cout << "Face too small for landmark detection" << endl;
 			return false;
@@ -931,7 +938,7 @@ void CLNF::GetWeightMatrix(cv::Mat_<float>& WeightMatrix, int scale, int view_id
 //=============================================================================
 double CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<double>& initial_local,
 		          const cv::Mat_<double>& base_shape, const cv::Matx22d& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_id, bool rigid, int scale, cv::Mat_<double>& landmark_lhoods,
-				  const FaceModelParameters& parameters)
+				  const FaceModelParameters& parameters, bool compute_lhood)
 {		
 
 	int n = pdm.NumberOfPoints();  
@@ -1081,47 +1088,50 @@ double CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, con
 	// compute the log likelihood
 	double loglhood = 0;
 	
-	landmark_lhoods = cv::Mat_<double>(n, 1, -1e8);
-	
-	for(int i = 0; i < n; i++)
+	if(compute_lhood)
 	{
-
-		if(patch_experts.visibilities[scale][view_id].at<int>(i,0) == 0 )
+		landmark_lhoods = cv::Mat_<double>(n, 1, -1e8);
+	
+		for(int i = 0; i < n; i++)
 		{
-			continue;
-		}
-		float dx = dxs.at<float>(i);
-		float dy = dys.at<float>(i);
 
-		int ii,jj;
-		float v,vx,vy,sum=0.0;
-
-		// Iterate over the patch responses here
-		cv::MatConstIterator_<float> p = patch_expert_responses[i].begin();
-			
-		for(ii = 0; ii < resp_size; ii++)
-		{
-			vx = (dy-ii)*(dy-ii);
-			for(jj = 0; jj < resp_size; jj++)
+			if(patch_experts.visibilities[scale][view_id].at<int>(i,0) == 0 )
 			{
-				vy = (dx-jj)*(dx-jj);
-
-				// the probability at the current, xi, yi
-				v = *p++;
-
-				// the KDE evaluation of that point
-				v *= exp(-0.5*(vx+vy)/(parameters.sigma * parameters.sigma));
-
-				sum += v;
+				continue;
 			}
-		}
-		landmark_lhoods.at<double>(i,0) = (double)sum;
+			float dx = dxs.at<float>(i);
+			float dy = dys.at<float>(i);
 
-		// the offset is there for numerical stability
-		loglhood += log(sum + 1e-8);
+			int ii,jj;
+			float v,vx,vy,sum=0.0;
 
-	}	
-	loglhood = loglhood/sum(patch_experts.visibilities[scale][view_id])[0];
+			// Iterate over the patch responses here
+			cv::MatConstIterator_<float> p = patch_expert_responses[i].begin();
+			
+			for(ii = 0; ii < resp_size; ii++)
+			{
+				vx = (dy-ii)*(dy-ii);
+				for(jj = 0; jj < resp_size; jj++)
+				{
+					vy = (dx-jj)*(dx-jj);
+
+					// the probability at the current, xi, yi
+					v = *p++;
+
+					// the KDE evaluation of that point
+					v *= exp(-0.5*(vx+vy)/(parameters.sigma * parameters.sigma));
+
+					sum += v;
+				}
+			}
+			landmark_lhoods.at<double>(i,0) = (double)sum;
+
+			// the offset is there for numerical stability
+			loglhood += log(sum + 1e-8);
+
+		}	
+		loglhood = loglhood/sum(patch_experts.visibilities[scale][view_id])[0];
+	}
 
 	final_global = current_global;
 	final_local = current_local;

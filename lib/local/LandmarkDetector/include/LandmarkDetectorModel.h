@@ -195,7 +195,7 @@ private:
 
 	// The actual model optimisation (update step), returns the model likelihood
     double NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<double>& initial_local,
-		          const cv::Mat_<double>& base_shape, const cv::Matx22d& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_idx, bool rigid, int scale, cv::Mat_<double>& landmark_lhoods, const FaceModelParameters& parameters);
+		          const cv::Mat_<double>& base_shape, const cv::Matx22d& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_idx, bool rigid, int scale, cv::Mat_<double>& landmark_lhoods, const FaceModelParameters& parameters, bool compute_lhood);
 
 	// Generating the weight matrix for the Weighted least squares
 	void GetWeightMatrix(cv::Mat_<float>& WeightMatrix, int scale, int view_id, const FaceModelParameters& parameters);
