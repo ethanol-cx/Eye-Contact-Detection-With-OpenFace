@@ -71,6 +71,9 @@
 #include <cblas.h>
 #include <f77blas.h>
 
+// For exponential
+#include <math.h> 
+
 using namespace LandmarkDetector;
 
 // Copy constructor		
@@ -712,16 +715,19 @@ void CEN_patch_expert::ResponseSparse_mirror_joint(const cv::Mat_<float> &area_o
 		if (activation_function[layer] == 0) // Sigmoid
 		{
 
-			size_t resp_size = response.rows * response.cols;
+			cv::exp(-response, response);
+			response = 1.0 / (1.0 + response);
 
 			// Iterate over the data directly
+			/*size_t resp_size = response.rows * response.cols;
+
 			float* data = (float*)response.data;
 
 			for (size_t counter = 0; counter < resp_size; ++counter)
 			{
 				float in = *data;
-				*data++ = 1.0 / (1.0 + exp(-(in)));
-			}
+				*data++ = 1.0 / (1.0 + std::exp(-(in)));
+			}*/
 
 		}
 		else if (activation_function[layer] == 2)// ReLU
