@@ -153,7 +153,6 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 			track_gaze = true;
 
 			valid[i] = false;
-			i++;
 		}
 		else if (arguments[i].compare("-q") == 0)
 		{
