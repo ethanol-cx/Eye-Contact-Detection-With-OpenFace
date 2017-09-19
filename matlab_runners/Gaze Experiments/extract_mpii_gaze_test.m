@@ -40,7 +40,6 @@ parfor p=1:numel(p_dirs)
     out_p_loc = ['-opdir "', [output, p_dirs(p).name], '" '];
     command_c = cat(2, command, input_loc, out_img_loc, out_p_loc);
 
-    command_c = cat(2, command_c, ' -wild');
     if(isunix)
         unix(command_c, '-echo');
     else
