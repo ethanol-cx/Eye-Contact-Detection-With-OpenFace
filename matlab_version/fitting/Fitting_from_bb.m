@@ -217,13 +217,13 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
         % deal with the fact that params might be different for different
         % scales
         if(numel(clmParams_old.regFactor) > 1)
-            clmParams.regFactor = clmParams_old.regFactor(i);
+            clmParams.regFactor = clmParams_old.regFactor(scale);
         end
         if(numel(clmParams_old.sigmaMeanShift) > 1)
-            clmParams.sigmaMeanShift = clmParams_old.sigmaMeanShift(i);
+            clmParams.sigmaMeanShift = clmParams_old.sigmaMeanShift(scale);
         end
         if(numel(clmParams_old.tikhonov_factor) > 1)
-            clmParams.tikhonov_factor = clmParams_old.tikhonov_factor(i);
+            clmParams.tikhonov_factor = clmParams_old.tikhonov_factor(scale);
         end
         
         % The actual NU-RLMS step

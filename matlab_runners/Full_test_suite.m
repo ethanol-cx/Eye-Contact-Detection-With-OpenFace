@@ -25,7 +25,7 @@ assert(median(clnf_error) < 0.053);
 run_300VW_dataset_OpenFace;
 assert(median(ceclm_error_49_cat_1) < 0.025);
 assert(median(ceclm_error_49_cat_2) < 0.027);
-assert(median(ceclm_error_49_cat_3) < 0.032);
+assert(median(ceclm_error_49_cat_3) < 0.033);
 assert(median(ceclm_error_66_cat_1) < 0.032);
 assert(median(ceclm_error_66_cat_2) < 0.036);
 assert(median(ceclm_error_66_cat_3) < 0.042);

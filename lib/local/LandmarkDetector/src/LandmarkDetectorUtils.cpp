@@ -1612,8 +1612,8 @@ bool DetectSingleFaceMTCNN(cv::Rect_<double>& o_region, const cv::Mat& image, La
 
 			if (use_preferred)
 			{
-				dist = sqrt((preference.x - (face_detections[0].width / 2 + face_detections[0].x)) * (preference.x - (face_detections[0].width / 2 + face_detections[0].x)) +
-					(preference.y - (face_detections[0].height / 2 + face_detections[0].y)) * (preference.y - (face_detections[0].height / 2 + face_detections[0].y)));
+				dist = sqrt((preference.x - (face_detections[i].width / 2 + face_detections[i].x)) * (preference.x - (face_detections[i].width / 2 + face_detections[i].x)) +
+					(preference.y - (face_detections[i].height / 2 + face_detections[i].y)) * (preference.y - (face_detections[i].height / 2 + face_detections[i].y)));
 				better = dist < best_so_far;
 			}
 			else

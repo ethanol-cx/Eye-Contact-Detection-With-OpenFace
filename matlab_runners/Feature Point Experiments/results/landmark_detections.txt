@@ -1,4 +1,4 @@
 Type, mean, median
-err ce-clm: 0.042290, 0.034776
+err ce-clm: 0.042604, 0.034670
 err clnf: 0.054960, 0.038257
 err svr: 0.070022, 0.049925

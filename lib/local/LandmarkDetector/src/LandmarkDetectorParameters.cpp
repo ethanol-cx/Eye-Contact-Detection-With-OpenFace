@@ -151,9 +151,7 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 		else if (arguments[i].compare("-gaze") == 0)
 		{
 			track_gaze = true;
-
 			valid[i] = false;
-			i++;
 		}
 		else if (arguments[i].compare("-q") == 0)
 		{
@@ -308,7 +306,7 @@ void FaceModelParameters::init()
 	limit_pose = true;
 	multi_view = false;
 
-	reinit_video_every = 4;
+	reinit_video_every = 2;
 
 	// Face detection
 	haar_face_detector_location = "classifiers/haarcascade_frontalface_alt.xml";

@@ -32,7 +32,7 @@ for f1=1:numel(bp4d_dirs)
                 
                 command = cat(2, command, [' -fx 2000 -fy 2000 -rigid -asvid -fdir "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
                 command = cat(2, command, [' -hogalign "' output_hog '"']);
-                command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze']);
+                command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze -q ']);
                 dos(command);
             end
         end
@@ -65,7 +65,7 @@ for f1=1:numel(bp4d_dirs)
 
                 command = cat(2, command, [' -fx 2000 -fy 2000 -rigid -q -asvid -fdir "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
                 command = cat(2, command, [' -hogalign "' output_hog '"']);
-                command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze']);
+                command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze -q ']);
                 dos(command);
             end
         end

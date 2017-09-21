@@ -30,7 +30,7 @@ end
 cd(op);
 
 %%
-for a=1:4%numel(DISFA_aus)
+for a=1:numel(DISFA_aus)
     
     name = sprintf('mat_models/AU_%d_static_intensity.mat', DISFA_aus(a));
     load(name);

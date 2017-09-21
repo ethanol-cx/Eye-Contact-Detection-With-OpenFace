@@ -55,7 +55,7 @@ for i=1:numel(disfa_loc_1_files)
         
     command = cat(2, command, [' -rigid -f "' input_file '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
     command = cat(2, command, [' -hogalign "' output_hog '"' ]);
-    command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze ']);
+    command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze -q ']);
 
     dos(command);
 end
@@ -76,7 +76,7 @@ for i=1:numel(disfa_loc_2_files)
         
     command = cat(2, command, [' -rigid -f "' input_file '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);  
     command = cat(2, command, [' -hogalign "' output_hog '"']);
-    command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze ']);
+    command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze -q ']);
     
     dos(command);
 end

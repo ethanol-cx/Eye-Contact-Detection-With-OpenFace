@@ -16,6 +16,10 @@ for f1=1:numel(bosph_dirs)
 
     for i=1:numel(curr_vids)
         command = features_exe;
+        % Do not do angled faces, does not add much information for AU
+        if(~isempty(strfind(curr_vids(i).name, 'YR')) || ~isempty(strfind(curr_vids(i).name, 'PR'))|| ~isempty(strfind(curr_vids(i).name, 'CR')))
+            continue;
+        end
         input_file = [bosph_loc, '/' name '/', curr_vids(i).name];
         [~, curr_name, ~] = fileparts(curr_vids(i).name);
         output_file = [out_loc, '/hog_aligned_rigid_b/',  curr_name, '/'];
