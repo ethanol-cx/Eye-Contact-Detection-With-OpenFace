@@ -42,13 +42,13 @@ cd('../');
 %% AUs
 cd('Action Unit Experiments');
 run_AU_prediction_DISFA
-assert(mean(au_res) > 0.7);
+assert(mean(au_res) > 0.73);
 
 run_AU_prediction_SEMAINE
-assert(mean(f1s) > 0.40);
+assert(mean(f1s) > 0.43);
 
 run_AU_prediction_FERA2011
-assert(mean(au_res) > 0.53);
+assert(mean(au_res) > 0.52);
 
 cd('../');
 
