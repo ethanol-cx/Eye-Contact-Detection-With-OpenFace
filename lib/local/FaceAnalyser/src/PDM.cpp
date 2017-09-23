@@ -49,6 +49,10 @@
 
 #include <Face_utils.h>
 
+// OpenBLAS
+#include <cblas.h>
+#include <f77blas.h>
+
 using namespace FaceAnalysis;
 //===========================================================================
 
@@ -442,6 +446,7 @@ void PDM::UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>&
 
 }
 
+// void CalcParams(cv::Vec6d& out_params_global, cv::Mat_<double>& out_params_local, const cv::Mat_<double>& landmark_locations, const cv::Vec3d rotation = cv::Vec3d(0.0)) const;
 void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<double>& out_params_local, const cv::Mat_<double>& landmark_locations, const cv::Vec3d rotation) const
 {
 		
@@ -536,17 +541,22 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<double>& out_params_
 		// Add the regularisation term
 		J_w_t_m(cv::Rect(0,6,1, m)) = J_w_t_m(cv::Rect(0,6,1, m)) - regularisations(cv::Rect(6,6, m, m)) * loc_params;
 
-		cv::Mat_<float> Hessian = J_w_t * J;
+		cv::Mat_<float> Hessian = regularisations.clone();
 
-		// Add the Tikhonov regularisation
-		Hessian = Hessian + regularisations;
+		// Perform matrix multiplication in OpenBLAS (fortran call)
+		float alpha1 = 1.0;
+		float beta1 = 1.0;
+		sgemm_("N", "N", &J.cols, &J_w_t.rows, &J_w_t.cols, &alpha1, (float*)J.data, &J.cols, (float*)J_w_t.data, &J_w_t.cols, &beta1, (float*)Hessian.data, &J.cols);
+
+		// Above is a fast (but ugly) version of 
+		// cv::Mat_<float> Hessian2 = J_w_t * J + regularisations;
 
 		// Solve for the parameter update (from Baltrusaitis 2013 based on eq (36) Saragih 2011)
 		cv::Mat_<float> param_update;
 		cv::solve(Hessian, J_w_t_m, param_update, CV_CHOLESKY);
 
 		// To not overshoot, have the gradient decent rate a bit smaller
-		param_update = 0.5 * param_update;
+		param_update = 0.75 * param_update;
 
 		UpdateModelParameters(param_update, loc_params, glob_params);		
         
@@ -574,8 +584,8 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<double>& out_params_
         if(0.999 * currError < error)
 		{
 			not_improved_in++;
-			if (not_improved_in == 5)
-			{
+			if (not_improved_in == 3)
+			{				
 	            break;
 			}
 		}

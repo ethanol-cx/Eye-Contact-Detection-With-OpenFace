@@ -653,7 +653,7 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, const cv::Mat_<double>& out_p
 		cv::solve(Hessian, J_w_t_m, param_update, CV_CHOLESKY);
 
 		// To not overshoot, have the gradient decent rate a bit smaller
-		param_update = 0.5 * param_update;
+		param_update = 0.75 * param_update;
 
 		UpdateModelParameters(param_update, loc_params, glob_params);		
         
@@ -681,9 +681,9 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, const cv::Mat_<double>& out_p
         if(0.999 * currError < error)
 		{
 			not_improved_in++;
-			if (not_improved_in == 5)
+			if (not_improved_in == 3)
 			{
-	            break;
+				break;
 			}
 		}
 
