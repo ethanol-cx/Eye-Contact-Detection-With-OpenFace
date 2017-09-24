@@ -506,6 +506,8 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, const cv::Mat_<double>& out_p
 	cv::Mat_<int> visi_ind_2D(n * 2, 1, 1);
 	cv::Mat_<int> visi_ind_3D(3 * n , 1, 1);
 
+	int visi_count = n;
+
 	for(int i = 0; i < n; ++i)
 	{
 		// If the landmark is invisible indicate this
@@ -516,19 +518,22 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, const cv::Mat_<double>& out_p
 			visi_ind_3D.at<int>(i) = 0;
 			visi_ind_3D.at<int>(i+n) = 0;
 			visi_ind_3D.at<int>(i+2*n) = 0;
+
+			visi_count--;
 		}
 	}
 
-	// As this might be subsampled have special versions
-	cv::Mat_<double> M(0, mean_shape.cols, 0.0);
-	cv::Mat_<double> V(0, princ_comp.cols, 0.0);
-
-	for(int i = 0; i < n * 3; ++i)
+	// As not all landmarks might be visible, subsample the Mean and principal component matrices
+	cv::Mat_<double> M(visi_count * 3, mean_shape.cols, 0.0);
+	cv::Mat_<double> V(visi_count * 3, princ_comp.cols, 0.0);
+	visi_count = 0;
+	for (int i = 0; i < n * 3; ++i)
 	{
-		if(visi_ind_3D.at<int>(i) == 1)
+		if (visi_ind_3D.at<int>(i) == 1)
 		{
-			cv::vconcat(M, this->mean_shape.row(i), M);
-			cv::vconcat(V, this->princ_comp.row(i), V);
+			this->mean_shape.row(i).copyTo(M.row(visi_count));
+			this->princ_comp.row(i).copyTo(V.row(visi_count));
+			visi_count++;
 		}
 	}
 

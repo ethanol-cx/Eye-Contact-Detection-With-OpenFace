@@ -540,8 +540,11 @@ int main(int argc, char **argv)
 				}
 			}
 
-			// Visualising the tracker
-			visualise_tracking(captured_image, face_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
+			// Visualising the tracker (only if output the video or not quiet mode
+			if(!tracked_videos_output.empty() || !det_parameters.quiet_mode)
+			{
+				visualise_tracking(captured_image, face_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
+			}
 
 			// Output the landmarks, pose, gaze, parameters and AUs
 			outputAllFeatures(&output_file, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze,
