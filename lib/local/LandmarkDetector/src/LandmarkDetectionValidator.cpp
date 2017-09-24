@@ -346,13 +346,36 @@ double DetectionValidator::Check(const cv::Vec3d& orientation, const cv::Mat_<uc
 	// The warped (cropped) image, corresponding to a face lying withing the detected lanmarks
 	cv::Mat_<float> warped;
 	
-	// the piece-wise affine image
-	cv::Mat_<float> intensity_img_float;
-	intensity_img.convertTo(intensity_img_float, CV_32F);
+	// First only use the ROI of the image of interest
+	cv::Mat_<double>& detected_landmarks_local = detected_landmarks.clone();
+	double min_x_d, max_x_d, min_y_d, max_y_d;
+	cv::Mat_<double> xs = detected_landmarks_local(cv::Rect(0, 0, 1, detected_landmarks.rows / 2));
+	cv::Mat_<double> ys = detected_landmarks_local(cv::Rect(0, detected_landmarks.rows / 2, 1, detected_landmarks.rows / 2));
+	cv::minMaxLoc(xs, &min_x_d, &max_x_d);
+	cv::minMaxLoc(ys, &min_y_d, &max_y_d);
 
-	paws[id].Warp(intensity_img_float, warped, detected_landmarks);
+	// Picking the ROI (some extra space for bilinear interpolation)
+	int min_x = (int)min_x_d - 3.0;
+	int max_x = (int)(max_x_d + 3.0);
+	int min_y = (int)min_y_d - 3.0;
+	int max_y = (int)(max_y_d + 3.0);
+
+	if (min_x < 0) min_x = 0;
+	if (min_y < 0) min_y = 0;
+	if (max_x > intensity_img.cols - 1) max_x = intensity_img.cols - 1;
+	if (max_y > intensity_img.rows - 1) max_y = intensity_img.rows - 1;
+	xs = xs - min_x;
+	ys = ys - min_y;
+
+	cv::Mat_<float> intensity_img_float_local;
+	intensity_img(cv::Rect(min_x, min_y, max_x - min_x, max_y - min_y)).convertTo(intensity_img_float_local, CV_32F);
 	
+	// the piece-wise affine image warping
+	paws[id].Warp(intensity_img_float_local, warped, detected_landmarks_local);
+
+	// The actual validation step
 	double dec = CheckCNN(warped, id);
+
 	return dec;
 }
 
