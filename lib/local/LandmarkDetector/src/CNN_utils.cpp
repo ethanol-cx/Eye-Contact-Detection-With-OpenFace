@@ -504,7 +504,9 @@ namespace LandmarkDetector
 			{
 	
 				float* Mo = output.ptr<float>(rowIdx);
-	
+
+				// TODO, this should be rearranged and done through mem-copy
+
 				// iterate over the blocks within the image
 				for (unsigned int yy = 0; yy < height; ++yy)
 				{
