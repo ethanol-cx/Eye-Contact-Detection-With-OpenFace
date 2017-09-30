@@ -367,9 +367,12 @@ void im2colBiasSparseContrastNorm(const cv::Mat_<float>& input, int width, int h
 				norm = 1;
 			}
 
+			// Flip multiplication to division for speed
+			norm = 1.0 / norm;
+
 			for (size_t x = 1; x < width*height + 1; ++x)
 			{
-				Mo[x] /= norm;
+				Mo[x] *= norm;
 			}
 
 			rowIdx++;
