@@ -938,8 +938,8 @@ void CLNF::GetWeightMatrix(cv::Mat_<float>& WeightMatrix, int scale, int view_id
 }
 
 //=============================================================================
-double CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<double>& initial_local,
-		          const cv::Mat_<double>& base_shape, const cv::Matx22d& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_id, bool rigid, int scale, cv::Mat_<double>& landmark_lhoods,
+float CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<double>& initial_local,
+		          const cv::Mat_<double>& base_shape, const cv::Matx22d& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_id, bool rigid, int scale, cv::Mat_<float>& landmark_lhoods,
 				  const FaceModelParameters& parameters, bool compute_lhood)
 {		
 
@@ -1088,11 +1088,11 @@ double CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, con
 	}
 
 	// compute the log likelihood
-	double loglhood = 0;
+	float loglhood = 0;
 	
 	if(compute_lhood)
 	{
-		landmark_lhoods = cv::Mat_<double>(n, 1, -1e8);
+		landmark_lhoods = cv::Mat_<float>(n, 1, -1e8);
 	
 		for(int i = 0; i < n; i++)
 		{
@@ -1126,7 +1126,7 @@ double CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, con
 					sum += v;
 				}
 			}
-			landmark_lhoods.at<double>(i,0) = (double)sum;
+			landmark_lhoods.at<float>(i,0) = sum;
 
 			// the offset is there for numerical stability
 			loglhood += log(sum + 1e-8);

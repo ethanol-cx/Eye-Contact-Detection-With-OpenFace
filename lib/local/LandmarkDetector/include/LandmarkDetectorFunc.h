@@ -70,10 +70,10 @@ namespace LandmarkDetector
 
 	// Return the current estimate of the head pose in world coordinates with camera at origin (0,0,0)
 	// The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-	cv::Vec6d GetPose(const CLNF& clnf_model, double fx, double fy, double cx, double cy);
+	cv::Vec6d GetPose(const CLNF& clnf_model, float fx, float fy, float cx, float cy);
 
 	// Return the current estimate of the head pose in world coordinates with camera at origin (0,0,0), but with rotation representing if the head is looking at the camera
 	// The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-	cv::Vec6d GetPoseWRTCamera(const CLNF& clnf_model, double fx, double fy, double cx, double cy);
+	cv::Vec6d GetPoseWRTCamera(const CLNF& clnf_model, float fx, float fy, float cx, float cy);
 }
 #endif

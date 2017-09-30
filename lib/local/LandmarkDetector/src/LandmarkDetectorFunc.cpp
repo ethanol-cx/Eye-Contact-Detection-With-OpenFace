@@ -51,7 +51,7 @@ using namespace LandmarkDetector;
 // which is only correct close to the centre of the image
 // This method returns a corrected pose estimate with respect to world coordinates with camera at origin (0,0,0)
 // The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-cv::Vec6d LandmarkDetector::GetPose(const CLNF& clnf_model, double fx, double fy, double cx, double cy)
+cv::Vec6d LandmarkDetector::GetPose(const CLNF& clnf_model, float fx, float fy, float cx, float cy)
 {
 	if (!clnf_model.detected_landmarks.empty() && clnf_model.params_global[0] != 0)
 	{
@@ -97,7 +97,7 @@ cv::Vec6d LandmarkDetector::GetPose(const CLNF& clnf_model, double fx, double fy
 // Getting a head pose estimate from the currently detected landmarks, with appropriate correction due to perspective projection
 // This method returns a corrected pose estimate with respect to a point camera (NOTE not the world coordinates), which is useful to find out if the person is looking at a camera
 // The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-cv::Vec6d LandmarkDetector::GetPoseWRTCamera(const CLNF& clnf_model, double fx, double fy, double cx, double cy)
+cv::Vec6d LandmarkDetector::GetPoseWRTCamera(const CLNF& clnf_model, float fx, float fy, float cx, float cy)
 {
 	if (!clnf_model.detected_landmarks.empty() && clnf_model.params_global[0] != 0)
 	{
@@ -310,7 +310,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_m
 			cv::Mat_<double> params_local_init = clnf_model.params_local.clone();
 			double likelihood_init = clnf_model.model_likelihood;
 			cv::Mat_<double> detected_landmarks_init = clnf_model.detected_landmarks.clone();
-			cv::Mat_<double> landmark_likelihoods_init = clnf_model.landmark_likelihoods.clone();
+			cv::Mat_<float> landmark_likelihoods_init = clnf_model.landmark_likelihoods.clone();
 
 			// Use the detected bounding box and empty local parameters
 			clnf_model.params_local.setTo(0);
@@ -402,7 +402,7 @@ bool DetectLandmarksInImageMultiHypBasic(const cv::Mat_<uchar> &grayscale_image,
 	cv::Vec6d best_global_parameters;
 	cv::Mat_<double> best_local_parameters;
 	cv::Mat_<double> best_detected_landmarks;
-	cv::Mat_<double> best_landmark_likelihoods;
+	cv::Mat_<float> best_landmark_likelihoods;
 	bool best_success;
 
 	// The hierarchical model parameters
@@ -410,7 +410,7 @@ bool DetectLandmarksInImageMultiHypBasic(const cv::Mat_<uchar> &grayscale_image,
 	vector<cv::Vec6d> best_global_parameters_h(clnf_model.hierarchical_models.size());
 	vector<cv::Mat_<double>> best_local_parameters_h(clnf_model.hierarchical_models.size());
 	vector<cv::Mat_<double>> best_detected_landmarks_h(clnf_model.hierarchical_models.size());
-	vector<cv::Mat_<double>> best_landmark_likelihoods_h(clnf_model.hierarchical_models.size());
+	vector<cv::Mat_<float>> best_landmark_likelihoods_h(clnf_model.hierarchical_models.size());
 
 	for (size_t hypothesis = 0; hypothesis < rotation_hypotheses.size(); ++hypothesis)
 	{
@@ -504,7 +504,7 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 	bool success = false;
 
 	// Keeping track of converges
-	vector<double> likelihoods;
+	vector<float> likelihoods;
 	vector<cv::Vec6d> global_parameters;
 	vector<cv::Mat_<double>> local_parameters;
 
@@ -524,7 +524,7 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 		// Perform landmark detection in first scale
 		clnf_model.DetectLandmarks(grayscale_image, params);
 
-		double lhood = clnf_model.model_likelihood * clnf_model.patch_experts.early_term_weights[clnf_model.view_used] + clnf_model.patch_experts.early_term_biases[clnf_model.view_used];
+		float lhood = clnf_model.model_likelihood * clnf_model.patch_experts.early_term_weights[clnf_model.view_used] + clnf_model.patch_experts.early_term_biases[clnf_model.view_used];
 
 		// If likelihood higher than cutoff continue on this model
 		if (lhood > clnf_model.patch_experts.early_term_cutoffs[clnf_model.view_used])
@@ -550,11 +550,11 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 	{
 
 		// Store the current best estimate
-		double best_likelihood;
+		float best_likelihood;
 		cv::Vec6d best_global_parameters;
 		cv::Mat_<double> best_local_parameters;
 		cv::Mat_<double> best_detected_landmarks;
-		cv::Mat_<double> best_landmark_likelihoods;
+		cv::Mat_<float> best_landmark_likelihoods;
 		bool best_success;
 
 		// The hierarchical model parameters
@@ -562,7 +562,7 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 		vector<cv::Vec6d> best_global_parameters_h(clnf_model.hierarchical_models.size());
 		vector<cv::Mat_<double>> best_local_parameters_h(clnf_model.hierarchical_models.size());
 		vector<cv::Mat_<double>> best_detected_landmarks_h(clnf_model.hierarchical_models.size());
-		vector<cv::Mat_<double>> best_landmark_likelihoods_h(clnf_model.hierarchical_models.size());
+		vector<cv::Mat_<float>> best_landmark_likelihoods_h(clnf_model.hierarchical_models.size());
 
 		// Sort the likelihoods and pick the best top 3 models
 		vector<size_t> indices = sort_indexes(likelihoods);
