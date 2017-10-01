@@ -253,7 +253,7 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 	
 	// Extract shape parameters from the detected landmarks
 	cv::Vec6d params_global;
-	cv::Mat_<double> params_local;
+	cv::Mat_<float> params_local;
 	pdm.CalcParams(params_global, params_local, detected_landmarks);
 
 	// First align the face
@@ -269,8 +269,9 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 	cv::Vec3d curr_orient(params_global[1], params_global[2], params_global[3]);
 	int orientation_to_use = GetViewId(this->head_orientations, curr_orient);
 	
-	// Geom descriptor and its median
-	geom_descriptor_frame = params_local.t();
+	// Geom descriptor and its median, TODO these should be floats?
+	params_local = params_local.t();
+	params_local.convertTo(geom_descriptor_frame, CV_64F);
 
 	// Stack with the actual feature point locations (without mean)
 	cv::Mat_<double> locs = pdm.princ_comp * geom_descriptor_frame.t();
@@ -313,7 +314,7 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<double>& de
 
 	// Extract shape parameters from the detected landmarks
 	cv::Vec6d params_global;
-	cv::Mat_<double> params_local;
+	cv::Mat_<float> params_local;
 	pdm.CalcParams(params_global, params_local, detected_landmarks);
 
 	// First align the face if tracking was successfull
@@ -398,8 +399,9 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<double>& de
 	}	
 
 	// Geom descriptor and its median
-	geom_descriptor_frame = params_local.t();
-	
+	params_local = params_local.t();
+	params_local.convertTo(geom_descriptor_frame, CV_64F);
+
 	if(!success)
 	{
 		geom_descriptor_frame.setTo(0);

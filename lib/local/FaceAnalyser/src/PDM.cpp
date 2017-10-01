@@ -88,15 +88,20 @@ PDM::PDM(const PDM& other) {
 
 //===========================================================================
 // Compute the 3D representation of shape (in object space) using the local parameters
-void PDM::CalcShape3D(cv::Mat_<double>& out_shape, const cv::Mat_<double>& p_local) const
+void PDM::CalcShape3D(cv::Mat_<double>& out_shape, const cv::Mat_<float>& p_local) const
 {
 	out_shape.create(mean_shape.rows, mean_shape.cols);
-	out_shape = mean_shape + princ_comp*p_local;
+
+	// TODO change it to all floats internally
+	cv::Mat_<double> p_local_d;
+	p_local.convertTo(p_local_d, CV_64F);
+
+	out_shape = mean_shape + princ_comp*p_local_d;
 }
 
 //===========================================================================
 // Get the 2D shape (in image space) from global and local parameters
-void PDM::CalcShape2D(cv::Mat_<double>& out_shape, const cv::Mat_<double>& params_local, const cv::Vec6d& params_global) const
+void PDM::CalcShape2D(cv::Mat_<double>& out_shape, const cv::Mat_<float>& params_local, const cv::Vec6d& params_global) const
 {
 
 	int n = this->NumberOfPoints();
@@ -108,9 +113,13 @@ void PDM::CalcShape2D(cv::Mat_<double>& out_shape, const cv::Mat_<double>& param
 	// get the rotation matrix from the euler angles
 	cv::Vec3d euler(params_global[1], params_global[2], params_global[3]);
 	cv::Matx33d currRot = Euler2RotationMatrix(euler);
-	
+
+	// TODO change it to all floats internally
+	cv::Mat_<double> p_local_d;
+	params_local.convertTo(p_local_d, CV_64F);
+
 	// get the 3D shape of the object
-	cv::Mat_<double> Shape_3D = mean_shape + princ_comp * params_local;
+	cv::Mat_<double> Shape_3D = mean_shape + princ_comp * p_local_d;
 
 	// create the 2D shape matrix (if it has not been defined yet)
 	if((out_shape.rows != mean_shape.rows) || (out_shape.cols != 1))
@@ -129,7 +138,7 @@ void PDM::CalcShape2D(cv::Mat_<double>& out_shape, const cv::Mat_<double>& param
 //===========================================================================
 // provided the bounding box of a face and the local parameters (with optional rotation), generates the global parameters that can generate the face with the provided bounding box
 // This all assumes that the bounding box describes face from left outline to right outline of the face and chin to eyebrows
-void PDM::CalcParams(cv::Vec6d& out_params_global, const cv::Rect_<double>& bounding_box, const cv::Mat_<double>& params_local, const cv::Vec3d rotation) const
+void PDM::CalcParams(cv::Vec6d& out_params_global, const cv::Rect_<double>& bounding_box, const cv::Mat_<float>& params_local, const cv::Vec3d rotation) const
 {
 
 	// get the shape instance based on local params
@@ -172,7 +181,7 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, const cv::Rect_<double>& boun
 //===========================================================================
 // provided the model parameters, compute the bounding box of a face
 // The bounding box describes face from left outline to right outline of the face and chin to eyebrows
-void PDM::CalcBoundingBox(cv::Rect& out_bounding_box, const cv::Vec6d& params_global, const cv::Mat_<double>& params_local) const
+void PDM::CalcBoundingBox(cv::Rect& out_bounding_box, const cv::Vec6d& params_global, const cv::Mat_<float>& params_local) const
 {
 	
 	// get the shape instance based on local params
@@ -447,7 +456,7 @@ void PDM::UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>&
 }
 
 // void CalcParams(cv::Vec6d& out_params_global, cv::Mat_<double>& out_params_local, const cv::Mat_<double>& landmark_locations, const cv::Vec3d rotation = cv::Vec3d(0.0)) const;
-void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<double>& out_params_local, const cv::Mat_<double>& landmark_locations, const cv::Vec3d rotation) const
+void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_local, const cv::Mat_<double>& landmark_locations, const cv::Vec3d rotation) const
 {
 		
 	int m = this->NumberOfModes();
@@ -595,8 +604,7 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<double>& out_params_
 	}
 
 	out_params_global = glob_params;
-	loc_params.convertTo(out_params_local, CV_64F);
-    	
+	out_params_local = loc_params;
 
 }
 

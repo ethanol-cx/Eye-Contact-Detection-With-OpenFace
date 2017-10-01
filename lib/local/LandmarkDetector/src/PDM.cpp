@@ -91,11 +91,11 @@ PDM::PDM(const PDM& other) {
 // Clamping the parameter values to be within 3 standard deviations
 void PDM::Clamp(cv::Mat_<float>& local_params, cv::Vec6d& params_global, const FaceModelParameters& parameters)
 {
-	double n_sigmas = 3;
-	cv::MatConstIterator_<double> e_it  = this->eigen_values.begin();
+	float n_sigmas = 3;
+	cv::MatConstIterator_<float> e_it  = this->eigen_values.begin();
 	cv::MatIterator_<float> p_it =  local_params.begin();
 
-	double v;
+	float v;
 
 	// go over all parameters
 	for(; p_it != local_params.end(); ++p_it, ++e_it)
@@ -143,11 +143,9 @@ void PDM::CalcShape3D(cv::Mat_<double>& out_shape, const cv::Mat_<float>& p_loca
 {
 	out_shape.create(mean_shape.rows, mean_shape.cols);
 
-	// TODO change it to all floats internally
-	cv::Mat_<double> p_local_d;
-	p_local.convertTo(p_local_d, CV_64F);
-
-	out_shape = mean_shape + princ_comp*p_local_d;
+	cv::Mat_<float> out_shape_f = mean_shape + princ_comp*p_local;
+	// TODO move away from doubles
+	out_shape_f.convertTo(out_shape, CV_64F);
 }
 
 //===========================================================================
@@ -165,12 +163,10 @@ void PDM::CalcShape2D(cv::Mat_<double>& out_shape, const cv::Mat_<float>& params
 	cv::Vec3d euler(params_global[1], params_global[2], params_global[3]);
 	cv::Matx33d currRot = Euler2RotationMatrix(euler);
 	
-	// TODO change it to all floats internally
-	cv::Mat_<double> p_local_d;
-	params_local.convertTo(p_local_d, CV_64F);
-
 	// get the 3D shape of the object
-	cv::Mat_<double> Shape_3D = mean_shape + princ_comp * p_local_d;
+	cv::Mat_<float> Shape_3D_f = mean_shape + princ_comp * params_local;
+	cv::Mat_<double> Shape_3D;
+	Shape_3D_f.convertTo(Shape_3D, CV_64F);
 
 	// create the 2D shape matrix (if it has not been defined yet)
 	if((out_shape.rows != mean_shape.rows) || (out_shape.cols != 1))
@@ -365,6 +361,7 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6d& 
 	
 	float s = (float) params_global[0];
   	
+	// TODO move away from doubles
 	cv::Mat_<double> shape_3D_d;
 	this->CalcShape3D(shape_3D_d, params_local);
 	
@@ -386,9 +383,9 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6d& 
 
 	cv::MatIterator_<float> Jx =  Jacobian.begin();
 	cv::MatIterator_<float> Jy =  Jx + n * (6 + m);
-	cv::MatConstIterator_<double> Vx =  this->princ_comp.begin();
-	cv::MatConstIterator_<double> Vy =  Vx + n*m;
-	cv::MatConstIterator_<double> Vz =  Vy + n*m;
+	cv::MatConstIterator_<float> Vx =  this->princ_comp.begin();
+	cv::MatConstIterator_<float> Vy =  Vx + n*m;
+	cv::MatConstIterator_<float> Vz =  Vy + n*m;
 
 	for(int i = 0; i < n; i++)
 	{
@@ -424,8 +421,8 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6d& 
 		for(int j = 0; j < m; j++,++Vx,++Vy,++Vz)
 		{
 			// How much the change of the non-rigid parameters (when object is rotated) affect 2D motion
-			*Jx++ = (float) ( s*(r11*(*Vx) + r12*(*Vy) + r13*(*Vz)) );
-			*Jy++ = (float) ( s*(r21*(*Vx) + r22*(*Vy) + r23*(*Vz)) );
+			*Jx++ = ( s*(r11*(*Vx) + r12*(*Vy) + r13*(*Vz)) );
+			*Jy++ = ( s*(r21*(*Vx) + r22*(*Vy) + r23*(*Vz)) );
 		}
 	}	
 
@@ -529,8 +526,8 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_l
 	}
 
 	// As not all landmarks might be visible, subsample the Mean and principal component matrices
-	cv::Mat_<double> M(visi_count * 3, mean_shape.cols, 0.0);
-	cv::Mat_<double> V(visi_count * 3, princ_comp.cols, 0.0);
+	cv::Mat_<float> M(visi_count * 3, mean_shape.cols, 0.0);
+	cv::Mat_<float> V(visi_count * 3, princ_comp.cols, 0.0);
 	visi_count = 0;
 	for (int i = 0; i < n * 3; ++i)
 	{
@@ -542,8 +539,8 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_l
 		}
 	}
 
-	cv::Mat_<double> m_old = this->mean_shape.clone();
-	cv::Mat_<double> v_old = this->princ_comp.clone();
+	cv::Mat_<float> m_old = this->mean_shape.clone();
+	cv::Mat_<float> v_old = this->princ_comp.clone();
 
 	this->mean_shape = M;
 	this->princ_comp = V;
@@ -592,7 +589,14 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_l
 	// get the 3D shape of the object
 	cv::Mat_<double> loc_params_d;
 	loc_params.convertTo(loc_params_d, CV_64F);
-	cv::Mat_<double> shape_3D = M + V * loc_params_d;
+
+	// TODO move away from doubles
+	cv::Mat_<double> M_d;
+	cv::Mat_<double> V_d;
+	M.convertTo(M_d, CV_64F);
+	V.convertTo(V_d, CV_64F);
+
+	cv::Mat_<double> shape_3D = M_d + V_d * loc_params_d;
 
 	cv::Mat_<double> curr_shape(2*n, 1);
 	
@@ -619,12 +623,14 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_l
 
 	int not_improved_in = 0;
 
-    for (size_t i = 0; i < 1000; ++i)
+	for (size_t i = 0; i < 1000; ++i)
 	{
 		// get the 3D shape of the object
+		// TODO move away from doubles
 		cv::Mat_<double> loc_params_d;
 		loc_params.convertTo(loc_params_d, CV_64F);
-		shape_3D = M + V * loc_params_d;
+
+		shape_3D = M_d + V_d * loc_params_d;
 
 		shape_3D = shape_3D.reshape(1, 3);
 
@@ -718,16 +724,21 @@ void PDM::Read(string location)
 	LandmarkDetector::SkipComments(pdmLoc);
 
 	// Reading mean values
-	LandmarkDetector::ReadMat(pdmLoc,mean_shape);
-	
+	cv::Mat_<double> mean_shape_d;
+	LandmarkDetector::ReadMat(pdmLoc, mean_shape_d);
+	mean_shape_d.convertTo(mean_shape, CV_32F); // Moving things to floats for speed
+
 	LandmarkDetector::SkipComments(pdmLoc);
 
 	// Reading principal components
-	LandmarkDetector::ReadMat(pdmLoc,princ_comp);
-	
+	cv::Mat_<double> princ_comp_d;
+	LandmarkDetector::ReadMat(pdmLoc, princ_comp_d);
+	princ_comp_d.convertTo(princ_comp, CV_32F);
+
 	LandmarkDetector::SkipComments(pdmLoc);
 	
 	// Reading eigenvalues	
-	LandmarkDetector::ReadMat(pdmLoc,eigen_values);
-
+	cv::Mat_<double> eigen_values_d;
+	LandmarkDetector::ReadMat(pdmLoc, eigen_values_d);
+	eigen_values_d.convertTo(eigen_values, CV_32F);
 }
