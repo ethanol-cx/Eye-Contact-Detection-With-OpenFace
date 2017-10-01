@@ -272,9 +272,12 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 	// Geom descriptor and its median, TODO these should be floats?
 	params_local = params_local.t();
 	params_local.convertTo(geom_descriptor_frame, CV_64F);
+	
+	cv::Mat_<double> princ_comp_d;
+	pdm.princ_comp.convertTo(princ_comp_d, CV_64F);
 
 	// Stack with the actual feature point locations (without mean)
-	cv::Mat_<double> locs = pdm.princ_comp * geom_descriptor_frame.t();
+	cv::Mat_<double> locs = princ_comp_d * geom_descriptor_frame.t();
 
 	cv::hconcat(locs.t(), geom_descriptor_frame.clone(), geom_descriptor_frame);
 	
@@ -408,7 +411,10 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<double>& de
 	}
 
 	// Stack with the actual feature point locations (without mean)
-	cv::Mat_<double> locs = pdm.princ_comp * geom_descriptor_frame.t();
+	// TODO rem double
+	cv::Mat_<double> princ_comp_d;
+	pdm.princ_comp.convertTo(princ_comp_d, CV_64F);
+	cv::Mat_<double> locs = princ_comp_d * geom_descriptor_frame.t();
 	
 	cv::hconcat(locs.t(), geom_descriptor_frame.clone(), geom_descriptor_frame);
 	

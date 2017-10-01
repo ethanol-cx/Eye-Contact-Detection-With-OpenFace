@@ -92,11 +92,9 @@ void PDM::CalcShape3D(cv::Mat_<double>& out_shape, const cv::Mat_<float>& p_loca
 {
 	out_shape.create(mean_shape.rows, mean_shape.cols);
 
-	// TODO change it to all floats internally
-	cv::Mat_<double> p_local_d;
-	p_local.convertTo(p_local_d, CV_64F);
-
-	out_shape = mean_shape + princ_comp*p_local_d;
+	cv::Mat_<float> out_shape_f = mean_shape + princ_comp*p_local;
+	// TODO move away from doubles
+	out_shape_f.convertTo(out_shape, CV_64F);
 }
 
 //===========================================================================
@@ -114,12 +112,10 @@ void PDM::CalcShape2D(cv::Mat_<double>& out_shape, const cv::Mat_<float>& params
 	cv::Vec3d euler(params_global[1], params_global[2], params_global[3]);
 	cv::Matx33d currRot = Euler2RotationMatrix(euler);
 
-	// TODO change it to all floats internally
-	cv::Mat_<double> p_local_d;
-	params_local.convertTo(p_local_d, CV_64F);
-
 	// get the 3D shape of the object
-	cv::Mat_<double> Shape_3D = mean_shape + princ_comp * p_local_d;
+	cv::Mat_<float> Shape_3D_f = mean_shape + princ_comp * params_local;
+	cv::Mat_<double> Shape_3D;
+	Shape_3D_f.convertTo(Shape_3D, CV_64F);
 
 	// create the 2D shape matrix (if it has not been defined yet)
 	if((out_shape.rows != mean_shape.rows) || (out_shape.cols != 1))
@@ -218,10 +214,8 @@ void PDM::ComputeRigidJacobian(const cv::Mat_<float>& p_local, const cv::Vec6d& 
 	float s = (float)params_global[0];
   	
 	cv::Mat_<double> shape_3D_d;
-	cv::Mat_<double> p_local_d;
-	p_local.convertTo(p_local_d, CV_64F);
-	this->CalcShape3D(shape_3D_d, p_local_d);
-	
+	this->CalcShape3D(shape_3D_d, p_local);
+
 	cv::Mat_<float> shape_3D;
 	shape_3D_d.convertTo(shape_3D, CV_32F);
 
@@ -316,11 +310,10 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6d& 
 	
 	float s = (float) params_global[0];
   	
+	// TODO move away from doubles
 	cv::Mat_<double> shape_3D_d;
-	cv::Mat_<double> p_local_d;
-	params_local.convertTo(p_local_d, CV_64F);
-	this->CalcShape3D(shape_3D_d, p_local_d);
-	
+	this->CalcShape3D(shape_3D_d, params_local);
+
 	cv::Mat_<float> shape_3D;
 	shape_3D_d.convertTo(shape_3D, CV_32F);
 
@@ -339,9 +332,9 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6d& 
 
 	cv::MatIterator_<float> Jx =  Jacobian.begin();
 	cv::MatIterator_<float> Jy =  Jx + n * (6 + m);
-	cv::MatConstIterator_<double> Vx =  this->princ_comp.begin();
-	cv::MatConstIterator_<double> Vy =  Vx + n*m;
-	cv::MatConstIterator_<double> Vz =  Vy + n*m;
+	cv::MatConstIterator_<float> Vx =  this->princ_comp.begin();
+	cv::MatConstIterator_<float> Vy =  Vx + n*m;
+	cv::MatConstIterator_<float> Vz =  Vy + n*m;
 
 	for(int i = 0; i < n; i++)
 	{
@@ -377,8 +370,8 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6d& 
 		for(int j = 0; j < m; j++,++Vx,++Vy,++Vz)
 		{
 			// How much the change of the non-rigid parameters (when object is rotated) affect 2D motion
-			*Jx++ = (float) ( s*(r11*(*Vx) + r12*(*Vy) + r13*(*Vz)) );
-			*Jy++ = (float) ( s*(r21*(*Vx) + r22*(*Vy) + r23*(*Vz)) );
+			*Jx++ = ( s*(r11*(*Vx) + r12*(*Vy) + r13*(*Vz)) );
+			*Jy++ = ( s*(r21*(*Vx) + r22*(*Vy) + r23*(*Vz)) );
 		}
 	}	
 
@@ -494,7 +487,14 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_l
 	// get the 3D shape of the object
 	cv::Mat_<double> loc_params_d;
 	loc_params.convertTo(loc_params_d, CV_64F);
-	cv::Mat_<double> shape_3D = mean_shape + princ_comp * loc_params_d;
+	
+	// TODO move to doubles
+	cv::Mat_<double> mean_shape_d;
+	cv::Mat_<double> princ_comp_d;
+	mean_shape.convertTo(mean_shape_d, CV_64F);
+	princ_comp.convertTo(princ_comp_d, CV_64F);
+
+	cv::Mat_<double> shape_3D = mean_shape_d + princ_comp_d * loc_params_d;
 
 	cv::Mat_<double> curr_shape(2*n, 1);
 	
@@ -523,10 +523,10 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_l
 
     for (size_t i = 0; i < 1000; ++i)
 	{
-		// get the 3D shape of the object
+		// get the 3D shape of the object, TODO move away from doubles
 		cv::Mat_<double> loc_params_d;
 		loc_params.convertTo(loc_params_d, CV_64F);
-		shape_3D = mean_shape + princ_comp * loc_params_d;
+		shape_3D = mean_shape_d + princ_comp_d * loc_params_d;
 
 		shape_3D = shape_3D.reshape(1, 3);
 
@@ -616,16 +616,22 @@ void PDM::Read(std::string location)
 	SkipComments(pdmLoc);
 
 	// Reading mean values
-	ReadMat(pdmLoc,mean_shape);
+	cv::Mat_<double> mean_shape_d;
+	ReadMat(pdmLoc, mean_shape_d);
+	mean_shape_d.convertTo(mean_shape, CV_32F); // Moving things to floats for speed
 	
 	SkipComments(pdmLoc);
 
 	// Reading principal components
-	ReadMat(pdmLoc,princ_comp);
+	cv::Mat_<double> princ_comp_d;
+	ReadMat(pdmLoc, princ_comp_d);
+	princ_comp_d.convertTo(princ_comp, CV_32F);
 	
 	SkipComments(pdmLoc);
 	
 	// Reading eigenvalues	
-	ReadMat(pdmLoc,eigen_values);
+	cv::Mat_<double> eigen_values_d;
+	ReadMat(pdmLoc, eigen_values_d);
+	eigen_values_d.convertTo(eigen_values, CV_32F);
 
 }
