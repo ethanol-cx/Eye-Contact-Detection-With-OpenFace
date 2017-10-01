@@ -109,6 +109,7 @@ namespace LandmarkDetector
 	// Angle representation conversion helpers
 	//===========================================================================
 	cv::Matx33d Euler2RotationMatrix(const cv::Vec3d& eulerAngles);
+	cv::Matx33f Euler2RotationMatrix_f(const cv::Vec3f& eulerAngles);
 
 	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
 	cv::Vec3d RotationMatrix2Euler(const cv::Matx33d& rotation_matrix);

@@ -1259,6 +1259,32 @@ namespace LandmarkDetector
 	}
 
 	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
+	cv::Matx33f Euler2RotationMatrix_f(const cv::Vec3f& eulerAngles)
+	{
+		cv::Matx33f rotation_matrix;
+
+		float s1 = sin(eulerAngles[0]);
+		float s2 = sin(eulerAngles[1]);
+		float s3 = sin(eulerAngles[2]);
+
+		float c1 = cos(eulerAngles[0]);
+		float c2 = cos(eulerAngles[1]);
+		float c3 = cos(eulerAngles[2]);
+
+		rotation_matrix(0, 0) = c2 * c3;
+		rotation_matrix(0, 1) = -c2 *s3;
+		rotation_matrix(0, 2) = s2;
+		rotation_matrix(1, 0) = c1 * s3 + c3 * s1 * s2;
+		rotation_matrix(1, 1) = c1 * c3 - s1 * s2 * s3;
+		rotation_matrix(1, 2) = -c2 * s1;
+		rotation_matrix(2, 0) = s1 * s3 - c1 * c3 * s2;
+		rotation_matrix(2, 1) = c3 * s1 + c1 * s2 * s3;
+		rotation_matrix(2, 2) = c1 * c2;
+
+		return rotation_matrix;
+	}
+
+	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
 	cv::Vec3d RotationMatrix2Euler(const cv::Matx33d& rotation_matrix)
 	{
 		double q0 = sqrt(1 + rotation_matrix(0, 0) + rotation_matrix(1, 1) + rotation_matrix(2, 2)) / 2.0;

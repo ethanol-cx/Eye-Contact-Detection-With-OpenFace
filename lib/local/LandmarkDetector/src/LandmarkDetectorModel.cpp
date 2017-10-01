@@ -1146,10 +1146,12 @@ cv::Mat_<double> CLNF::GetShape(double fx, double fy, double cx, double cy) cons
 {
 	int n = this->detected_landmarks.rows/2;
 
-	cv::Mat_<double> shape3d(n*3, 1);
+	cv::Mat_<float> shape3d_f(n*3, 1);
+	this->pdm.CalcShape3D(shape3d_f, this->params_local);
 
-	this->pdm.CalcShape3D(shape3d, this->params_local);
-	
+	cv::Mat_<double> shape3d;
+	shape3d_f.convertTo(shape3d, CV_64F);
+
 	// Need to rotate the shape to get the actual 3D representation
 	
 	// get the rotation matrix from the euler angles

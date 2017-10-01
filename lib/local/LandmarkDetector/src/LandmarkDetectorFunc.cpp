@@ -69,8 +69,12 @@ cv::Vec6d LandmarkDetector::GetPose(const CLNF& clnf_model, float fx, float fy, 
 		landmarks_2D = landmarks_2D.reshape(1, 2).t();
 
 		// 3D points
+		cv::Mat_<float> landmarks_3D_f;
+		clnf_model.pdm.CalcShape3D(landmarks_3D_f, clnf_model.params_local);
+		
+		// TODO rem move away from doubles
 		cv::Mat_<double> landmarks_3D;
-		clnf_model.pdm.CalcShape3D(landmarks_3D, clnf_model.params_local);
+		landmarks_3D_f.convertTo(landmarks_3D, CV_64F);
 
 		landmarks_3D = landmarks_3D.reshape(1, 3).t();
 
@@ -110,8 +114,12 @@ cv::Vec6d LandmarkDetector::GetPoseWRTCamera(const CLNF& clnf_model, float fx, f
 		// Correction for orientation
 
 		// 3D points
-		cv::Mat_<double> landmarks_3D;
-		clnf_model.pdm.CalcShape3D(landmarks_3D, clnf_model.params_local);
+		cv::Mat_<float> landmarks_3D_f;
+		clnf_model.pdm.CalcShape3D(landmarks_3D_f, clnf_model.params_local);
+
+		// TODO rem double
+		cv::Mat_<float> landmarks_3D;
+		landmarks_3D_f.convertTo(landmarks_3D, CV_64F);
 
 		landmarks_3D = landmarks_3D.reshape(1, 3).t();
 
