@@ -73,7 +73,7 @@ public:
 	// The local and global parameters describing the current model instance (current landmark detections)
 
 	// Local parameters describing the non-rigid shape
-	cv::Mat_<double>    params_local;
+	cv::Mat_<float>    params_local;
 
 	// Global parameters describing the rigid shape [scale, euler_x, euler_y, euler_z, tx, ty]
 	cv::Vec6d           params_global;
@@ -124,7 +124,7 @@ public:
 	
 	// The landmark detection likelihoods (combined and per patch expert)
 	float					model_likelihood;
-	cv::Mat_<float>		landmark_likelihoods;
+	cv::Mat_<float>			landmark_likelihoods;
 	
 	// Keeping track of how many frames the tracker has failed in so far when tracking in videos
 	// This is useful for knowing when to initialise and reinitialise tracking
@@ -194,7 +194,7 @@ private:
 	void NonVectorisedMeanShift_precalc_kde(cv::Mat_<float>& out_mean_shifts, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Mat_<float> &dxs, const cv::Mat_<float> &dys, int resp_size, float a, int scale, int view_id, map<int, cv::Mat_<float> >& mean_shifts);
 
 	// The actual model optimisation (update step), returns the model likelihood
-    float NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<double>& initial_local,
+    float NU_RLMS(cv::Vec6d& final_global, cv::Mat_<float>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<float>& initial_local,
 		          const cv::Mat_<double>& base_shape, const cv::Matx22d& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_idx, bool rigid, int scale, cv::Mat_<float>& landmark_lhoods, const FaceModelParameters& parameters, bool compute_lhood);
 
 	// Generating the weight matrix for the Weighted least squares

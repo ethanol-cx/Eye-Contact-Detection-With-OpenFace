@@ -938,7 +938,7 @@ void CLNF::GetWeightMatrix(cv::Mat_<float>& WeightMatrix, int scale, int view_id
 }
 
 //=============================================================================
-float CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<double>& initial_local,
+float CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<float>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<float>& initial_local,
 		          const cv::Mat_<double>& base_shape, const cv::Matx22d& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_id, bool rigid, int scale, cv::Mat_<float>& landmark_lhoods,
 				  const FaceModelParameters& parameters, bool compute_lhood)
 {		
@@ -954,8 +954,7 @@ float CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, cons
 	
 	cv::Vec6d current_global(initial_global);
 
-	cv::Mat_<float> current_local;
-	initial_local.convertTo(current_local, CV_32F);
+	cv::Mat_<float> current_local = initial_local.clone();
 
 	cv::Mat_<double> current_shape;
 	cv::Mat_<double> previous_shape;
