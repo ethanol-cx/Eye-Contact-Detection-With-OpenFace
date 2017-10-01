@@ -1142,41 +1142,38 @@ float CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<float>& final_local, const
 }
 
 // Getting a 3D shape model from the current detected landmarks (in camera space)
-cv::Mat_<double> CLNF::GetShape(double fx, double fy, double cx, double cy) const
+cv::Mat_<float> CLNF::GetShape(float fx, float fy, float cx, float cy) const
 {
 	int n = this->detected_landmarks.rows/2;
 
-	cv::Mat_<float> shape3d_f(n*3, 1);
-	this->pdm.CalcShape3D(shape3d_f, this->params_local);
-
-	cv::Mat_<double> shape3d;
-	shape3d_f.convertTo(shape3d, CV_64F);
+	cv::Mat_<float> shape3d(n*3, 1);
+	this->pdm.CalcShape3D(shape3d, this->params_local);
 
 	// Need to rotate the shape to get the actual 3D representation
 	
 	// get the rotation matrix from the euler angles
-	cv::Matx33d R = LandmarkDetector::Euler2RotationMatrix(cv::Vec3d(params_global[1], params_global[2], params_global[3]));
+	cv::Matx33f R = LandmarkDetector::Euler2RotationMatrix_f(cv::Vec3f((float)params_global[1], (float)params_global[2], (float)params_global[3]));
 
 	shape3d = shape3d.reshape(1, 3);
 
 	shape3d = shape3d.t() * cv::Mat(R).t();
 	
 	// from the weak perspective model can determine the average depth of the object
-	double Zavg = fx / params_global[0];	
+	float Zavg = fx / (float)params_global[0];	
 
-	cv::Mat_<double> outShape(n,3,0.0);
+	cv::Mat_<float> outShape(n, 3, 0.0f);
 
 	// this is described in the paper in section 3.4 (equation 10) (of the CLM-Z paper)
 	for(int i = 0; i < n; i++)
 	{
-		double Z = Zavg + shape3d.at<double>(i,2);
+		float Z = Zavg + shape3d.at<float>(i,2);
 
-		double X = Z * ((this->detected_landmarks.at<double>(i) - cx)/fx);
-		double Y = Z * ((this->detected_landmarks.at<double>(i + n) - cy)/fy);
+		float X = Z * ((((float)this->detected_landmarks.at<double>(i)) - cx)/fx);
+		float Y = Z * ((((float)this->detected_landmarks.at<double>(i + n)) - cy)/fy);
 
-		outShape.at<double>(i,0) = (double)X;
-		outShape.at<double>(i,1) = (double)Y;
-		outShape.at<double>(i,2) = (double)Z;
+		outShape.at<float>(i,0) = X;
+		outShape.at<float>(i,1) = Y;
+		outShape.at<float>(i,2) = Z;
 
 	}
 

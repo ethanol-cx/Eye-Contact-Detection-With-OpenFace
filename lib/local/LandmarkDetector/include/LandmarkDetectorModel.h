@@ -165,7 +165,7 @@ public:
 	
 	// Gets the shape of the current detected landmarks in camera space (given camera calibration)
 	// Can only be called after a call to DetectLandmarksInVideo or DetectLandmarksInImage
-	cv::Mat_<double> GetShape(double fx, double fy, double cx, double cy) const;
+	cv::Mat_<float> GetShape(float fx, float fy, float cx, float cy) const;
 
 	// A utility bounding box function
 	cv::Rect_<double> GetBoundingBox() const;

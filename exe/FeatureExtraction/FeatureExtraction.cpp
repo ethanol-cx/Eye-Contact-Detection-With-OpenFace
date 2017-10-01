@@ -808,12 +808,12 @@ void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, boo
 	// Output the detected 3D facial landmarks
 	if (output_3D_landmarks)
 	{
-		cv::Mat_<double> shape_3D = face_model.GetShape(fx, fy, cx, cy);
+		cv::Mat_<float> shape_3D = face_model.GetShape(fx, fy, cx, cy);
 		for (int i = 0; i < face_model.pdm.NumberOfPoints() * 3; ++i)
 		{
 			if (face_model.tracking_initialised)
 			{
-				*output_file << ", " << shape_3D.at<double>(i);
+				*output_file << ", " << shape_3D.at<float>(i);
 			}
 			else
 			{

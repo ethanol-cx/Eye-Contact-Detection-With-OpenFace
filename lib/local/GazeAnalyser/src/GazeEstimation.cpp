@@ -83,7 +83,7 @@ cv::Point3f GazeAnalysis::GetPupilPosition(cv::Mat_<double> eyeLdmks3d){
 	
 	eyeLdmks3d = eyeLdmks3d.t();
 
-	cv::Mat_<double> irisLdmks3d = eyeLdmks3d.rowRange(0,8);
+	cv::Mat_<float> irisLdmks3d = eyeLdmks3d.rowRange(0,8);
 
 	cv::Point3f p (mean(irisLdmks3d.col(0))[0], mean(irisLdmks3d.col(1))[0], mean(irisLdmks3d.col(2))[0]);
 	return p;
@@ -92,8 +92,8 @@ cv::Point3f GazeAnalysis::GetPupilPosition(cv::Mat_<double> eyeLdmks3d){
 void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Point3f& gaze_absolute, float fx, float fy, float cx, float cy, bool left_eye)
 {
 	cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
-	cv::Vec3d eulerAngles(headPose(3), headPose(4), headPose(5));
-	cv::Matx33d rotMat = LandmarkDetector::Euler2RotationMatrix(eulerAngles);
+	cv::Vec3f eulerAngles((float)headPose(3), (float)headPose(4), (float)headPose(5));
+	cv::Matx33f rotMat = LandmarkDetector::Euler2RotationMatrix_f(eulerAngles);
 
 	int part = -1;
 	for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
@@ -120,7 +120,7 @@ void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 
 	cv::Mat faceLdmks3d = clnf_model.GetShape(fx, fy, cx, cy);
 	faceLdmks3d = faceLdmks3d.t();
-	cv::Mat offset = (cv::Mat_<double>(3, 1) << 0, -3.5, 7.0);
+	cv::Mat offset = (cv::Mat_<float>(3, 1) << 0, -3.5, 7.0);
 	int eyeIdx = 1;
 	if (left_eye)
 	{

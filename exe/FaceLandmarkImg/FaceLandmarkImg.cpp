@@ -94,7 +94,7 @@ void create_directory_from_file(string output_path)
 }
 
 // This will only be accurate when camera parameters are accurate, useful for work on 3D data
-void write_out_3D_output(const string& outfeatures, const cv::Mat_<double>& shape3D, const cv::Vec6d& pose, const cv::Point3f& gaze0, const cv::Point3f& gaze1)
+void write_out_3D_output(const string& outfeatures, const cv::Mat_<float>& shape3D, const cv::Vec6d& pose, const cv::Point3f& gaze0, const cv::Point3f& gaze1)
 {
 	create_directory_from_file(outfeatures);
 	std::ofstream featuresFile;
@@ -110,7 +110,7 @@ void write_out_3D_output(const string& outfeatures, const cv::Mat_<double>& shap
 		for (int i = 0; i < n; ++i)
 		{
 			// Use matlab format, so + 1
-			featuresFile << shape3D.at<double>(i) << " " << shape3D.at<double>(i + n) << " " << shape3D.at<double>(i + 2 * n) << endl;
+			featuresFile << shape3D.at<float>(i) << " " << shape3D.at<float>(i + n) << " " << shape3D.at<float>(i + 2 * n) << endl;
 		}
 		featuresFile << "}" << endl;
 
