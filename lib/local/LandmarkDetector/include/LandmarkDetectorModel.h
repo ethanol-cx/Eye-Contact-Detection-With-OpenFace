@@ -108,7 +108,7 @@ public:
 	bool				tracking_initialised;
 
 	// The actual output of the regressor (-1 is perfect detection 1 is worst detection)
-	double				detection_certainty; 
+	float				detection_certainty;
 
 	// Indicator if eye model is there for eye detection
 	bool				eye_model;
@@ -120,7 +120,7 @@ public:
 	// Member variables that retain the state of the tracking (reflecting the state of the lastly tracked (detected) image
 
 	// Lastly detect 2D model shape [x1,x2,...xn,y1,...yn]
-	cv::Mat_<double>		detected_landmarks;
+	cv::Mat_<float>			detected_landmarks;
 	
 	// The landmark detection likelihoods (combined and per patch expert)
 	float					model_likelihood;
@@ -195,20 +195,10 @@ private:
 
 	// The actual model optimisation (update step), returns the model likelihood
     float NU_RLMS(cv::Vec6d& final_global, cv::Mat_<float>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<float>& initial_local,
-		          const cv::Mat_<double>& base_shape, const cv::Matx22d& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_idx, bool rigid, int scale, cv::Mat_<float>& landmark_lhoods, const FaceModelParameters& parameters, bool compute_lhood);
+		          const cv::Mat_<float>& base_shape, const cv::Matx22f& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_idx, bool rigid, int scale, cv::Mat_<float>& landmark_lhoods, const FaceModelParameters& parameters, bool compute_lhood);
 
 	// Generating the weight matrix for the Weighted least squares
 	void GetWeightMatrix(cv::Mat_<float>& WeightMatrix, int scale, int view_id, const FaceModelParameters& parameters);
-
-	//=======================================================
-	// Legacy functions that are not used at the moment
-	//=======================================================
-
-	// Mean shift computation	
-	void NonVectorisedMeanShift(cv::Mat_<double>& out_mean_shifts, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Mat_<double> &dxs, const cv::Mat_<double> &dys, int resp_size, double a, int scale, int view_id);
-
-	// A vectorised version of mean shift (Not actually used)
-	void VectorisedMeanShift(cv::Mat_<double>& meanShifts, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Mat_<double> &iis, const cv::Mat_<double> &jjs, const cv::Mat_<double> &dxs, const cv::Mat_<double> &dys, const cv::Size patchSize, double sigma, int scale, int view_id);
 
   };
   //===========================================================================

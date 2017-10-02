@@ -338,7 +338,7 @@ void DetectionValidator::Read(string location)
 
 //===========================================================================
 // Check if the fitting actually succeeded
-double DetectionValidator::Check(const cv::Vec3d& orientation, const cv::Mat_<uchar>& intensity_img, cv::Mat_<double>& detected_landmarks)
+float DetectionValidator::Check(const cv::Vec3d& orientation, const cv::Mat_<uchar>& intensity_img, cv::Mat_<float>& detected_landmarks)
 {
 
 	int id = GetViewId(orientation);
@@ -347,10 +347,10 @@ double DetectionValidator::Check(const cv::Vec3d& orientation, const cv::Mat_<uc
 	cv::Mat_<float> warped;
 	
 	// First only use the ROI of the image of interest
-	cv::Mat_<double>& detected_landmarks_local = detected_landmarks.clone();
+	cv::Mat_<float>& detected_landmarks_local = detected_landmarks.clone();
 	double min_x_d, max_x_d, min_y_d, max_y_d;
-	cv::Mat_<double> xs = detected_landmarks_local(cv::Rect(0, 0, 1, detected_landmarks.rows / 2));
-	cv::Mat_<double> ys = detected_landmarks_local(cv::Rect(0, detected_landmarks.rows / 2, 1, detected_landmarks.rows / 2));
+	cv::Mat_<float> xs = detected_landmarks_local(cv::Rect(0, 0, 1, detected_landmarks.rows / 2));
+	cv::Mat_<float> ys = detected_landmarks_local(cv::Rect(0, detected_landmarks.rows / 2, 1, detected_landmarks.rows / 2));
 	cv::minMaxLoc(xs, &min_x_d, &max_x_d);
 	cv::minMaxLoc(ys, &min_y_d, &max_y_d);
 
@@ -376,7 +376,7 @@ double DetectionValidator::Check(const cv::Vec3d& orientation, const cv::Mat_<uc
 	// The actual validation step
 	double dec = CheckCNN(warped, id);
 
-	return dec;
+	return (float)dec;
 }
 
 double DetectionValidator::CheckCNN(const cv::Mat_<float>& warped_img, int view_id)

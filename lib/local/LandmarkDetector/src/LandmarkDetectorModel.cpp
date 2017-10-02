@@ -598,13 +598,13 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 
 				vector<pair<int, int>> mappings = this->hierarchical_mapping[part_model];
 
-				cv::Mat_<double> part_model_locs(n_part_points * 2, 1, 0.0);
+				cv::Mat_<float> part_model_locs(n_part_points * 2, 1, 0.0);
 
 				// Extract the corresponding landmarks
 				for (size_t mapping_ind = 0; mapping_ind < mappings.size(); ++mapping_ind)
 				{
-					part_model_locs.at<double>(mappings[mapping_ind].second) = detected_landmarks.at<double>(mappings[mapping_ind].first);
-					part_model_locs.at<double>(mappings[mapping_ind].second + n_part_points) = detected_landmarks.at<double>(mappings[mapping_ind].first + this->pdm.NumberOfPoints());
+					part_model_locs.at<float>(mappings[mapping_ind].second) = detected_landmarks.at<float>(mappings[mapping_ind].first);
+					part_model_locs.at<float>(mappings[mapping_ind].second + n_part_points) = detected_landmarks.at<float>(mappings[mapping_ind].first + this->pdm.NumberOfPoints());
 				}
 
 				// Fit the part based model PDM
@@ -644,8 +644,8 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 					// Reincorporate the models into main tracker
 					for (size_t mapping_ind = 0; mapping_ind < mappings.size(); ++mapping_ind)
 					{
-						detected_landmarks.at<double>(mappings[mapping_ind].first) = hierarchical_models[part_model].detected_landmarks.at<double>(mappings[mapping_ind].second);
-						detected_landmarks.at<double>(mappings[mapping_ind].first + pdm.NumberOfPoints()) = hierarchical_models[part_model].detected_landmarks.at<double>(mappings[mapping_ind].second + hierarchical_models[part_model].pdm.NumberOfPoints());
+						detected_landmarks.at<float>(mappings[mapping_ind].first) = hierarchical_models[part_model].detected_landmarks.at<float>(mappings[mapping_ind].second);
+						detected_landmarks.at<float>(mappings[mapping_ind].first + pdm.NumberOfPoints()) = hierarchical_models[part_model].detected_landmarks.at<float>(mappings[mapping_ind].second + hierarchical_models[part_model].pdm.NumberOfPoints());
 					}
 				}
 			}
@@ -689,7 +689,7 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const std::vector<int>& window_sizes, 
 	assert(im.channels() == 1);	
 	
 	// Placeholder for the landmarks
-	cv::Mat_<double> current_shape(2 * pdm.NumberOfPoints() , 1, 0.0);
+	cv::Mat_<float> current_shape(2 * pdm.NumberOfPoints() , 1, 0.0f);
 
 	int n = pdm.NumberOfPoints(); 
 		
@@ -858,6 +858,7 @@ void CLNF::NonVectorisedMeanShift_precalc_kde(cv::Mat_<float>& out_mean_shifts, 
 		// Iterate over the patch responses here
 		cv::MatConstIterator_<float> p = patch_expert_responses[i].begin();
 			
+		// TODO maybe do through MatMuls instead?
 		for(int ii = 0; ii < resp_size; ii++)
 		{
 			for(int jj = 0; jj < resp_size; jj++)
@@ -939,16 +940,16 @@ void CLNF::GetWeightMatrix(cv::Mat_<float>& WeightMatrix, int scale, int view_id
 
 //=============================================================================
 float CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<float>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<float>& initial_local,
-		          const cv::Mat_<double>& base_shape, const cv::Matx22d& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_id, bool rigid, int scale, cv::Mat_<float>& landmark_lhoods,
+		          const cv::Mat_<float>& base_shape, const cv::Matx22f& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_id, bool rigid, int scale, cv::Mat_<float>& landmark_lhoods,
 				  const FaceModelParameters& parameters, bool compute_lhood)
 {		
 
 	int n = pdm.NumberOfPoints();  
 	
 	// Mean, eigenvalues, eigenvectors
-	cv::Mat_<double> M = this->pdm.mean_shape;
-	cv::Mat_<double> E = this->pdm.eigen_values;
-	//Mat_<double> V = this->pdm.princ_comp;
+	cv::Mat_<float> M = this->pdm.mean_shape;
+	cv::Mat_<float> E = this->pdm.eigen_values;
+	//Mat_<float> V = this->pdm.princ_comp;
 
 	int m = pdm.NumberOfModes();
 	
@@ -956,8 +957,8 @@ float CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<float>& final_local, const
 
 	cv::Mat_<float> current_local = initial_local.clone();
 
-	cv::Mat_<double> current_shape;
-	cv::Mat_<double> previous_shape;
+	cv::Mat_<float> current_shape;
+	cv::Mat_<float> previous_shape;
 
 	// Pre-calculate the regularisation term
 	cv::Mat_<float> regTerm;
@@ -968,12 +969,11 @@ float CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<float>& final_local, const
 	}
 	else
 	{
-		cv::Mat_<double> regularisations = cv::Mat_<double>::zeros(1, 6 + m);
+		cv::Mat_<float> regularisations = cv::Mat_<float>::zeros(1, 6 + m);
 
 		// Setting the regularisation to the inverse of eigenvalues
 		cv::Mat(parameters.reg_factor / E).copyTo(regularisations(cv::Rect(6, 0, m, 1)));
-		cv::Mat_<double> regTerm_d = cv::Mat::diag(regularisations.t());
-		regTerm_d.convertTo(regTerm, CV_32F);
+		regTerm = cv::Mat::diag(regularisations.t());
 	}	
 
 	cv::Mat_<float> WeightMatrix;
@@ -1017,8 +1017,8 @@ float CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<float>& final_local, const
 		// useful for mean shift calculation
 		float a = -0.5/(parameters.sigma * parameters.sigma);
 
-		cv::Mat_<double> current_shape_2D = current_shape.reshape(1, 2).t();
-		cv::Mat_<double> base_shape_2D = base_shape.reshape(1, 2).t();
+		cv::Mat_<float> current_shape_2D = current_shape.reshape(1, 2).t();
+		cv::Mat_<float> base_shape_2D = base_shape.reshape(1, 2).t();
 
 		cv::Mat_<float> offsets;
 		cv::Mat((current_shape_2D - base_shape_2D) * cv::Mat(sim_img_to_ref).t()).convertTo(offsets, CV_32F);
@@ -1168,8 +1168,8 @@ cv::Mat_<float> CLNF::GetShape(float fx, float fy, float cx, float cy) const
 	{
 		float Z = Zavg + shape3d.at<float>(i,2);
 
-		float X = Z * ((((float)this->detected_landmarks.at<double>(i)) - cx)/fx);
-		float Y = Z * ((((float)this->detected_landmarks.at<double>(i + n)) - cy)/fy);
+		float X = Z * ((this->detected_landmarks.at<float>(i) - cx)/fx);
+		float Y = Z * ((this->detected_landmarks.at<float>(i + n) - cy)/fy);
 
 		outShape.at<float>(i,0) = X;
 		outShape.at<float>(i,1) = Y;
@@ -1185,8 +1185,8 @@ cv::Mat_<float> CLNF::GetShape(float fx, float fy, float cx, float cy) const
 // A utility bounding box function
 cv::Rect_<double> CLNF::GetBoundingBox() const
 {
-	cv::Mat_<double> xs = this->detected_landmarks(cv::Rect(0,0,1,this->detected_landmarks.rows/2));
-	cv::Mat_<double> ys = this->detected_landmarks(cv::Rect(0,this->detected_landmarks.rows/2, 1, this->detected_landmarks.rows/2));
+	cv::Mat_<float> xs = this->detected_landmarks(cv::Rect(0,0,1,this->detected_landmarks.rows/2));
+	cv::Mat_<float> ys = this->detected_landmarks(cv::Rect(0,this->detected_landmarks.rows/2, 1, this->detected_landmarks.rows/2));
 
 	double min_x, max_x;
 	double min_y, max_y;
@@ -1196,63 +1196,4 @@ cv::Rect_<double> CLNF::GetBoundingBox() const
 	// See if the detections intersect
 	cv::Rect_<double> model_rect(min_x, min_y, max_x - min_x, max_y - min_y);
 	return model_rect;
-}
-
-// Legacy function not used at the moment
-void CLNF::NonVectorisedMeanShift(cv::Mat_<double>& out_mean_shifts, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Mat_<double> &dxs, const cv::Mat_<double> &dys, int resp_size, double a, int scale, int view_id)
-{
-	
-	int n = dxs.rows;
-	
-	for(int i = 0; i < n; i++)
-	{
-
-		if(patch_experts.visibilities[scale][view_id].at<int>(i,0) == 0  || sum(patch_expert_responses[i])[0] == 0)
-		{
-			out_mean_shifts.at<double>(i,0) = 0;
-			out_mean_shifts.at<double>(i+n,0) = 0;
-			continue;
-		}
-
-		// indices of dx, dy
-		double dx = dxs.at<double>(i);
-		double dy = dys.at<double>(i);
-
-		int ii,jj;
-		double v,vx,vy,mx=0.0,my=0.0,sum=0.0;
-
-		// Iterate over the patch responses here
-		cv::MatConstIterator_<float> p = patch_expert_responses[i].begin();
-			
-		for(ii = 0; ii < resp_size; ii++)
-		{
-			vx = (dy-ii)*(dy-ii);
-			for(jj = 0; jj < resp_size; jj++)
-			{
-				vy = (dx-jj)*(dx-jj);
-
-				// the probability at the current, xi, yi
-				v = *p++;
-
-				// the KDE evaluation of that point
-				double kd = exp(a*(vx+vy));
-				v *= kd;
-
-				sum += v;
-
-				// mean shift in x and y
-				mx += v*jj;
-				my += v*ii; 
-
-			}
-		}
-
-		// setting the actual mean shift update
-		double msx = (mx/sum - dx);
-		double msy = (my/sum - dy);
-
-		out_mean_shifts.at<double>(i, 0) = msx;
-		out_mean_shifts.at<double>(i + n, 0) = msy;
-			
-	}
 }

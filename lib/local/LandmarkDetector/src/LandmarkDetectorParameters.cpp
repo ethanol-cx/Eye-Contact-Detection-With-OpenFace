@@ -213,8 +213,8 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 
 	if (model_path.stem().string().compare("main_ceclm_general") == 0)
 	{
-		sigma = 1.5 * sigma;
-		reg_factor = 0.9 * reg_factor;
+		sigma = 1.5f * sigma;
+		reg_factor = 0.9f * reg_factor;
 	}
 
 	// Make sure face detector location is valid
@@ -288,7 +288,7 @@ void FaceModelParameters::init()
 	window_sizes_init.at(2) = 7;
 	window_sizes_init.at(3) = 5;
 
-	face_template_scale = 0.3;
+	face_template_scale = 0.3f;
 	// Off by default (as it might lead to some slight inaccuracies in slowly moving faces)
 	use_face_template = false;
 
@@ -297,11 +297,11 @@ void FaceModelParameters::init()
 
 	model_location = "model/main_ceclm_general.txt";
 
-	sigma = 1.5;
-	reg_factor = 25;
-	weight_factor = 0; // By default do not use NU-RLMS for videos as it does not work as well for them
+	sigma = 1.5f;
+	reg_factor = 25.0f;
+	weight_factor = 0.0f; // By default do not use NU-RLMS for videos as it does not work as well for them
 
-	validation_boundary = -0.45;
+	validation_boundary = -0.45f;
 
 	limit_pose = true;
 	multi_view = false;

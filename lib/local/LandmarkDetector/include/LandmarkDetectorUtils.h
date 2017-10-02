@@ -75,10 +75,12 @@ namespace LandmarkDetector
 	// Using Kabsch's algorithm for aligning shapes
 	//This assumes that align_from and align_to are already mean normalised
 	cv::Matx22d AlignShapesKabsch2D(const cv::Mat_<double>& align_from, const cv::Mat_<double>& align_to);
+	cv::Matx22f AlignShapesKabsch2D_f(const cv::Mat_<float>& align_from, const cv::Mat_<float>& align_to);
 
 	//=============================================================================
 	// Basically Kabsch's algorithm but also allows the collection of points to be different in scale from each other
 	cv::Matx22d AlignShapesWithScale(cv::Mat_<double>& src, cv::Mat_<double> dst);
+	cv::Matx22f AlignShapesWithScale_f(cv::Mat_<float>& src, cv::Mat_<float> dst);
 
 	//===========================================================================
 	// Visualisation functions
@@ -90,18 +92,18 @@ namespace LandmarkDetector
 	vector<std::pair<cv::Point2d, cv::Point2d>> CalculateBox(cv::Vec6d pose, float fx, float fy, float cx, float cy);
 	void DrawBox(vector<pair<cv::Point, cv::Point>> lines, cv::Mat image, cv::Scalar color, int thickness);
 
-	vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities);
+	vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities);
 	vector<cv::Point2d> CalculateVisibleLandmarks(const CLNF& clnf_model);
 	vector<cv::Point2d> CalculateVisibleEyeLandmarks(const CLNF& clnf_model);
 
-	vector<cv::Point2d> CalculateAllLandmarks(const cv::Mat_<double>& shape2D);
+	vector<cv::Point2d> CalculateAllLandmarks(const cv::Mat_<float>& shape2D);
 	vector<cv::Point2d> CalculateAllLandmarks(const CLNF& clnf_model);
 	vector<cv::Point2d> CalculateAllEyeLandmarks(const CLNF& clnf_model);
 
 	void DrawLandmarks(cv::Mat img, vector<cv::Point> landmarks);
 
-	void Draw(cv::Mat img, const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities);
-	void Draw(cv::Mat img, const cv::Mat_<double>& shape2D);
+	void Draw(cv::Mat img, const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities);
+	void Draw(cv::Mat img, const cv::Mat_<float>& shape2D);
 	void Draw(cv::Mat img, const CLNF& clnf_model);
 
 

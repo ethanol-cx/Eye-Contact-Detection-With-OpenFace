@@ -796,7 +796,7 @@ void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, boo
 		{
 			if (face_model.tracking_initialised)
 			{
-				*output_file << ", " << face_model.detected_landmarks.at<double>(i);
+				*output_file << ", " << face_model.detected_landmarks.at<float>(i);
 			}
 			else
 			{

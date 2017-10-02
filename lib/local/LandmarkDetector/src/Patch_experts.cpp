@@ -142,11 +142,11 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 	int n = pdm.NumberOfPoints();
 		
 	// Compute the current landmark locations (around which responses will be computed)
-	cv::Mat_<double> landmark_locations;
+	cv::Mat_<float> landmark_locations;
 
 	pdm.CalcShape2D(landmark_locations, params_local, params_global);
 
-	cv::Mat_<double> reference_shape;
+	cv::Mat_<float> reference_shape;
 		
 	// Initialise the reference shape on which we'll be warping
 	cv::Vec6d global_ref(patch_scaling[scale], 0, 0, 0, 0, 0);
@@ -155,19 +155,14 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 	pdm.CalcShape2D(reference_shape, params_local, global_ref);
 		
 	// similarity and inverse similarity transform to and from image and reference shape
-	cv::Mat_<double> reference_shape_2D = (reference_shape.reshape(1, 2).t());
-	cv::Mat_<double> image_shape_2D = landmark_locations.reshape(1, 2).t();
+	cv::Mat_<float> reference_shape_2D = (reference_shape.reshape(1, 2).t());
+	cv::Mat_<float> image_shape_2D = landmark_locations.reshape(1, 2).t();
 
-	sim_img_to_ref = AlignShapesWithScale(image_shape_2D, reference_shape_2D);
-	cv::Matx22d sim_ref_to_img_d = sim_img_to_ref.inv(cv::DECOMP_LU);
+	sim_img_to_ref = AlignShapesWithScale_f(image_shape_2D, reference_shape_2D);
+	sim_ref_to_img = sim_img_to_ref.inv(cv::DECOMP_LU);
 
-	double a1 = sim_ref_to_img_d(0,0);
-	double b1 = -sim_ref_to_img_d(0,1);
-		
-	sim_ref_to_img(0,0) = (float)sim_ref_to_img_d(0,0);
-	sim_ref_to_img(0,1) = (float)sim_ref_to_img_d(0,1);
-	sim_ref_to_img(1,0) = (float)sim_ref_to_img_d(1,0);
-	sim_ref_to_img(1,1) = (float)sim_ref_to_img_d(1,1);
+	float a1 = sim_ref_to_img(0,0);
+	float b1 = -sim_ref_to_img(0,1);		
 
 	bool use_ccnf = !this->ccnf_expert_intensity.empty();
 	bool use_cen = !this->cen_expert_intensity.empty();
@@ -248,7 +243,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 		}
 
 		// scale and rotate to mean shape to reference frame
-		cv::Mat sim = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<double>(ind, 0), b1, a1, landmark_locations.at<double>(ind + n, 0));
+		cv::Mat sim = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<float>(ind, 0), b1, a1, landmark_locations.at<float>(ind + n, 0));
 
 		// Extract the region of interest around the current landmark location
 		cv::Mat_<float> area_of_interest(area_of_interest_height, area_of_interest_width);
@@ -280,7 +275,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 					{
 
 						// Grab mirrored area of interest
-						cv::Mat sim_r = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<double>(mirror_id, 0), b1, a1, landmark_locations.at<double>(mirror_id + n, 0));
+						cv::Mat sim_r = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<float>(mirror_id, 0), b1, a1, landmark_locations.at<float>(mirror_id + n, 0));
 
 						// Extract the region of interest around the current landmark location
 						cv::Mat_<float> area_of_interest_r(area_of_interest_height, area_of_interest_width);

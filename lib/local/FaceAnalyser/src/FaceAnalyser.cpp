@@ -248,7 +248,7 @@ int GetViewId(const vector<cv::Vec3d> orientations_all, const cv::Vec3d& orienta
 	
 }
 
-std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, double>>> FaceAnalyser::PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<double>& detected_landmarks, bool visualise)
+std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, double>>> FaceAnalyser::PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool visualise)
 {
 	
 	// Extract shape parameters from the detected landmarks
@@ -310,7 +310,7 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 
 }
 
-void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<double>& detected_landmarks, bool success, double timestamp_seconds, bool online, bool visualise)
+void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool success, double timestamp_seconds, bool online, bool visualise)
 {
 
 	frames_tracking++;

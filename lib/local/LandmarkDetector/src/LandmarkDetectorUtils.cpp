@@ -717,6 +717,31 @@ namespace LandmarkDetector
 		return R;
 	}
 
+	cv::Matx22f AlignShapesKabsch2D_f(const cv::Mat_<float>& align_from, const cv::Mat_<float>& align_to)
+	{
+
+		cv::SVD svd(align_from.t() * align_to);
+
+		// make sure no reflection is there
+		// corr ensures that we do only rotaitons and not reflections
+		float d = cv::determinant(svd.vt.t() * svd.u.t());
+
+		cv::Matx22f corr = cv::Matx22f::eye();
+		if (d > 0)
+		{
+			corr(1, 1) = 1;
+		}
+		else
+		{
+			corr(1, 1) = -1;
+		}
+
+		cv::Matx22f R;
+		cv::Mat(svd.vt.t()*cv::Mat(corr)*svd.u.t()).copyTo(R);
+
+		return R;
+	}
+
 	//=============================================================================
 	// Basically Kabsch's algorithm but also allows the collection of points to be different in scale from each other
 	cv::Matx22d AlignShapesWithScale(cv::Mat_<double>& src, cv::Mat_<double> dst)
@@ -769,6 +794,55 @@ namespace LandmarkDetector
 
 	}
 
+	cv::Matx22f AlignShapesWithScale_f(cv::Mat_<float>& src, cv::Mat_<float> dst)
+	{
+		int n = src.rows;
+
+		// First we mean normalise both src and dst
+		float mean_src_x = cv::mean(src.col(0))[0];
+		float mean_src_y = cv::mean(src.col(1))[0];
+
+		float mean_dst_x = cv::mean(dst.col(0))[0];
+		float mean_dst_y = cv::mean(dst.col(1))[0];
+
+		cv::Mat_<float> src_mean_normed = src.clone();
+		src_mean_normed.col(0) = src_mean_normed.col(0) - mean_src_x;
+		src_mean_normed.col(1) = src_mean_normed.col(1) - mean_src_y;
+
+		cv::Mat_<float> dst_mean_normed = dst.clone();
+		dst_mean_normed.col(0) = dst_mean_normed.col(0) - mean_dst_x;
+		dst_mean_normed.col(1) = dst_mean_normed.col(1) - mean_dst_y;
+
+		// Find the scaling factor of each
+		cv::Mat src_sq;
+		cv::pow(src_mean_normed, 2, src_sq);
+
+		cv::Mat dst_sq;
+		cv::pow(dst_mean_normed, 2, dst_sq);
+
+		float s_src = sqrt(cv::sum(src_sq)[0] / n);
+		float s_dst = sqrt(cv::sum(dst_sq)[0] / n);
+
+		src_mean_normed = src_mean_normed / s_src;
+		dst_mean_normed = dst_mean_normed / s_dst;
+
+		float s = s_dst / s_src;
+
+		// Get the rotation
+		cv::Matx22f R = AlignShapesKabsch2D_f(src_mean_normed, dst_mean_normed);
+
+		cv::Matx22f	A;
+		cv::Mat(s * R).copyTo(A);
+
+		cv::Mat_<float> aligned = (cv::Mat(cv::Mat(A) * src.t())).t();
+		cv::Mat_<float> offset = dst - aligned;
+
+		float t_x = cv::mean(offset.col(0))[0];
+		float t_y = cv::mean(offset.col(1))[0];
+
+		return A;
+
+	}
 
 	//===========================================================================
 	// Visualisation functions
@@ -965,7 +1039,7 @@ namespace LandmarkDetector
 	}
 
 	// Computing landmarks (to be drawn later possibly)
-	vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities)
+	vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities)
 	{
 		int n = shape2D.rows / 2;
 		vector<cv::Point2d> landmarks;
@@ -974,7 +1048,7 @@ namespace LandmarkDetector
 		{
 			if (visibilities.at<int>(i))
 			{
-				cv::Point2d featurePoint(shape2D.at<double>(i), shape2D.at<double>(i + n));
+				cv::Point2d featurePoint(shape2D.at<float>(i), shape2D.at<float>(i + n));
 
 				landmarks.push_back(featurePoint);
 			}
@@ -984,7 +1058,7 @@ namespace LandmarkDetector
 	}
 
 	// Computing landmarks (to be drawn later possibly)
-	vector<cv::Point2d> CalculateAllLandmarks(const cv::Mat_<double>& shape2D)
+	vector<cv::Point2d> CalculateAllLandmarks(const cv::Mat_<float>& shape2D)
 	{
 
 		int n;
@@ -1004,11 +1078,11 @@ namespace LandmarkDetector
 			cv::Point2d featurePoint;
 			if (shape2D.cols == 1)
 			{
-				featurePoint = cv::Point2d(shape2D.at<double>(i), shape2D.at<double>(i + n));
+				featurePoint = cv::Point2d(shape2D.at<float>(i), shape2D.at<float>(i + n));
 			}
 			else
 			{
-				featurePoint = cv::Point2d(shape2D.at<double>(i, 0), shape2D.at<double>(i, 1));
+				featurePoint = cv::Point2d(shape2D.at<float>(i, 0), shape2D.at<float>(i, 1));
 			}
 
 			landmarks.push_back(featurePoint);
@@ -1086,7 +1160,7 @@ namespace LandmarkDetector
 	}
 
 	// Drawing landmarks on a face image
-	void Draw(cv::Mat img, const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities)
+	void Draw(cv::Mat img, const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities)
 	{
 		int n = shape2D.rows / 2;
 
@@ -1098,7 +1172,7 @@ namespace LandmarkDetector
 			{
 				if (visibilities.at<int>(i))
 				{
-					cv::Point featurePoint(cvRound(shape2D.at<double>(i) * (double)draw_multiplier), cvRound(shape2D.at<double>(i + n) * (double)draw_multiplier));
+					cv::Point featurePoint(cvRound(shape2D.at<float>(i) * (float)draw_multiplier), cvRound(shape2D.at<float>(i + n) * (float)draw_multiplier));
 
 					// A rough heuristic for drawn point size
 					int thickness = (int)std::ceil(3.0* ((double)img.cols) / 640.0);
@@ -1114,7 +1188,7 @@ namespace LandmarkDetector
 		{
 			for (int i = 0; i < n; ++i)
 			{
-				cv::Point featurePoint(cvRound(shape2D.at<double>(i) * (double)draw_multiplier), cvRound(shape2D.at<double>(i + n) * (double)draw_multiplier));
+				cv::Point featurePoint(cvRound(shape2D.at<float>(i) * (float)draw_multiplier), cvRound(shape2D.at<float>(i + n) * (float)draw_multiplier));
 
 				// A rough heuristic for drawn point size
 				int thickness = 1.0;
@@ -1128,7 +1202,7 @@ namespace LandmarkDetector
 				if (i == 27)
 					next_point = 20;
 
-				cv::Point nextFeaturePoint(cvRound(shape2D.at<double>(next_point) * (double)draw_multiplier), cvRound(shape2D.at<double>(next_point + n) * (double)draw_multiplier));
+				cv::Point nextFeaturePoint(cvRound(shape2D.at<float>(next_point) * (float)draw_multiplier), cvRound(shape2D.at<float>(next_point + n) * (float)draw_multiplier));
 				if (i < 8 || i > 19)
 					cv::line(img, featurePoint, nextFeaturePoint, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
 				else
@@ -1141,7 +1215,7 @@ namespace LandmarkDetector
 		{
 			for (int i = 0; i < n; ++i)
 			{
-				cv::Point featurePoint(cvRound(shape2D.at<double>(i) * (double)draw_multiplier), cvRound(shape2D.at<double>(i + n) * (double)draw_multiplier));
+				cv::Point featurePoint(cvRound(shape2D.at<float>(i) * (float)draw_multiplier), cvRound(shape2D.at<float>(i + n) * (float)draw_multiplier));
 
 				// A rough heuristic for drawn point size
 				int thickness = 1.0;
@@ -1151,14 +1225,14 @@ namespace LandmarkDetector
 				if (i == 5)
 					next_point = 0;
 
-				cv::Point nextFeaturePoint(cvRound(shape2D.at<double>(next_point) * (double)draw_multiplier), cvRound(shape2D.at<double>(next_point + n) * (double)draw_multiplier));
+				cv::Point nextFeaturePoint(cvRound(shape2D.at<float>(next_point) * (float)draw_multiplier), cvRound(shape2D.at<float>(next_point + n) * (float)draw_multiplier));
 				cv::line(img, featurePoint, nextFeaturePoint, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
 			}
 		}
 	}
 
 	// Drawing landmarks on a face image
-	void Draw(cv::Mat img, const cv::Mat_<double>& shape2D)
+	void Draw(cv::Mat img, const cv::Mat_<float>& shape2D)
 	{
 
 		int n;
@@ -1177,11 +1251,11 @@ namespace LandmarkDetector
 			cv::Point featurePoint;
 			if (shape2D.cols == 1)
 			{
-				featurePoint = cv::Point(cvRound(shape2D.at<double>(i) * (double)draw_multiplier), cvRound(shape2D.at<double>(i + n) * (double)draw_multiplier));
+				featurePoint = cv::Point(cvRound(shape2D.at<float>(i) * (float)draw_multiplier), cvRound(shape2D.at<float>(i + n) * (float)draw_multiplier));
 			}
 			else
 			{
-				featurePoint = cv::Point(cvRound(shape2D.at<double>(i, 0) * (double)draw_multiplier), cvRound(shape2D.at<double>(i, 1) * (double)draw_multiplier));
+				featurePoint = cv::Point(cvRound(shape2D.at<float>(i, 0) * (float)draw_multiplier), cvRound(shape2D.at<float>(i, 1) * (float)draw_multiplier));
 			}
 			// A rough heuristic for drawn point size
 			int thickness = (int)std::ceil(5.0* ((double)img.cols) / 640.0);

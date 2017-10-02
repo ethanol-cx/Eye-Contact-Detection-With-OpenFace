@@ -315,9 +315,9 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_m
 						
 			// Keep track of old model values so that they can be restored if redetection fails
 			cv::Vec6d params_global_init = clnf_model.params_global;
-			cv::Mat_<double> params_local_init = clnf_model.params_local.clone();
-			double likelihood_init = clnf_model.model_likelihood;
-			cv::Mat_<double> detected_landmarks_init = clnf_model.detected_landmarks.clone();
+			cv::Mat_<float> params_local_init = clnf_model.params_local.clone();
+			float likelihood_init = clnf_model.model_likelihood;
+			cv::Mat_<float> detected_landmarks_init = clnf_model.detected_landmarks.clone();
 			cv::Mat_<float> landmark_likelihoods_init = clnf_model.landmark_likelihoods.clone();
 
 			// Use the detected bounding box and empty local parameters

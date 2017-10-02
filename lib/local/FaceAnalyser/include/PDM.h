@@ -75,16 +75,16 @@ class PDM{
 		inline int NumberOfModes() const {return princ_comp.cols;}
 
 		// Compute shape in object space (3D)
-		void CalcShape3D(cv::Mat_<double>& out_shape, const cv::Mat_<float>& params_local) const;
+		void CalcShape3D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& params_local) const;
 
 		// Compute shape in image space (2D)
-		void CalcShape2D(cv::Mat_<double>& out_shape, const cv::Mat_<float>& params_local, const cv::Vec6d& params_global) const;
+		void CalcShape2D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& params_local, const cv::Vec6d& params_global) const;
     
 		// provided the bounding box of a face and the local parameters (with optional rotation), generates the global parameters that can generate the face with the provided bounding box
-		void CalcParams(cv::Vec6d& out_params_global, const cv::Rect_<double>& bounding_box, const cv::Mat_<float>& params_local, const cv::Vec3d rotation = cv::Vec3d(0.0)) const;
+		void CalcParams(cv::Vec6d& out_params_global, const cv::Rect_<double>& bounding_box, const cv::Mat_<float>& params_local, const cv::Vec3f rotation = cv::Vec3f(0.0f)) const;
 
 		// Provided the landmark location compute global and local parameters best fitting it (can provide optional rotation for potentially better results)
-		void CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_local, const cv::Mat_<double>& landmark_locations, const cv::Vec3d rotation = cv::Vec3d(0.0)) const;
+		void CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_local, const cv::Mat_<float>& landmark_locations, const cv::Vec3f rotation = cv::Vec3f(0.0f)) const;
 
 		// provided the model parameters, compute the bounding box of a face
 		void CalcBoundingBox(cv::Rect& out_bounding_box, const cv::Vec6d& params_global, const cv::Mat_<float>& params_local) const;

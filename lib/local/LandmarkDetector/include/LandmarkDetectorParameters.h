@@ -56,7 +56,7 @@ struct FaceModelParameters
 	bool validate_detections;
 
 	// Landmark detection validator boundary for correct detection, the regressor output -1 (perfect alignment) 1 (bad alignment), 
-	double validation_boundary;
+	float validation_boundary;
 
 	// Used when tracking is going well
 	vector<int> window_sizes_small;
@@ -68,17 +68,17 @@ struct FaceModelParameters
 	vector<int> window_sizes_current;
 	
 	// How big is the tracking template that helps with large motions
-	double face_template_scale;	
+	float face_template_scale;	
 	bool use_face_template;
 
 	// Where to load the model from
 	string model_location;
 	
 	// this is used for the smooting of response maps (KDE sigma)
-	double sigma;
+	float sigma;
 
-	double reg_factor;	// weight put to regularisation
-	double weight_factor; // factor for weighted least squares
+	float reg_factor;	// weight put to regularisation
+	float weight_factor; // factor for weighted least squares
 
 	// should multiple views be considered during reinit
 	bool multi_view;

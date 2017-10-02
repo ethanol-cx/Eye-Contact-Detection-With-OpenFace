@@ -147,23 +147,22 @@ void PDM::CalcShape3D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& p_local
 
 //===========================================================================
 // Get the 2D shape (in image space) from global and local parameters
-void PDM::CalcShape2D(cv::Mat_<double>& out_shape, const cv::Mat_<float>& params_local, const cv::Vec6d& params_global) const
+void PDM::CalcShape2D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& params_local, const cv::Vec6d& params_global) const
 {
 
 	int n = this->NumberOfPoints();
 
-	double s = params_global[0]; // scaling factor
-	double tx = params_global[4]; // x offset
-	double ty = params_global[5]; // y offset
+	// TODO move to float
+	float s = (float)params_global[0]; // scaling factor
+	float tx = (float)params_global[4]; // x offset
+	float ty = (float)params_global[5]; // y offset
 
 	// get the rotation matrix from the euler angles
-	cv::Vec3d euler(params_global[1], params_global[2], params_global[3]);
-	cv::Matx33d currRot = Euler2RotationMatrix(euler);
+	cv::Vec3f euler((float)params_global[1], (float)params_global[2], (float)params_global[3]);
+	cv::Matx33f currRot = Euler2RotationMatrix_f(euler);
 	
 	// get the 3D shape of the object
-	cv::Mat_<float> Shape_3D_f = mean_shape + princ_comp * params_local;
-	cv::Mat_<double> Shape_3D;
-	Shape_3D_f.convertTo(Shape_3D, CV_64F);
+	cv::Mat_<float> Shape_3D = mean_shape + princ_comp * params_local;
 
 	// create the 2D shape matrix (if it has not been defined yet)
 	if((out_shape.rows != mean_shape.rows) || (out_shape.cols != 1))
@@ -174,8 +173,8 @@ void PDM::CalcShape2D(cv::Mat_<double>& out_shape, const cv::Mat_<float>& params
 	for(int i = 0; i < n; i++)
 	{
 		// Transform this using the weak-perspective mapping to 2D from 3D
-		out_shape.at<double>(i  ,0) = s * ( currRot(0,0) * Shape_3D.at<double>(i, 0) + currRot(0,1) * Shape_3D.at<double>(i+n  ,0) + currRot(0,2) * Shape_3D.at<double>(i+n*2,0) ) + tx;
-		out_shape.at<double>(i+n,0) = s * ( currRot(1,0) * Shape_3D.at<double>(i, 0) + currRot(1,1) * Shape_3D.at<double>(i+n  ,0) + currRot(1,2) * Shape_3D.at<double>(i+n*2,0) ) + ty;
+		out_shape.at<float>(i  ,0) = s * ( currRot(0,0) * Shape_3D.at<float>(i, 0) + currRot(0,1) * Shape_3D.at<float>(i+n  ,0) + currRot(0,2) * Shape_3D.at<float>(i+n*2,0) ) + tx;
+		out_shape.at<float>(i+n,0) = s * ( currRot(1,0) * Shape_3D.at<float>(i, 0) + currRot(1,1) * Shape_3D.at<float>(i+n  ,0) + currRot(1,2) * Shape_3D.at<float>(i+n*2,0) ) + ty;
 	}
 }
 
@@ -229,7 +228,7 @@ void PDM::CalcBoundingBox(cv::Rect& out_bounding_box, const cv::Vec6d& params_gl
 {
 	
 	// get the shape instance based on local params
-	cv::Mat_<double> current_shape;
+	cv::Mat_<float> current_shape;
 	CalcShape2D(current_shape, params_local, params_global);
 	
 	// Get the width of expected shape
@@ -489,7 +488,7 @@ void PDM::UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>&
 
 }
 
-void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_local, const cv::Mat_<double>& landmark_locations, const cv::Vec3f rotation)
+void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_local, const cv::Mat_<float> & landmark_locations, const cv::Vec3f rotation)
 {
 		
 	int m = this->NumberOfModes();
@@ -503,7 +502,7 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_l
 	for(int i = 0; i < n; ++i)
 	{
 		// If the landmark is invisible indicate this
-		if(landmark_locations.at<double>(i) == 0)
+		if(landmark_locations.at<float>(i) == 0)
 		{
 			visi_ind_2D.at<int>(i) = 0;
 			visi_ind_2D.at<int>(i+n) = 0;
@@ -545,8 +544,7 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_l
 	{
 		if(visi_ind_2D.at<int>(i) == 1)
 		{
-			// TODO move away from doubles
-			landmark_locs_vis.at<float>(k) = (float)landmark_locations.at<double>(i);
+			landmark_locs_vis.at<float>(k) = landmark_locations.at<float>(i);
 			k++;
 		}		
 	}

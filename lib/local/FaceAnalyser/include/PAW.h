@@ -56,16 +56,16 @@ public:
     int     number_of_pixels; 
 
 	// Minimum x coordinate in destination
-    double  min_x;
+    float  min_x;
 
 	// minimum y coordinate in destination
-    double  min_y;
+	float  min_y;
 
 	// Destination points (landmarks to be warped to)
-	cv::Mat_<double> destination_landmarks;
+	cv::Mat_<float> destination_landmarks;
 
 	// Destination points (landmarks to be warped from)
-	cv::Mat_<double> source_landmarks;
+	cv::Mat_<float> source_landmarks;
 
 	// Triangulation, each triangle is warped using an affine transform
 	cv::Mat_<int> triangulation;
@@ -81,13 +81,13 @@ public:
 	// affine coefficients for all triangles (see Matthews and Baker 2004)
 	// 6 coefficients for each triangle (are computed from alpha and beta)
 	// This is computed during each warp based on source landmarks
-	cv::Mat_<double> coefficients;
+	cv::Mat_<float> coefficients;
 
 	// matrix of (c,x,y) coeffs for alpha
-	cv::Mat_<double> alpha;
+	cv::Mat_<float> alpha;
 
 	// matrix of (c,x,y) coeffs for alpha
-	cv::Mat_<double> beta;
+	cv::Mat_<float> beta;
 
 	// x-source of warped points
 	cv::Mat_<float> map_x;
@@ -99,10 +99,10 @@ public:
     PAW(){;}
 
 	// Construct a warp from a destination shape and triangulation
-	PAW(const cv::Mat_<double>& destination_shape, const cv::Mat_<int>& triangulation);
+	PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangulation);
 
 	// The final optional argument allows for optimisation if the triangle indices from previous frame are known (for tracking in video)
-	PAW(const cv::Mat_<double>& destination_shape, const cv::Mat_<int>& triangulation, double in_min_x, double in_min_y, double in_max_x, double in_max_y);
+	PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangulation, float in_min_x, float in_min_y, float in_max_x, float in_max_y);
 
 	// Copy constructor
 	PAW(const PAW& other);
@@ -110,7 +110,7 @@ public:
 	void Read(std::ifstream &s);
 
 	// The actual warping
-    void Warp(const cv::Mat& image_to_warp, cv::Mat& destination_image, const cv::Mat_<double>& landmarks_to_warp);
+    void Warp(const cv::Mat& image_to_warp, cv::Mat& destination_image, const cv::Mat_<float>& landmarks_to_warp);
 	
 	// Compute coefficients needed for warping
     void CalcCoeff();
@@ -128,9 +128,9 @@ public:
 private:
 
 	// Helper functions for dealing with triangles
-	static bool sameSide(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3);
-	static bool pointInTriangle(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3);
-	static int findTriangle(const cv::Point_<double>& point, const std::vector<std::vector<double>>& control_points, int guess = -1);
+	static bool sameSide(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3);
+	static bool pointInTriangle(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3);
+	static int findTriangle(const cv::Point_<float>& point, const std::vector<std::vector<float>>& control_points, int guess = -1);
 
   };
   //===========================================================================

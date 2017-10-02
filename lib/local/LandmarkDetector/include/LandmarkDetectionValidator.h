@@ -117,7 +117,7 @@ public:
 	DetectionValidator(const DetectionValidator& other);
 
 	// Given an image, orientation and detected landmarks output the result of the appropriate regressor
-	double Check(const cv::Vec3d& orientation, const cv::Mat_<uchar>& intensity_img, cv::Mat_<double>& detected_landmarks);
+	float Check(const cv::Vec3d& orientation, const cv::Mat_<uchar>& intensity_img, cv::Mat_<float>& detected_landmarks);
 
 	// Reading in the model
 	void Read(string location);
