@@ -25,7 +25,7 @@ cat_3 = [410, 411, 516, 517, 526, 528, 529, 530, 531, 533, 557, 558, 559, 562];
 in_dirs = cat(2, cat_1, cat_2, cat_3);
 
 %% Running CE-CLM models
-for i=1:numel(in_dirs)
+parfor i=1:numel(in_dirs)
     command = executable;
 
     command = cat(2, command, ' -no3Dfp -noMparams -noPose -noGaze -noAUs ');
@@ -43,7 +43,7 @@ for i=1:numel(in_dirs)
 end
 
 %% Running CLNF models
-for i=1:numel(in_dirs)
+parfor i=1:numel(in_dirs)
     command = executable;
 
     command = cat(2, command, ' -no3Dfp -noMparams -noPose -noGaze -noAUs -mloc model/main_clnf_general.txt ');

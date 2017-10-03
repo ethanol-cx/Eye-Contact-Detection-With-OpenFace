@@ -27,7 +27,7 @@ end
 %%
 % Do it in parrallel for speed (replace the parfor with for if no parallel
 % toolbox is available)
-for v = 1:numel(videos)
+parfor v = 1:numel(videos)
    
     vid_file = [DISFA_dir, videos(v).name];
     

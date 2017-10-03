@@ -22,7 +22,7 @@ for f1=1:numel(fera_dirs)
 
     vid_files = dir([FERA2011_dir, fera_dirs(f1).name, '/*.avi']);
 
-    for v=1:numel(vid_files)
+    parfor v=1:numel(vid_files)
 
         command = [executable ' -asvid -q -no2Dfp -no3Dfp -noMparams -noPose -noGaze -au_static '];
 
