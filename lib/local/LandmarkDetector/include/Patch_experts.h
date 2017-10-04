@@ -95,8 +95,8 @@ public:
 	// Additionally returns the transform from the image coordinates to the response coordinates (and vice versa).
 	// The computation also requires the current landmark locations to compute response around, the PDM corresponding to the desired model, and the parameters describing its instance
 	// Also need to provide the size of the area of interest and the desired scale of analysis
-	void Response(vector<cv::Mat_<float> >& patch_expert_responses, cv::Matx22f& sim_ref_to_img, cv::Matx22d& sim_img_to_ref, const cv::Mat_<uchar>& grayscale_image, 
-							 const PDM& pdm, const cv::Vec6d& params_global, const cv::Mat_<double>& params_local, int window_size, int scale);
+	void Response(vector<cv::Mat_<float> >& patch_expert_responses, cv::Matx22f& sim_ref_to_img, cv::Matx22f& sim_img_to_ref, const cv::Mat_<uchar>& grayscale_image, 
+							 const PDM& pdm, const cv::Vec6d& params_global, const cv::Mat_<float>& params_local, int window_size, int scale);
 
 	// Getting the best view associated with the current orientation
 	int GetViewIdx(const cv::Vec6d& params_global, int scale) const;

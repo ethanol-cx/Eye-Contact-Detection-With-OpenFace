@@ -166,8 +166,8 @@ namespace LandmarkDetector
 		for (size_t in = 0; in < input_maps.size(); ++in)
 		{
 			// Help with rounding up a bit, to match caffe style output
-			int out_x = round((double)(input_maps[in].cols - kernel_size_x) / (double)stride_x) + 1;
-			int out_y = round((double)(input_maps[in].rows - kernel_size_y) / (double)stride_y) + 1;
+			int out_x = round((float)(input_maps[in].cols - kernel_size_x) / (float)stride_x) + 1;
+			int out_y = round((float)(input_maps[in].rows - kernel_size_y) / (float)stride_y) + 1;
 
 			cv::Mat_<float> sub_out(out_y, out_x, 0.0);
 			cv::Mat_<float> in_map = input_maps[in];

@@ -158,7 +158,7 @@ void contrastNorm(const cv::Mat_<float>& input, cv::Mat_<float>& output)
 	{
 		
 		cv::Scalar mean_s = cv::mean(input(cv::Rect(1,y,num_cols-1, 1)));
-		double mean = mean_s[0];
+		float mean = (float)mean_s[0];
 
 		p++;
 
@@ -470,7 +470,7 @@ void LandmarkDetector::interpolationMatrix(cv::Mat_<float>& mapMatrix, int respo
 				continue;
 			}
 
-			double num_neigh = 0.0;
+			float num_neigh = 0.0;
 			vector<int> val_ids;
 			if (x - 1 >= 0)
 			{

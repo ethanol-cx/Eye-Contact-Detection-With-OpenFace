@@ -700,7 +700,7 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const std::vector<int>& window_sizes, 
 
 	// Converting from image space to patch expert space (normalised for rotation and scale)
 	cv::Matx22f sim_ref_to_img;
-	cv::Matx22d sim_img_to_ref;
+	cv::Matx22f sim_img_to_ref;
 
 	FaceModelParameters tmp_parameters = parameters;
 
