@@ -79,7 +79,7 @@ cv::Point3f RaySphereIntersect(cv::Point3f rayOrigin, cv::Point3f rayDir, cv::Po
 	return rayOrigin + rayDir * t;
 }
 
-cv::Point3f GazeAnalysis::GetPupilPosition(cv::Mat_<double> eyeLdmks3d){
+cv::Point3f GazeAnalysis::GetPupilPosition(cv::Mat_<float> eyeLdmks3d){
 	
 	eyeLdmks3d = eyeLdmks3d.t();
 
@@ -136,26 +136,26 @@ void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 	gaze_absolute = gazeVecAxis / norm(gazeVecAxis);
 }
 
-cv::Vec2d GazeAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2, cv::Vec6d head_pose)
+cv::Vec2f GazeAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2, cv::Vec6d head_pose)
 {
 
-	cv::Vec3d eulerAngles(head_pose(3), head_pose(4), head_pose(5));
-	cv::Matx33d rotMat = LandmarkDetector::Euler2RotationMatrix(eulerAngles);
+	cv::Vec3d eulerAngles((float)head_pose(3), (float)head_pose(4), (float)head_pose(5));
+	cv::Matx33f rotMat = LandmarkDetector::Euler2RotationMatrix_f(eulerAngles);
 	cv::Point3f gaze_point = (gaze_vector_1 + gaze_vector_2) / 2;
-	cv::Vec3d gaze(gaze_point.x, gaze_point.y, gaze_point.z);
+	cv::Vec3f gaze(gaze_point.x, gaze_point.y, gaze_point.z);
 
 	gaze = rotMat * gaze;
 
-	double x_angle = atan2(gaze[0], -gaze[2]);
-	double y_angle = atan2(gaze[1], -gaze[2]);
+	float x_angle = atan2(gaze[0], -gaze[2]);
+	float y_angle = atan2(gaze[1], -gaze[2]);
 
-	return cv::Vec2d(x_angle, y_angle);
+	return cv::Vec2f(x_angle, y_angle);
 
 }
 void GazeAnalysis::DrawGaze(cv::Mat img, const LandmarkDetector::CLNF& clnf_model, cv::Point3f gazeVecAxisLeft, cv::Point3f gazeVecAxisRight, float fx, float fy, float cx, float cy)
 {
 
-	cv::Mat cameraMat = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
+	cv::Mat cameraMat = (cv::Mat_<float>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
 
 	int part_left = -1;
 	int part_right = -1;
