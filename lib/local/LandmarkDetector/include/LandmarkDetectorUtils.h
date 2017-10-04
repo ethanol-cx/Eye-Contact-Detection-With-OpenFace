@@ -85,11 +85,11 @@ namespace LandmarkDetector
 	//===========================================================================
 	// Visualisation functions
 	//===========================================================================
-	void Project(cv::Mat_<double>& dest, const cv::Mat_<double>& mesh, double fx, double fy, double cx, double cy);
+	void Project(cv::Mat_<float>& dest, const cv::Mat_<float>& mesh, float fx, float fy, float cx, float cy);
 	void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy);
 
 	// Drawing face bounding box
-	vector<std::pair<cv::Point2d, cv::Point2d>> CalculateBox(cv::Vec6d pose, float fx, float fy, float cx, float cy);
+	vector<std::pair<cv::Point2f, cv::Point2f>> CalculateBox(cv::Vec6d pose, float fx, float fy, float cx, float cy);
 	void DrawBox(vector<pair<cv::Point, cv::Point>> lines, cv::Mat image, cv::Scalar color, int thickness);
 
 	vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities);

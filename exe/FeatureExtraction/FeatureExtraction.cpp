@@ -148,7 +148,7 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 {
 
 	// Drawing the facial landmarks on the face and the bounding box around it if tracking is successful and initialised
-	double detection_certainty = face_model.detection_certainty;
+	float detection_certainty = face_model.detection_certainty;
 	bool detection_success = face_model.detection_success;
 
 	double visualisation_boundary = 0.2;
@@ -158,7 +158,7 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 	{
 		LandmarkDetector::Draw(captured_image, face_model);
 
-		double vis_certainty = detection_certainty;
+		float vis_certainty = detection_certainty;
 		if (vis_certainty > 1)
 			vis_certainty = 1;
 		if (vis_certainty < -1)
@@ -210,7 +210,7 @@ void prepareOutputFile(std::ofstream* output_file, bool output_2D_landmarks, boo
 void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, bool output_3D_landmarks,
 	bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
 	const LandmarkDetector::CLNF& face_model, int frame_count, double time_stamp, bool detection_success,
-	cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, cv::Vec2d gaze_angle, const cv::Vec6d& pose_estimate, double fx, double fy, double cx, double cy,
+	cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, cv::Vec2d gaze_angle, const cv::Vec6d& pose_estimate, float fx, float fy, float cx, float cy,
 	const FaceAnalysis::FaceAnalyser& face_analyser);
 
 int main(int argc, char **argv)
@@ -726,11 +726,11 @@ void prepareOutputFile(std::ofstream* output_file, bool output_2D_landmarks, boo
 void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, bool output_3D_landmarks,
 	bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
 	const LandmarkDetector::CLNF& face_model, int frame_count, double time_stamp, bool detection_success,
-	cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, cv::Vec2d gaze_angle, const cv::Vec6d& pose_estimate, double fx, double fy, double cx, double cy,
+	cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, cv::Vec2d gaze_angle, const cv::Vec6d& pose_estimate, float fx, float fy, float cx, float cy,
 	const FaceAnalysis::FaceAnalyser& face_analyser)
 {
 
-	double confidence = 0.5 * (1 - face_model.detection_certainty);
+	float confidence = 0.5 * (1 - face_model.detection_certainty);
 
 	*output_file << std::setprecision(9);
 	*output_file << frame_count + 1 << ", " << time_stamp << ", ";

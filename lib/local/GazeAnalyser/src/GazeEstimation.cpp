@@ -177,22 +177,22 @@ void GazeAnalysis::DrawGaze(cv::Mat img, const LandmarkDetector::CLNF& clnf_mode
 	cv::Mat eyeLdmks3d_right = clnf_model.hierarchical_models[part_right].GetShape(fx, fy, cx, cy);
 	cv::Point3f pupil_right = GetPupilPosition(eyeLdmks3d_right);
 
-	vector<cv::Point3d> points_left;
-	points_left.push_back(cv::Point3d(pupil_left));
-	points_left.push_back(cv::Point3d(pupil_left + gazeVecAxisLeft*50.0));
+	vector<cv::Point3f> points_left;
+	points_left.push_back(cv::Point3f(pupil_left));
+	points_left.push_back(cv::Point3f(pupil_left + gazeVecAxisLeft*50.0f));
 
-	vector<cv::Point3d> points_right;
-	points_right.push_back(cv::Point3d(pupil_right));
-	points_right.push_back(cv::Point3d(pupil_right + gazeVecAxisRight*50.0));
+	vector<cv::Point3f> points_right;
+	points_right.push_back(cv::Point3f(pupil_right));
+	points_right.push_back(cv::Point3f(pupil_right + gazeVecAxisRight*50.0f));
 
-	cv::Mat_<double> proj_points;
-	cv::Mat_<double> mesh_0 = (cv::Mat_<double>(2, 3) << points_left[0].x, points_left[0].y, points_left[0].z, points_left[1].x, points_left[1].y, points_left[1].z);
+	cv::Mat_<float> proj_points;
+	cv::Mat_<float> mesh_0 = (cv::Mat_<float>(2, 3) << points_left[0].x, points_left[0].y, points_left[0].z, points_left[1].x, points_left[1].y, points_left[1].z);
 	LandmarkDetector::Project(proj_points, mesh_0, fx, fy, cx, cy);
-	cv::line(img, cv::Point(cvRound(proj_points.at<double>(0,0) * (double)gaze_draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)gaze_draw_multiplier)),
-		cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)gaze_draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)gaze_draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, gaze_draw_shiftbits);
+	cv::line(img, cv::Point(cvRound(proj_points.at<float>(0,0) * (float)gaze_draw_multiplier), cvRound(proj_points.at<float>(0, 1) * (float)gaze_draw_multiplier)),
+		cv::Point(cvRound(proj_points.at<float>(1, 0) * (float)gaze_draw_multiplier), cvRound(proj_points.at<float>(1, 1) * (float)gaze_draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, gaze_draw_shiftbits);
 
-	cv::Mat_<double> mesh_1 = (cv::Mat_<double>(2, 3) << points_right[0].x, points_right[0].y, points_right[0].z, points_right[1].x, points_right[1].y, points_right[1].z);
+	cv::Mat_<float> mesh_1 = (cv::Mat_<float>(2, 3) << points_right[0].x, points_right[0].y, points_right[0].z, points_right[1].x, points_right[1].y, points_right[1].z);
 	LandmarkDetector::Project(proj_points, mesh_1, fx, fy, cx, cy);
-	cv::line(img, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)gaze_draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)gaze_draw_multiplier)),
-		cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)gaze_draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)gaze_draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, gaze_draw_shiftbits);
+	cv::line(img, cv::Point(cvRound(proj_points.at<float>(0, 0) * (float)gaze_draw_multiplier), cvRound(proj_points.at<float>(0, 1) * (float)gaze_draw_multiplier)),
+		cv::Point(cvRound(proj_points.at<float>(1, 0) * (float)gaze_draw_multiplier), cvRound(proj_points.at<float>(1, 1) * (float)gaze_draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, gaze_draw_shiftbits);
 }
