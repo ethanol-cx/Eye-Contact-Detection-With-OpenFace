@@ -132,7 +132,7 @@ void create_directory(string output_path)
 }
 
 void get_output_feature_params(vector<string> &output_similarity_aligned, vector<string> &output_hog_aligned_files, double &similarity_scale,
-	int &similarity_size, bool &grayscale, bool& verbose, bool& dynamic, bool &output_2D_landmarks, bool &output_3D_landmarks,
+	int &similarity_size, bool &grayscale, bool& visualize_track, bool& visualize_align, bool& visualize_hog, bool& dynamic, bool &output_2D_landmarks, bool &output_3D_landmarks,
 	bool &output_model_params, bool &output_pose, bool &output_AUs, bool &output_gaze, vector<string> &arguments);
 
 void get_image_input_output_params_feats(vector<vector<string> > &input_image_files, bool& as_video, vector<string> &arguments);
@@ -213,9 +213,6 @@ void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, boo
 	cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, const cv::Vec6d& pose_estimate, double fx, double fy, double cx, double cy,
 	const FaceAnalysis::FaceAnalyser& face_analyser);
 
-void post_process_output_file(FaceAnalysis::FaceAnalyser& face_analyser, string output_file, bool dynamic);
-
-
 int main (int argc, char **argv)
 {
 
@@ -240,7 +237,6 @@ int main (int argc, char **argv)
 	LandmarkDetector::get_video_input_output_params(input_files, output_files, tracked_videos_output, use_world_coordinates, output_codec, arguments);
 
 	bool video_input = true;
-	bool verbose = true;
 	bool images_as_video = false;
 
 	vector<vector<string> > input_image_files;
@@ -301,7 +297,10 @@ int main (int argc, char **argv)
 	bool output_AUs = true;
 	bool output_gaze = true;
 
-	get_output_feature_params(output_similarity_align, output_hog_align_files, sim_scale, sim_size, grayscale, verbose, dynamic,
+	bool visualize_track = false;
+	bool visualize_align = false;
+	bool visualize_hog = false;
+	get_output_feature_params(output_similarity_align, output_hog_align_files, sim_scale, sim_size, grayscale, visualize_track, visualize_align, visualize_hog, dynamic,
 		output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, arguments);
 
 	// Used for image masking
@@ -504,8 +503,6 @@ int main (int argc, char **argv)
 		// Use for timestamping if using a webcam
 		int64 t_initial = cv::getTickCount();
 
-		bool visualise_hog = verbose;
-
 		// Timestamp in seconds of current processing
 		double time_stamp = 0;
 
@@ -565,18 +562,18 @@ int main (int argc, char **argv)
 			// But only if needed in output
 			if(!output_similarity_align.empty() || hog_output_file.is_open() || output_AUs)
 			{
-				face_analyser.AddNextFrame(captured_image, face_model, time_stamp, false, !det_parameters.quiet_mode);
+				face_analyser.AddNextFrame(captured_image, face_model, time_stamp, false, !det_parameters.quiet_mode && (visualize_align || visualize_hog));
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 
-				if(!det_parameters.quiet_mode)
+				if(!det_parameters.quiet_mode && visualize_align)
 				{
 					cv::imshow("sim_warp", sim_warped_img);			
 				}
-				if(hog_output_file.is_open())
+				if(hog_output_file.is_open() || (visualize_hog && !det_parameters.quiet_mode))
 				{
 					face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 
-					if(visualise_hog && !det_parameters.quiet_mode)
+					if(visualize_hog && !det_parameters.quiet_mode)
 					{
 						cv::Mat_<double> hog_descriptor_vis;
 						FaceAnalysis::Visualise_FHOG(hog_descriptor, num_hog_rows, num_hog_cols, hog_descriptor_vis);
@@ -631,7 +628,10 @@ int main (int argc, char **argv)
 			}
 
 			// Visualising the tracker
-			visualise_tracking(captured_image, face_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
+			if(visualize_track && !det_parameters.quiet_mode)
+			{
+				visualise_tracking(captured_image, face_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
+			}
 
 			// Output the landmarks, pose, gaze, parameters and AUs
 			outputAllFeatures(&output_file, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze,
@@ -949,7 +949,7 @@ void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, boo
 
 
 void get_output_feature_params(vector<string> &output_similarity_aligned, vector<string> &output_hog_aligned_files, double &similarity_scale,
-	int &similarity_size, bool &grayscale, bool& verbose, bool& dynamic,
+	int &similarity_size, bool &grayscale, bool& visualize_track, bool& visualize_align, bool& visualize_hog, bool& dynamic,
 	bool &output_2D_landmarks, bool &output_3D_landmarks, bool &output_model_params, bool &output_pose, bool &output_AUs, bool &output_gaze,
 	vector<string> &arguments)
 {
@@ -967,6 +967,10 @@ void get_output_feature_params(vector<string> &output_similarity_aligned, vector
 
 	// By default the model is dynamic
 	dynamic = true;
+
+	visualize_align = false;
+	visualize_hog = false;
+	visualize_track = false;
 
 	string separator = string(1, boost::filesystem::path::preferred_separator);
 
@@ -1005,7 +1009,24 @@ void get_output_feature_params(vector<string> &output_similarity_aligned, vector
 		}
 		else if (arguments[i].compare("-verbose") == 0)
 		{
-			verbose = true;
+			visualize_track = true;
+			visualize_align = true;
+			visualize_hog = true;
+		}
+		else if (arguments[i].compare("-vis-align") == 0)
+		{
+			visualize_align = true;
+			valid[i] = false;
+		}
+		else if (arguments[i].compare("-vis-hog") == 0)
+		{
+			visualize_hog = true;
+			valid[i] = false;
+		}
+		else if (arguments[i].compare("-vis-track") == 0)
+		{
+			visualize_track = true;
+			valid[i] = false;
 		}
 		else if (arguments[i].compare("-au_static") == 0)
 		{
