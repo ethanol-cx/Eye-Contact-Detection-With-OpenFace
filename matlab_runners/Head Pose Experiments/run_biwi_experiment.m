@@ -53,7 +53,7 @@ for i=3 + offset:numTogether:numel(dbSeqDir)
             command = cat(2, command, [' -ov "' outputVideo '"']);    
         end
     end    
-    command = cat(2, command, [' -fx 505 -fy 505 -cx 320 -cy 240 -no2Dfp -no3Dfp -noMparams -noAUs -noGaze']);
+    command = cat(2, command, [' -fx 505 -fy 505 -cx 320 -cy 240 -no2Dfp -no3Dfp -noMparams -noAUs -noGaze -vis-track']);
         
     if(any(strcmp('model', varargin)))
         command = cat(2, command, [' -mloc "', varargin{find(strcmp('model', varargin))+1}, '"']);
