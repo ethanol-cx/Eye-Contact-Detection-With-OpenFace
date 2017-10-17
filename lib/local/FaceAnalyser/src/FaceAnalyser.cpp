@@ -252,7 +252,7 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 {
 	
 	// Extract shape parameters from the detected landmarks
-	cv::Vec6d params_global;
+	cv::Vec6f params_global;
 	cv::Mat_<float> params_local;
 	pdm.CalcParams(params_global, params_local, detected_landmarks);
 
@@ -316,7 +316,7 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& det
 	frames_tracking++;
 
 	// Extract shape parameters from the detected landmarks
-	cv::Vec6d params_global;
+	cv::Vec6f params_global;
 	cv::Mat_<float> params_local;
 	pdm.CalcParams(params_global, params_local, detected_landmarks);
 

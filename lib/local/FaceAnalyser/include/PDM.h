@@ -78,27 +78,27 @@ class PDM{
 		void CalcShape3D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& params_local) const;
 
 		// Compute shape in image space (2D)
-		void CalcShape2D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& params_local, const cv::Vec6d& params_global) const;
+		void CalcShape2D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& params_local, const cv::Vec6f& params_global) const;
     
 		// provided the bounding box of a face and the local parameters (with optional rotation), generates the global parameters that can generate the face with the provided bounding box
-		void CalcParams(cv::Vec6d& out_params_global, const cv::Rect_<double>& bounding_box, const cv::Mat_<float>& params_local, const cv::Vec3f rotation = cv::Vec3f(0.0f)) const;
+		void CalcParams(cv::Vec6f& out_params_global, const cv::Rect_<float>& bounding_box, const cv::Mat_<float>& params_local, const cv::Vec3f rotation = cv::Vec3f(0.0f)) const;
 
 		// Provided the landmark location compute global and local parameters best fitting it (can provide optional rotation for potentially better results)
-		void CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_local, const cv::Mat_<float>& landmark_locations, const cv::Vec3f rotation = cv::Vec3f(0.0f)) const;
+		void CalcParams(cv::Vec6f& out_params_global, cv::Mat_<float>& out_params_local, const cv::Mat_<float>& landmark_locations, const cv::Vec3f rotation = cv::Vec3f(0.0f)) const;
 
 		// provided the model parameters, compute the bounding box of a face
-		void CalcBoundingBox(cv::Rect& out_bounding_box, const cv::Vec6d& params_global, const cv::Mat_<float>& params_local) const;
+		void CalcBoundingBox(cv::Rect_<float>& out_bounding_box, const cv::Vec6f& params_global, const cv::Mat_<float>& params_local) const;
 
 		// Helpers for computing Jacobians, and Jacobians with the weight matrix
-		void ComputeRigidJacobian(const cv::Mat_<float>& params_local, const cv::Vec6d& params_global, cv::Mat_<float> &Jacob, const cv::Mat_<float> W, cv::Mat_<float> &Jacob_t_w) const;
-		void ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6d& params_global, cv::Mat_<float> &Jacobian, const cv::Mat_<float> W, cv::Mat_<float> &Jacob_t_w) const;
+		void ComputeRigidJacobian(const cv::Mat_<float>& params_local, const cv::Vec6f& params_global, cv::Mat_<float> &Jacob, const cv::Mat_<float> W, cv::Mat_<float> &Jacob_t_w) const;
+		void ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6f& params_global, cv::Mat_<float> &Jacobian, const cv::Mat_<float> W, cv::Mat_<float> &Jacob_t_w) const;
 
 		// Given the current parameters, and the computed delta_p compute the updated parameters
-		void UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>& params_local, cv::Vec6d& params_global) const;
+		void UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>& params_local, cv::Vec6f& params_global) const;
 
 		// Helper utilities
 	private:
-		static void Orthonormalise(cv::Matx33d &R);
+		static void Orthonormalise(cv::Matx33f &R);
   };
   //===========================================================================
 }

@@ -91,9 +91,9 @@ cv::Point3f GazeAnalysis::GetPupilPosition(cv::Mat_<float> eyeLdmks3d){
 
 void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Point3f& gaze_absolute, float fx, float fy, float cx, float cy, bool left_eye)
 {
-	cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
-	cv::Vec3f eulerAngles((float)headPose(3), (float)headPose(4), (float)headPose(5));
-	cv::Matx33f rotMat = LandmarkDetector::Euler2RotationMatrix_f(eulerAngles);
+	cv::Vec6f headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
+	cv::Vec3f eulerAngles(headPose(3), headPose(4), headPose(5));
+	cv::Matx33f rotMat = LandmarkDetector::Euler2RotationMatrix(eulerAngles);
 
 	int part = -1;
 	for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
@@ -136,11 +136,11 @@ void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 	gaze_absolute = gazeVecAxis / norm(gazeVecAxis);
 }
 
-cv::Vec2f GazeAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2, cv::Vec6d head_pose)
+cv::Vec2f GazeAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2, cv::Vec6f head_pose)
 {
 
-	cv::Vec3d eulerAngles((float)head_pose(3), (float)head_pose(4), (float)head_pose(5));
-	cv::Matx33f rotMat = LandmarkDetector::Euler2RotationMatrix_f(eulerAngles);
+	cv::Vec3f eulerAngles(head_pose(3), head_pose(4), head_pose(5));
+	cv::Matx33f rotMat = LandmarkDetector::Euler2RotationMatrix(eulerAngles);
 	cv::Point3f gaze_point = (gaze_vector_1 + gaze_vector_2) / 2;
 	cv::Vec3f gaze(gaze_point.x, gaze_point.y, gaze_point.z);
 

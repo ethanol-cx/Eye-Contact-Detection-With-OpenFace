@@ -82,14 +82,17 @@ namespace LandmarkDetector
 	cv::Matx22d AlignShapesWithScale(cv::Mat_<double>& src, cv::Mat_<double> dst);
 	cv::Matx22f AlignShapesWithScale_f(cv::Mat_<float>& src, cv::Mat_<float> dst);
 
+	// Useful utility for grabing a bounding box around a set of 2D landmarks (as a 1D 2n x 1 vector of xs followed by doubles or as an n x 2 vector)
+	void ExtractBoundingBox(const cv::Mat_<float>& landmarks, float &min_x, float &max_x, float &min_y, float &max_y);
+
 	//===========================================================================
 	// Visualisation functions
 	//===========================================================================
 	void Project(cv::Mat_<float>& dest, const cv::Mat_<float>& mesh, float fx, float fy, float cx, float cy);
-	void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy);
+	void DrawBox(cv::Mat image, cv::Vec6f pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy);
 
 	// Drawing face bounding box
-	vector<std::pair<cv::Point2f, cv::Point2f>> CalculateBox(cv::Vec6d pose, float fx, float fy, float cx, float cy);
+	vector<std::pair<cv::Point2f, cv::Point2f>> CalculateBox(cv::Vec6f pose, float fx, float fy, float cx, float cy);
 	void DrawBox(vector<pair<cv::Point, cv::Point>> lines, cv::Mat image, cv::Scalar color, int thickness);
 
 	vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities);
@@ -110,19 +113,18 @@ namespace LandmarkDetector
 	//===========================================================================
 	// Angle representation conversion helpers
 	//===========================================================================
-	cv::Matx33d Euler2RotationMatrix(const cv::Vec3d& eulerAngles);
-	cv::Matx33f Euler2RotationMatrix_f(const cv::Vec3f& eulerAngles);
+	cv::Matx33f Euler2RotationMatrix(const cv::Vec3f& eulerAngles);
 
 	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	cv::Vec3d RotationMatrix2Euler(const cv::Matx33d& rotation_matrix);
+	cv::Vec3f RotationMatrix2Euler(const cv::Matx33f& rotation_matrix);
 
-	cv::Vec3d Euler2AxisAngle(const cv::Vec3d& euler);
+	cv::Vec3f Euler2AxisAngle(const cv::Vec3f& euler);
 
-	cv::Vec3d AxisAngle2Euler(const cv::Vec3d& axis_angle);
+	cv::Vec3f AxisAngle2Euler(const cv::Vec3f& axis_angle);
 
-	cv::Matx33d AxisAngle2RotationMatrix(const cv::Vec3d& axis_angle);
+	cv::Matx33f AxisAngle2RotationMatrix(const cv::Vec3f& axis_angle);
 
-	cv::Vec3d RotationMatrix2AxisAngle(const cv::Matx33d& rotation_matrix);
+	cv::Vec3f RotationMatrix2AxisAngle(const cv::Matx33f& rotation_matrix);
 
 	//============================================================================
 	// Face detection helpers

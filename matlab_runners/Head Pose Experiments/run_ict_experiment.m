@@ -1,13 +1,16 @@
 function [output_dir] = run_ict_experiment(rootDir, ictDir, verbose, depth, varargin)
-%EVALUATEICTDATABASE Summary of this function goes here
-%   Detailed explanation goes here
 
 if(isunix)
-    executable = '"../../build/bin/FeatureExtraction"';
+    executable = '../../build/bin/FeatureExtraction';
 else
-    executable = '"../../x64/Release/FeatureExtraction.exe"';
+    executable = '../../x64/Release/FeatureExtraction.exe';
 end
 
+if(~exist(executable))
+    fprintf('OpenFace executable not found, please compile the code (see https://github.com/TadasBaltrusaitis/OpenFace/wiki) or specify the location to executable\n');
+    return;
+end
+    
 output_dir = 'experiments/ict_out';    
 
 dbSeqDir = dir([rootDir ictDir]);
@@ -22,7 +25,7 @@ numTogether = 10;
 
 for i=3:numTogether:numel(dbSeqDir)
         
-    command = [executable  ' -fx 535 -fy 536 -cx 327 -cy 241 -no2Dfp -no3Dfp -noMparams -noAUs -noGaze '];
+    command = ['"', executable '" -fx 535 -fy 536 -cx 327 -cy 241 -no2Dfp -no3Dfp -noMparams -noAUs -noGaze '];
 
     command = cat(2, command, [' -inroot ' '"' rootDir '/"']);
 

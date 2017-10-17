@@ -1,11 +1,16 @@
 function [output_dir] = run_bu_experiment(bu_dir, verbose, varargin)
    
     if(isunix)
-        executable = '"../../build/bin/FeatureExtraction"';
+        executable = '../../build/bin/FeatureExtraction';
     else
-        executable = '"../../x64/Release/FeatureExtraction.exe"';
+        executable = '../../x64/Release/FeatureExtraction.exe';
     end
 
+    if(~exist(executable))
+        fprintf('OpenFace executable not found, please compile the code (see https://github.com/TadasBaltrusaitis/OpenFace/wiki) or specify the location to executable\n');
+        return;
+    end
+    
     output_dir = 'experiments/bu_out/';        
 
     buFiles = dir([bu_dir '*.avi']);
@@ -14,7 +19,7 @@ function [output_dir] = run_bu_experiment(bu_dir, verbose, varargin)
     
     for i=1:numTogether:numel(buFiles)
         
-        command = executable;
+        command = ['"', executable '"'];
         command = cat(2, command, [' -inroot ' '"' bu_dir '/"']);
         
         % BU dataset orientation is in terms of camera plane, instruct the

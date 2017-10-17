@@ -686,6 +686,7 @@ void CEN_patch_expert::ResponseSparse_mirror_joint(const cv::Mat_<float> &area_o
 		cv::Mat_<float> weight = weights[layer];
 		float* m2 = (float*)weight.data;
 
+		// TODO, this could poss be pre-allocated based on biggest one
 		cv::Mat_<float> resp_blas(weight.rows, resp.cols);
 		float* m3 = (float*)resp_blas.data;
 

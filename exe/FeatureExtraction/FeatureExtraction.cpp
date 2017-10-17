@@ -169,7 +169,7 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 		// A rough heuristic for box around the face width
 		int thickness = (int)std::ceil(2.0* ((double)captured_image.cols) / 640.0);
 
-		cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
+		cv::Vec6f pose_estimate_to_draw = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
 		// Draw it in reddish if uncertain, blueish if certain
 		LandmarkDetector::DrawBox(captured_image, pose_estimate_to_draw, cv::Scalar((1 - vis_certainty)*255.0, 0, vis_certainty * 255), thickness, fx, fy, cx, cy);
@@ -210,7 +210,7 @@ void prepareOutputFile(std::ofstream* output_file, bool output_2D_landmarks, boo
 void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, bool output_3D_landmarks,
 	bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
 	const LandmarkDetector::CLNF& face_model, int frame_count, double time_stamp, bool detection_success,
-	cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, cv::Vec2d gaze_angle, const cv::Vec6d& pose_estimate, float fx, float fy, float cx, float cy,
+	cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, cv::Vec2d gaze_angle, const cv::Vec6f& pose_estimate, float fx, float fy, float cx, float cy,
 	const FaceAnalysis::FaceAnalyser& face_analyser);
 
 int main(int argc, char **argv)
@@ -426,10 +426,8 @@ int main(int argc, char **argv)
 		int frame_count = 0;
 
 		// This is useful for a second pass run (if want AU predictions)
-		vector<cv::Vec6d> params_global_video;
 		vector<bool> successes_video;
-		vector<cv::Mat_<double>> params_local_video;
-		vector<cv::Mat_<double>> detected_landmarks_video;
+		vector<cv::Mat_<float>> detected_landmarks_video;
 
 		// Use for timestamping if using a webcam
 		int64 t_initial = cv::getTickCount();
@@ -468,7 +466,7 @@ int main(int argc, char **argv)
 
 
 			// Work out the pose of the head from the tracked model
-			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
+			cv::Vec6f pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, -1);
@@ -726,7 +724,7 @@ void prepareOutputFile(std::ofstream* output_file, bool output_2D_landmarks, boo
 void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, bool output_3D_landmarks,
 	bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
 	const LandmarkDetector::CLNF& face_model, int frame_count, double time_stamp, bool detection_success,
-	cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, cv::Vec2d gaze_angle, const cv::Vec6d& pose_estimate, float fx, float fy, float cx, float cy,
+	cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, cv::Vec2d gaze_angle, const cv::Vec6f& pose_estimate, float fx, float fy, float cx, float cy,
 	const FaceAnalysis::FaceAnalyser& face_analyser)
 {
 

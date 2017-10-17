@@ -26,11 +26,16 @@ else
 end
       
 if(isunix)
-    command = '"../../build/bin/FaceLandmarkImg"';
+    command = '../../build/bin/FaceLandmarkImg';
 else
-    command = '"../../x64/Release/FaceLandmarkImg.exe"';
+    command = '../../x64/Release/FaceLandmarkImg.exe';
 end
-    
+
+if(~exist(command))
+   fprintf('OpenFace executable not found, please compile the code (see https://github.com/TadasBaltrusaitis/OpenFace/wiki) or specify the location to executable\n');
+   return;
+end
+
 if(any(strcmp(varargin, 'model')))
     model = varargin{find(strcmp(varargin, 'model')) + 1};
 else
@@ -44,7 +49,7 @@ else
     multi_view = 0;
 end
 
-command = cat(2, command, [' -mloc ' model ' ']);
+command = cat(2, ['"' command '"'], [' -mloc ' model ' ']);
 command = cat(2, command, [' -multi_view ' num2str(multi_view) ' ']);
    
 tic

@@ -61,7 +61,7 @@ for i = 1:numel(files_yt)
     end
     
     if(size(pred_landmarks_ceclm,3) ~= size(fps_all) | size(pred_landmarks_clnf,3) ~= size(fps_all))
-        fprintf('something wrong at vid %s, fps - %d, preds - %d\n', name, gt_landmarks);
+        fprintf('something wrong at vid %s, fps - %d, ceclm size - %d, clnf size - %d\n', name, size(fps_all,1), size(pred_landmarks_ceclm,3), size(pred_landmarks_clnf,3));
     end
     
     % Remove unreliable frames

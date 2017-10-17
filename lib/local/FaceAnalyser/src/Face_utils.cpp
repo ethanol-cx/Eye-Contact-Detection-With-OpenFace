@@ -132,6 +132,7 @@ namespace FaceAnalysis
 			extract_rigid_points(source_landmarks, destination_landmarks);
 		}
 
+		// TODO rem the doubles here
 		cv::Matx22d scale_rot_matrix = AlignShapesWithScale(source_landmarks, destination_landmarks);
 		cv::Matx23d warp_matrix;
 
@@ -154,7 +155,7 @@ namespace FaceAnalysis
 	}
 
 	// Aligning a face to a common reference frame
-	void AlignFaceMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6d params_global, const PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid, float sim_scale, int out_width, int out_height)
+	void AlignFaceMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid, float sim_scale, int out_width, int out_height)
 	{
 		// Will warp to scaled mean shape
 		cv::Mat_<float> similarity_normalised_shape = pdm.mean_shape * sim_scale;
@@ -444,17 +445,17 @@ namespace FaceAnalysis
 	//===========================================================================
 	// Visualisation functions
 	//===========================================================================
-	void Project(cv::Mat_<double>& dest, const cv::Mat_<double>& mesh, double fx, double fy, double cx, double cy)
+	void Project(cv::Mat_<float>& dest, const cv::Mat_<float>& mesh, float fx, float fy, float cx, float cy)
 	{
-		dest = cv::Mat_<double>(mesh.rows, 2, 0.0);
+		dest = cv::Mat_<float>(mesh.rows, 2, 0.0);
 
 		int num_points = mesh.rows;
 
-		double X, Y, Z;
+		float X, Y, Z;
 
 
-		cv::Mat_<double>::const_iterator mData = mesh.begin();
-		cv::Mat_<double>::iterator projected = dest.begin();
+		cv::Mat_<float>::const_iterator mData = mesh.begin();
+		cv::Mat_<float>::iterator projected = dest.begin();
 
 		for (int i = 0; i < num_points; i++)
 		{
@@ -463,8 +464,8 @@ namespace FaceAnalysis
 			Y = *(mData++);
 			Z = *(mData++);
 
-			double x;
-			double y;
+			float x;
+			float y;
 
 			// if depth is 0 the projection is different
 			if (Z != 0)
@@ -484,38 +485,13 @@ namespace FaceAnalysis
 		}
 
 	}
+
 	//===========================================================================
 	// Angle representation conversion helpers
 	//===========================================================================
 
 	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	cv::Matx33d Euler2RotationMatrix(const cv::Vec3d& eulerAngles)
-	{
-		cv::Matx33d rotation_matrix;
-
-		double s1 = sin(eulerAngles[0]);
-		double s2 = sin(eulerAngles[1]);
-		double s3 = sin(eulerAngles[2]);
-
-		double c1 = cos(eulerAngles[0]);
-		double c2 = cos(eulerAngles[1]);
-		double c3 = cos(eulerAngles[2]);
-
-		rotation_matrix(0, 0) = c2 * c3;
-		rotation_matrix(0, 1) = -c2 *s3;
-		rotation_matrix(0, 2) = s2;
-		rotation_matrix(1, 0) = c1 * s3 + c3 * s1 * s2;
-		rotation_matrix(1, 1) = c1 * c3 - s1 * s2 * s3;
-		rotation_matrix(1, 2) = -c2 * s1;
-		rotation_matrix(2, 0) = s1 * s3 - c1 * c3 * s2;
-		rotation_matrix(2, 1) = c3 * s1 + c1 * s2 * s3;
-		rotation_matrix(2, 2) = c1 * c2;
-
-		return rotation_matrix;
-	}
-
-	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	cv::Matx33f Euler2RotationMatrix_f(const cv::Vec3f& eulerAngles)
+	cv::Matx33f Euler2RotationMatrix(const cv::Vec3f& eulerAngles)
 	{
 		cv::Matx33f rotation_matrix;
 
@@ -539,53 +515,52 @@ namespace FaceAnalysis
 
 		return rotation_matrix;
 	}
-
+	
 	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	cv::Vec3d RotationMatrix2Euler(const cv::Matx33d& rotation_matrix)
+	cv::Vec3f RotationMatrix2Euler(const cv::Matx33f& rotation_matrix)
 	{
-		double q0 = sqrt(1 + rotation_matrix(0, 0) + rotation_matrix(1, 1) + rotation_matrix(2, 2)) / 2.0;
-		double q1 = (rotation_matrix(2, 1) - rotation_matrix(1, 2)) / (4.0*q0);
-		double q2 = (rotation_matrix(0, 2) - rotation_matrix(2, 0)) / (4.0*q0);
-		double q3 = (rotation_matrix(1, 0) - rotation_matrix(0, 1)) / (4.0*q0);
+		float q0 = sqrt(1 + rotation_matrix(0, 0) + rotation_matrix(1, 1) + rotation_matrix(2, 2)) / 2.0f;
+		float q1 = (rotation_matrix(2, 1) - rotation_matrix(1, 2)) / (4.0f*q0);
+		float q2 = (rotation_matrix(0, 2) - rotation_matrix(2, 0)) / (4.0f*q0);
+		float q3 = (rotation_matrix(1, 0) - rotation_matrix(0, 1)) / (4.0f*q0);
 
-		double t1 = 2.0 * (q0*q2 + q1*q3);
+		float t1 = 2.0f * (q0*q2 + q1*q3);
 
-		double yaw = asin(2.0 * (q0*q2 + q1*q3));
-		double pitch = atan2(2.0 * (q0*q1 - q2*q3), q0*q0 - q1*q1 - q2*q2 + q3*q3);
-		double roll = atan2(2.0 * (q0*q3 - q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3);
+		float yaw = asin(2.0 * (q0*q2 + q1*q3));
+		float pitch = atan2(2.0 * (q0*q1 - q2*q3), q0*q0 - q1*q1 - q2*q2 + q3*q3);
+		float roll = atan2(2.0 * (q0*q3 - q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3);
 
-		return cv::Vec3d(pitch, yaw, roll);
+		return cv::Vec3f(pitch, yaw, roll);
 	}
 
-	cv::Vec3d Euler2AxisAngle(const cv::Vec3d& euler)
+	cv::Vec3f Euler2AxisAngle(const cv::Vec3f& euler)
 	{
-		cv::Matx33d rotMatrix = Euler2RotationMatrix(euler);
-		cv::Vec3d axis_angle;
+		cv::Matx33f rotMatrix = Euler2RotationMatrix(euler);
+		cv::Vec3f axis_angle;
 		cv::Rodrigues(rotMatrix, axis_angle);
 		return axis_angle;
 	}
 
-	cv::Vec3d AxisAngle2Euler(const cv::Vec3d& axis_angle)
+	cv::Vec3f AxisAngle2Euler(const cv::Vec3f& axis_angle)
 	{
-		cv::Matx33d rotation_matrix;
+		cv::Matx33f rotation_matrix;
 		cv::Rodrigues(axis_angle, rotation_matrix);
 		return RotationMatrix2Euler(rotation_matrix);
 	}
 
-	cv::Matx33d AxisAngle2RotationMatrix(const cv::Vec3d& axis_angle)
+	cv::Matx33f AxisAngle2RotationMatrix(const cv::Vec3f& axis_angle)
 	{
-		cv::Matx33d rotation_matrix;
+		cv::Matx33f rotation_matrix;
 		cv::Rodrigues(axis_angle, rotation_matrix);
 		return rotation_matrix;
 	}
 
-	cv::Vec3d RotationMatrix2AxisAngle(const cv::Matx33d& rotation_matrix)
+	cv::Vec3f RotationMatrix2AxisAngle(const cv::Matx33f& rotation_matrix)
 	{
-		cv::Vec3d axis_angle;
+		cv::Vec3f axis_angle;
 		cv::Rodrigues(rotation_matrix, axis_angle);
 		return axis_angle;
 	}
-
 
 	//============================================================================
 	// Matrix reading functionality

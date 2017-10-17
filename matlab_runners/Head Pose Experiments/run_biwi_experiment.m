@@ -2,11 +2,16 @@ function [output_dir] = run_biwi_experiment(rootDir, biwiDir, verbose, depth, va
 % Biwi dataset experiment
 
 if(isunix)
-    executable = '"../../build/bin/FeatureExtraction"';
+    executable = '../../build/bin/FeatureExtraction';
 else
-    executable = '"../../x64/Release/FeatureExtraction.exe"';
+    executable = '../../x64/Release/FeatureExtraction.exe';
 end
 
+if(~exist(executable))
+    fprintf('OpenFace executable not found, please compile the code (see https://github.com/TadasBaltrusaitis/OpenFace/wiki) or specify the location to executable\n');
+    return;
+end
+    
 output_dir = 'experiments/biwi_out';    
 
 dbSeqDir = dir([rootDir biwiDir]);
@@ -27,7 +32,7 @@ numTogether = 25;
 for i=3 + offset:numTogether:numel(dbSeqDir)
     
        
-    command = executable;
+    command = ['"', executable '"'];
            
     command = cat(2, command, [' -inroot ' '"' rootDir '"']);
      

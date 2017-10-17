@@ -134,7 +134,7 @@ std::vector<int> Patch_experts::Collect_visible_landmarks(vector<vector<cv::Mat_
 // The computation also requires the current landmark locations to compute response around, the PDM corresponding to the desired model, and the parameters describing its instance
 // Also need to provide the size of the area of interest and the desired scale of analysis
 void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, cv::Matx22f& sim_ref_to_img, cv::Matx22f& sim_img_to_ref, const cv::Mat_<uchar>& grayscale_image, 
-							 const PDM& pdm, const cv::Vec6d& params_global, const cv::Mat_<float>& params_local, int window_size, int scale)
+							 const PDM& pdm, const cv::Vec6f& params_global, const cv::Mat_<float>& params_local, int window_size, int scale)
 {
 
 	int view_id = GetViewIdx(params_global, scale);		
@@ -149,7 +149,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 	cv::Mat_<float> reference_shape;
 		
 	// Initialise the reference shape on which we'll be warping
-	cv::Vec6d global_ref(patch_scaling[scale], 0, 0, 0, 0, 0);
+	cv::Vec6f global_ref(patch_scaling[scale], 0, 0, 0, 0, 0);
 
 	// Compute the reference shape
 	pdm.CalcShape2D(reference_shape, params_local, global_ref);
@@ -328,19 +328,19 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 
 //=============================================================================
 // Getting the closest view center based on orientation
-int Patch_experts::GetViewIdx(const cv::Vec6d& params_global, int scale) const
+int Patch_experts::GetViewIdx(const cv::Vec6f& params_global, int scale) const
 {	
 	int idx = 0;
 	
-	double dbest;
+	float dbest;
 
 	for(int i = 0; i < this->nViews(scale); i++)
 	{
-		double v1 = params_global[1] - centers[scale][i][0]; 
-		double v2 = params_global[2] - centers[scale][i][1];
-		double v3 = params_global[3] - centers[scale][i][2];
+		float v1 = params_global[1] - centers[scale][i][0]; 
+		float v2 = params_global[2] - centers[scale][i][1];
+		float v3 = params_global[3] - centers[scale][i][2];
 			
-		double d = v1*v1 + v2*v2 + v3*v3;
+		float d = v1*v1 + v2*v2 + v3*v3;
 
 		if(i == 0 || d < dbest)
 		{

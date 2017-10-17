@@ -51,122 +51,116 @@ using namespace LandmarkDetector;
 // which is only correct close to the centre of the image
 // This method returns a corrected pose estimate with respect to world coordinates with camera at origin (0,0,0)
 // The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-cv::Vec6d LandmarkDetector::GetPose(const CLNF& clnf_model, float fx, float fy, float cx, float cy)
+cv::Vec6f LandmarkDetector::GetPose(const CLNF& clnf_model, float fx, float fy, float cx, float cy)
 {
 	if (!clnf_model.detected_landmarks.empty() && clnf_model.params_global[0] != 0)
 	{
 		// This is used as an initial estimate for the iterative PnP algorithm
-		double Z = fx / clnf_model.params_global[0];
+		float Z = fx / clnf_model.params_global[0];
 
-		double X = ((clnf_model.params_global[4] - cx) * (1.0 / fx)) * Z;
-		double Y = ((clnf_model.params_global[5] - cy) * (1.0 / fy)) * Z;
+		float X = ((clnf_model.params_global[4] - cx) * (1.0 / fx)) * Z;
+		float Y = ((clnf_model.params_global[5] - cy) * (1.0 / fy)) * Z;
 
 		// Correction for orientation
 
 		// 2D points
-		cv::Mat_<double> landmarks_2D = clnf_model.detected_landmarks;
+		cv::Mat_<float> landmarks_2D = clnf_model.detected_landmarks;
 
 		landmarks_2D = landmarks_2D.reshape(1, 2).t();
 
 		// 3D points
-		cv::Mat_<float> landmarks_3D_f;
-		clnf_model.pdm.CalcShape3D(landmarks_3D_f, clnf_model.params_local);
+		cv::Mat_<float> landmarks_3D;
+		clnf_model.pdm.CalcShape3D(landmarks_3D, clnf_model.params_local);
 		
-		// TODO rem move away from doubles
-		cv::Mat_<double> landmarks_3D;
-		landmarks_3D_f.convertTo(landmarks_3D, CV_64F);
-
 		landmarks_3D = landmarks_3D.reshape(1, 3).t();
 
 		// Solving the PNP model
 
 		// The camera matrix
-		cv::Matx33d camera_matrix(fx, 0, cx, 0, fy, cy, 0, 0, 1);
+		cv::Matx33f camera_matrix(fx, 0, cx, 0, fy, cy, 0, 0, 1);
 
-		cv::Vec3d vec_trans(X, Y, Z);
-		cv::Vec3d vec_rot(clnf_model.params_global[1], clnf_model.params_global[2], clnf_model.params_global[3]);
+		cv::Vec3f vec_trans(X, Y, Z);
+		cv::Vec3f vec_rot(clnf_model.params_global[1], clnf_model.params_global[2], clnf_model.params_global[3]);
 
 		cv::solvePnP(landmarks_3D, landmarks_2D, camera_matrix, cv::Mat(), vec_rot, vec_trans, true);
 
-		cv::Vec3d euler = LandmarkDetector::AxisAngle2Euler(vec_rot);
+		cv::Vec3f euler = LandmarkDetector::AxisAngle2Euler(vec_rot);
 
-		return cv::Vec6d(vec_trans[0], vec_trans[1], vec_trans[2], euler[0], euler[1], euler[2]);
+		return cv::Vec6f(vec_trans[0], vec_trans[1], vec_trans[2], euler[0], euler[1], euler[2]);
 	}
 	else
 	{
-		return cv::Vec6d(0, 0, 0, 0, 0, 0);
+		return cv::Vec6f(0, 0, 0, 0, 0, 0);
 	}
 }
 
 // Getting a head pose estimate from the currently detected landmarks, with appropriate correction due to perspective projection
 // This method returns a corrected pose estimate with respect to a point camera (NOTE not the world coordinates), which is useful to find out if the person is looking at a camera
 // The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-cv::Vec6d LandmarkDetector::GetPoseWRTCamera(const CLNF& clnf_model, float fx, float fy, float cx, float cy)
+cv::Vec6f LandmarkDetector::GetPoseWRTCamera(const CLNF& clnf_model, float fx, float fy, float cx, float cy)
 {
 	if (!clnf_model.detected_landmarks.empty() && clnf_model.params_global[0] != 0)
 	{
 
-		double Z = fx / clnf_model.params_global[0];
+		float Z = fx / clnf_model.params_global[0];
 
-		double X = ((clnf_model.params_global[4] - cx) * (1.0 / fx)) * Z;
-		double Y = ((clnf_model.params_global[5] - cy) * (1.0 / fy)) * Z;
+		float X = ((clnf_model.params_global[4] - cx) * (1.0 / fx)) * Z;
+		float Y = ((clnf_model.params_global[5] - cy) * (1.0 / fy)) * Z;
 
 		// Correction for orientation
 
 		// 3D points
-		cv::Mat_<float> landmarks_3D_f;
-		clnf_model.pdm.CalcShape3D(landmarks_3D_f, clnf_model.params_local);
-
-		// TODO rem double
 		cv::Mat_<float> landmarks_3D;
-		landmarks_3D_f.convertTo(landmarks_3D, CV_64F);
+		clnf_model.pdm.CalcShape3D(landmarks_3D, clnf_model.params_local);
 
 		landmarks_3D = landmarks_3D.reshape(1, 3).t();
 
 		// 2D points
-		cv::Mat_<double> landmarks_2D = clnf_model.detected_landmarks;
+		cv::Mat_<float> landmarks_2D = clnf_model.detected_landmarks;
 
 		landmarks_2D = landmarks_2D.reshape(1, 2).t();
 
 		// Solving the PNP model
 
 		// The camera matrix
-		cv::Matx33d camera_matrix(fx, 0, cx, 0, fy, cy, 0, 0, 1);
+		cv::Matx33f camera_matrix(fx, 0, cx, 0, fy, cy, 0, 0, 1);
 
-		cv::Vec3d vec_trans(X, Y, Z);
-		cv::Vec3d vec_rot(clnf_model.params_global[1], clnf_model.params_global[2], clnf_model.params_global[3]);
+		cv::Vec3f vec_trans(X, Y, Z);
+		cv::Vec3f vec_rot(clnf_model.params_global[1], clnf_model.params_global[2], clnf_model.params_global[3]);
 
 		cv::solvePnP(landmarks_3D, landmarks_2D, camera_matrix, cv::Mat(), vec_rot, vec_trans, true);
 
 		// Here we correct for the camera orientation, for this need to determine the angle the camera makes with the head pose
-		double z_x = cv::sqrt(vec_trans[0] * vec_trans[0] + vec_trans[2] * vec_trans[2]);
-		double eul_x = atan2(vec_trans[1], z_x);
+		float z_x = cv::sqrt(vec_trans[0] * vec_trans[0] + vec_trans[2] * vec_trans[2]);
+		float eul_x = atan2(vec_trans[1], z_x);
 
-		double z_y = cv::sqrt(vec_trans[1] * vec_trans[1] + vec_trans[2] * vec_trans[2]);
-		double eul_y = -atan2(vec_trans[0], z_y);
+		float z_y = cv::sqrt(vec_trans[1] * vec_trans[1] + vec_trans[2] * vec_trans[2]);
+		float eul_y = -atan2(vec_trans[0], z_y);
 
-		cv::Matx33d camera_rotation = LandmarkDetector::Euler2RotationMatrix(cv::Vec3d(eul_x, eul_y, 0));
-		cv::Matx33d head_rotation = LandmarkDetector::AxisAngle2RotationMatrix(vec_rot);
+		cv::Matx33f camera_rotation = LandmarkDetector::Euler2RotationMatrix(cv::Vec3f(eul_x, eul_y, 0));
+		cv::Matx33f head_rotation = LandmarkDetector::AxisAngle2RotationMatrix(vec_rot);
 
-		cv::Matx33d corrected_rotation = camera_rotation * head_rotation;
+		cv::Matx33f corrected_rotation = camera_rotation * head_rotation;
 
-		cv::Vec3d euler_corrected = LandmarkDetector::RotationMatrix2Euler(corrected_rotation);
+		cv::Vec3f euler_corrected = LandmarkDetector::RotationMatrix2Euler(corrected_rotation);
 
-		return cv::Vec6d(vec_trans[0], vec_trans[1], vec_trans[2], euler_corrected[0], euler_corrected[1], euler_corrected[2]);
+		return cv::Vec6f(vec_trans[0], vec_trans[1], vec_trans[2], euler_corrected[0], euler_corrected[1], euler_corrected[2]);
 	}
 	else
 	{
-		return cv::Vec6d(0, 0, 0, 0, 0, 0);
+		return cv::Vec6f(0, 0, 0, 0, 0, 0);
 	}
 }
 
 // If landmark detection in video succeeded create a template for use in simple tracking
 void UpdateTemplate(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model)
 {
-	cv::Rect bounding_box;
+	cv::Rect_<float> bounding_box;
 	clnf_model.pdm.CalcBoundingBox(bounding_box, clnf_model.params_global, clnf_model.params_local);
+	
 	// Make sure the box is not out of bounds
-	bounding_box = bounding_box & cv::Rect(0, 0, grayscale_image.cols, grayscale_image.rows);
+	cv::Rect_<int> bbox_tmp((int)bounding_box.x, (int)bounding_box.y, (int)bounding_box.width, (int)bounding_box.height);
+	bounding_box = bbox_tmp & cv::Rect(0, 0, grayscale_image.cols, grayscale_image.rows);
 
 	clnf_model.face_template = grayscale_image(bounding_box).clone();
 }
@@ -174,7 +168,7 @@ void UpdateTemplate(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model)
 // This method uses basic template matching in order to allow for better tracking of fast moving faces
 void CorrectGlobalParametersVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& clnf_model, const FaceModelParameters& params)
 {
-	cv::Rect init_box;
+	cv::Rect_<float> init_box;
 	clnf_model.pdm.CalcBoundingBox(init_box, clnf_model.params_global, clnf_model.params_local);
 
 	cv::Rect roi(init_box.x - init_box.width/2, init_box.y - init_box.height/2, init_box.width * 2, init_box.height * 2);
@@ -183,7 +177,7 @@ void CorrectGlobalParametersVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& 
 	int off_x = roi.x;
 	int off_y = roi.y;
 
-	double scaling = params.face_template_scale / clnf_model.params_global[0];
+	float scaling = params.face_template_scale / clnf_model.params_global[0];
 	cv::Mat_<uchar> image;
 	if(scaling < 1)
 	{
@@ -206,10 +200,10 @@ void CorrectGlobalParametersVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& 
 
 	cv::minMaxIdx(corr_out, NULL, NULL, NULL, max_loc);
 
-	cv::Rect_<double> out_bbox(max_loc[1]/scaling + off_x, max_loc[0]/scaling + off_y, clnf_model.face_template.rows / scaling, clnf_model.face_template.cols / scaling);
+	cv::Rect_<float> out_bbox(max_loc[1]/scaling + off_x, max_loc[0]/scaling + off_y, clnf_model.face_template.rows / scaling, clnf_model.face_template.cols / scaling);
 
-	double shift_x = out_bbox.x - (double)init_box.x;
-	double shift_y = out_bbox.y - (double)init_box.y;
+	float shift_x = out_bbox.x - init_box.x;
+	float shift_y = out_bbox.y - init_box.y;
 			
 	clnf_model.params_global[4] = clnf_model.params_global[4] + shift_x;
 	clnf_model.params_global[5] = clnf_model.params_global[5] + shift_y;
@@ -314,7 +308,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_m
 			clnf_model.tracking_initialised = true;
 						
 			// Keep track of old model values so that they can be restored if redetection fails
-			cv::Vec6d params_global_init = clnf_model.params_global;
+			cv::Vec6f params_global_init = clnf_model.params_global;
 			cv::Mat_<float> params_local_init = clnf_model.params_local.clone();
 			float likelihood_init = clnf_model.model_likelihood;
 			cv::Mat_<float> detected_landmarks_init = clnf_model.detected_landmarks.clone();
@@ -406,18 +400,18 @@ bool DetectLandmarksInImageMultiHypBasic(const cv::Mat_<uchar> &grayscale_image,
 	params.window_sizes_current = params.window_sizes_init;
 
 	// Store the current best estimate
-	double best_likelihood;
-	cv::Vec6d best_global_parameters;
-	cv::Mat_<double> best_local_parameters;
-	cv::Mat_<double> best_detected_landmarks;
+	float best_likelihood;
+	cv::Vec6f best_global_parameters;
+	cv::Mat_<float> best_local_parameters;
+	cv::Mat_<float> best_detected_landmarks;
 	cv::Mat_<float> best_landmark_likelihoods;
 	bool best_success;
 
 	// The hierarchical model parameters
-	vector<double> best_likelihood_h(clnf_model.hierarchical_models.size());
-	vector<cv::Vec6d> best_global_parameters_h(clnf_model.hierarchical_models.size());
-	vector<cv::Mat_<double>> best_local_parameters_h(clnf_model.hierarchical_models.size());
-	vector<cv::Mat_<double>> best_detected_landmarks_h(clnf_model.hierarchical_models.size());
+	vector<float> best_likelihood_h(clnf_model.hierarchical_models.size());
+	vector<cv::Vec6f> best_global_parameters_h(clnf_model.hierarchical_models.size());
+	vector<cv::Mat_<float>> best_local_parameters_h(clnf_model.hierarchical_models.size());
+	vector<cv::Mat_<float>> best_detected_landmarks_h(clnf_model.hierarchical_models.size());
 	vector<cv::Mat_<float>> best_landmark_likelihoods_h(clnf_model.hierarchical_models.size());
 
 	for (size_t hypothesis = 0; hypothesis < rotation_hypotheses.size(); ++hypothesis)
@@ -513,8 +507,8 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 
 	// Keeping track of converges
 	vector<float> likelihoods;
-	vector<cv::Vec6d> global_parameters;
-	vector<cv::Mat_<double>> local_parameters;
+	vector<cv::Vec6f> global_parameters;
+	vector<cv::Mat_<float>> local_parameters;
 
 	for (size_t hypothesis = 0; hypothesis < rotation_hypotheses.size(); ++hypothesis)
 	{
@@ -559,17 +553,17 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 
 		// Store the current best estimate
 		float best_likelihood;
-		cv::Vec6d best_global_parameters;
-		cv::Mat_<double> best_local_parameters;
-		cv::Mat_<double> best_detected_landmarks;
+		cv::Vec6f best_global_parameters;
+		cv::Mat_<float> best_local_parameters;
+		cv::Mat_<float> best_detected_landmarks;
 		cv::Mat_<float> best_landmark_likelihoods;
 		bool best_success;
 
 		// The hierarchical model parameters
-		vector<double> best_likelihood_h(clnf_model.hierarchical_models.size());
-		vector<cv::Vec6d> best_global_parameters_h(clnf_model.hierarchical_models.size());
-		vector<cv::Mat_<double>> best_local_parameters_h(clnf_model.hierarchical_models.size());
-		vector<cv::Mat_<double>> best_detected_landmarks_h(clnf_model.hierarchical_models.size());
+		vector<float> best_likelihood_h(clnf_model.hierarchical_models.size());
+		vector<cv::Vec6f> best_global_parameters_h(clnf_model.hierarchical_models.size());
+		vector<cv::Mat_<float>> best_local_parameters_h(clnf_model.hierarchical_models.size());
+		vector<cv::Mat_<float>> best_detected_landmarks_h(clnf_model.hierarchical_models.size());
 		vector<cv::Mat_<float>> best_landmark_likelihoods_h(clnf_model.hierarchical_models.size());
 
 		// Sort the likelihoods and pick the best top 3 models

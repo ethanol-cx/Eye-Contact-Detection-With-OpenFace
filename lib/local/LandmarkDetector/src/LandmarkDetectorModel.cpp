@@ -532,7 +532,7 @@ void CLNF::Read(string main_location)
 	params_local.setTo(0.0);
 
 	// global parameters (pose) [scale, euler_x, euler_y, euler_z, tx, ty]
-	params_global = cv::Vec6d(1, 0, 0, 0, 0, 0);
+	params_global = cv::Vec6f(1, 0, 0, 0, 0, 0);
 
 	failures_in_a_row = -1;
 
@@ -552,7 +552,7 @@ void CLNF::Reset()
 	params_local.setTo(0.0);
 
 	// global parameters (pose) [scale, euler_x, euler_y, euler_z, tx, ty]
-	params_global = cv::Vec6d(1, 0, 0, 0, 0, 0);
+	params_global = cv::Vec6f(1, 0, 0, 0, 0, 0);
 
 	failures_in_a_row = -1;
 	face_template = cv::Mat_<uchar>();
@@ -598,7 +598,7 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 
 				vector<pair<int, int>> mappings = this->hierarchical_mapping[part_model];
 
-				cv::Mat_<float> part_model_locs(n_part_points * 2, 1, 0.0);
+				cv::Mat_<float> part_model_locs(n_part_points * 2, 1, 0.0f);
 
 				// Extract the corresponding landmarks
 				for (size_t mapping_ind = 0; mapping_ind < mappings.size(); ++mapping_ind)
@@ -741,18 +741,18 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const std::vector<int>& window_sizes, 
 		this->view_used = view_id;
 
 		// the actual optimisation step
-		this->NU_RLMS(params_global, params_local, patch_expert_responses, cv::Vec6d(params_global), params_local.clone(), current_shape, sim_img_to_ref, sim_ref_to_img, window_size, view_id, true, scale, this->landmark_likelihoods, tmp_parameters, false);
+		this->NU_RLMS(params_global, params_local, patch_expert_responses, cv::Vec6f(params_global), params_local.clone(), current_shape, sim_img_to_ref, sim_ref_to_img, window_size, view_id, true, scale, this->landmark_likelihoods, tmp_parameters, false);
 
 		// non-rigid optimisation
 
 		// If we are terminating next iteration, make sure to record the model likelihood
 		if(scale == num_scales - 1 || window_sizes[scale + 1] == 0 || params_global[0] < 0.30)
 		{			
-			this->model_likelihood = this->NU_RLMS(params_global, params_local, patch_expert_responses, cv::Vec6d(params_global), params_local.clone(), current_shape, sim_img_to_ref, sim_ref_to_img, window_size, view_id, false, scale, this->landmark_likelihoods, tmp_parameters, true);
+			this->model_likelihood = this->NU_RLMS(params_global, params_local, patch_expert_responses, cv::Vec6f(params_global), params_local.clone(), current_shape, sim_img_to_ref, sim_ref_to_img, window_size, view_id, false, scale, this->landmark_likelihoods, tmp_parameters, true);
 		}
 		else
 		{
-			this->NU_RLMS(params_global, params_local, patch_expert_responses, cv::Vec6d(params_global), params_local.clone(), current_shape, sim_img_to_ref, sim_ref_to_img, window_size, view_id, false, scale, this->landmark_likelihoods, tmp_parameters, false);
+			this->NU_RLMS(params_global, params_local, patch_expert_responses, cv::Vec6f(params_global), params_local.clone(), current_shape, sim_img_to_ref, sim_ref_to_img, window_size, view_id, false, scale, this->landmark_likelihoods, tmp_parameters, false);
 		}
 
 		// Can't track very small images reliably (less than ~30px across)
@@ -939,7 +939,7 @@ void CLNF::GetWeightMatrix(cv::Mat_<float>& WeightMatrix, int scale, int view_id
 }
 
 //=============================================================================
-float CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<float>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<float>& initial_local,
+float CLNF::NU_RLMS(cv::Vec6f& final_global, cv::Mat_<float>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6f& initial_global, const cv::Mat_<float>& initial_local,
 		          const cv::Mat_<float>& base_shape, const cv::Matx22f& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_id, bool rigid, int scale, cv::Mat_<float>& landmark_lhoods,
 				  const FaceModelParameters& parameters, bool compute_lhood)
 {		
@@ -953,7 +953,7 @@ float CLNF::NU_RLMS(cv::Vec6d& final_global, cv::Mat_<float>& final_local, const
 
 	int m = pdm.NumberOfModes();
 	
-	cv::Vec6d current_global(initial_global);
+	cv::Vec6f current_global(initial_global);
 
 	cv::Mat_<float> current_local = initial_local.clone();
 
@@ -1152,7 +1152,7 @@ cv::Mat_<float> CLNF::GetShape(float fx, float fy, float cx, float cy) const
 	// Need to rotate the shape to get the actual 3D representation
 	
 	// get the rotation matrix from the euler angles
-	cv::Matx33f R = LandmarkDetector::Euler2RotationMatrix_f(cv::Vec3f((float)params_global[1], (float)params_global[2], (float)params_global[3]));
+	cv::Matx33f R = LandmarkDetector::Euler2RotationMatrix(cv::Vec3f((float)params_global[1], (float)params_global[2], (float)params_global[3]));
 
 	shape3d = shape3d.reshape(1, 3);
 

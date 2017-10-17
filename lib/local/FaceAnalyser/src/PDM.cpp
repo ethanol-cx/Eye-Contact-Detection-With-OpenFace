@@ -58,18 +58,18 @@ using namespace FaceAnalysis;
 
 //=============================================================================
 // Orthonormalising the 3x3 rotation matrix
-void PDM::Orthonormalise(cv::Matx33d &R)
+void PDM::Orthonormalise(cv::Matx33f &R)
 {
 
 	cv::SVD svd(R,cv::SVD::MODIFY_A);
   
 	// get the orthogonal matrix from the initial rotation matrix
-	cv::Mat_<double> X = svd.u*svd.vt;
+	cv::Mat_<float> X = svd.u*svd.vt;
   
 	// This makes sure that the handedness is preserved and no reflection happened
 	// by making sure the determinant is 1 and not -1
-	cv::Mat_<double> W = cv::Mat_<double>::eye(3,3);
-	double d = determinant(X);
+	cv::Mat_<float> W = cv::Mat_<float>::eye(3,3);
+	float d = determinant(X);
 	W(2,2) = determinant(X);
 	cv::Mat Rt = svd.u*W*svd.vt;
 
@@ -96,19 +96,18 @@ void PDM::CalcShape3D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& p_local
 
 //===========================================================================
 // Get the 2D shape (in image space) from global and local parameters
-void PDM::CalcShape2D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& params_local, const cv::Vec6d& params_global) const
+void PDM::CalcShape2D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& params_local, const cv::Vec6f& params_global) const
 {
 
 	int n = this->NumberOfPoints();
 
-	// TODO move to float
-	float s = (float)params_global[0]; // scaling factor
-	float tx = (float)params_global[4]; // x offset
-	float ty = (float)params_global[5]; // y offset
+	float s = params_global[0]; // scaling factor
+	float tx = params_global[4]; // x offset
+	float ty = params_global[5]; // y offset
 
-										// get the rotation matrix from the euler angles
-	cv::Vec3f euler((float)params_global[1], (float)params_global[2], (float)params_global[3]);
-	cv::Matx33f currRot = Euler2RotationMatrix_f(euler);
+								 // get the rotation matrix from the euler angles
+	cv::Vec3f euler(params_global[1], params_global[2], params_global[3]);
+	cv::Matx33f currRot = Euler2RotationMatrix(euler);
 
 	// get the 3D shape of the object
 	cv::Mat_<float> Shape_3D = mean_shape + princ_comp * params_local;
@@ -130,7 +129,7 @@ void PDM::CalcShape2D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& params_
 //===========================================================================
 // provided the bounding box of a face and the local parameters (with optional rotation), generates the global parameters that can generate the face with the provided bounding box
 // This all assumes that the bounding box describes face from left outline to right outline of the face and chin to eyebrows
-void PDM::CalcParams(cv::Vec6d& out_params_global, const cv::Rect_<double>& bounding_box, const cv::Mat_<float>& params_local, const cv::Vec3f rotation) const
+void PDM::CalcParams(cv::Vec6f& out_params_global, const cv::Rect_<float>& bounding_box, const cv::Mat_<float>& params_local, const cv::Vec3f rotation) const
 {
 
 	// get the shape instance based on local params
@@ -139,7 +138,7 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, const cv::Rect_<double>& boun
 	CalcShape3D(current_shape, params_local);
 
 	// rotate the shape
-	cv::Matx33f rotation_matrix = Euler2RotationMatrix_f(rotation);
+	cv::Matx33f rotation_matrix = Euler2RotationMatrix(rotation);
 
 	cv::Mat_<float> reshaped = current_shape.reshape(1, 3);
 
@@ -154,28 +153,28 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, const cv::Rect_<double>& boun
 	double max_y;
 	cv::minMaxLoc(rotated_shape.row(1), &min_y, &max_y);
 
-	double width = abs(min_x - max_x);
-	double height = abs(min_y - max_y);
+	float width = (float)abs(min_x - max_x);
+	float height = (float)abs(min_y - max_y);
 
-	double scaling = ((bounding_box.width / width) + (bounding_box.height / height)) / 2;
+	float scaling = ((bounding_box.width / width) + (bounding_box.height / height)) / 2.0f;
 
 	// The estimate of face center also needs some correction
-	double tx = bounding_box.x + bounding_box.width / 2;
-	double ty = bounding_box.y + bounding_box.height / 2;
+	float tx = bounding_box.x + bounding_box.width / 2;
+	float ty = bounding_box.y + bounding_box.height / 2;
 
 	// Correct it so that the bounding box is just around the minimum and maximum point in the initialised face	
-	tx = tx - scaling * (min_x + max_x) / 2;
-	ty = ty - scaling * (min_y + max_y) / 2;
+	tx = tx - scaling * (min_x + max_x) / 2.0f;
+	ty = ty - scaling * (min_y + max_y) / 2.0f;
 
-	out_params_global = cv::Vec6d(scaling, rotation[0], rotation[1], rotation[2], tx, ty);
+	out_params_global = cv::Vec6f(scaling, rotation[0], rotation[1], rotation[2], tx, ty);
 }
 
 //===========================================================================
 // provided the model parameters, compute the bounding box of a face
 // The bounding box describes face from left outline to right outline of the face and chin to eyebrows
-void PDM::CalcBoundingBox(cv::Rect& out_bounding_box, const cv::Vec6d& params_global, const cv::Mat_<float>& params_local) const
+void PDM::CalcBoundingBox(cv::Rect_<float>& out_bounding_box, const cv::Vec6f& params_global, const cv::Mat_<float>& params_local) const
 {
-	
+
 	// get the shape instance based on local params
 	cv::Mat_<float> current_shape;
 	CalcShape2D(current_shape, params_local, params_global);
@@ -189,17 +188,17 @@ void PDM::CalcBoundingBox(cv::Rect& out_bounding_box, const cv::Vec6d& params_gl
 	double max_y;
 	cv::minMaxLoc(current_shape(cv::Rect(0, this->NumberOfPoints(), 1, this->NumberOfPoints())), &min_y, &max_y);
 
-	double width = abs(min_x - max_x);
-	double height = abs(min_y - max_y);
+	float width = (float)abs(min_x - max_x);
+	float height = (float)abs(min_y - max_y);
 
-	out_bounding_box = cv::Rect((int)min_x, (int)min_y, (int)width, (int)height);
+	out_bounding_box = cv::Rect_<float>(min_x, min_y, width, height);
 }
 
 //===========================================================================
 // Calculate the PDM's Jacobian over rigid parameters (rotation, translation and scaling), the additional input W represents trust for each of the landmarks and is part of Non-Uniform RLMS 
-void PDM::ComputeRigidJacobian(const cv::Mat_<float>& p_local, const cv::Vec6d& params_global, cv::Mat_<float> &Jacob, const cv::Mat_<float> W, cv::Mat_<float> &Jacob_t_w) const
+void PDM::ComputeRigidJacobian(const cv::Mat_<float>& p_local, const cv::Vec6f& params_global, cv::Mat_<float> &Jacob, const cv::Mat_<float> W, cv::Mat_<float> &Jacob_t_w) const
 {
-  	
+
 	// number of verts
 	int n = this->NumberOfPoints();
 
@@ -207,14 +206,14 @@ void PDM::ComputeRigidJacobian(const cv::Mat_<float>& p_local, const cv::Vec6d& 
 
 	float X, Y, Z;
 
-	float s = (float)params_global[0];
+	float s = params_global[0];
 
 	cv::Mat_<float> shape_3D;
 	this->CalcShape3D(shape_3D, p_local);
 
-	// Get the rotation matrix (TODO move away from doubles)
-	cv::Vec3f euler((float)params_global[1], (float)params_global[2], (float)params_global[3]);
-	cv::Matx33f currRot = Euler2RotationMatrix_f(euler);
+	// Get the rotation matrix
+	cv::Vec3f euler(params_global[1], params_global[2], params_global[3]);
+	cv::Matx33f currRot = Euler2RotationMatrix(euler);
 
 	float r11 = currRot(0, 0);
 	float r12 = currRot(0, 1);
@@ -288,9 +287,9 @@ void PDM::ComputeRigidJacobian(const cv::Mat_<float>& p_local, const cv::Vec6d& 
 
 //===========================================================================
 // Calculate the PDM's Jacobian over all parameters (rigid and non-rigid), the additional input W represents trust for each of the landmarks and is part of Non-Uniform RLMS
-void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6d& params_global, cv::Mat_<float> &Jacobian, const cv::Mat_<float> W, cv::Mat_<float> &Jacob_t_w) const
-{ 
-	
+void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6f& params_global, cv::Mat_<float> &Jacobian, const cv::Mat_<float> W, cv::Mat_<float> &Jacob_t_w) const
+{
+
 	// number of vertices
 	int n = this->NumberOfPoints();
 
@@ -301,13 +300,13 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6d& 
 
 	float X, Y, Z;
 
-	float s = (float)params_global[0];
+	float s = params_global[0];
 
 	cv::Mat_<float> shape_3D;
 	this->CalcShape3D(shape_3D, params_local);
 
-	cv::Vec3f euler((float)params_global[1], (float)params_global[2], (float)params_global[3]);
-	cv::Matx33f currRot = Euler2RotationMatrix_f(euler);
+	cv::Vec3f euler(params_global[1], params_global[2], params_global[3]);
+	cv::Matx33f currRot = Euler2RotationMatrix(euler);
 
 	float r11 = currRot(0, 0);
 	float r12 = currRot(0, 1);
@@ -392,53 +391,53 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6d& 
 
 }
 
+
 //===========================================================================
 // Updating the parameters (more details in my thesis)
-void PDM::UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>& params_local, cv::Vec6d& params_global) const
+void PDM::UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>& params_local, cv::Vec6f& params_global) const
 {
 
 	// The scaling and translation parameters can be just added
-	params_global[0] += (double)delta_p.at<float>(0,0);
-	params_global[4] += (double)delta_p.at<float>(4,0);
-	params_global[5] += (double)delta_p.at<float>(5,0);
+	params_global[0] += delta_p.at<float>(0, 0);
+	params_global[4] += delta_p.at<float>(4, 0);
+	params_global[5] += delta_p.at<float>(5, 0);
 
 	// get the original rotation matrix	
-	cv::Vec3d eulerGlobal(params_global[1], params_global[2], params_global[3]);
-	cv::Matx33d R1 = Euler2RotationMatrix(eulerGlobal);
+	cv::Vec3f eulerGlobal(params_global[1], params_global[2], params_global[3]);
+	cv::Matx33f R1 = Euler2RotationMatrix(eulerGlobal);
 
 	// construct R' = [1, -wz, wy
 	//               wz, 1, -wx
 	//               -wy, wx, 1]
-	cv::Matx33d R2 = cv::Matx33d::eye();
+	cv::Matx33f R2 = cv::Matx33f::eye();
 
-	R2(1,2) = -1.0*(R2(2,1) = (double)delta_p.at<float>(1,0));
-	R2(2,0) = -1.0*(R2(0,2) = (double)delta_p.at<float>(2,0));
-	R2(0,1) = -1.0*(R2(1,0) = (double)delta_p.at<float>(3,0));
-	
+	R2(1, 2) = -1.0*(R2(2, 1) = delta_p.at<float>(1, 0));
+	R2(2, 0) = -1.0*(R2(0, 2) = delta_p.at<float>(2, 0));
+	R2(0, 1) = -1.0*(R2(1, 0) = delta_p.at<float>(3, 0));
+
 	// Make sure it's orthonormal
 	Orthonormalise(R2);
 
 	// Combine rotations
-	cv::Matx33d R3 = R1 *R2;
+	cv::Matx33f R3 = R1 *R2;
 
 	// Extract euler angle (through axis angle first to make sure it's legal)
-	cv::Vec3d axis_angle = RotationMatrix2AxisAngle(R3);
-	cv::Vec3d euler = AxisAngle2Euler(axis_angle);
+	cv::Vec3f axis_angle = RotationMatrix2AxisAngle(R3);
+	cv::Vec3f euler = AxisAngle2Euler(axis_angle);
 
 	params_global[1] = euler[0];
 	params_global[2] = euler[1];
 	params_global[3] = euler[2];
 
 	// Local parameter update, just simple addition
-	if(delta_p.rows > 6)
+	if (delta_p.rows > 6)
 	{
-		params_local = params_local + delta_p(cv::Rect(0,6,1, this->NumberOfModes()));
+		params_local = params_local + delta_p(cv::Rect(0, 6, 1, this->NumberOfModes()));
 	}
 
 }
-
 // void CalcParams(cv::Vec6d& out_params_global, cv::Mat_<double>& out_params_local, const cv::Mat_<double>& landmark_locations, const cv::Vec3d rotation = cv::Vec3d(0.0)) const;
-void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_local, const cv::Mat_<float>& landmark_locations, const cv::Vec3f rotation) const
+void PDM::CalcParams(cv::Vec6f& out_params_global, cv::Mat_<float>& out_params_local, const cv::Mat_<float>& landmark_locations, const cv::Vec3f rotation) const
 {
 		
 	int m = this->NumberOfModes();
@@ -459,7 +458,7 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_l
 	float width = (float)abs(min_x - max_x);
 	float height = (float)abs(min_y - max_y);
 
-	cv::Rect model_bbox;
+	cv::Rect_<float> model_bbox;
 	CalcBoundingBox(model_bbox, cv::Vec6d(1.0, 0.0, 0.0, 0.0, 0.0, 0.0), cv::Mat_<double>(this->NumberOfModes(), 1, 0.0));
 
 	cv::Rect bbox((int)min_x, (int)min_y, (int)width, (int)height);
@@ -467,11 +466,11 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_l
 	float scaling = ((width / model_bbox.width) + (height / model_bbox.height)) / 2;
         
 	cv::Vec3f rotation_init(rotation[0], rotation[1], rotation[2]);
-	cv::Matx33f R = Euler2RotationMatrix_f(rotation_init);
+	cv::Matx33f R = Euler2RotationMatrix(rotation_init);
 	cv::Vec2f translation((min_x + max_x) / 2.0, (min_y + max_y) / 2.0);
     
 	cv::Mat_<float> loc_params(this->NumberOfModes(),1, 0.0);
-	cv::Vec6d glob_params(scaling, rotation_init[0], rotation_init[1], rotation_init[2], translation[0], translation[1]);
+	cv::Vec6f glob_params(scaling, rotation_init[0], rotation_init[1], rotation_init[2], translation[0], translation[1]);
 
 	// get the 3D shape of the object
 	cv::Mat_<float> shape_3D = mean_shape + princ_comp * loc_params;
@@ -554,7 +553,7 @@ void PDM::CalcParams(cv::Vec6d& out_params_global, cv::Mat_<float>& out_params_l
 		translation[0] = glob_params[4];
 		translation[1] = glob_params[5];
         
-		R = Euler2RotationMatrix_f(rotation_init);
+		R = Euler2RotationMatrix(rotation_init);
 
 		R_2D(0,0) = R(0,0);R_2D(0,1) = R(0,1); R_2D(0,2) = R(0,2);
 		R_2D(1,0) = R(1,0);R_2D(1,1) = R(1,1); R_2D(1,2) = R(1,2); 

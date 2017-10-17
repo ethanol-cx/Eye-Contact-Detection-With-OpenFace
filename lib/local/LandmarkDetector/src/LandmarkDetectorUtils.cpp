@@ -844,6 +844,66 @@ namespace LandmarkDetector
 
 	}
 
+	// Useful utility for grabing a bounding box around a set of 2D landmarks (as a 1D 2n x 1 vector of xs followed by doubles or as an n x 2 vector)
+	void ExtractBoundingBox(const cv::Mat_<float>& landmarks, float &min_x, float &max_x, float &min_y, float &max_y)
+	{
+
+		if (landmarks.cols == 1)
+		{
+			int n = landmarks.rows / 2;
+			cv::MatConstIterator_<float> landmarks_it = landmarks.begin();
+
+			for (int i = 0; i < n; ++i)
+			{
+				float val = *landmarks_it++;
+				
+				if (i == 0 || val < min_x)
+					min_x = val;
+
+				if (i == 0 || val > max_x)
+					max_x = val;
+
+			}
+
+			for (int i = 0; i < n; ++i)
+			{
+				float val = *landmarks_it++;
+
+				if (i == 0 || val < min_y)
+					min_y = val;
+
+				if (i == 0 || val > max_y)
+					max_y = val;
+
+			}
+		}
+		else
+		{
+			int n = landmarks.rows;
+			for (int i = 0; i < n; ++i)
+			{
+				float val_x = landmarks.at<float>(i, 0);
+				float val_y = landmarks.at<float>(i, 0);
+
+				if (i == 0 || val_x < min_x)
+					min_x = val_x;
+
+				if (i == 0 || val_x > max_x)
+					max_x = val_x;
+
+				if (i == 0 || val_y < min_y)
+					min_y = val_y;
+
+				if (i == 0 || val_y > max_y)
+					max_y = val_y;
+
+			}
+
+		}
+
+
+	}
+
 	//===========================================================================
 	// Visualisation functions
 	//===========================================================================
@@ -888,7 +948,7 @@ namespace LandmarkDetector
 
 	}
 
-	void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy)
+	void DrawBox(cv::Mat image, cv::Vec6f pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy)
 	{
 		float boxVerts[] = { -1, 1, -1,
 			1, 1, -1,
@@ -916,7 +976,7 @@ namespace LandmarkDetector
 		// The size of the head is roughly 200mm x 200mm x 200mm
 		cv::Mat_<float> box = cv::Mat(8, 3, CV_32F, boxVerts).clone() * 100;
 
-		cv::Matx33f rot = LandmarkDetector::Euler2RotationMatrix_f(cv::Vec3f((float)pose[3], (float)pose[4], (float)pose[5]));
+		cv::Matx33f rot = LandmarkDetector::Euler2RotationMatrix(cv::Vec3f((float)pose[3], (float)pose[4], (float)pose[5]));
 		cv::Mat_<float> rotBox;
 
 		// Rotate the box
@@ -956,7 +1016,7 @@ namespace LandmarkDetector
 
 	}
 
-	vector<std::pair<cv::Point2f, cv::Point2f>> CalculateBox(cv::Vec6d pose, float fx, float fy, float cx, float cy)
+	vector<std::pair<cv::Point2f, cv::Point2f>> CalculateBox(cv::Vec6f pose, float fx, float fy, float cx, float cy)
 	{
 		float boxVerts[] = { -1, 1, -1,
 			1, 1, -1,
@@ -984,7 +1044,7 @@ namespace LandmarkDetector
 		// The size of the head is roughly 200mm x 200mm x 200mm
 		cv::Mat_<float> box = cv::Mat(8, 3, CV_32F, boxVerts).clone() * 100;
 
-		cv::Matx33f rot = LandmarkDetector::Euler2RotationMatrix_f(cv::Vec3d((float) pose[3], (float)pose[4], (float)pose[5]));
+		cv::Matx33f rot = LandmarkDetector::Euler2RotationMatrix(cv::Vec3d((float) pose[3], (float)pose[4], (float)pose[5]));
 		cv::Mat_<float> rotBox;
 
 		// Rotate the box
@@ -1307,33 +1367,7 @@ namespace LandmarkDetector
 	//===========================================================================
 
 	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	cv::Matx33d Euler2RotationMatrix(const cv::Vec3d& eulerAngles)
-	{
-		cv::Matx33d rotation_matrix;
-
-		double s1 = sin(eulerAngles[0]);
-		double s2 = sin(eulerAngles[1]);
-		double s3 = sin(eulerAngles[2]);
-
-		double c1 = cos(eulerAngles[0]);
-		double c2 = cos(eulerAngles[1]);
-		double c3 = cos(eulerAngles[2]);
-
-		rotation_matrix(0, 0) = c2 * c3;
-		rotation_matrix(0, 1) = -c2 *s3;
-		rotation_matrix(0, 2) = s2;
-		rotation_matrix(1, 0) = c1 * s3 + c3 * s1 * s2;
-		rotation_matrix(1, 1) = c1 * c3 - s1 * s2 * s3;
-		rotation_matrix(1, 2) = -c2 * s1;
-		rotation_matrix(2, 0) = s1 * s3 - c1 * c3 * s2;
-		rotation_matrix(2, 1) = c3 * s1 + c1 * s2 * s3;
-		rotation_matrix(2, 2) = c1 * c2;
-
-		return rotation_matrix;
-	}
-
-	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	cv::Matx33f Euler2RotationMatrix_f(const cv::Vec3f& eulerAngles)
+	cv::Matx33f Euler2RotationMatrix(const cv::Vec3f& eulerAngles)
 	{
 		cv::Matx33f rotation_matrix;
 
@@ -1359,51 +1393,50 @@ namespace LandmarkDetector
 	}
 
 	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	cv::Vec3d RotationMatrix2Euler(const cv::Matx33d& rotation_matrix)
+	cv::Vec3f RotationMatrix2Euler(const cv::Matx33f& rotation_matrix)
 	{
-		double q0 = sqrt(1 + rotation_matrix(0, 0) + rotation_matrix(1, 1) + rotation_matrix(2, 2)) / 2.0;
-		double q1 = (rotation_matrix(2, 1) - rotation_matrix(1, 2)) / (4.0*q0);
-		double q2 = (rotation_matrix(0, 2) - rotation_matrix(2, 0)) / (4.0*q0);
-		double q3 = (rotation_matrix(1, 0) - rotation_matrix(0, 1)) / (4.0*q0);
+		float q0 = sqrt(1 + rotation_matrix(0, 0) + rotation_matrix(1, 1) + rotation_matrix(2, 2)) / 2.0f;
+		float q1 = (rotation_matrix(2, 1) - rotation_matrix(1, 2)) / (4.0f*q0);
+		float q2 = (rotation_matrix(0, 2) - rotation_matrix(2, 0)) / (4.0f*q0);
+		float q3 = (rotation_matrix(1, 0) - rotation_matrix(0, 1)) / (4.0f*q0);
 
-		double t1 = 2.0 * (q0*q2 + q1*q3);
+		float t1 = 2.0f * (q0*q2 + q1*q3);
 
-		double yaw = asin(2.0 * (q0*q2 + q1*q3));
-		double pitch = atan2(2.0 * (q0*q1 - q2*q3), q0*q0 - q1*q1 - q2*q2 + q3*q3);
-		double roll = atan2(2.0 * (q0*q3 - q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3);
+		float yaw = asin(2.0 * (q0*q2 + q1*q3));
+		float pitch = atan2(2.0 * (q0*q1 - q2*q3), q0*q0 - q1*q1 - q2*q2 + q3*q3);
+		float roll = atan2(2.0 * (q0*q3 - q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3);
 
-		return cv::Vec3d(pitch, yaw, roll);
+		return cv::Vec3f(pitch, yaw, roll);
 	}
 
-	cv::Vec3d Euler2AxisAngle(const cv::Vec3d& euler)
+	cv::Vec3f Euler2AxisAngle(const cv::Vec3f& euler)
 	{
-		cv::Matx33d rotMatrix = LandmarkDetector::Euler2RotationMatrix(euler);
-		cv::Vec3d axis_angle;
+		cv::Matx33f rotMatrix = LandmarkDetector::Euler2RotationMatrix(euler);
+		cv::Vec3f axis_angle;
 		cv::Rodrigues(rotMatrix, axis_angle);
 		return axis_angle;
 	}
 
-	cv::Vec3d AxisAngle2Euler(const cv::Vec3d& axis_angle)
+	cv::Vec3f AxisAngle2Euler(const cv::Vec3f& axis_angle)
 	{
-		cv::Matx33d rotation_matrix;
+		cv::Matx33f rotation_matrix;
 		cv::Rodrigues(axis_angle, rotation_matrix);
 		return RotationMatrix2Euler(rotation_matrix);
 	}
 
-	cv::Matx33d AxisAngle2RotationMatrix(const cv::Vec3d& axis_angle)
+	cv::Matx33f AxisAngle2RotationMatrix(const cv::Vec3f& axis_angle)
 	{
-		cv::Matx33d rotation_matrix;
+		cv::Matx33f rotation_matrix;
 		cv::Rodrigues(axis_angle, rotation_matrix);
 		return rotation_matrix;
 	}
 
-	cv::Vec3d RotationMatrix2AxisAngle(const cv::Matx33d& rotation_matrix)
+	cv::Vec3f RotationMatrix2AxisAngle(const cv::Matx33f& rotation_matrix)
 	{
-		cv::Vec3d axis_angle;
+		cv::Vec3f axis_angle;
 		cv::Rodrigues(rotation_matrix, axis_angle);
 		return axis_angle;
 	}
-
 	//===========================================================================
 
 	//============================================================================

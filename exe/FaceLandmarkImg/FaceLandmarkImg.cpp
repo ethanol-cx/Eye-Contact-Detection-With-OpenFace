@@ -94,7 +94,7 @@ void create_directory_from_file(string output_path)
 }
 
 // This will only be accurate when camera parameters are accurate, useful for work on 3D data
-void write_out_3D_output(const string& outfeatures, const cv::Mat_<float>& shape3D, const cv::Vec6d& pose, const cv::Point3f& gaze0, const cv::Point3f& gaze1)
+void write_out_3D_output(const string& outfeatures, const cv::Mat_<float>& shape3D, const cv::Vec6f& pose, const cv::Point3f& gaze0, const cv::Point3f& gaze1)
 {
 	create_directory_from_file(outfeatures);
 	std::ofstream featuresFile;
@@ -129,7 +129,7 @@ void write_out_3D_output(const string& outfeatures, const cv::Mat_<float>& shape
 	}
 }
 
-void write_out_2D_output(const string& outfeatures, const LandmarkDetector::CLNF& clnf_model, const cv::Vec6d& pose, const cv::Point3f& gaze0, const cv::Point3f& gaze1, std::vector<std::pair<std::string, double>> au_intensities, std::vector<std::pair<std::string, double>> au_occurences)
+void write_out_2D_output(const string& outfeatures, const LandmarkDetector::CLNF& clnf_model, const cv::Vec6f& pose, const cv::Point3f& gaze0, const cv::Point3f& gaze1, std::vector<std::pair<std::string, double>> au_intensities, std::vector<std::pair<std::string, double>> au_occurences)
 {
 	create_directory_from_file(outfeatures);
 	std::ofstream featuresFile;
@@ -379,7 +379,7 @@ int main(int argc, char **argv)
 				bool success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_detections[face], clnf_model, det_parameters);
 
 				// Estimate head pose and eye gaze				
-				cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
+				cv::Vec6f headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
 
 				// Gaze tracking, absolute gaze direction
 				cv::Point3f gazeDirection0(0, 0, -1);
@@ -434,7 +434,7 @@ int main(int argc, char **argv)
 
 				if (det_parameters.track_gaze)
 				{
-					cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
+					cv::Vec6f pose_estimate_to_draw = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
 
 					// Draw it in reddish if uncertain, blueish if certain
 					LandmarkDetector::DrawBox(read_image, pose_estimate_to_draw, cv::Scalar(255.0, 0, 0), 3, fx, fy, cx, cy);
@@ -512,7 +512,7 @@ int main(int argc, char **argv)
 			LandmarkDetector::DetectLandmarksInImage(grayscale_image, bounding_boxes[i], clnf_model, det_parameters);
 
 			// Estimate head pose and eye gaze				
-			cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
+			cv::Vec6f headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
 
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, -1);
@@ -545,7 +545,7 @@ int main(int argc, char **argv)
 
 			if (det_parameters.track_gaze)
 			{
-				cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
+				cv::Vec6f pose_estimate_to_draw = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
 
 				// Draw it in reddish if uncertain, blueish if certain
 				LandmarkDetector::DrawBox(read_image, pose_estimate_to_draw, cv::Scalar(255.0, 0, 0), 3, fx, fy, cx, cy);
