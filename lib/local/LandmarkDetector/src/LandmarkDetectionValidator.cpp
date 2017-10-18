@@ -348,17 +348,18 @@ float DetectionValidator::Check(const cv::Vec3d& orientation, const cv::Mat_<uch
 	
 	// First only use the ROI of the image of interest
 	cv::Mat_<float>& detected_landmarks_local = detected_landmarks.clone();
-	double min_x_d, max_x_d, min_y_d, max_y_d;
+
+	float min_x_f, max_x_f, min_y_f, max_y_f;
+	ExtractBoundingBox(detected_landmarks_local, min_x_f, max_x_f, min_y_f, max_y_f);
+
 	cv::Mat_<float> xs = detected_landmarks_local(cv::Rect(0, 0, 1, detected_landmarks.rows / 2));
 	cv::Mat_<float> ys = detected_landmarks_local(cv::Rect(0, detected_landmarks.rows / 2, 1, detected_landmarks.rows / 2));
-	cv::minMaxLoc(xs, &min_x_d, &max_x_d);
-	cv::minMaxLoc(ys, &min_y_d, &max_y_d);
 
 	// Picking the ROI (some extra space for bilinear interpolation)
-	int min_x = (int)min_x_d - 3.0;
-	int max_x = (int)(max_x_d + 3.0);
-	int min_y = (int)min_y_d - 3.0;
-	int max_y = (int)(max_y_d + 3.0);
+	int min_x = (int)(min_x_f - 3.0f);
+	int max_x = (int)(max_x_f + 3.0f);
+	int min_y = (int)(min_y_f - 3.0f);
+	int max_y = (int)(max_y_f + 3.0f);
 
 	if (min_x < 0) min_x = 0;
 	if (min_y < 0) min_y = 0;

@@ -1183,17 +1183,12 @@ cv::Mat_<float> CLNF::GetShape(float fx, float fy, float cx, float cy) const
 }
 
 // A utility bounding box function
-cv::Rect_<double> CLNF::GetBoundingBox() const
+cv::Rect_<float> CLNF::GetBoundingBox() const
 {
-	cv::Mat_<float> xs = this->detected_landmarks(cv::Rect(0,0,1,this->detected_landmarks.rows/2));
-	cv::Mat_<float> ys = this->detected_landmarks(cv::Rect(0,this->detected_landmarks.rows/2, 1, this->detected_landmarks.rows/2));
+	float min_x, max_x;
+	float min_y, max_y;
+	ExtractBoundingBox(this->detected_landmarks, min_x, max_x, min_y, max_y);
 
-	double min_x, max_x;
-	double min_y, max_y;
-	cv::minMaxLoc(xs, &min_x, &max_x);
-	cv::minMaxLoc(ys, &min_y, &max_y);
-
-	// See if the detections intersect
-	cv::Rect_<double> model_rect(min_x, min_y, max_x - min_x, max_y - min_y);
+	cv::Rect_<float> model_rect(min_x, min_y, max_x - min_x, max_y - min_y);
 	return model_rect;
 }

@@ -168,7 +168,7 @@ public:
 	cv::Mat_<float> GetShape(float fx, float fy, float cx, float cy) const;
 
 	// A utility bounding box function
-	cv::Rect_<double> GetBoundingBox() const;
+	cv::Rect_<float> GetBoundingBox() const;
 
 	// Reset the model (useful if we want to completelly reinitialise, or we want to track another video)
 	void Reset();
