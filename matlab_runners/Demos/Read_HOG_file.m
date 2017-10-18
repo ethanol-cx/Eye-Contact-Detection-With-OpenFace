@@ -1,9 +1,10 @@
 function [hog_data, valid_inds] = Read_HOG_file(hog_file)
 
     valid_inds = [];
-    
+            
     f = fopen(hog_file, 'r');
 
+    % Pre-allocated data
     curr_data = [];
     curr_ind = 0;
 
@@ -50,10 +51,9 @@ function [hog_data, valid_inds] = Read_HOG_file(hog_file)
 
     fclose(f);
 
-    hog_data = curr_data(1:curr_ind,:);
-    
-    if(~isempty(hog_data))        
-        valid_inds = hog_data(:,1);
-        hog_data = hog_data(:,2:end);
+    % Do some cleanup, remove un-allocated data    
+    if(~isempty(curr_data))        
+        valid_inds = curr_data(1:curr_ind,1);
+        hog_data = curr_data(1:curr_ind,2:end);    
     end
 end

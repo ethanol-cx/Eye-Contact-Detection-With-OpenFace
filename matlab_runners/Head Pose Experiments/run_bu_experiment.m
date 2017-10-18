@@ -41,7 +41,7 @@ function [output_dir] = run_bu_experiment(bu_dir, verbose, varargin)
             end
         end
         
-        command = cat(2, command,  ' -fx 500 -fy 500 -cx 160 -cy 120 -no2Dfp -no3Dfp -noMparams -noAUs -noGaze ');        
+        command = cat(2, command,  ' -fx 500 -fy 500 -cx 160 -cy 120 -no2Dfp -no3Dfp -noMparams -noAUs -noGaze -vis-track ');        
     
         if(any(strcmp('model', varargin)))
             command = cat(2, command, [' -mloc "', varargin{find(strcmp('model', varargin))+1}, '"']);

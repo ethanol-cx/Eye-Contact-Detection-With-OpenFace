@@ -416,11 +416,6 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<double>& de
 		UpdateRunningMedian(this->geom_desc_hist, this->geom_hist_sum, this->geom_descriptor_median, geom_descriptor_frame, update_median, this->num_bins_geom, this->min_val_geom, this->max_val_geom);
 	}
 
-	// First convert the face image to double representation as a row vector, TODO rem?
-	//cv::Mat_<uchar> aligned_face_cols(1, aligned_face.cols * aligned_face.rows * aligned_face.channels(), aligned_face.data, 1);
-	//cv::Mat_<double> aligned_face_cols_double;
-	//aligned_face_cols.convertTo(aligned_face_cols_double, CV_64F);
-	
 	// Visualising the median HOG
 	if(visualise)
 	{

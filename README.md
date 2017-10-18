@@ -68,13 +68,17 @@ Tadas Baltrušaitis, Marwa Mahmoud, and Peter Robinson
 in *Facial Expression Recognition and Analysis Challenge*, 
 *IEEE International Conference on Automatic Face and Gesture Recognition*, 2015 
 
-# Final remarks
-
-I did my best to make sure that the code runs out of the box but there are always issues and I would be grateful for your understanding that this is research code and not a commercial level product. However, if you encounter any problems/bugs/issues please contact me on github or by emailing me at Tadas.Baltrusaitis@cl.cam.ac.uk for any bug reports/questions/suggestions. 
-
 # Copyright
 
 Copyright can be found in the Copyright.txt
 
 You have to respect boost, TBB, dlib, and OpenCV licenses.
+
+# Commercial license
+
+For inquiries about the commercial licensing of the OpenFace toolkit please contact innovation@cmu.edu
+
+# Final remarks
+
+I did my best to make sure that the code runs out of the box but there are always issues and I would be grateful for your understanding that this is research code and not full fledged product. However, if you encounter any problems/bugs/issues please contact me on github or by emailing me at Tadas.Baltrusaitis@cl.cam.ac.uk for any bug reports/questions/suggestions. 
 

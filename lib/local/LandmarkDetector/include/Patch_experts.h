@@ -57,9 +57,6 @@ public:
 	// The collection of SVR patch experts (for intensity/grayscale images), the experts are laid out scale->view->landmark
 	vector<vector<vector<Multi_SVR_patch_expert> > >	svr_expert_intensity;
 	 
-	// The collection of SVR patch experts (for depth/range images), the experts are laid out scale->view->landmark
-	vector<vector<vector<Multi_SVR_patch_expert> > >	svr_expert_depth;
-
 	// The collection of LNF (CCNF) patch experts (for intensity images), the experts are laid out scale->view->landmark
 	vector<vector<vector<CCNF_patch_expert> > >			ccnf_expert_intensity;
 
@@ -81,11 +78,11 @@ public:
 	// A copy constructor
 	Patch_experts(const Patch_experts& other);
 
-	// Returns the patch expert responses given a grayscale and an optional depth image.
+	// Returns the patch expert responses given a grayscale image.
 	// Additionally returns the transform from the image coordinates to the response coordinates (and vice versa).
 	// The computation also requires the current landmark locations to compute response around, the PDM corresponding to the desired model, and the parameters describing its instance
 	// Also need to provide the size of the area of interest and the desired scale of analysis
-	void Response(vector<cv::Mat_<float> >& patch_expert_responses, cv::Matx22f& sim_ref_to_img, cv::Matx22d& sim_img_to_ref, const cv::Mat_<uchar>& grayscale_image, const cv::Mat_<float>& depth_image,
+	void Response(vector<cv::Mat_<float> >& patch_expert_responses, cv::Matx22f& sim_ref_to_img, cv::Matx22d& sim_img_to_ref, const cv::Mat_<uchar>& grayscale_image, 
 							 const PDM& pdm, const cv::Vec6d& params_global, const cv::Mat_<double>& params_local, int window_size, int scale);
 
 	// Getting the best view associated with the current orientation
@@ -95,7 +92,7 @@ public:
 	inline int nViews(size_t scale = 0) const { return (int)centers[scale].size(); };
 
 	// Reading in all of the patch experts
-	void Read(vector<string> intensity_svr_expert_locations, vector<string> depth_svr_expert_locations, vector<string> intensity_ccnf_expert_locations);
+	void Read(vector<string> intensity_svr_expert_locations, vector<string> intensity_ccnf_expert_locations);
 
 
    

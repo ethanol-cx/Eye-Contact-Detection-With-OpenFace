@@ -83,6 +83,15 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 			i++;
 
 		}
+		if (arguments[i].compare("-fdloc") ==0)
+		{
+			string face_detector_loc = arguments[i + 1];
+			face_detector_location = face_detector_loc;
+			curr_face_detector = HAAR_DETECTOR;
+			valid[i] = false;
+			valid[i + 1] = false;
+			i++;
+		}
 		if (arguments[i].compare("-sigma") == 0)
 		{
 			stringstream data(arguments[i + 1]);
@@ -144,7 +153,6 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 			track_gaze = true;
 
 			valid[i] = false;
-			i++;
 		}
 		else if (arguments[i].compare("-q") == 0)
 		{
@@ -253,12 +261,7 @@ void FaceModelParameters::init()
 	reinit_video_every = 4;
 
 	// Face detection
-#if OS_UNIX
 	face_detector_location = "classifiers/haarcascade_frontalface_alt.xml";
-#else
-	face_detector_location = "classifiers/haarcascade_frontalface_alt.xml";
-#endif
-
 	quiet_mode = false;
 
 	// By default use HOG SVM

@@ -302,12 +302,12 @@ int main (int argc, char **argv)
 	boost::filesystem::path parent_path = boost::filesystem::path(arguments[0]).parent_path();
 
 	// Some initial parameters that can be overriden from command line
-	vector<string> files, depth_files, output_images, output_landmark_locations, output_pose_locations;
+	vector<string> files, output_images, output_landmark_locations, output_pose_locations;
 
 	// Bounding boxes for a face in each image (optional)
 	vector<cv::Rect_<double> > bounding_boxes;
 	
-	LandmarkDetector::get_image_input_output_params(files, depth_files, output_landmark_locations, output_pose_locations, output_images, bounding_boxes, arguments);
+	LandmarkDetector::get_image_input_output_params(files, output_landmark_locations, output_pose_locations, output_images, bounding_boxes, arguments);
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);	
 	// No need to validate detections, as we're not doing tracking
 	det_parameters.validate_detections = false;
@@ -357,17 +357,7 @@ int main (int argc, char **argv)
 			cout << "Could not read the input image" << endl;
 			return 1;
 		}
-
-		// Loading depth file if exists (optional)
-		cv::Mat_<float> depth_image;
-
-		if(depth_files.size() > 0)
-		{
-			string dFile = depth_files.at(i);
-			cv::Mat dTemp = cv::imread(dFile, -1);
-			dTemp.convertTo(depth_image, CV_32F);
-		}
-
+		
 		// Making sure the image is in uchar grayscale
 		cv::Mat_<uchar> grayscale_image;
 		convert_to_grayscale(read_image, grayscale_image);
@@ -413,7 +403,7 @@ int main (int argc, char **argv)
 			for(size_t face=0; face < face_detections.size(); ++face)
 			{
 				// if there are multiple detections go through them
-				bool success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, depth_image, face_detections[face], clnf_model, det_parameters);
+				bool success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_detections[face], clnf_model, det_parameters);
 
 				// Estimate head pose and eye gaze				
 				cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);

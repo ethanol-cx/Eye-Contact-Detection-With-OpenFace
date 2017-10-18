@@ -134,7 +134,7 @@ title('Pose (rotation and translation)');
 xlabel('Time (s)');
 
 %% Output HOG files
-[hog_data, valid_inds] = Read_HOG_file([output, '/', name, '.hog']);
+[hog_data, valid_inds] = Read_HOG_file(outputHOG_aligned);
 
 %% Output aligned images
 img_files = dir([outputDir_aligned, '/*.png']);

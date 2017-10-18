@@ -107,7 +107,7 @@ int main (int argc, char **argv)
 	vector<string> arguments = get_arguments(argc, argv);
 
 	// Some initial parameters that can be overriden from command line	
-	vector<string> files, depth_directories, tracked_videos_output, dummy_out;
+	vector<string> files, tracked_videos_output, dummy_out;
 	
 	// By default try webcam 0
 	int device = 0;
@@ -127,7 +127,8 @@ int main (int argc, char **argv)
 
 	// Get the input output file parameters
 	string output_codec;
-	LandmarkDetector::get_video_input_output_params(files, depth_directories, dummy_out, tracked_videos_output, output_codec, arguments);
+	LandmarkDetector::get_video_input_output_params(files, dummy_out, tracked_videos_output, output_codec, arguments);
+
 	// Get camera parameters
 	LandmarkDetector::get_camera_params(device, fx, fy, cx, cy, arguments);
 	
@@ -175,8 +176,6 @@ int main (int argc, char **argv)
 			f_n++;			
 		    current_file = files[f_n];
 		}
-
-		bool use_depth = !depth_directories.empty();	
 
 		// Do some grabbing
 		cv::VideoCapture video_capture;
@@ -253,28 +252,6 @@ int main (int argc, char **argv)
 				grayscale_image = captured_image.clone();				
 			}
 		
-			// Get depth image
-			if(use_depth)
-			{
-				char* dst = new char[100];
-				std::stringstream sstream;
-
-				sstream << depth_directories[f_n] << "\\depth%05d.png";
-				sprintf(dst, sstream.str().c_str(), frame_count + 1);
-				// Reading in 16-bit png image representing depth
-				cv::Mat_<short> depth_image_16_bit = cv::imread(string(dst), -1);
-
-				// Convert to a floating point depth image
-				if(!depth_image_16_bit.empty())
-				{
-					depth_image_16_bit.convertTo(depth_image, CV_32F);
-				}
-				else
-				{
-					WARN_STREAM( "Can't find depth image" );
-				}
-			}
-
 			vector<cv::Rect_<double> > face_detections;
 
 			bool all_models_active = true;
@@ -336,7 +313,7 @@ int main (int argc, char **argv)
 
 							// This ensures that a wider window is used for the initial landmark localisation
 							clnf_models[model].detection_success = false;
-							detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, depth_image, face_detections[detection_ind], clnf_models[model], det_parameters[model]);
+							detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_detections[detection_ind], clnf_models[model], det_parameters[model]);
 													
 							// This activates the model
 							active_models[model] = true;
@@ -350,7 +327,7 @@ int main (int argc, char **argv)
 				else
 				{
 					// The actual facial landmark detection / tracking
-					detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, depth_image, clnf_models[model], det_parameters[model]);
+					detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, clnf_models[model], det_parameters[model]);
 				}
 			});
 								

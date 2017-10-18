@@ -8,6 +8,8 @@ end
 
 if(exist('D:/Datasets/DISFA/Videos_LeftCamera/', 'file'))   
     DISFA_dir = 'D:/Datasets/DISFA/Videos_LeftCamera/';  
+elseif(exist('E:/Datasets/DISFA/Videos_LeftCamera/', 'file'))   
+    DISFA_dir = 'E:/Datasets/DISFA/Videos_LeftCamera/';  
 else
     DISFA_dir = '/multicomp/datasets/face_datasets/DISFA/Videos_LeftCamera/';
 end

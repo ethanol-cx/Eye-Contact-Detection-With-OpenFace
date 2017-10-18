@@ -52,12 +52,12 @@ namespace LandmarkDetector
 	//=============================================================================================
 	// Helper functions for parsing the inputs
 	//=============================================================================================
-	void get_video_input_output_params(vector<string> &input_video_file, vector<string> &depth_dir, vector<string> &output_files,
+	void get_video_input_output_params(vector<string> &input_video_file, vector<string> &output_files,
 		vector<string> &output_video_files, string &output_codec, vector<string> &arguments);
 
 	void get_camera_params(int &device, float &fx, float &fy, float &cx, float &cy, vector<string> &arguments);
 
-	void get_image_input_output_params(vector<string> &input_image_files, vector<string> &input_depth_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
+	void get_image_input_output_params(vector<string> &input_image_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
 		vector<cv::Rect_<double>> &input_bounding_boxes, vector<string> &arguments);
 
 	//===========================================================================

@@ -14,20 +14,20 @@
 //       reports and manuals, must cite at least one of the following works:
 //
 //       OpenFace: an open source facial behavior analysis toolkit
-//       Tadas Baltrušaitis, Peter Robinson, and Louis-Philippe Morency
+//       Tadas BaltruÅ¡aitis, Peter Robinson, and Louis-Philippe Morency
 //       in IEEE Winter Conference on Applications of Computer Vision, 2016  
 //
 //       Rendering of Eyes for Eye-Shape Registration and Gaze Estimation
-//       Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
+//       Erroll Wood, Tadas BaltruÅ¡aitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
 //       in IEEE International. Conference on Computer Vision (ICCV),  2015 
 //
 //       Cross-dataset learning and person-speci?c normalisation for automatic Action Unit detection
-//       Tadas Baltrušaitis, Marwa Mahmoud, and Peter Robinson 
+//       Tadas BaltruÅ¡aitis, Marwa Mahmoud, and Peter Robinson 
 //       in Facial Expression Recognition and Analysis Challenge, 
 //       IEEE International Conference on Automatic Face and Gesture Recognition, 2015 
 //
 //       Constrained Local Neural Fields for robust facial landmark detection in the wild.
-//       Tadas Baltrušaitis, Peter Robinson, and Louis-Philippe Morency. 
+//       Tadas BaltruÅ¡aitis, Peter Robinson, and Louis-Philippe Morency. 
 //       in IEEE Int. Conference on Computer Vision Workshops, 300 Faces in-the-Wild Challenge, 2013.    
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -95,8 +95,8 @@ void create_directories(string output_path)
 	}
 }
 
-// Extracting the following command line arguments -f, -fd, -op, -of, -ov (and possible ordered repetitions)
-void get_video_input_output_params(vector<string> &input_video_files, vector<string> &depth_dirs, vector<string> &output_files,
+// Extracting the following command line arguments -f, -op, -of, -ov (and possible ordered repetitions)
+void get_video_input_output_params(vector<string> &input_video_files, vector<string> &output_files,
 	vector<string> &output_video_files, string& output_codec, vector<string> &arguments)
 {
 	bool* valid = new bool[arguments.size()];
@@ -146,13 +146,6 @@ void get_video_input_output_params(vector<string> &input_video_files, vector<str
 			valid[i+1] = false;			
 			i++;
 		}		
-		else if (arguments[i].compare("-fd") == 0) 
-		{                    
-			depth_dirs.push_back(input_root + arguments[i + 1]);
-			valid[i] = false;
-			valid[i+1] = false;		
-			i++;
-		}
 		else if (arguments[i].compare("-of") == 0)
 		{
 			output_files.push_back(output_root + arguments[i + 1]);
@@ -173,6 +166,7 @@ void get_video_input_output_params(vector<string> &input_video_files, vector<str
 		{
 			if(arguments[i + 1].length() == 4)
 				output_codec = arguments[i + 1];
+			i++;
 		}
 	}
 
@@ -244,7 +238,7 @@ void get_camera_params(int &device, float &fx, float &fy, float &cx, float &cy, 
 	}
 }
 
-void get_image_input_output_params(vector<string> &input_image_files, vector<string> &input_depth_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
+void get_image_input_output_params(vector<string> &input_image_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
 		vector<cv::Rect_<double>> &input_bounding_boxes, vector<string> &arguments)
 {
 	bool* valid = new bool[arguments.size()];
@@ -287,13 +281,6 @@ void get_image_input_output_params(vector<string> &input_image_files, vector<str
 			valid[i+1] = false;			
 			i++;
 		}		
-		else if (arguments[i].compare("-fd") == 0) 
-		{                    
-			input_depth_files.push_back(input_root + arguments[i + 1]);
-			valid[i] = false;
-			valid[i+1] = false;		
-			i++;
-		}
 		else if (arguments[i].compare("-fdir") == 0) 
 		{                    
 
@@ -1537,7 +1524,6 @@ bool DetectSingleFaceHOG(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& int
 			{
 				dist = sqrt((preference.x - (face_detections[i].width/2 + face_detections[i].x)) * (preference.x - (face_detections[i].width/2 + face_detections[i].x)) + 
 							   (preference.y - (face_detections[i].height/2 + face_detections[i].y)) * (preference.y - (face_detections[i].height/2 + face_detections[i].y)));
-
 				better = dist < best_so_far;
 			}
 			else if (use_size)

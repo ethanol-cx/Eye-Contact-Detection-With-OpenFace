@@ -22,7 +22,7 @@ numTogether = 10;
 
 for i=3:numTogether:numel(dbSeqDir)
         
-    command = [executable  ' -fx 535 -fy 536 -cx 327 -cy 241 -no2Dfp -no3Dfp -noMparams -noAUs -noGaze '];
+    command = [executable  ' -fx 535 -fy 536 -cx 327 -cy 241 -no2Dfp -no3Dfp -noMparams -noAUs -noGaze -vis-track '];
 
     command = cat(2, command, [' -inroot ' '"' rootDir '/"']);
 
