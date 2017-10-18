@@ -221,9 +221,8 @@ namespace CppInterop {
 				// perform landmark detection for every face detected
 				for(size_t face=0; face < face_detections.size(); ++face)
 				{
-					cv::Mat depth;
 					// if there are multiple detections go through them
-					bool success = ::LandmarkDetector::DetectLandmarksInImage(image->Mat, depth, face_detections[face], *clnf, *modelParams->getParams());
+					bool success = ::LandmarkDetector::DetectLandmarksInImage(image->Mat, face_detections[face], *clnf, *modelParams->getParams());
 
 					auto landmarks_curr = gcnew System::Collections::Generic::List<System::Tuple<double,double>^>();
 					if(clnf->detected_landmarks.cols == 1)

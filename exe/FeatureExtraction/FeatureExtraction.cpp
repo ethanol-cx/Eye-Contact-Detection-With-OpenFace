@@ -271,8 +271,6 @@ int main (int argc, char **argv)
 
 	vector<string> output_similarity_align;
 	vector<string> output_hog_align_files;
-
-	bool video_output = false;
 	
 	double sim_scale = -1;
 	int sim_size = 112;
