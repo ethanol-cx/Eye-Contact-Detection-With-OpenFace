@@ -263,7 +263,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_m
 		|| (clnf_model.tracking_initialised && !clnf_model.detection_success && params.reinit_video_every > 0 && clnf_model.failures_in_a_row % params.reinit_video_every == 0))
 	{
 
-		cv::Rect_<double> bounding_box;
+		cv::Rect_<float> bounding_box;
 
 		// If the face detector has not been initialised read it in
 		if(clnf_model.face_detector_HAAR.empty())
@@ -288,7 +288,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_m
 		bool face_detection_success;
 		if(params.curr_face_detector == FaceModelParameters::HOG_SVM_DETECTOR)
 		{
-			double confidence;
+			float confidence;
 			face_detection_success = LandmarkDetector::DetectSingleFaceHOG(bounding_box, grayscale_image, clnf_model.face_detector_HOG, confidence, preference_det);
 		}
 		else if(params.curr_face_detector == FaceModelParameters::HAAR_DETECTOR)
@@ -297,7 +297,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_m
 		}
 		else if (params.curr_face_detector == FaceModelParameters::MTCNN_DETECTOR)
 		{
-			double confidence;
+			float confidence;
 			face_detection_success = LandmarkDetector::DetectSingleFaceMTCNN(bounding_box, image, clnf_model.face_detector_MTCNN, confidence, preference_det);
 		}
 
@@ -688,7 +688,7 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, CLNF& clnf_m
 	cv::Mat grayscale_image;
 	convert_to_grayscale(image, grayscale_image);
 
-	cv::Rect_<double> bounding_box;
+	cv::Rect_<float> bounding_box;
 
 	// If the face detector has not been initialised read it in
 	if(clnf_model.face_detector_HAAR.empty() && params.curr_face_detector == FaceModelParameters::HAAR_DETECTOR)
@@ -705,7 +705,7 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, CLNF& clnf_m
 	// Detect the face first
 	if(params.curr_face_detector == FaceModelParameters::HOG_SVM_DETECTOR)
 	{
-		double confidence;
+		float confidence;
 		LandmarkDetector::DetectSingleFaceHOG(bounding_box, grayscale_image, clnf_model.face_detector_HOG, confidence);
 	}
 	else if(params.curr_face_detector == FaceModelParameters::HAAR_DETECTOR)
@@ -714,7 +714,7 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, CLNF& clnf_m
 	}
 	else if (params.curr_face_detector == FaceModelParameters::MTCNN_DETECTOR)
 	{
-		double confidence;
+		float confidence;
 		LandmarkDetector::DetectSingleFaceMTCNN(bounding_box, image, clnf_model.face_detector_MTCNN, confidence);
 	}
 

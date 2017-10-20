@@ -77,7 +77,7 @@ vector<string> get_arguments(int argc, char **argv)
 	return arguments;
 }
 
-void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<double> >& face_detections)
+void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<float> >& face_detections)
 {
 
 	// Go over the model and eliminate detections that are not informative (there already is a tracker there)
@@ -85,15 +85,15 @@ void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, 
 	{
 
 		// See if the detections intersect
-		cv::Rect_<double> model_rect = clnf_models[model].GetBoundingBox();
+		cv::Rect_<float> model_rect = clnf_models[model].GetBoundingBox();
 
 		for (int detection = face_detections.size() - 1; detection >= 0; --detection)
 		{
-			double intersection_area = (model_rect & face_detections[detection]).area();
-			double union_area = model_rect.area() + face_detections[detection].area() - 2 * intersection_area;
+			float intersection_area = (model_rect & face_detections[detection]).area();
+			float union_area = model_rect.area() + face_detections[detection].area() - 2 * intersection_area;
 
 			// If the model is already tracking what we're detecting ignore the detection, this is determined by amount of overlap
-			if (intersection_area / union_area > 0.5)
+			if (intersection_area / union_area > 0.5f)
 			{
 				face_detections.erase(face_detections.begin() + detection);
 			}
@@ -245,7 +245,7 @@ int main(int argc, char **argv)
 
 			cv::Mat disp_image = captured_image.clone();
 
-			vector<cv::Rect_<double> > face_detections;
+			vector<cv::Rect_<float> > face_detections;
 
 			bool all_models_active = true;
 			for (unsigned int model = 0; model < clnf_models.size(); ++model)
@@ -261,7 +261,7 @@ int main(int argc, char **argv)
 			{
 				if (det_parameters[0].curr_face_detector == LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR)
 				{
-					vector<double> confidences;
+					vector<float> confidences;
 					LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, clnf_models[0].face_detector_HOG, confidences);
 				}
 				else if (det_parameters[0].curr_face_detector == LandmarkDetector::FaceModelParameters::HAAR_DETECTOR)
@@ -270,7 +270,7 @@ int main(int argc, char **argv)
 				}
 				else
 				{
-					vector<double> confidences;
+					vector<float> confidences;
 					LandmarkDetector::DetectFacesMTCNN(face_detections, captured_image, clnf_models[0].face_detector_MTCNN, confidences);
 				}
 

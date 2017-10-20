@@ -658,7 +658,7 @@ void apply_correction(vector<cv::Rect_<float> >& total_bboxes, const vector<cv::
 
 
 // The actual MTCNN face detection step
-bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat& img_in, std::vector<double>& o_confidences, int min_face_size, double t1, double t2, double t3)
+bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<float> >& o_regions, const cv::Mat& img_in, std::vector<float>& o_confidences, int min_face_size, float t1, float t2, float t3)
 {
 
 	int height_orig = img_in.size().height;
@@ -907,7 +907,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<double> >& o_regions, const
 		proposal_boxes_all[k].width = 1.0323 * proposal_boxes_all[k].width;
 		proposal_boxes_all[k].height = 0.7751 * proposal_boxes_all[k].height;
 
-		o_regions.push_back(cv::Rect_<double>(proposal_boxes_all[k].x, proposal_boxes_all[k].y, proposal_boxes_all[k].width, proposal_boxes_all[k].height));
+		o_regions.push_back(cv::Rect_<float>(proposal_boxes_all[k].x, proposal_boxes_all[k].y, proposal_boxes_all[k].width, proposal_boxes_all[k].height));
 		o_confidences.push_back(scores_all[k]);
 
 	}

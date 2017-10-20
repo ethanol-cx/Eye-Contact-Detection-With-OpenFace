@@ -350,11 +350,11 @@ int main(int argc, char **argv)
 		{
 
 			// Detect faces in an image
-			vector<cv::Rect_<double> > face_detections;
+			vector<cv::Rect_<float> > face_detections;
 
 			if (det_parameters.curr_face_detector == LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR)
 			{
-				vector<double> confidences;
+				vector<float> confidences;
 				LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, face_detector_hog, confidences);
 			}
 			else if (det_parameters.curr_face_detector == LandmarkDetector::FaceModelParameters::HAAR_DETECTOR)
@@ -363,7 +363,7 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				vector<double> confidences;
+				vector<float> confidences;
 				LandmarkDetector::DetectFacesMTCNN(face_detections, read_image, face_detector_mtcnn, confidences);
 			}
 

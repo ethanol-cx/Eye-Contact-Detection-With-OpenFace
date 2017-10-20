@@ -138,7 +138,7 @@ namespace LandmarkDetector
 		FaceDetectorMTCNN(const FaceDetectorMTCNN& other);
 
 		// Given an image, orientation and detected landmarks output the result of the appropriate regressor
-		bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat& input_img, std::vector<double>& o_confidences, int min_face = 60, double t1 = 0.6, double t2 = 0.7, double t3 = 0.7);
+		bool DetectFaces(vector<cv::Rect_<float> >& o_regions, const cv::Mat& input_img, std::vector<float>& o_confidences, int min_face = 60, float t1 = 0.6, float t2 = 0.7, float t3 = 0.7);
 
 		// Reading in the model
 		void Read(const string& location);

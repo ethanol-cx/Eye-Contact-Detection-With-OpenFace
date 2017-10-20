@@ -1442,7 +1442,7 @@ namespace LandmarkDetector
 	//============================================================================
 	// Face detection helpers
 	//============================================================================
-	bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, double min_width, cv::Rect_<double> roi)
+	bool DetectFaces(vector<cv::Rect_<float> >& o_regions, const cv::Mat_<uchar>& intensity, float min_width, cv::Rect_<float> roi)
 	{
 		cv::CascadeClassifier classifier("./classifiers/haarcascade_frontalface_alt.xml");
 		if (classifier.empty())
@@ -1457,7 +1457,7 @@ namespace LandmarkDetector
 
 	}
 
-	bool DetectFaces(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, cv::CascadeClassifier& classifier, double min_width, cv::Rect_<double> roi)
+	bool DetectFaces(vector<cv::Rect_<float> >& o_regions, const cv::Mat_<uchar>& intensity, cv::CascadeClassifier& classifier, float min_width, cv::Rect_<float> roi)
 	{
 
 		vector<cv::Rect> face_detections;
@@ -1477,20 +1477,20 @@ namespace LandmarkDetector
 			// CLNF detector expects the bounding box to encompass from eyebrow to chin in y, and from cheeck outline to cheeck outline in x, so we need to compensate
 
 			// The scalings were learned using the Face Detections on LFPW, Helen, AFW and iBUG datasets, using ground truth and detections from openCV
-			cv::Rect_<double> region;
+			cv::Rect_<float> region;
 			// Correct for scale
-			region.width = face_detections[face].width * 0.8924;
-			region.height = face_detections[face].height * 0.8676;
+			region.width = face_detections[face].width * 0.8924f;
+			region.height = face_detections[face].height * 0.8676f;
 
 			// Move the face slightly to the right (as the width was made smaller)
-			region.x = face_detections[face].x + 0.0578 * face_detections[face].width;
+			region.x = face_detections[face].x + 0.0578f * face_detections[face].width;
 			// Shift face down as OpenCV Haar Cascade detects the forehead as well, and we're not interested
-			region.y = face_detections[face].y + face_detections[face].height * 0.2166;
+			region.y = face_detections[face].y + face_detections[face].height * 0.2166f;
 
 			if (min_width != -1)
 			{
-				if (region.width < min_width || region.x < ((double)intensity.cols) * roi.x || region.y < ((double)intensity.cols) * roi.y ||
-					region.x + region.width >((double)intensity.cols) * (roi.x + roi.width) || region.y + region.height >((double)intensity.rows) * (roi.y + roi.height))
+				if (region.width < min_width || region.x < ((float)intensity.cols) * roi.x || region.y < ((float)intensity.cols) * roi.y ||
+					region.x + region.width >((float)intensity.cols) * (roi.x + roi.width) || region.y + region.height >((float)intensity.rows) * (roi.y + roi.height))
 					continue;
 			}
 
@@ -1500,10 +1500,10 @@ namespace LandmarkDetector
 		return o_regions.size() > 0;
 	}
 
-	bool DetectSingleFace(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& intensity_image, cv::CascadeClassifier& classifier, cv::Point preference, double min_width, cv::Rect_<double> roi)
+	bool DetectSingleFace(cv::Rect_<float>& o_region, const cv::Mat_<uchar>& intensity_image, cv::CascadeClassifier& classifier, cv::Point preference, float min_width, cv::Rect_<float> roi)
 	{
 		// The tracker can return multiple faces
-		vector<cv::Rect_<double> > face_detections;
+		vector<cv::Rect_<float> > face_detections;
 
 		bool detect_success = LandmarkDetector::DetectFaces(face_detections, intensity_image, classifier, min_width, roi);
 
@@ -1515,11 +1515,11 @@ namespace LandmarkDetector
 			if (face_detections.size() > 1)
 			{
 				// keep the closest one if preference point not set
-				double best = -1;
+				float best = -1;
 				int bestIndex = -1;
 				for (size_t i = 0; i < face_detections.size(); ++i)
 				{
-					double dist;
+					float dist;
 					bool better;
 
 					if (use_preferred)
@@ -1554,12 +1554,12 @@ namespace LandmarkDetector
 		else
 		{
 			// if not detected
-			o_region = cv::Rect_<double>(0, 0, 0, 0);
+			o_region = cv::Rect_<float>(0, 0, 0, 0);
 		}
 		return detect_success;
 	}
 
-	bool DetectFacesHOG(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, std::vector<double>& confidences, double min_width, cv::Rect_<double> roi)
+	bool DetectFacesHOG(vector<cv::Rect_<float> >& o_regions, const cv::Mat_<uchar>& intensity, std::vector<float>& confidences, float min_width, cv::Rect_<float> roi)
 	{
 		dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
 
@@ -1567,7 +1567,7 @@ namespace LandmarkDetector
 
 	}
 
-	bool DetectFacesHOG(vector<cv::Rect_<double> >& o_regions, const cv::Mat_<uchar>& intensity, dlib::frontal_face_detector& detector, std::vector<double>& o_confidences, double min_width, cv::Rect_<double> roi)
+	bool DetectFacesHOG(vector<cv::Rect_<float> >& o_regions, const cv::Mat_<uchar>& intensity, dlib::frontal_face_detector& detector, std::vector<float>& o_confidences, float min_width, cv::Rect_<float> roi)
 	{
 		if (detector.num_detectors() == 0)
 		{
@@ -1576,7 +1576,7 @@ namespace LandmarkDetector
 
 		cv::Mat_<uchar> upsampled_intensity;
 
-		double scaling = 1.3;
+		float scaling = 1.3f;
 
 		cv::resize(intensity, upsampled_intensity, cv::Size((int)(intensity.cols * scaling), (int)(intensity.rows * scaling)));
 
@@ -1593,11 +1593,11 @@ namespace LandmarkDetector
 		{
 			// CLNF expects the bounding box to encompass from eyebrow to chin in y, and from cheeck outline to cheeck outline in x, so we need to compensate
 
-			cv::Rect_<double> region;
+			cv::Rect_<float> region;
 			// Move the face slightly to the right (as the width was made smaller)
-			region.x = (face_detections[face].rect.get_rect().tl_corner().x() + 0.0389 * face_detections[face].rect.get_rect().width()) / scaling;
+			region.x = (face_detections[face].rect.get_rect().tl_corner().x() + 0.0389f * face_detections[face].rect.get_rect().width()) / scaling;
 			// Shift face down as OpenCV Haar Cascade detects the forehead as well, and we're not interested
-			region.y = (face_detections[face].rect.get_rect().tl_corner().y() + 0.1278 * face_detections[face].rect.get_rect().height()) / scaling;
+			region.y = (face_detections[face].rect.get_rect().tl_corner().y() + 0.1278f * face_detections[face].rect.get_rect().height()) / scaling;
 
 			// Correct for scale
 			region.width = (face_detections[face].rect.get_rect().width() * 0.9611) / scaling;
@@ -1606,8 +1606,8 @@ namespace LandmarkDetector
 			// The scalings were learned using the Face Detections on LFPW and Helen using ground truth and detections from the HOG detector
 			if (min_width != -1)
 			{
-				if (region.width < min_width || region.x < ((double)intensity.cols) * roi.x || region.y < ((double)intensity.cols) * roi.y ||
-					region.x + region.width >((double)intensity.cols) * (roi.x + roi.width) || region.y + region.height >((double)intensity.rows) * (roi.y + roi.height))
+				if (region.width < min_width || region.x < ((float)intensity.cols) * roi.x || region.y < ((float)intensity.cols) * roi.y ||
+					region.x + region.width >((float)intensity.cols) * (roi.x + roi.width) || region.y + region.height >((float)intensity.rows) * (roi.y + roi.height))
 					continue;
 			}
 
@@ -1620,7 +1620,7 @@ namespace LandmarkDetector
 		return o_regions.size() > 0;
 	}
 
-	bool DetectSingleFaceHOG(cv::Rect_<double>& o_region, const cv::Mat_<uchar>& intensity_img, dlib::frontal_face_detector& detector, double& confidence, cv::Point preference, double min_width, cv::Rect_<double> roi)
+	bool DetectSingleFaceHOG(cv::Rect_<float>& o_region, const cv::Mat_<uchar>& intensity_img, dlib::frontal_face_detector& detector, float& confidence, cv::Point preference, float min_width, cv::Rect_<float> roi)
 	{
 
 		if (detector.num_detectors() == 0)
@@ -1629,8 +1629,8 @@ namespace LandmarkDetector
 		}
 
 		// The tracker can return multiple faces
-		vector<cv::Rect_<double> > face_detections;
-		vector<double> confidences;
+		vector<cv::Rect_<float> > face_detections;
+		vector<float> confidences;
 		bool detect_success = LandmarkDetector::DetectFacesHOG(face_detections, intensity_img, detector, confidences, min_width, roi);
 
 		// In case of multiple faces pick the biggest one
@@ -1642,7 +1642,7 @@ namespace LandmarkDetector
 			bool use_preferred = (preference.x != -1) && (preference.y != -1);
 
 			// keep the most confident one or the one closest to preference point if set
-			double best_so_far;
+			float best_so_far;
 			if (use_preferred)
 			{
 				best_so_far = sqrt((preference.x - (face_detections[0].width / 2 + face_detections[0].x)) * (preference.x - (face_detections[0].width / 2 + face_detections[0].x)) +
@@ -1661,7 +1661,7 @@ namespace LandmarkDetector
 			for (size_t i = 1; i < face_detections.size(); ++i)
 			{
 
-				double dist;
+				float dist;
 				bool better;
 
 				if (use_preferred)
@@ -1696,25 +1696,25 @@ namespace LandmarkDetector
 		else
 		{
 			// if not detected
-			o_region = cv::Rect_<double>(0, 0, 0, 0);
+			o_region = cv::Rect_<float>(0, 0, 0, 0);
 			// A completely unreliable detection (shouldn't really matter what is returned here)
 			confidence = -2;
 		}
 		return detect_success;
 	}
 
-bool DetectFacesMTCNN(vector<cv::Rect_<double> >& o_regions, const cv::Mat& image, LandmarkDetector::FaceDetectorMTCNN& detector, std::vector<double>& o_confidences)
+bool DetectFacesMTCNN(vector<cv::Rect_<float> >& o_regions, const cv::Mat& image, LandmarkDetector::FaceDetectorMTCNN& detector, std::vector<float>& o_confidences)
 {
 	detector.DetectFaces(o_regions, image, o_confidences);
 
 	return o_regions.size() > 0;
 }
 
-bool DetectSingleFaceMTCNN(cv::Rect_<double>& o_region, const cv::Mat& image, LandmarkDetector::FaceDetectorMTCNN& detector, double& confidence, cv::Point preference)
+bool DetectSingleFaceMTCNN(cv::Rect_<float>& o_region, const cv::Mat& image, LandmarkDetector::FaceDetectorMTCNN& detector, float& confidence, cv::Point preference)
 {
 	// The tracker can return multiple faces
-	vector<cv::Rect_<double> > face_detections;
-	vector<double> confidences;
+	vector<cv::Rect_<float> > face_detections;
+	vector<float> confidences;
 
 	detector.DetectFaces(face_detections, image, confidences);
 
@@ -1725,7 +1725,7 @@ bool DetectSingleFaceMTCNN(cv::Rect_<double>& o_region, const cv::Mat& image, La
 		bool use_preferred = (preference.x != -1) && (preference.y != -1);
 
 		// keep the most confident one or the one closest to preference point if set
-		double best_so_far;
+		float best_so_far;
 		if (use_preferred)
 		{
 			best_so_far = sqrt((preference.x - (face_detections[0].width / 2 + face_detections[0].x)) * (preference.x - (face_detections[0].width / 2 + face_detections[0].x)) +
@@ -1740,7 +1740,7 @@ bool DetectSingleFaceMTCNN(cv::Rect_<double>& o_region, const cv::Mat& image, La
 		for (size_t i = 1; i < face_detections.size(); ++i)
 		{
 
-			double dist;
+			float dist;
 			bool better;
 
 			if (use_preferred)
@@ -1769,7 +1769,7 @@ bool DetectSingleFaceMTCNN(cv::Rect_<double>& o_region, const cv::Mat& image, La
 	else
 	{
 		// if not detected
-		o_region = cv::Rect_<double>(0, 0, 0, 0);
+		o_region = cv::Rect_<float>(0, 0, 0, 0);
 		// A completely unreliable detection (shouldn't really matter what is returned here)
 		confidence = -2;
 	}
