@@ -111,7 +111,7 @@ cv::Vec6d LandmarkDetector::GetCorrectedPoseWorld(const CLNF& clnf_model, double
 	
 		double X = ((clnf_model.params_global[4] - cx) * (1.0/fx)) * Z;
 		double Y = ((clnf_model.params_global[5] - cy) * (1.0/fy)) * Z;
- 
+
 		// Correction for orientation
 
 		// 2D points
