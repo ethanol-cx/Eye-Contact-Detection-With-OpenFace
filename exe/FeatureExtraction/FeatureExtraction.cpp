@@ -232,7 +232,7 @@ int main (int argc, char **argv)
 	// Get the input output file parameters
 	
 	// Indicates that rotation should be with respect to camera or world coordinates
-	bool use_camera_coordinates;
+	bool use_camera_coordinates = false;
 	string output_codec; //not used but should
 	LandmarkDetector::get_video_input_output_params(input_files, output_files, tracked_videos_output, use_camera_coordinates, output_codec, arguments);
 

@@ -238,7 +238,6 @@ int main (int argc, char **argv)
 		{		
 
 			// Reading the images
-			cv::Mat_<float> depth_image;
 			cv::Mat_<uchar> grayscale_image;
 
 			cv::Mat disp_image = captured_image.clone();
@@ -398,12 +397,6 @@ int main (int argc, char **argv)
 			{
 				cv::namedWindow("tracking_result",1);
 				cv::imshow("tracking_result", disp_image);
-
-				if(!depth_image.empty())
-				{
-					// Division needed for visualisation purposes
-					imshow("depth", depth_image/2000.0);
-				}
 			}
 
 			// output the tracked video

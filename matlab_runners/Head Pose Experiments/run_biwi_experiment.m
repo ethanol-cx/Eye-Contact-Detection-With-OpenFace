@@ -1,4 +1,4 @@
-function [output_dir] = run_biwi_experiment(rootDir, biwiDir, verbose, depth, varargin)
+function [output_dir] = run_biwi_experiment(rootDir, biwiDir, verbose, varargin)
 % Biwi dataset experiment
 
 if(isunix)
@@ -11,10 +11,6 @@ output_dir = 'experiments/biwi_out';
 
 dbSeqDir = dir([rootDir biwiDir]);
    
-if(depth)
-    output_dir = cat(2, output_dir, '_depth');
-end
-
 output_dir = cat(2, output_dir, '/');
 
 offset = 0;
@@ -43,17 +39,12 @@ for i=3 + offset:numTogether:numel(dbSeqDir)
 
         command = cat(2, command, [' -f "' inputFile '" -of "' outputFile  '"']);
 
-        if(depth)
-            dDir = [biwiDir dbSeqDir(i+n).name '/depthAligned/'];
-            command = cat(2, command, [' -fd "' dDir '"']);    
-        end
-
         if(verbose)
             outputVideo = [output_dir dbSeqDir(i).name '.avi'];
             command = cat(2, command, [' -ov "' outputVideo '"']);    
         end
     end    
-    command = cat(2, command, [' -fx 505 -fy 505 -cx 320 -cy 240 -no2Dfp -no3Dfp -noMparams -noAUs -noGaze -vis-track']);
+    command = cat(2, command, [' -fx 505 -fy 505 -cx 320 -cy 240 -no2Dfp -no3Dfp -noMparams -noAUs -noGaze -vis-track -camera_coord ']);
         
     if(any(strcmp('model', varargin)))
         command = cat(2, command, [' -mloc "', varargin{find(strcmp('model', varargin))+1}, '"']);
