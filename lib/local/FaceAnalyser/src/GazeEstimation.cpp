@@ -133,6 +133,17 @@ void FaceAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 	gaze_absolute = gazeVecAxis / norm(gazeVecAxis);
 }
 
+cv::Vec2d FaceAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2)
+{
+
+	cv::Point3f gaze_vector = (gaze_vector_1 + gaze_vector_2) / 2;
+
+	double x_angle = atan2(gaze_vector.x, -gaze_vector.z);
+	double y_angle = atan2(gaze_vector.y, -gaze_vector.z);
+
+	return cv::Vec2d(x_angle, y_angle);
+
+}
 
 void FaceAnalysis::DrawGaze(cv::Mat img, const LandmarkDetector::CLNF& clnf_model, cv::Point3f gazeVecAxisLeft, cv::Point3f gazeVecAxisRight, float fx, float fy, float cx, float cy)
 {
