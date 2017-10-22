@@ -200,7 +200,7 @@ namespace OpenFaceOffline
 
             List<double> pose = new List<double>();
             clnf_model.GetPose(pose, fx, fy, cx, cy);
-
+            
             output_features_file.Write(String.Format("{0}, {1}, {2:F3}, {3}", frame_ind, time_stamp, confidence, success ? 1 : 0));
 
             if (output_gaze)
@@ -222,7 +222,7 @@ namespace OpenFaceOffline
             }
 
             if (output_pose)
-                output_features_file.Write(String.Format(", {0:F3}, {1:F3}, {2:F3}, {3:F3}, {4:F3}, {5:F3}", pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]));
+                output_features_file.Write(String.Format(", {0:F4}, {1:F4}, {2:F4}, {3:F4}, {4:F4}, {5:F4}", pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]));
 
             if (output_2D_landmarks)
             {

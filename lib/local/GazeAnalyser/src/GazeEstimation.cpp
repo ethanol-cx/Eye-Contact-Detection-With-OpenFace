@@ -136,18 +136,13 @@ void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 	gaze_absolute = gazeVecAxis / norm(gazeVecAxis);
 }
 
-cv::Vec2d GazeAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2, cv::Vec6d head_pose)
+cv::Vec2d GazeAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2)
 {
 
-	cv::Vec3d eulerAngles(head_pose(3), head_pose(4), head_pose(5));
-	cv::Matx33d rotMat = LandmarkDetector::Euler2RotationMatrix(eulerAngles);
-	cv::Point3f gaze_point = (gaze_vector_1 + gaze_vector_2) / 2;
-	cv::Vec3d gaze(gaze_point.x, gaze_point.y, gaze_point.z);
+	cv::Point3f gaze_vector = (gaze_vector_1 + gaze_vector_2) / 2;
 
-	gaze = rotMat * gaze;
-
-	double x_angle = atan2(gaze[0], -gaze[2]);
-	double y_angle = atan2(gaze[1], -gaze[2]);
+	double x_angle = atan2(gaze_vector.x, -gaze_vector.z);
+	double y_angle = atan2(gaze_vector.y, -gaze_vector.z);
 
 	return cv::Vec2d(x_angle, y_angle);
 

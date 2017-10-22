@@ -109,10 +109,8 @@ namespace GazeAnalyser_Interop {
 
 			// Estimate the gaze angle WRT to head pose here
 			System::Collections::Generic::List<double>^ pose_list = gcnew System::Collections::Generic::List<double>();
-			clnf->GetPose(pose_list, fx, fy, cx, cy);
-			cv::Vec6d pose(pose_list[0], pose_list[1], pose_list[2], pose_list[3], pose_list[4], pose_list[5]);
 
-			*gazeAngle = GazeAnalysis::GetGazeAngle(*gazeDirection0, *gazeDirection1, pose);
+			*gazeAngle = GazeAnalysis::GetGazeAngle(*gazeDirection0, *gazeDirection1);
 
 			// Grab pupil locations
 			int part_left = -1;
