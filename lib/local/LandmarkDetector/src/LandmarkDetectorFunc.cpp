@@ -137,7 +137,7 @@ cv::Vec6d LandmarkDetector::GetCorrectedPoseWorld(const CLNF& clnf_model, double
 
 		cv::Vec3d euler = LandmarkDetector::AxisAngle2Euler(vec_rot);
 		
-		return cv::Vec6d(vec_trans[0], vec_trans[1], vec_trans[2], vec_rot[0], vec_rot[1], vec_rot[2]);
+		return cv::Vec6d(vec_trans[0], vec_trans[1], vec_trans[2], euler[0], euler[1], euler[2]);
 	}
 	else
 	{
