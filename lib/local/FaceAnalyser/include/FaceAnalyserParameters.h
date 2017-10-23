@@ -32,56 +32,69 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __SVMSTATICLIN_h_
-#define __SVMSTATICLIN_h_
+//  Parameters of the Face analyser
+#ifndef __FACE_ANALYSER_PARAM_H
+#define __FACE_ANALYSER_PARAM_H
 
 #include <vector>
-#include <string>
-
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-
 #include <opencv2/core/core.hpp>
+
+// Boost includes
+#include <filesystem.hpp>
+#include <filesystem/fstream.hpp>
+
+using namespace std;
 
 namespace FaceAnalysis
 {
 
-// Collection of linear SVR regressors for AU prediction
-class SVM_static_lin{
-
+struct FaceAnalyserParameters
+{
 public:
+	// Constructors
+	FaceAnalyserParameters();
+	FaceAnalyserParameters(string root_exe);
+	FaceAnalyserParameters(vector<string> &arguments);
 
-	SVM_static_lin()
-	{}
+	// These are the parameters of training and will not change and are fixed
+	const double sim_scale_au = 0.7;
+	const int sim_size_au = 112;
 
-	// Predict the AU from HOG appearance of the face
-	void Predict(std::vector<double>& predictions, std::vector<std::string>& names, const cv::Mat_<double>& fhog_descriptor, const cv::Mat_<double>& geom_params);
+	// Should the output aligned faces be grayscale
+	bool grayscale;
 
-	// Reading in the model (or adding to it)
-	void Read(std::ifstream& stream, const std::vector<std::string>& au_names);
+	// Use getters and setters for these as they might need to reload models and make sure the scale and size ratio makes sense
+	void setAlignedOutput(int output_size, double scale=-1);
+	// This will also change the model location
+	void OptimizeForVideos();
+	void OptimizeForImages();
 
-	std::vector<std::string> GetAUNames() const
-	{
-		return AU_names;
-	}
+	double getSimScaleOut() const { return sim_scale_out; }
+	int getSimSizeOut() const { return sim_size_out; }
+	bool getDynamic() const { return dynamic; }
+	string getModelLoc() const { return string(model_location); }
+	vector<cv::Vec3d> getOrientationBins() const { return vector<cv::Vec3d>(orientation_bins); }
 
 private:
 
-	// The names of Action Units this model is responsible for
-	std::vector<std::string> AU_names;
+	void init();
 
-	// For normalisation
-	cv::Mat_<double> means;
-	
-	// For actual prediction
-	cv::Mat_<double> support_vectors;	
-	cv::Mat_<double> biases;
+	// Aligned face output size
+	double sim_scale_out;
+	int sim_size_out;
 
-	std::vector<double> pos_classes;
-	std::vector<double> neg_classes;
+	// Should a video stream be assumed
+	bool dynamic;
+
+	// Where to load the models from
+	string model_location;
+	// The location of the executable
+	boost::filesystem::path root;
+
+	vector<cv::Vec3d> orientation_bins;
 
 };
-  //===========================================================================
+
 }
-#endif
+
+#endif // __FACE_ANALYSER_PARAM_H

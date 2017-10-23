@@ -131,9 +131,9 @@ void create_directory(string output_path)
 	}
 }
 
-void get_output_feature_params(vector<string> &output_similarity_aligned, vector<string> &output_hog_aligned_files, double &similarity_scale,
-	int &similarity_size, bool &grayscale, bool& visualize_track, bool& visualize_align, bool& visualize_hog, bool& dynamic, bool &output_2D_landmarks, bool &output_3D_landmarks,
-	bool &output_model_params, bool &output_pose, bool &output_AUs, bool &output_gaze, vector<string> &arguments);
+void get_output_feature_params(vector<string> &output_similarity_aligned, vector<string> &output_hog_aligned_files, bool& visualize_track,
+	bool& visualize_align, bool& visualize_hog, bool &output_2D_landmarks, bool &output_3D_landmarks, bool &output_model_params,
+	bool &output_pose, bool &output_AUs, bool &output_gaze, vector<string> &arguments);
 
 void get_image_input_output_params_feats(vector<vector<string> > &input_image_files, bool& as_video, vector<string> &arguments);
 
@@ -217,18 +217,10 @@ int main (int argc, char **argv)
 {
 
 	vector<string> arguments = get_arguments(argc, argv);
-
-	// Search paths
-	boost::filesystem::path config_path = boost::filesystem::path(CONFIG_DIR);
-	boost::filesystem::path parent_path = boost::filesystem::path(arguments[0]).parent_path();
-
+	
 	// Some initial parameters that can be overriden from command line	
 	vector<string> input_files, output_files, tracked_videos_output;
 	
-	LandmarkDetector::FaceModelParameters det_parameters(arguments);
-	// Always track gaze in feature extraction
-	det_parameters.track_gaze = true;
-
 	// Get the input output file parameters
 	
 	// Indicates that rotation should be with respect to camera or world coordinates
@@ -274,19 +266,8 @@ int main (int argc, char **argv)
 		fx_undefined = true;
 	}
 
-	// The modules that are being used for tracking
-	LandmarkDetector::CLNF face_model(det_parameters.model_location);	
-
 	vector<string> output_similarity_align;
 	vector<string> output_hog_align_files;
-
-	double sim_scale = -1;
-	int sim_size = 112;
-	bool grayscale = false;
-	bool video_output = false;
-	bool dynamic = true; // Indicates if a dynamic AU model should be used (dynamic is useful if the video is long enough to include neutral expressions)
-	int num_hog_rows;
-	int num_hog_cols;
 
 	// By default output all parameters, but these can be turned off to get smaller files or slightly faster processing times
 	// use -no2Dfp, -no3Dfp, -noMparams, -noPose, -noAUs, -noGaze to turn them off
@@ -300,77 +281,25 @@ int main (int argc, char **argv)
 	bool visualize_track = false;
 	bool visualize_align = false;
 	bool visualize_hog = false;
-	get_output_feature_params(output_similarity_align, output_hog_align_files, sim_scale, sim_size, grayscale, visualize_track, visualize_align, visualize_hog, dynamic,
+	get_output_feature_params(output_similarity_align, output_hog_align_files, visualize_track, visualize_align, visualize_hog,
 		output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, arguments);
-
-	// Used for image masking
-	string tri_loc;
-	boost::filesystem::path tri_loc_path = boost::filesystem::path("model/tris_68_full.txt");
-	if (boost::filesystem::exists(tri_loc_path))
-	{
-		tri_loc = tri_loc_path.string();
-	}
-	else if (boost::filesystem::exists(parent_path/tri_loc_path))
-	{
-		tri_loc = (parent_path/tri_loc_path).string();
-	}
-	else if (boost::filesystem::exists(config_path/tri_loc_path))
-	{
-		tri_loc = (config_path/tri_loc_path).string();
-	}
-	else
-	{
-		cout << "Can't find triangulation files, exiting" << endl;
-		return 1;
-	}
-
-	// Will warp to scaled mean shape
-	cv::Mat_<double> similarity_normalised_shape = face_model.pdm.mean_shape * sim_scale;
-	// Discard the z component
-	similarity_normalised_shape = similarity_normalised_shape(cv::Rect(0, 0, 1, 2*similarity_normalised_shape.rows/3)).clone();
 
 	// If multiple video files are tracked, use this to indicate if we are done
 	bool done = false;	
 	int f_n = -1;
 	int curr_img = -1;
 
-	string au_loc;
+	// Load the modules that are being used for tracking and face analysis
+	// Load face landmark detector
+	LandmarkDetector::FaceModelParameters det_parameters(arguments);
+	// Always track gaze in feature extraction
+	det_parameters.track_gaze = true;
+	LandmarkDetector::CLNF face_model(det_parameters.model_location);
 
-	string au_loc_local;
-	if (dynamic)
-	{
-		au_loc_local = "AU_predictors/AU_all_best.txt";
-	}
-	else
-	{
-		au_loc_local = "AU_predictors/AU_all_static.txt";
-	}
+	// Load facial feature extractor and AU analyser
+	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
+	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
-	boost::filesystem::path au_loc_path = boost::filesystem::path(au_loc_local);
-	if (boost::filesystem::exists(au_loc_path))
-	{
-		au_loc = au_loc_path.string();
-	}
-	else if (boost::filesystem::exists(parent_path/au_loc_path))
-	{
-		au_loc = (parent_path/au_loc_path).string();
-	}
-	else if (boost::filesystem::exists(config_path/au_loc_path))
-	{
-		au_loc = (config_path/au_loc_path).string();
-	}
-	else
-	{
-		cout << "Can't find AU prediction files, exiting" << endl;
-		return 1;
-	}
-
-	// Creating a  face analyser that will be used for AU extraction
-	// Make sure sim_scale is proportional to sim_size if not set
-	if (sim_scale == -1) sim_scale = sim_size * (0.7 / 112.0);
-
-	FaceAnalysis::FaceAnalyser face_analyser(vector<cv::Vec3d>(), sim_scale, sim_size, sim_size, au_loc, tri_loc);
-		
 	while(!done) // this is not a for loop as we might also be reading from a webcam
 	{
 		
@@ -562,11 +491,12 @@ int main (int argc, char **argv)
 			// Do face alignment
 			cv::Mat sim_warped_img;
 			cv::Mat_<double> hog_descriptor;
+			int num_hog_rows, num_hog_cols;
 
 			// But only if needed in output
 			if(!output_similarity_align.empty() || hog_output_file.is_open() || output_AUs)
 			{
-				face_analyser.AddNextFrame(captured_image, face_model, time_stamp, false, !det_parameters.quiet_mode && (visualize_align || visualize_hog));
+				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, time_stamp, false, !det_parameters.quiet_mode);
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 
 				if(!det_parameters.quiet_mode && visualize_align)
@@ -605,11 +535,6 @@ int main (int argc, char **argv)
 			// Write the similarity normalised output
 			if (!output_similarity_align.empty())
 			{
-
-				if (sim_warped_img.channels() == 3 && grayscale)
-				{
-					cvtColor(sim_warped_img, sim_warped_img, CV_BGR2GRAY);
-				}
 
 				char name[100];
 
@@ -702,7 +627,7 @@ int main (int argc, char **argv)
 		if (output_files.size() > 0 && output_AUs)
 		{
 			cout << "Postprocessing the Action Unit predictions" << endl;
-			face_analyser.PostprocessOutputFile(output_files[f_n], dynamic);
+			face_analyser.PostprocessOutputFile(output_files[f_n]);
 		}
 		// Reset the models for the next video
 		face_analyser.Reset();
@@ -976,10 +901,9 @@ void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, boo
 }
 
 
-void get_output_feature_params(vector<string> &output_similarity_aligned, vector<string> &output_hog_aligned_files, double &similarity_scale,
-	int &similarity_size, bool &grayscale, bool& visualize_track, bool& visualize_align, bool& visualize_hog, bool& dynamic,
-	bool &output_2D_landmarks, bool &output_3D_landmarks, bool &output_model_params, bool &output_pose, bool &output_AUs, bool &output_gaze,
-	vector<string> &arguments)
+void get_output_feature_params(vector<string> &output_similarity_aligned, vector<string> &output_hog_aligned_files, bool& visualize_track, 
+	bool& visualize_align, bool& visualize_hog, bool &output_2D_landmarks, bool &output_3D_landmarks, bool &output_model_params, 
+	bool &output_pose, bool &output_AUs, bool &output_gaze, vector<string> &arguments)
 {
 	output_similarity_aligned.clear();
 	output_hog_aligned_files.clear();
@@ -992,9 +916,6 @@ void get_output_feature_params(vector<string> &output_similarity_aligned, vector
 	}
 
 	string output_root = "";
-
-	// By default the model is dynamic
-	dynamic = true;
 
 	visualize_align = false;
 	visualize_hog = false;
@@ -1055,29 +976,6 @@ void get_output_feature_params(vector<string> &output_similarity_aligned, vector
 		{
 			visualize_track = true;
 			valid[i] = false;
-		}
-		else if (arguments[i].compare("-au_static") == 0)
-		{
-			dynamic = false;
-		}
-		else if (arguments[i].compare("-g") == 0)
-		{
-			grayscale = true;
-			valid[i] = false;
-		}
-		else if (arguments[i].compare("-simscale") == 0)
-		{
-			similarity_scale = stod(arguments[i + 1]);
-			valid[i] = false;
-			valid[i + 1] = false;
-			i++;
-		}
-		else if (arguments[i].compare("-simsize") == 0)
-		{
-			similarity_size = stoi(arguments[i + 1]);
-			valid[i] = false;
-			valid[i + 1] = false;
-			i++;
 		}
 		else if (arguments[i].compare("-no2Dfp") == 0)
 		{

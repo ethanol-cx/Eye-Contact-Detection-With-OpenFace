@@ -314,10 +314,6 @@ int main (int argc, char **argv)
 	//Convert arguments to more convenient vector form
 	vector<string> arguments = get_arguments(argc, argv);
 
-	// Search paths
-	boost::filesystem::path config_path = boost::filesystem::path(CONFIG_DIR);
-	boost::filesystem::path parent_path = boost::filesystem::path(arguments[0]).parent_path();
-
 	// Some initial parameters that can be overriden from command line
 	vector<string> files, output_images, output_landmark_locations, output_pose_locations;
 
@@ -354,50 +350,10 @@ int main (int argc, char **argv)
 	cv::CascadeClassifier classifier(det_parameters.face_detector_location);
 	dlib::frontal_face_detector face_detector_hog = dlib::get_frontal_face_detector();
 
-	// Loading the AU prediction models
-	string au_loc = "AU_predictors/AU_all_static.txt";
-
-	boost::filesystem::path au_loc_path = boost::filesystem::path(au_loc);
-	if (boost::filesystem::exists(au_loc_path))
-	{
-		au_loc = au_loc_path.string();
-	}
-	else if (boost::filesystem::exists(parent_path/au_loc_path))
-	{
-		au_loc = (parent_path/au_loc_path).string();
-	}
-	else if (boost::filesystem::exists(config_path/au_loc_path))
-	{
-		au_loc = (config_path/au_loc_path).string();
-	}
-	else
-	{
-		cout << "Can't find AU prediction files, exiting" << endl;
-		return 1;
-	}
-
-	// Used for image masking for AUs
-	string tri_loc;
-	boost::filesystem::path tri_loc_path = boost::filesystem::path("model/tris_68_full.txt");
-	if (boost::filesystem::exists(tri_loc_path))
-	{
-		tri_loc = tri_loc_path.string();
-	}
-	else if (boost::filesystem::exists(parent_path/tri_loc_path))
-	{
-		tri_loc = (parent_path/tri_loc_path).string();
-	}
-	else if (boost::filesystem::exists(config_path/tri_loc_path))
-	{
-		tri_loc = (config_path/tri_loc_path).string();
-	}
-	else
-	{
-		cout << "Can't find triangulation files, exiting" << endl;
-		return 1;
-	}
-
-	FaceAnalysis::FaceAnalyser face_analyser(vector<cv::Vec3d>(), 0.7, 112, 112, au_loc, tri_loc);
+	// Load facial feature extractor and AU analyser (make sure it is static)
+	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
+	face_analysis_params.OptimizeForImages();
+	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
 	bool visualise = !det_parameters.quiet_mode;
 
@@ -477,7 +433,7 @@ int main (int argc, char **argv)
 					gazeAngle = FaceAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
 				}
 
-				auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model, false);
+				auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model.detected_landmarks, false);
 
 				// Writing out the detected landmarks (in an OS independent manner)
 				if(!output_landmark_locations.empty())
@@ -594,7 +550,7 @@ int main (int argc, char **argv)
 				gazeAngle = FaceAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
 			}
 
-			auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model, false);
+			auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model.detected_landmarks, false);
 
 			// Writing out the detected landmarks
 			if(!output_landmark_locations.empty())

@@ -186,18 +186,24 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\FaceAnalyserParameters.cpp" />
     <ClCompile Include="src\GazeEstimation.cpp" />
+    <ClCompile Include="src\PAW.cpp" />
+    <ClCompile Include="src\PDM.cpp" />
     <ClCompile Include="src\SVM_dynamic_lin.cpp" />
     <ClCompile Include="src\SVM_static_lin.cpp" />
     <ClCompile Include="src\SVR_dynamic_lin_regressors.cpp" />
     <ClCompile Include="src\SVR_static_lin_regressors.cpp" />
     <ClInclude Include="include\FaceAnalyser.h" />
+    <ClInclude Include="include\FaceAnalyserParameters.h" />
     <ClInclude Include="include\Face_utils.h">
       <FileType>CppCode</FileType>
     </ClInclude>
     <ClCompile Include="src\FaceAnalyser.cpp" />
     <ClCompile Include="src\Face_utils.cpp" />
     <ClInclude Include="include\GazeEstimation.h" />
+    <ClInclude Include="include\PAW.h" />
+    <ClInclude Include="include\PDM.h" />
     <ClInclude Include="include\SVM_dynamic_lin.h" />
     <ClInclude Include="include\SVM_static_lin.h" />
     <ClInclude Include="include\SVR_dynamic_lin_regressors.h" />
