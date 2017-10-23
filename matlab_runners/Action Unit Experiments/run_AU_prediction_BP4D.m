@@ -22,32 +22,32 @@ new_bp4d_dirs = {};
 % This might take some time
 for i = 1:numel(bp4d_dirs)
     dirs = dir([bp4d_loc, '/', bp4d_dirs{i}, '/T*']);
-    
+
     tmp_dir = [bp4d_loc, '/../tmp/', bp4d_dirs{i}, '/'];
     new_bp4d_dirs = cat(1, new_bp4d_dirs, tmp_dir);
-    
+
     if(~exist(tmp_dir, 'file'))
         mkdir(tmp_dir);
-        
+
         % Move all images and resize them
         for d=1:numel(dirs)
-           
+
             in_files = dir([bp4d_loc, '/', bp4d_dirs{i}, '/', dirs(d).name, '/*.jpg']);
-            
+
             for img_ind=1:numel(in_files)
-               
+
                 img_file = [bp4d_loc, '/', bp4d_dirs{i}, '/', dirs(d).name, '/', in_files(img_ind).name];
                 img = imread(img_file);
                 img = imresize(img, 0.5);
                 img_out = [tmp_dir, dirs(d).name, '_', in_files(img_ind).name];
                 imwrite(img, img_out);
-                
+
             end
-            
+
         end
-        
+
     end
-    
+
 end
 %%
 
@@ -125,6 +125,8 @@ end
 
 %%
 f = fopen('results/BP4D_valid_res_class.txt', 'w');
+f1s_class = zeros(1, numel(aus_BP4D));
+
 for au = 1:numel(aus_BP4D)
 
     if(inds_au_class(au) ~= 0)
@@ -137,7 +139,7 @@ for au = 1:numel(aus_BP4D)
         recall = tp./(tp+fn);
 
         f1 = 2 * precision .* recall ./ (precision + recall);
-
+        f1s_class(au) = f1;
         fprintf(f, 'AU%d class, Precision - %.3f, Recall - %.3f, F1 - %.3f\n', aus_BP4D(au), precision, recall, f1);
     end    
     
@@ -195,8 +197,10 @@ end
 
 %%
 f = fopen('results/BP4D_valid_res_int.txt', 'w');
+ints_cccs = zeros(1, numel(aus_BP4D));
 for au = 1:numel(aus_BP4D)
     [ accuracies, F1s, corrs, ccc, rms, classes ] = evaluate_au_prediction_results( preds_all_int(valid_ids, inds_au_int(au)), labels_gt(valid_ids,au));
+    ints_cccs(au) = ccc;
     fprintf(f, 'AU%d results - rms %.3f, corr %.3f, ccc - %.3f\n', aus_BP4D(au), rms, corrs, ccc);    
 end
 fclose(f);
