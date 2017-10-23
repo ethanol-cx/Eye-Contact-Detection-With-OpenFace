@@ -48,6 +48,7 @@ end_ind = -1;
 aus_det = [];
 aus_det_id = [];
 
+%%
 while ischar(data)
     if(~isempty(findstr(data, 'au occurences:')))
         num_occurences = str2num(data(numel('au occurences:')+1:end));
