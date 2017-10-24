@@ -53,7 +53,7 @@ namespace LandmarkDetector
 	// Helper functions for parsing the inputs
 	//=============================================================================================
 	void get_video_input_output_params(vector<string> &input_video_file, vector<string> &output_files,
-		vector<string> &output_video_files, string &output_codec, vector<string> &arguments);
+		vector<string> &output_video_files, bool& camera_coordinates_pose, string &output_codec, vector<string> &arguments);
 
 	void get_camera_params(int &device, float &fx, float &fy, float &cx, float &cy, vector<string> &arguments);
 

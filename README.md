@@ -72,7 +72,7 @@ in *Facial Expression Recognition and Analysis Challenge*,
 
 Copyright can be found in the Copyright.txt
 
-You have to respect boost, TBB, dlib, and OpenCV licenses.
+You have to respect boost, TBB, dlib, OpenBLAS, and OpenCV licenses.
 
 # Commercial license
 

@@ -97,7 +97,7 @@ void create_directories(string output_path)
 
 // Extracting the following command line arguments -f, -op, -of, -ov (and possible ordered repetitions)
 void get_video_input_output_params(vector<string> &input_video_files, vector<string> &output_files,
-	vector<string> &output_video_files, string& output_codec, vector<string> &arguments)
+	vector<string> &output_video_files, bool& camera_coordinates_pose, string& output_codec, vector<string> &arguments)
 {
 	bool* valid = new bool[arguments.size()];
 
@@ -105,6 +105,9 @@ void get_video_input_output_params(vector<string> &input_video_files, vector<str
 	{
 		valid[i] = true;
 	}
+
+	// By default use world coordinate system
+	camera_coordinates_pose = false;
 
     // By default use DIVX codec
 	output_codec = "DIVX";
@@ -161,6 +164,10 @@ void get_video_input_output_params(vector<string> &input_video_files, vector<str
 			valid[i] = false;
 			valid[i+1] = false;
 			i++;
+		}		
+		else if (arguments[i].compare("-camera_coord") == 0)
+		{
+			camera_coordinates_pose = true;
 		}
 		else if (arguments[i].compare("-oc") == 0)
 		{
@@ -966,14 +973,14 @@ void DrawBox(vector<pair<cv::Point, cv::Point>> lines, cv::Mat image, cv::Scalar
 // Computing landmarks (to be drawn later possibly)
 vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities)
 {
-	int n = shape2D.rows/2;
+	int n = shape2D.rows / 2;
 	vector<cv::Point2d> landmarks;
 
-	for( int i = 0; i < n; ++i)
-	{		
-		if(visibilities.at<int>(i))
+	for (int i = 0; i < n; ++i)
+	{
+		if (visibilities.at<int>(i))
 		{
-			cv::Point2d featurePoint(shape2D.at<double>(i), shape2D.at<double>(i +n));
+			cv::Point2d featurePoint(shape2D.at<double>(i), shape2D.at<double>(i + n));
 
 			landmarks.push_back(featurePoint);
 		}
@@ -985,25 +992,25 @@ vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<double>& shape2D, c
 // Computing landmarks (to be drawn later possibly)
 vector<cv::Point2d> CalculateAllLandmarks(const cv::Mat_<double>& shape2D)
 {
-	
+
 	int n;
 	vector<cv::Point2d> landmarks;
-	
-	if(shape2D.cols == 2)
+
+	if (shape2D.cols == 2)
 	{
 		n = shape2D.rows;
 	}
-	else if(shape2D.cols == 1)
+	else if (shape2D.cols == 1)
 	{
-		n = shape2D.rows/2;
+		n = shape2D.rows / 2;
 	}
 
-	for( int i = 0; i < n; ++i)
-	{		
+	for (int i = 0; i < n; ++i)
+	{
 		cv::Point2d featurePoint;
-		if(shape2D.cols == 1)
+		if (shape2D.cols == 1)
 		{
-			featurePoint = cv::Point2d(shape2D.at<double>(i), shape2D.at<double>(i +n));
+			featurePoint = cv::Point2d(shape2D.at<double>(i), shape2D.at<double>(i + n));
 		}
 		else
 		{
@@ -1012,7 +1019,7 @@ vector<cv::Point2d> CalculateAllLandmarks(const cv::Mat_<double>& shape2D)
 
 		landmarks.push_back(featurePoint);
 	}
-	
+
 	return landmarks;
 }
 
@@ -1026,7 +1033,7 @@ vector<cv::Point2d> CalculateAllLandmarks(const CLNF& clnf_model)
 vector<cv::Point2d> CalculateVisibleLandmarks(const CLNF& clnf_model)
 {
 	// If the detection was not successful no landmarks are visible
-	if(clnf_model.detection_success)
+	if (clnf_model.detection_success)
 	{
 		int idx = clnf_model.patch_experts.GetViewIdx(clnf_model.params_global, 0);
 		// Because we only draw visible points, need to find which points patch experts consider visible at a certain orientation
@@ -1061,6 +1068,7 @@ vector<cv::Point2d> CalculateVisibleEyeLandmarks(const CLNF& clnf_model)
 	return to_return;
 }
 
+
 // Computing eye landmarks (to be drawn later or in different interfaces)
 vector<cv::Point2d> CalculateAllEyeLandmarks(const CLNF& clnf_model)
 {
@@ -1083,6 +1091,7 @@ vector<cv::Point2d> CalculateAllEyeLandmarks(const CLNF& clnf_model)
 	}
 	return to_return;
 }
+
 
 // Drawing landmarks on a face image
 void Draw(cv::Mat img, const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities)

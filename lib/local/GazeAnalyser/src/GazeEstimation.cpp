@@ -92,6 +92,7 @@ cv::Point3f GazeAnalysis::GetPupilPosition(cv::Mat_<double> eyeLdmks3d){
 void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Point3f& gaze_absolute, float fx, float fy, float cx, float cy, bool left_eye)
 {
 	cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
+
 	cv::Vec3d eulerAngles(headPose(3), headPose(4), headPose(5));
 	cv::Matx33d rotMat = LandmarkDetector::Euler2RotationMatrix(eulerAngles);
 
@@ -120,7 +121,9 @@ void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 
 	cv::Mat faceLdmks3d = clnf_model.GetShape(fx, fy, cx, cy);
 	faceLdmks3d = faceLdmks3d.t();
+
 	cv::Mat offset = (cv::Mat_<double>(3, 1) << 0, -3.5, 7.0);
+
 	int eyeIdx = 1;
 	if (left_eye)
 	{

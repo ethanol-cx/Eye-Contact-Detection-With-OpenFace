@@ -46,8 +46,8 @@ namespace FaceAnalysis
 	// Defining a set of useful utility functions to be used within FaceAnalyser
 
 	// Aligning a face to a common reference frame
-	void AlignFace(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<double>& detected_landmarks, cv::Vec6d params_global, const PDM& pdm, bool rigid = true, double scale = 0.6, int width = 96, int height = 96);
-	void AlignFaceMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<double>& detected_landmarks, cv::Vec6d params_global, const PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid = true, double scale = 0.6, int width = 96, int height = 96);
+	void AlignFace(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const PDM& pdm, bool rigid = true, float scale = 0.6, int width = 96, int height = 96);
+	void AlignFaceMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid = true, float scale = 0.6, int width = 96, int height = 96);
 
 	void Extract_FHOG_descriptor(cv::Mat_<double>& descriptor, const cv::Mat& image, int& num_rows, int& num_cols, int cell_size = 8);
 
@@ -62,32 +62,32 @@ namespace FaceAnalysis
 	//===========================================================================
 	// Using Kabsch's algorithm for aligning shapes
 	//This assumes that align_from and align_to are already mean normalised
-	cv::Matx22d AlignShapesKabsch2D(const cv::Mat_<double>& align_from, const cv::Mat_<double>& align_to);
+	cv::Matx22f AlignShapesKabsch2D(const cv::Mat_<float>& align_from, const cv::Mat_<float>& align_to);
 
 	//=============================================================================
 	// Basically Kabsch's algorithm but also allows the collection of points to be different in scale from each other
-	cv::Matx22d AlignShapesWithScale(cv::Mat_<double>& src, cv::Mat_<double> dst);
+	cv::Matx22f AlignShapesWithScale(cv::Mat_<float>& src, cv::Mat_<float> dst);
 
 	//===========================================================================
 	// Visualisation functions
 	//===========================================================================
-	void Project(cv::Mat_<double>& dest, const cv::Mat_<double>& mesh, double fx, double fy, double cx, double cy);
+	void Project(cv::Mat_<float>& dest, const cv::Mat_<float>& mesh, float fx, float fy, float cx, float cy);
 
 	//===========================================================================
 	// Angle representation conversion helpers
 	//===========================================================================
-	cv::Matx33d Euler2RotationMatrix(const cv::Vec3d& eulerAngles);
-
+	cv::Matx33f Euler2RotationMatrix(const cv::Vec3f& eulerAngles);
+	
 	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	cv::Vec3d RotationMatrix2Euler(const cv::Matx33d& rotation_matrix);
+	cv::Vec3f RotationMatrix2Euler(const cv::Matx33f& rotation_matrix);
 
-	cv::Vec3d Euler2AxisAngle(const cv::Vec3d& euler);
+	cv::Vec3f Euler2AxisAngle(const cv::Vec3f& euler);
 
-	cv::Vec3d AxisAngle2Euler(const cv::Vec3d& axis_angle);
+	cv::Vec3f AxisAngle2Euler(const cv::Vec3f& axis_angle);
 
-	cv::Matx33d AxisAngle2RotationMatrix(const cv::Vec3d& axis_angle);
+	cv::Matx33f AxisAngle2RotationMatrix(const cv::Vec3f& axis_angle);
 
-	cv::Vec3d RotationMatrix2AxisAngle(const cv::Matx33d& rotation_matrix);
+	cv::Vec3f RotationMatrix2AxisAngle(const cv::Matx33f& rotation_matrix);
 
 	//============================================================================
 	// Matrix reading functionality

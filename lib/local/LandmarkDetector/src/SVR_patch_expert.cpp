@@ -195,72 +195,6 @@ void SVR_patch_expert::Response(const cv::Mat_<float>& area_of_interest, cv::Mat
 
 }
 
-void SVR_patch_expert::ResponseDepth(const cv::Mat_<float>& area_of_interest, cv::Mat_<float> &response)
-{
-
-	// How big the response map will be
-	int response_height = area_of_interest.rows - weights.rows + 1;
-	int response_width = area_of_interest.cols - weights.cols + 1;
-	
-	// the patch area on which we will calculate reponses
-	cv::Mat_<float> normalised_area_of_interest;
-  
-	if(response.rows != response_height || response.cols != response_width)
-	{
-		response.create(response_height, response_width);
-	}
-
-	if(type == 0)
-	{
-		// Perform normalisation across whole patch
-		cv::Scalar mean;
-		cv::Scalar std;
-		
-		// ignore missing values
-		cv::Mat_<uchar> mask = area_of_interest > 0;
-		cv::meanStdDev(area_of_interest, mean, std, mask);
-
-		// if all values the same don't divide by 0
-		if(std[0] == 0)
-		{
-			std[0] = 1;
-		}
-
-		normalised_area_of_interest = (area_of_interest - mean[0]) / std[0];
-
-		// Set the invalid pixels to 0
-		normalised_area_of_interest.setTo(0, mask == 0);
-	}
-	else
-	{
-		printf("ERROR(%s,%d): Unsupported patch type %d!\n", __FILE__,__LINE__,type);
-		abort();
-	}
-  
-	cv::Mat_<float> svr_response;
-		
-	// The empty matrix as we don't pass precomputed dft's of image
-	cv::Mat_<double> empty_matrix_0(0,0,0.0);
-	cv::Mat_<float> empty_matrix_1(0,0,0.0);
-	cv::Mat_<float> empty_matrix_2(0,0,0.0);
-
-	// Efficient calc of patch expert response across the area of interest
-
-	matchTemplate_m(normalised_area_of_interest, empty_matrix_0, empty_matrix_1, empty_matrix_2, weights, weights_dfts, svr_response, CV_TM_CCOEFF); 
-	
-	response.create(svr_response.size());
-	cv::MatIterator_<float> p = response.begin();
-
-	cv::MatIterator_<float> q1 = svr_response.begin(); // respone for each pixel
-	cv::MatIterator_<float> q2 = svr_response.end();
-
-	while(q1 != q2)
-	{
-		// the SVR response passed through a logistic regressor
-		*p++ = 1.0/(1.0 + exp( -(*q1++ * scaling + bias )));
-	}	
-}
-
 // Copy constructor				
 Multi_SVR_patch_expert::Multi_SVR_patch_expert(const Multi_SVR_patch_expert& other) : svr_patch_experts(other.svr_patch_experts)
 {
@@ -321,17 +255,3 @@ void Multi_SVR_patch_expert::Response(const cv::Mat_<float> &area_of_interest, c
 
 }
 
-void Multi_SVR_patch_expert::ResponseDepth(const cv::Mat_<float>& area_of_interest, cv::Mat_<float>& response)
-{
-	int response_height = area_of_interest.rows - height + 1;
-	int response_width = area_of_interest.cols - width + 1;
-
-	if(response.rows != response_height || response.cols != response_width)
-	{
-		response.create(response_height, response_width);
-	}
-	
-	// With depth patch experts only do raw data modality
-	svr_patch_experts[0].ResponseDepth(area_of_interest, response);
-}
-//===========================================================================

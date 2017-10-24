@@ -61,11 +61,12 @@ FaceAnalyserParameters::FaceAnalyserParameters(string root_dir)
 }
 FaceAnalyserParameters::FaceAnalyserParameters(vector<string> &arguments):root()
 {
-	// initialise the default values
-	init();
 
 	// First element is reserved for the executable location (useful for finding relative model locs)
 	this->root = boost::filesystem::path(arguments[0]).parent_path();
+
+	// initialise the default values
+	init();
 
 	bool* valid = new bool[arguments.size()];
 	valid[0] = true;

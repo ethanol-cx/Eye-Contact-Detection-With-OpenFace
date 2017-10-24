@@ -51,7 +51,7 @@ class CCNF_neuron{
 
 public:
 
-	// Type of patch (0=raw,1=grad,3=depth, other types besides raw are not actually used now)
+	// Type of patch (0=raw,1=grad other types besides raw are not actually used now)
 	int     neuron_type; 
 
 	// scaling of weights (needed as the energy of neuron might not be 1) 
@@ -112,7 +112,7 @@ public:
 
 	void Read(std::ifstream &stream, std::vector<int> window_sizes, std::vector<std::vector<cv::Mat_<float> > > sigma_components);
 
-	// actual work (can pass in an image and a potential depth image, if the CCNF is trained with depth)
+	// actual work (can pass in an image)
 	void Response(cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
 
 	// Helper function to compute relevant sigmas

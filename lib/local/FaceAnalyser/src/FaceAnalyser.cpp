@@ -248,12 +248,12 @@ int GetViewId(const vector<cv::Vec3d> orientations_all, const cv::Vec3d& orienta
 	
 }
 
-std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, double>>> FaceAnalyser::PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<double>& detected_landmarks, bool visualise)
+std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, double>>> FaceAnalyser::PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool visualise)
 {
 	
 	// Extract shape parameters from the detected landmarks
-	cv::Vec6d params_global;
-	cv::Mat_<double> params_local;
+	cv::Vec6f params_global;
+	cv::Mat_<float> params_local;
 	pdm.CalcParams(params_global, params_local, detected_landmarks);
 
 	// First align the face
@@ -269,11 +269,15 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 	cv::Vec3d curr_orient(params_global[1], params_global[2], params_global[3]);
 	int orientation_to_use = GetViewId(this->head_orientations, curr_orient);
 	
-	// Geom descriptor and its median
-	geom_descriptor_frame = params_local.t();
+	// Geom descriptor and its median, TODO these should be floats?
+	params_local = params_local.t();
+	params_local.convertTo(geom_descriptor_frame, CV_64F);
+	
+	cv::Mat_<double> princ_comp_d;
+	pdm.princ_comp.convertTo(princ_comp_d, CV_64F);
 
 	// Stack with the actual feature point locations (without mean)
-	cv::Mat_<double> locs = pdm.princ_comp * geom_descriptor_frame.t();
+	cv::Mat_<double> locs = princ_comp_d * geom_descriptor_frame.t();
 
 	cv::hconcat(locs.t(), geom_descriptor_frame.clone(), geom_descriptor_frame);
 	
@@ -306,14 +310,14 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 
 }
 
-void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<double>& detected_landmarks, bool success, double timestamp_seconds, bool online, bool visualise)
+void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool success, double timestamp_seconds, bool online, bool visualise)
 {
 
 	frames_tracking++;
 
 	// Extract shape parameters from the detected landmarks
-	cv::Vec6d params_global;
-	cv::Mat_<double> params_local;
+	cv::Vec6f params_global;
+	cv::Mat_<float> params_local;
 	pdm.CalcParams(params_global, params_local, detected_landmarks);
 
 	// First align the face if tracking was successfull
@@ -398,15 +402,19 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<double>& de
 	}	
 
 	// Geom descriptor and its median
-	geom_descriptor_frame = params_local.t();
-	
+	params_local = params_local.t();
+	params_local.convertTo(geom_descriptor_frame, CV_64F);
+
 	if(!success)
 	{
 		geom_descriptor_frame.setTo(0);
 	}
 
 	// Stack with the actual feature point locations (without mean)
-	cv::Mat_<double> locs = pdm.princ_comp * geom_descriptor_frame.t();
+	// TODO rem double
+	cv::Mat_<double> princ_comp_d;
+	pdm.princ_comp.convertTo(princ_comp_d, CV_64F);
+	cv::Mat_<double> locs = princ_comp_d * geom_descriptor_frame.t();
 	
 	cv::hconcat(locs.t(), geom_descriptor_frame.clone(), geom_descriptor_frame);
 	
@@ -1044,7 +1052,7 @@ void FaceAnalyser::Read(std::string model_loc)
 		else if (module.compare("PDM") == 0)
 		{
 			cout << "Reading the PDM from: " << location;
-			pdm = PDM::PDM();
+			pdm = PDM();
 			pdm.Read(location);
 			cout << "... Done" << endl;
 		}

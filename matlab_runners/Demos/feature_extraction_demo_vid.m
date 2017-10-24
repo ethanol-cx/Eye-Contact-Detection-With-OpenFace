@@ -93,6 +93,7 @@ for j = 1:size(xs,1)
     hold on;
     plot(xs_eye(j,:), -ys_eye(j,:), '.');
     hold off;
+
     xlim([min(xs(1,:)) * 0.5, max(xs(2,:))*1.4]);
     ylim([min(-ys(1,:)) * 1.4, max(-ys(2,:))*0.5]);
     xlabel('x (px)');
@@ -148,21 +149,16 @@ title('Pose (rotation and translation)');
 xlabel('Time (s)');
 
 %% Demo gaze
-gaze_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'gaze_'));
+gaze_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'gaze_angle'));
 
 % Read gaze (x,y,z) for one eye and (x,y,z) for another
 gaze = all_params(valid_frames, gaze_inds);
-
-% only picking left, right and up down views for visualisation
-gaze = (gaze(:,[1,2]) + gaze(:,[4,5]))/2;
-gaze(:,1) = smooth(gaze(:,1));
-gaze(:,2) = smooth(gaze(:,2));
 
 plot(time, gaze(:,1), 'DisplayName', 'Left - right');
 hold on;
 plot(time, gaze(:,2), 'DisplayName', 'Up - down');
 xlabel('Time(s)') % x-axis label
-ylabel('Gaze vector size') % y-axis label
+ylabel('Angle radians') % y-axis label
 legend('show');
 hold off;
 
