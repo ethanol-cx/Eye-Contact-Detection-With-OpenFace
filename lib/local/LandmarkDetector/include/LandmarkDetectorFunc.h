@@ -68,18 +68,13 @@ namespace LandmarkDetector
 	//================================================================
 	// Helper function for getting head pose from CLNF parameters
 
-	// Return the current estimate of the head pose, this can be either in camera or world coordinate space
+	// Return the current estimate of the head pose in world coordinates with camera at origin (0,0,0)
 	// The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-	cv::Vec6d GetPoseCamera(const CLNF& clnf_model, double fx, double fy, double cx, double cy);
-	cv::Vec6d GetPoseWorld(const CLNF& clnf_model, double fx, double fy, double cx, double cy);
-	
-	// Getting a head pose estimate from the currently detected landmarks, with appropriate correction for perspective
-	// This is because rotation estimate under orthographic assumption is only correct close to the centre of the image
-	// These methods attempt to correct for that
-	// The pose returned can be either in camera or world coordinates
+	cv::Vec6d GetPose(const CLNF& clnf_model, float fx, float fy, float cx, float cy);
+
+	// Return the current estimate of the head pose in world coordinates with camera at origin (0,0,0), but with rotation representing if the head is looking at the camera
 	// The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-	cv::Vec6d GetCorrectedPoseCamera(const CLNF& clnf_model, double fx, double fy, double cx, double cy);
-	cv::Vec6d GetCorrectedPoseWorld(const CLNF& clnf_model, double fx, double fy, double cx, double cy);
+	cv::Vec6d GetPoseWRTCamera(const CLNF& clnf_model, float fx, float fy, float cx, float cy);
 
 	//===========================================================================
 
