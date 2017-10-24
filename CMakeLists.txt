@@ -9,6 +9,10 @@ set(CMAKE_CONFIG_DIR etc/OpenFace)
 set(CONFIG_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_CONFIG_DIR}")
 add_definitions(-DCONFIG_DIR="${CONFIG_DIR}")
 
+find_package( BLAS REQUIRED )
+include_directories( ${BLAS_INCLUDE_DIRS} )
+LINK_DIRECTORIES(${BLAS_LIBRARY_DIRS})	
+
 find_package( OpenCV REQUIRED )
 
 MESSAGE("OpenCV information:") 
@@ -68,6 +72,18 @@ foreach(file ${files})
 endforeach()
 
 file(GLOB files "lib/local/LandmarkDetector/model/patch_experts/*.txt")
+foreach(file ${files})
+	if (MSVC)
+		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/Debug/model/patch_experts)
+		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/Release/model/patch_experts)
+	else(MSVC)
+		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/model/patch_experts)
+	endif(MSVC)
+
+	install(FILES ${file} DESTINATION ${CMAKE_CONFIG_DIR}/model/patch_experts)
+endforeach()
+
+file(GLOB files "lib/local/LandmarkDetector/model/patch_experts/*.dat")
 foreach(file ${files})
 	if (MSVC)
 		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/Debug/model/patch_experts)
