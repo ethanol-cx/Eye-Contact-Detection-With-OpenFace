@@ -4,6 +4,9 @@ include_directories(${BLAS_ROOT_DIR})
 
 include_directories(${BOOST_INCLUDE_DIR})
 
+#OpenBlas library
+include_directories(../../3rdParty/OpenBLAS/include)
+
 SET(SOURCE
     src/Face_utils.cpp
 	src/FaceAnalyser.cpp
