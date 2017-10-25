@@ -33,7 +33,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <Face_utils.h>
-#include <PAW.h>
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
