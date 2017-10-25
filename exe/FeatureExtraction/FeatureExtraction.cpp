@@ -224,10 +224,8 @@ int main (int argc, char **argv)
 	
 	// Get the input output file parameters
 	
-	// Indicates that rotation should be with respect to camera or world coordinates
-	bool use_camera_coordinates = false;
 	string output_codec; //not used but should
-	LandmarkDetector::get_video_input_output_params(input_files, output_files, tracked_videos_output, use_camera_coordinates, output_codec, arguments);
+	LandmarkDetector::get_video_input_output_params(input_files, output_files, tracked_videos_output, output_codec, arguments);
 
 	bool video_input = true;
 	bool images_as_video = false;
@@ -520,15 +518,7 @@ int main (int argc, char **argv)
 			}
 
 			// Work out the pose of the head from the tracked model
-			cv::Vec6d pose_estimate;
-			if(use_camera_coordinates)
-			{
-				pose_estimate = LandmarkDetector::GetCorrectedPoseCamera(face_model, fx, fy, cx, cy);
-			}
-			else
-			{
-				pose_estimate = LandmarkDetector::GetCorrectedPoseWorld(face_model, fx, fy, cx, cy);
-			}
+			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
 			if (hog_output_file.is_open())
 			{

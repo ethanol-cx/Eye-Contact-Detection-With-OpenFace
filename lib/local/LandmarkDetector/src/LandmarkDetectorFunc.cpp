@@ -50,15 +50,15 @@ using namespace LandmarkDetector;
 // which is only correct close to the centre of the image
 // This method returns a corrected pose estimate with respect to world coordinates with camera at origin (0,0,0)
 // The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-cv::Vec6d LandmarkDetector::GetPose(const CLNF& clnf_model, double fx, double fy, double cx, double cy)
+cv::Vec6d LandmarkDetector::GetPose(const CLNF& clnf_model, float fx, float fy, float cx, float cy)
 {
-	if(!clnf_model.detected_landmarks.empty() && clnf_model.params_global[0] != 0)
+	if (!clnf_model.detected_landmarks.empty() && clnf_model.params_global[0] != 0)
 	{
 		// This is used as an initial estimate for the iterative PnP algorithm
 		double Z = fx / clnf_model.params_global[0];
-	
-		double X = ((clnf_model.params_global[4] - cx) * (1.0/fx)) * Z;
-		double Y = ((clnf_model.params_global[5] - cy) * (1.0/fy)) * Z;
+
+		double X = ((clnf_model.params_global[4] - cx) * (1.0 / fx)) * Z;
+		double Y = ((clnf_model.params_global[5] - cy) * (1.0 / fy)) * Z;
 
 		// Correction for orientation
 
@@ -77,35 +77,35 @@ cv::Vec6d LandmarkDetector::GetPose(const CLNF& clnf_model, double fx, double fy
 
 		// The camera matrix
 		cv::Matx33d camera_matrix(fx, 0, cx, 0, fy, cy, 0, 0, 1);
-		
+
 		cv::Vec3d vec_trans(X, Y, Z);
 		cv::Vec3d vec_rot(clnf_model.params_global[1], clnf_model.params_global[2], clnf_model.params_global[3]);
-		
+
 		cv::solvePnP(landmarks_3D, landmarks_2D, camera_matrix, cv::Mat(), vec_rot, vec_trans, true);
 
 		cv::Vec3d euler = LandmarkDetector::AxisAngle2Euler(vec_rot);
-		
+
 		return cv::Vec6d(vec_trans[0], vec_trans[1], vec_trans[2], euler[0], euler[1], euler[2]);
 	}
 	else
 	{
-		return cv::Vec6d(0,0,0,0,0,0);
+		return cv::Vec6d(0, 0, 0, 0, 0, 0);
 	}
 }
 
 // Getting a head pose estimate from the currently detected landmarks, with appropriate correction due to perspective projection
 // This method returns a corrected pose estimate with respect to a point camera (NOTE not the world coordinates), which is useful to find out if the person is looking at a camera
 // The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
-cv::Vec6d LandmarkDetector::GetPoseWRTCamera(const CLNF& clnf_model, double fx, double fy, double cx, double cy)
+cv::Vec6d LandmarkDetector::GetPoseWRTCamera(const CLNF& clnf_model, float fx, float fy, float cx, float cy)
 {
-	if(!clnf_model.detected_landmarks.empty() && clnf_model.params_global[0] != 0)
+	if (!clnf_model.detected_landmarks.empty() && clnf_model.params_global[0] != 0)
 	{
 
 		double Z = fx / clnf_model.params_global[0];
-	
-		double X = ((clnf_model.params_global[4] - cx) * (1.0/fx)) * Z;
-		double Y = ((clnf_model.params_global[5] - cy) * (1.0/fy)) * Z;
-	
+
+		double X = ((clnf_model.params_global[4] - cx) * (1.0 / fx)) * Z;
+		double Y = ((clnf_model.params_global[5] - cy) * (1.0 / fy)) * Z;
+
 		// Correction for orientation
 
 		// 3D points
@@ -116,17 +116,17 @@ cv::Vec6d LandmarkDetector::GetPoseWRTCamera(const CLNF& clnf_model, double fx, 
 
 		// 2D points
 		cv::Mat_<double> landmarks_2D = clnf_model.detected_landmarks;
-				
+
 		landmarks_2D = landmarks_2D.reshape(1, 2).t();
 
 		// Solving the PNP model
 
 		// The camera matrix
 		cv::Matx33d camera_matrix(fx, 0, cx, 0, fy, cy, 0, 0, 1);
-		
+
 		cv::Vec3d vec_trans(X, Y, Z);
 		cv::Vec3d vec_rot(clnf_model.params_global[1], clnf_model.params_global[2], clnf_model.params_global[3]);
-		
+
 		cv::solvePnP(landmarks_3D, landmarks_2D, camera_matrix, cv::Mat(), vec_rot, vec_trans, true);
 
 		// Here we correct for the camera orientation, for this need to determine the angle the camera makes with the head pose
@@ -142,12 +142,12 @@ cv::Vec6d LandmarkDetector::GetPoseWRTCamera(const CLNF& clnf_model, double fx, 
 		cv::Matx33d corrected_rotation = camera_rotation * head_rotation;
 
 		cv::Vec3d euler_corrected = LandmarkDetector::RotationMatrix2Euler(corrected_rotation);
-		
+
 		return cv::Vec6d(vec_trans[0], vec_trans[1], vec_trans[2], euler_corrected[0], euler_corrected[1], euler_corrected[2]);
 	}
 	else
 	{
-		return cv::Vec6d(0,0,0,0,0,0);
+		return cv::Vec6d(0, 0, 0, 0, 0, 0);
 	}
 }
 
