@@ -7,6 +7,9 @@ include_directories(${BOOST_INCLUDE_DIR})
 #OpenBlas library
 include_directories(../../3rdParty/OpenBLAS/include)
 
+#LandmarkDetector library
+include_directories(../../local/LandmarkDetector/include)
+
 SET(SOURCE
     src/Face_utils.cpp
 	src/FaceAnalyser.cpp
