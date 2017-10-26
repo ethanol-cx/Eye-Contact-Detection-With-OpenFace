@@ -39,6 +39,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "PDM.h"
+#include "PAW.h"
 
 namespace FaceAnalysis
 {
