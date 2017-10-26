@@ -40,9 +40,12 @@
 
 #include "GazeEstimation.h"
 
+#include "LandmarkDetectorUtils.h"
+#include "LandmarkDetectorFunc.h"
+
 using namespace std;
 
-using namespace FaceAnalysis;
+using namespace GazeAnalysis;
 
 // For subpixel accuracy drawing
 const int gaze_draw_shiftbits = 4;
@@ -76,7 +79,7 @@ cv::Point3f RaySphereIntersect(cv::Point3f rayOrigin, cv::Point3f rayDir, cv::Po
 	return rayOrigin + rayDir * t;
 }
 
-cv::Point3f GetPupilPosition(cv::Mat_<double> eyeLdmks3d){
+cv::Point3f GazeAnalysis::GetPupilPosition(cv::Mat_<double> eyeLdmks3d){
 	
 	eyeLdmks3d = eyeLdmks3d.t();
 
@@ -86,7 +89,7 @@ cv::Point3f GetPupilPosition(cv::Mat_<double> eyeLdmks3d){
 	return p;
 }
 
-void FaceAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Point3f& gaze_absolute, float fx, float fy, float cx, float cy, bool left_eye)
+void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Point3f& gaze_absolute, float fx, float fy, float cx, float cy, bool left_eye)
 {
 	cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
 	cv::Vec3d eulerAngles(headPose(3), headPose(4), headPose(5));
@@ -117,7 +120,9 @@ void FaceAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 
 	cv::Mat faceLdmks3d = clnf_model.GetShape(fx, fy, cx, cy);
 	faceLdmks3d = faceLdmks3d.t();
-	cv::Mat offset = (cv::Mat_<double>(3, 1) << 0, -3.50, 7.0);
+
+	cv::Mat offset = (cv::Mat_<double>(3, 1) << 0, -3.5, 7.0);
+
 	int eyeIdx = 1;
 	if (left_eye)
 	{
@@ -133,7 +138,7 @@ void FaceAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 	gaze_absolute = gazeVecAxis / norm(gazeVecAxis);
 }
 
-cv::Vec2d FaceAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2)
+cv::Vec2d GazeAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2)
 {
 
 	cv::Point3f gaze_vector = (gaze_vector_1 + gaze_vector_2) / 2;
@@ -144,8 +149,7 @@ cv::Vec2d FaceAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& ga
 	return cv::Vec2d(x_angle, y_angle);
 
 }
-
-void FaceAnalysis::DrawGaze(cv::Mat img, const LandmarkDetector::CLNF& clnf_model, cv::Point3f gazeVecAxisLeft, cv::Point3f gazeVecAxisRight, float fx, float fy, float cx, float cy)
+void GazeAnalysis::DrawGaze(cv::Mat img, const LandmarkDetector::CLNF& clnf_model, cv::Point3f gazeVecAxisLeft, cv::Point3f gazeVecAxisRight, float fx, float fy, float cx, float cy)
 {
 
 	cv::Mat cameraMat = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
