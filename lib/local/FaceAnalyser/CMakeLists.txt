@@ -20,7 +20,6 @@ SET(SOURCE
 	src/SVM_static_lin.cpp
 	src/SVR_dynamic_lin_regressors.cpp
 	src/SVR_static_lin_regressors.cpp
-	src/GazeEstimation.cpp
 )
 
 SET(HEADERS
@@ -33,7 +32,6 @@ SET(HEADERS
 	include/SVM_static_lin.h
 	include/SVR_dynamic_lin_regressors.h
 	include/SVR_static_lin_regressors.h
-	include/GazeEstimation.h
 )
 
 include_directories(./include)

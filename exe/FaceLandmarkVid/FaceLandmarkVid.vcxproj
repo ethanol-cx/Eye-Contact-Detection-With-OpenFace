@@ -189,6 +189,9 @@
     <ProjectReference Include="..\..\lib\local\GazeAnalyser\GazeAnalyser.vcxproj">
       <Project>{5f915541-f531-434f-9c81-79f5db58012b}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\lib\local\GazeAnalyser\GazeAnalyser.vcxproj">
+      <Project>{5f915541-f531-434f-9c81-79f5db58012b}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\lib\local\LandmarkDetector\LandmarkDetector.vcxproj">
       <Project>{bdc1d107-de17-4705-8e7b-cdde8bfb2bf8}</Project>
     </ProjectReference>

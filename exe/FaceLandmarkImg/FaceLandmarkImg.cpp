@@ -430,9 +430,9 @@ int main (int argc, char **argv)
 
 				if (success && det_parameters.track_gaze)
 				{
-					FaceAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
-					FaceAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
-					gazeAngle = FaceAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
+					GazeAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
+					GazeAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
+					gazeAngle = GazeAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
 				}
 
 				auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model.detected_landmarks, false);
@@ -547,9 +547,9 @@ int main (int argc, char **argv)
 
 			if (det_parameters.track_gaze)
 			{
-				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
-				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
-				gazeAngle = FaceAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
+				GazeAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
+				GazeAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
+				gazeAngle = GazeAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
 			}
 
 			auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model.detected_landmarks, false);
