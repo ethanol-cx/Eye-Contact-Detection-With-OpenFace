@@ -472,7 +472,6 @@ int main (int argc, char **argv)
 				detection_success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_model, det_parameters);
 			}
 			
-
 			// Work out the pose of the head from the tracked model
 			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
@@ -516,9 +515,6 @@ int main (int argc, char **argv)
 					}
 				}
 			}
-
-			// Work out the pose of the head from the tracked model
-			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
 			if (hog_output_file.is_open())
 			{
