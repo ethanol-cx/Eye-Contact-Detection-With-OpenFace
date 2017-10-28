@@ -214,10 +214,10 @@ namespace OpenFaceOffline
                 List<Tuple<double, double>> landmarks_2d = clnf_model.CalculateAllEyeLandmarks();
 
                 for (int i = 0; i < landmarks_2d.Count; ++i)
-                    output_features_file.Write(", {0:F2}", landmarks_2d[i].Item1);
+                    output_features_file.Write(", {0:F3}", landmarks_2d[i].Item1);
 
                 for (int i = 0; i < landmarks_2d.Count; ++i)
-                    output_features_file.Write(", {0:F2}", landmarks_2d[i].Item2);
+                    output_features_file.Write(", {0:F3}", landmarks_2d[i].Item2);
 
             }
 
@@ -229,10 +229,10 @@ namespace OpenFaceOffline
                 List<Tuple<double, double>> landmarks_2d = clnf_model.CalculateAllLandmarks();
 
                 for (int i = 0; i < landmarks_2d.Count; ++i)
-                    output_features_file.Write(", {0:F2}", landmarks_2d[i].Item1);
+                    output_features_file.Write(", {0:F3}", landmarks_2d[i].Item1);
 
                 for (int i = 0; i < landmarks_2d.Count; ++i)
-                    output_features_file.Write(", {0:F2}", landmarks_2d[i].Item2);
+                    output_features_file.Write(", {0:F3}", landmarks_2d[i].Item2);
             }
 
             if (output_3D_landmarks)
@@ -240,13 +240,13 @@ namespace OpenFaceOffline
                 List<System.Windows.Media.Media3D.Point3D> landmarks_3d = clnf_model.Calculate3DLandmarks(fx, fy, cx, cy);
 
                 for (int i = 0; i < landmarks_3d.Count; ++i)
-                    output_features_file.Write(", {0:F2}", landmarks_3d[i].X);
+                    output_features_file.Write(", {0:F3}", landmarks_3d[i].X);
 
                 for (int i = 0; i < landmarks_3d.Count; ++i)
-                    output_features_file.Write(", {0:F2}", landmarks_3d[i].Y);
+                    output_features_file.Write(", {0:F3}", landmarks_3d[i].Y);
 
                 for (int i = 0; i < landmarks_3d.Count; ++i)
-                    output_features_file.Write(", {0:F2}", landmarks_3d[i].Z);
+                    output_features_file.Write(", {0:F3}", landmarks_3d[i].Z);
             }
 
             if (output_model_params)
@@ -294,6 +294,13 @@ namespace OpenFaceOffline
                 face_analyser.StopHOGRecording();
 
             face_analyser.PostProcessOutputFile(out_filename);
+        }
+
+        static void RecordImg(string root, string filename, int width, int height, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params,
+            bool output_pose, bool output_AUs, bool output_gaze, bool record_aligned, bool record_HOG,
+            CLNF clnf_model, FaceAnalyserManaged face_analyser, double fx, double fy, double cx, double cy, bool dynamic_AU_model)
+        {
+
         }
 
     }
