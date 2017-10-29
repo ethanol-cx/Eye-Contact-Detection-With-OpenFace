@@ -360,6 +360,7 @@ int main (int argc, char **argv)
 			{
 				string curr_img_file = input_image_files[f_n][curr_img];
 				captured_image = cv::imread(curr_img_file, -1);
+				total_frames = input_image_files[f_n].size();
 			}
 			else
 			{
@@ -494,7 +495,7 @@ int main (int argc, char **argv)
 			// But only if needed in output
 			if(!output_similarity_align.empty() || hog_output_file.is_open() || output_AUs)
 			{
-				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, time_stamp, false, !det_parameters.quiet_mode);
+				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, time_stamp, false, !det_parameters.quiet_mode && visualize_hog);
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 
 				if(!det_parameters.quiet_mode && visualize_align)
