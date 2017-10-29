@@ -55,7 +55,6 @@
 
 #include <Face_utils.h>
 #include <FaceAnalyser.h>
-#include <FaceAnalyserParameters.h>
 #include <GazeEstimation.h>
 
 #ifndef CONFIG_DIR
@@ -218,7 +217,7 @@ int main (int argc, char **argv)
 {
 
 	vector<string> arguments = get_arguments(argc, argv);
-
+	
 	// Some initial parameters that can be overriden from command line	
 	vector<string> input_files, output_files, tracked_videos_output;
 	
@@ -244,6 +243,7 @@ int main (int argc, char **argv)
 		{
 			video_input = false;
 		}
+
 	}
 
 	// Grab camera parameters, if they are not defined (approximate values will be used)
@@ -360,6 +360,7 @@ int main (int argc, char **argv)
 			{
 				string curr_img_file = input_image_files[f_n][curr_img];
 				captured_image = cv::imread(curr_img_file, -1);
+				total_frames = input_image_files[f_n].size();
 			}
 			else
 			{
@@ -416,7 +417,9 @@ int main (int argc, char **argv)
 			catch(cv::Exception e)
 			{
 				WARN_STREAM( "Could not open VideoWriter, OUTPUT FILE WILL NOT BE WRITTEN. Currently using codec " << output_codec << ", try using an other one (-oc option)");
-			}			
+			}
+
+			
 		}
 
 		int frame_count = 0;
@@ -472,9 +475,6 @@ int main (int argc, char **argv)
 				detection_success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_model, det_parameters);
 			}
 			
-			// Work out the pose of the head from the tracked model
-			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
-
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, -1);
 			cv::Point3f gazeDirection1(0, 0, -1);
@@ -495,8 +495,7 @@ int main (int argc, char **argv)
 			// But only if needed in output
 			if(!output_similarity_align.empty() || hog_output_file.is_open() || output_AUs)
 			{
-				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, time_stamp, false, !det_parameters.quiet_mode && (visualize_align || visualize_hog));
-
+				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, time_stamp, false, !det_parameters.quiet_mode && visualize_hog);
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 
 				if(!det_parameters.quiet_mode && visualize_align)
@@ -515,6 +514,9 @@ int main (int argc, char **argv)
 					}
 				}
 			}
+
+			// Work out the pose of the head from the tracked model
+			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
 			if (hog_output_file.is_open())
 			{
@@ -732,14 +734,8 @@ void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, boo
 {
 
 	double confidence = 0.5 * (1 - face_model.detection_certainty);
-	
-	*output_file << std::setprecision(9);
-	*output_file << frame_count + 1 << ", " << time_stamp << ", ";
 
-	*output_file << std::setprecision(2);
-	*output_file << confidence << ", " << detection_success;
-
-	*output_file << std::setprecision(5);
+	*output_file << frame_count + 1 << ", " << time_stamp << ", " << confidence << ", " << detection_success;
 
 	// Output the estimated gaze
 	if (output_gaze)
@@ -763,7 +759,6 @@ void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, boo
 		}
 	}
 
-	*output_file << std::setprecision(4);
 	// Output the estimated head pose
 	if (output_pose)
 	{
@@ -778,7 +773,6 @@ void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, boo
 		}
 	}
 
-	*output_file << std::setprecision(4);
 	// Output the detected 2D facial landmarks
 	if (output_2D_landmarks)
 	{
