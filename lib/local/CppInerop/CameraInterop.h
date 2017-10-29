@@ -160,6 +160,18 @@ namespace CameraInterop {
 				this->image_files->push_back(msclr::interop::marshal_as<std::string>(image_files[i]));
 			}
 			vid_length = image_files->Count;
+
+			// Read the first frame to determine the capture width and height
+			cv::Mat tmp = cv::imread(this->image_files->at(0));
+
+			if (tmp.empty())
+			{
+				throw gcnew CaptureFailedException("Failed to open image sequence");
+			}
+
+			this->width = tmp.size().width;
+			this->height = tmp.size().height;
+
 		}
 
 		static void split(const std::string &s, char delim, std::vector<string> &elems) {
