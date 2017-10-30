@@ -210,6 +210,32 @@ public:
 
 	}
 	
+	// Predicting AUs from a single image
+	System::Collections::Generic::Dictionary<System::String^, double>^ PredictStaticAUs(OpenCVWrappers::RawImage^ frame, System::Collections::Generic::List<System::Tuple<double, double>^>^ landmarks, bool success, bool vis_hog) {
+		
+		// Construct an OpenCV matric from the landmarks
+		cv::Mat_<double> landmarks_mat(landmarks->Count * 2, 1, 0.0);
+		for (int i = 0; i < landmarks->Count; ++i)
+		{
+			landmarks_mat.at<double>(i, 0) = landmarks[i]->Item1;
+			landmarks_mat.at<double>(i + landmarks->Count, 0) = landmarks[i]->Item2;
+		}
+
+		face_analyser->AddNextFrame(frame->Mat, landmarks_mat, success, 0, false, vis_hog);
+
+		face_analyser->GetLatestHOG(*hog_features, *num_rows, *num_cols);
+
+		face_analyser->GetLatestAlignedFace(*aligned_face);
+
+		*good_frame = success;
+
+		if (vis_hog)
+		{
+			*visualisation = face_analyser->GetLatestHOGDescriptorVisualisation();
+		}
+
+	}
+
 	System::Collections::Generic::List<System::String^>^ GetClassActionUnitsNames()
 	{
 		auto names = face_analyser->GetAUClassNames();
