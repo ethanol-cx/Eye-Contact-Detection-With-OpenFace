@@ -335,7 +335,20 @@ namespace OpenFaceOffline
                 return;
             }
 
-            List<List<Tuple<double, double>>> landmark_detections = ProcessImage(clnf_model, face_model_params, frame, grayFrame);
+            var landmark_detections = clnf_model.DetectMultiFaceLandmarksInImage(grayFrame, face_model_params);
+
+            // Go over all detected faces
+            for(int i = 0; i < landmark_detections.Count; ++i)
+            {
+
+                // Predict action units
+                var au_preds = face_analyser.PredictStaticAUs(grayFrame, landmark_detections[i]);
+
+                // Record the predictions
+                //String output_name = record_root + 
+                //Recorder.RecordImg();
+
+            }
 
             List<Point> landmark_points = new List<Point>();
 
@@ -730,14 +743,6 @@ namespace OpenFaceOffline
             return detectionSucceeding;
 
         }
-
-        private List<List<Tuple<double, double>>> ProcessImage(CLNF clnf_model, FaceModelParameters clnf_params, RawImage frame, RawImage grayscale_frame)
-        {
-            List<List<Tuple<double, double>>> landmark_detections = clnf_model.DetectMultiFaceLandmarksInImage(grayscale_frame, clnf_params);
-            return landmark_detections;
-
-        }
-
 
         // ----------------------------------------------------------
         // Mode handling (image, video)

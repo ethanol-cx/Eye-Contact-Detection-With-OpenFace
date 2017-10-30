@@ -68,6 +68,8 @@
 #undef generic
 #endif
 
+using namespace System::Collections::Generic;
+
 #pragma managed
 
 namespace CppInterop {
@@ -202,9 +204,9 @@ namespace CppInterop {
 				return ::LandmarkDetector::DetectLandmarksInImage(image->Mat, *clnf, *modelParams->getParams());
 			}
 
-			System::Collections::Generic::List<System::Collections::Generic::List<System::Tuple<double,double>^>^>^ DetectMultiFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {
+			List<List<System::Tuple<double,double>^>^>^ DetectMultiFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {
 
-				auto all_landmarks = gcnew System::Collections::Generic::List<System::Collections::Generic::List<System::Tuple<double,double>^>^>();
+				auto all_landmarks = gcnew List<List<System::Tuple<double,double>^>^>();
 
 				// Detect faces in an image
 				vector<cv::Rect_<double> > face_detections;
@@ -224,7 +226,7 @@ namespace CppInterop {
 					// if there are multiple detections go through them
 					bool success = ::LandmarkDetector::DetectLandmarksInImage(image->Mat, face_detections[face], *clnf, *modelParams->getParams());
 
-					auto landmarks_curr = gcnew System::Collections::Generic::List<System::Tuple<double,double>^>();
+					auto landmarks_curr = gcnew List<System::Tuple<double,double>^>();
 					if(clnf->detected_landmarks.cols == 1)
 					{
 						int n = clnf->detected_landmarks.rows / 2;
@@ -248,7 +250,7 @@ namespace CppInterop {
 				return all_landmarks;
 			}
 
-			void GetPoseWRTCamera(System::Collections::Generic::List<double>^ pose, double fx, double fy, double cx, double cy) {
+			void GetPoseWRTCamera(List<double>^ pose, double fx, double fy, double cx, double cy) {
 				auto pose_vec = ::LandmarkDetector::GetPoseWRTCamera(*clnf, fx, fy, cx, cy);
 				pose->Clear();
 				for(int i = 0; i < 6; ++i)
@@ -257,7 +259,7 @@ namespace CppInterop {
 				}
 			}
 
-			void GetPose(System::Collections::Generic::List<double>^ pose, double fx, double fy, double cx, double cy) {
+			void GetPose(List<double>^ pose, double fx, double fy, double cx, double cy) {
 				auto pose_vec = ::LandmarkDetector::GetPose(*clnf, fx, fy, cx, cy);
 				pose->Clear();
 				for(int i = 0; i < 6; ++i)
@@ -266,7 +268,7 @@ namespace CppInterop {
 				}
 			}
 	
-			System::Collections::Generic::List<System::Tuple<double,double>^>^ CalculateVisibleLandmarks() {
+			List<System::Tuple<double,double>^>^ CalculateVisibleLandmarks() {
 				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateVisibleLandmarks(*clnf);
 				
 				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double,double>^>();
@@ -277,10 +279,10 @@ namespace CppInterop {
 				return landmarks;
 			}
 
-			System::Collections::Generic::List<System::Tuple<double, double>^>^ CalculateAllLandmarks() {
+			List<System::Tuple<double, double>^>^ CalculateAllLandmarks() {
 				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateAllLandmarks(*clnf);
 
-				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double, double>^>();
+				auto landmarks = gcnew List<System::Tuple<double, double>^>();
 				for (cv::Point2d p : vecLandmarks) {
 					landmarks->Add(gcnew System::Tuple<double, double>(p.x, p.y));
 				}
@@ -288,7 +290,7 @@ namespace CppInterop {
 				return landmarks;
 			}
 
-			System::Collections::Generic::List<System::Tuple<double, double>^>^ CalculateAllEyeLandmarks() {
+			List<System::Tuple<double, double>^>^ CalculateAllEyeLandmarks() {
 				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateAllEyeLandmarks(*clnf);
 
 				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double, double>^>();
@@ -299,7 +301,7 @@ namespace CppInterop {
 				return landmarks;
 			}
 
-			System::Collections::Generic::List<System::Tuple<double, double>^>^ CalculateVisibleEyeLandmarks() {
+			List<System::Tuple<double, double>^>^ CalculateVisibleEyeLandmarks() {
 				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateVisibleEyeLandmarks(*clnf);
 
 				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double, double>^>();
@@ -310,11 +312,11 @@ namespace CppInterop {
 				return landmarks;
 			}
 
-			System::Collections::Generic::List<System::Windows::Media::Media3D::Point3D>^ Calculate3DLandmarks(double fx, double fy, double cx, double cy) {
+			List<System::Windows::Media::Media3D::Point3D>^ Calculate3DLandmarks(double fx, double fy, double cx, double cy) {
 				
 				cv::Mat_<double> shape3D = clnf->GetShape(fx, fy, cx, cy);
 				
-				auto landmarks_3D = gcnew System::Collections::Generic::List<System::Windows::Media::Media3D::Point3D>();
+				auto landmarks_3D = gcnew List<System::Windows::Media::Media3D::Point3D>();
 				
 				for(int i = 0; i < shape3D.cols; ++i) 
 				{
@@ -326,7 +328,7 @@ namespace CppInterop {
 
 
 			// Static functions from the LandmarkDetector namespace.
-			void DrawLandmarks(OpenCVWrappers::RawImage^ img, System::Collections::Generic::List<System::Windows::Point>^ landmarks) {
+			void DrawLandmarks(OpenCVWrappers::RawImage^ img, List<System::Windows::Point>^ landmarks) {
 
 				vector<cv::Point> vecLandmarks;
 
@@ -339,13 +341,13 @@ namespace CppInterop {
 			}
 
 
-			System::Collections::Generic::List<System::Tuple<System::Windows::Point, System::Windows::Point>^>^ CalculateBox(float fx, float fy, float cx, float cy) {
+			List<System::Tuple<System::Windows::Point, System::Windows::Point>^>^ CalculateBox(float fx, float fy, float cx, float cy) {
 
 				cv::Vec6d pose = ::LandmarkDetector::GetPose(*clnf, fx,fy, cx, cy);
 
 				vector<pair<cv::Point2d, cv::Point2d>> vecLines = ::LandmarkDetector::CalculateBox(pose, fx, fy, cx, cy);
 
-				auto lines = gcnew System::Collections::Generic::List<System::Tuple<System::Windows::Point,System::Windows::Point>^>();
+				auto lines = gcnew List<System::Tuple<System::Windows::Point,System::Windows::Point>^>();
 
 				for(pair<cv::Point2d, cv::Point2d> line : vecLines) {
 					lines->Add(gcnew System::Tuple<System::Windows::Point, System::Windows::Point>(System::Windows::Point(line.first.x, line.first.y), System::Windows::Point(line.second.x, line.second.y)));
@@ -354,7 +356,7 @@ namespace CppInterop {
 				return lines;
 			}
 
-			void DrawBox(System::Collections::Generic::List<System::Tuple<System::Windows::Point, System::Windows::Point>^>^ lines, OpenCVWrappers::RawImage^ image, double r, double g, double b, int thickness) {
+			void DrawBox(List<System::Tuple<System::Windows::Point, System::Windows::Point>^>^ lines, OpenCVWrappers::RawImage^ image, double r, double g, double b, int thickness) {
 				cv::Scalar color = cv::Scalar(r,g,b,1);
 
 				vector<pair<cv::Point, cv::Point>> vecLines;
@@ -378,9 +380,9 @@ namespace CppInterop {
 			}
 
 			// Getting the non-rigid shape parameters describing the facial expression
-			System::Collections::Generic::List<double>^ GetNonRigidParams()
+			List<double>^ GetNonRigidParams()
 			{
-				auto non_rigid_params = gcnew System::Collections::Generic::List<double>();
+				auto non_rigid_params = gcnew List<double>();
 
 				for (int i = 0; i < clnf->params_local.rows; ++i)
 				{
@@ -391,9 +393,9 @@ namespace CppInterop {
 			}
 
 			// Getting the rigid shape parameters describing face scale rotation and translation (scale,rotx,roty,rotz,tx,ty)
-			System::Collections::Generic::List<double>^ GetRigidParams()
+			List<double>^ GetRigidParams()
 			{
-				auto rigid_params = gcnew System::Collections::Generic::List<double>();
+				auto rigid_params = gcnew List<double>();
 
 				for (size_t i = 0; i < 6; ++i)
 				{
@@ -403,7 +405,7 @@ namespace CppInterop {
 			}
 
 			// Rigid params followed by non-rigid ones
-			System::Collections::Generic::List<double>^ GetParams()
+			List<double>^ GetParams()
 			{
 				auto all_params = GetRigidParams();
 				all_params->AddRange(GetNonRigidParams());

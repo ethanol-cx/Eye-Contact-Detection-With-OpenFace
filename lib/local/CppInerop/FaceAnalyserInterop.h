@@ -70,6 +70,8 @@
 #undef generic
 #endif
 
+using namespace System::Collections::Generic;
+
 #pragma managed
 
 namespace FaceAnalyser_Interop {
@@ -185,7 +187,7 @@ public:
 		face_analyser->PostprocessOutputFile(msclr::interop::marshal_as<std::string>(file));
 	}
 
-	void AddNextFrame(OpenCVWrappers::RawImage^ frame, System::Collections::Generic::List<System::Tuple<double, double>^>^ landmarks, bool success, bool online, bool vis_hog) {
+	void AddNextFrame(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks, bool success, bool online, bool vis_hog) {
 			
 		// Construct an OpenCV matric from the landmarks
 		cv::Mat_<double> landmarks_mat(landmarks->Count * 2, 1, 0.0);
@@ -211,7 +213,9 @@ public:
 	}
 	
 	// Predicting AUs from a single image
-	System::Collections::Generic::Dictionary<System::String^, double>^ PredictStaticAUs(OpenCVWrappers::RawImage^ frame, System::Collections::Generic::List<System::Tuple<double, double>^>^ landmarks, bool success, bool vis_hog) {
+    System::Tuple<Dictionary<System::String^, double>^, Dictionary<System::String^, double>^>^
+		PredictStaticAUs(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks) 
+	{
 		
 		// Construct an OpenCV matric from the landmarks
 		cv::Mat_<double> landmarks_mat(landmarks->Count * 2, 1, 0.0);
@@ -221,26 +225,33 @@ public:
 			landmarks_mat.at<double>(i + landmarks->Count, 0) = landmarks[i]->Item2;
 		}
 
-		face_analyser->AddNextFrame(frame->Mat, landmarks_mat, success, 0, false, vis_hog);
+		auto aus = face_analyser->PredictStaticAUs(frame->Mat, landmarks_mat, false);
 
-		face_analyser->GetLatestHOG(*hog_features, *num_rows, *num_cols);
+		auto AU_predictions_intensity = aus.first;
+		auto AU_predictions_occurence = aus.second;
 
-		face_analyser->GetLatestAlignedFace(*aligned_face);
+		auto au_intensities = gcnew Dictionary<System::String^, double>();
+		auto au_occurences = gcnew Dictionary<System::String^, double>();
 
-		*good_frame = success;
-
-		if (vis_hog)
+		for (auto p : AU_predictions_intensity)
 		{
-			*visualisation = face_analyser->GetLatestHOGDescriptorVisualisation();
+			au_intensities->Add(gcnew System::String(p.first.c_str()), p.second);
 		}
+
+		for (auto p : AU_predictions_occurence)
+		{
+			au_occurences->Add(gcnew System::String(p.first.c_str()), p.second);
+		}
+
+		return gcnew System::Tuple<Dictionary<System::String^, double>^, Dictionary<System::String^, double>^>(au_intensities, au_occurences);
 
 	}
 
-	System::Collections::Generic::List<System::String^>^ GetClassActionUnitsNames()
+	List<System::String^>^ GetClassActionUnitsNames()
 	{
 		auto names = face_analyser->GetAUClassNames();
 
-		auto names_ret = gcnew System::Collections::Generic::List<System::String^>();
+		auto names_ret = gcnew List<System::String^>();
 
 		for(std::string name : names)
 		{
@@ -251,11 +262,11 @@ public:
 
 	}
 
-	System::Collections::Generic::List<System::String^>^ GetRegActionUnitsNames()
+	List<System::String^>^ GetRegActionUnitsNames()
 	{
 		auto names = face_analyser->GetAURegNames();
 
-		auto names_ret = gcnew System::Collections::Generic::List<System::String^>();
+		auto names_ret = gcnew List<System::String^>();
 
 		for(std::string name : names)
 		{
@@ -266,10 +277,10 @@ public:
 
 	}
 
-	System::Collections::Generic::Dictionary<System::String^, double>^ GetCurrentAUsClass()
+	Dictionary<System::String^, double>^ GetCurrentAUsClass()
 	{
 		auto classes = face_analyser->GetCurrentAUsClass();
-		auto au_classes = gcnew System::Collections::Generic::Dictionary<System::String^, double>();
+		auto au_classes = gcnew Dictionary<System::String^, double>();
 
 		for(auto p: classes)
 		{
@@ -278,10 +289,10 @@ public:
 		return au_classes;
 	}
 
-	System::Collections::Generic::Dictionary<System::String^, double>^ GetCurrentAUsReg()
+	Dictionary<System::String^, double>^ GetCurrentAUsReg()
 	{
 		auto preds = face_analyser->GetCurrentAUsReg();
-		auto au_preds = gcnew System::Collections::Generic::Dictionary<System::String^, double>();
+		auto au_preds = gcnew Dictionary<System::String^, double>();
 
 		for(auto p: preds)
 		{
