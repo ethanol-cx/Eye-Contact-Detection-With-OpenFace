@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017, Tadas Baltrusaitis all rights reserved.
+// Copyright (C) 2017, Tadas Baltrusaitis, all rights reserved.
 //
 // ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
 //
@@ -31,50 +31,59 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __RECORDER_CSV_h_
-#define __RECORDER_CSV_h_
+#include "RecorderHOG.h"
 
-// System includes
 #include <fstream>
-#include <sstream>
-#include <vector>
 
-namespace Recorder
+using namespace Recorder;
+
+// Default constructor initializes the variables
+RecorderHOG::RecorderHOG(int num_rows, int num_cols, int num_channels) :hog_file(),num_rows(num_rows), num_cols(num_cols), num_channels(num_channels) {};
+
+// TODO the other 4 constructors + destructors?
+
+// Opening the file and preparing the header for it
+bool RecorderHOG::Open(std::string output_file_name)
+{
+	hog_file.open(output_file_name, std::ios_base::out | std::ios_base::binary);
+
+	return hog_file.is_open();
+}
+
+void RecorderHOG::Close()
+{
+	hog_file.close();
+}
+
+// Writing to a HOG file
+void RecorderHOG::AddObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor)
 {
 
-	//===========================================================================
-	/**
-	A class for recording CSV file from OpenFace
-	*/
-	class RecorderCSV {
+	hog_file.write((char*)(&num_cols), 4);
+	hog_file.write((char*)(&num_rows), 4);
+	hog_file.write((char*)(&num_channels), 4);
 
-	public:
+	// Not the best way to store a bool, but will be much easier to read it
+	float good_frame_float;
+	if (good_frame)
+		good_frame_float = 1;
+	else
+		good_frame_float = -1;
 
-		// The constructor for the recorder, need to specify if we are recording a sequence or not
-		RecorderCSV();
+	hog_file.write((char*)(&good_frame_float), 4);
 
-		// Opening the file and preparing the header for it
-		bool Open(std::string output_file_name, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
-			int num_face_landmarks, int num_model_modes, int num_eye_landmarks, std::vector<std::string> au_names_class, std::vector<std::string> au_names_reg);
+	cv::MatConstIterator_<double> descriptor_it = hog_descriptor.begin();
 
-		// Closing the file and cleaning up
-		void Close();
+	for (int y = 0; y < num_cols; ++y)
+	{
+		for (int x = 0; x < num_rows; ++x)
+		{
+			for (unsigned int o = 0; o < 31; ++o)
+			{
 
-		void WriteLine();
-
-		// TODO have set functions?
-
-	private:
-
-		// The actual output file stream that will be written
-		std::ofstream output_file;
-
-		// If we are recording results from a sequence each row refers to a frame, if we are recording an image each row is a face
-		bool is_sequence;
-
-		// Internal storage of OF outputs
-
-
-	};
+				float hog_data = (float)(*descriptor_it++);
+				hog_file.write((char*)&hog_data, 4);
+			}
+		}
+	}
 }
-#endif
