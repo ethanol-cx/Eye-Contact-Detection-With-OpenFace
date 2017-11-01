@@ -139,10 +139,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="src\RecorderCSV.cpp" />
+    <ClCompile Include="src\RecorderHOG.cpp" />
     <ClCompile Include="src\RecorderOpenFace.cpp" />
   </ItemGroup>
   <ItemGroup>
