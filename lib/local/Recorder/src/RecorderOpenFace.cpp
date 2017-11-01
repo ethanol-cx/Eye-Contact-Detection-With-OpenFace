@@ -89,13 +89,21 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 		output_AUs, output_gaze, num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
 
 	// Consruct HOG recorder here
-	std::string hog_filename = (path(record_root) / path(filename).replace_extension(".hog")).string();
-	hog_recorder.Open(hog_filename);
+	if(output_hog)
+	{
+		std::string hog_filename = (path(record_root) / path(filename).replace_extension(".hog")).string();
+		hog_recorder.Open(hog_filename);
+	}
 
 	// TODO construct a video recorder
 
 	// Prepare image recording
 
+}
+
+void RecorderOpenFace::AddObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels)
+{
+	hog_recorder.AddObservationHOG(good_frame, hog_descriptor, num_cols, num_rows, num_channels);
 }
 
 // TODO the other 4 constructors + destructors?

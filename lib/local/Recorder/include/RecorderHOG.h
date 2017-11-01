@@ -50,10 +50,10 @@ namespace Recorder
 	public:
 
 		// The constructor for the recorder, by default does not do anything
-		RecorderHOG(int num_rows, int num_cols, int num_channels);
+		RecorderHOG();
 		
 		// Adding observations to the recorder
-		void AddObservationHOG(bool success, const cv::Mat_<double>& hog_descriptor);
+		void AddObservationHOG(bool success, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels);
 
 		bool Open(std::string filename);
 
@@ -64,9 +64,6 @@ namespace Recorder
 
 		std::ofstream hog_file;
 
-		int num_rows;
-		int num_cols;
-		const int num_channels;
 	};
 }
 #endif

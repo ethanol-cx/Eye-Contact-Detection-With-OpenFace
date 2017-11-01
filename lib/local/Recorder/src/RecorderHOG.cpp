@@ -38,7 +38,7 @@
 using namespace Recorder;
 
 // Default constructor initializes the variables
-RecorderHOG::RecorderHOG(int num_rows, int num_cols, int num_channels) :hog_file(),num_rows(num_rows), num_cols(num_cols), num_channels(num_channels) {};
+RecorderHOG::RecorderHOG() :hog_file() {};
 
 // TODO the other 4 constructors + destructors?
 
@@ -56,7 +56,7 @@ void RecorderHOG::Close()
 }
 
 // Writing to a HOG file
-void RecorderHOG::AddObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor)
+void RecorderHOG::AddObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels)
 {
 
 	hog_file.write((char*)(&num_cols), 4);

@@ -75,7 +75,7 @@ namespace Recorder
 		void AddObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, 
 			const cv::Vec2d& gaze_angle, const cv::Mat_<double>& eye_landmarks);
 		void AddObservationFaceAlign(const cv::Mat& aligned_face);
-		void AddObservationHOG(const cv::Mat_<double>& aligned_HOG);
+		void AddObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels);
 		void AddObservationSuccess(double confidence, bool success);
 		void AddObservationTimestamp(double timestamp);
 
