@@ -56,7 +56,7 @@ void RecorderHOG::Close()
 }
 
 // Writing to a HOG file
-void RecorderHOG::AddObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels)
+void RecorderHOG::SetObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels)
 {
 
 	hog_file.write((char*)(&num_cols), 4);

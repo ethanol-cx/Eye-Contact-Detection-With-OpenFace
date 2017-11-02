@@ -50,7 +50,7 @@ using namespace boost::filesystem;
 
 using namespace Recorder;
 
-void create_directory(std::string output_path)
+void CreateDirectory(std::string output_path)
 {
 
 	// Creating the right directory structure
@@ -81,11 +81,11 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 	record_root = out_directory;
 
 	// Construct the directories required for the output
-	create_directory(record_root);
+	CreateDirectory(record_root);
 
 	// Create the required individual recorders, CSV, HOG, aligned, video
 	std::string csv_filename = (path(record_root) / path(filename).replace_extension(".csv")).string();
-	csv_recorder.open(csv_filename, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose,
+	csv_recorder.Open(csv_filename, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose,
 		output_AUs, output_gaze, num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
 
 	// Consruct HOG recorder here
@@ -101,10 +101,50 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 
 }
 
-void RecorderOpenFace::AddObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels)
+void RecorderOpenFace::SetObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels)
 {
-	hog_recorder.AddObservationHOG(good_frame, hog_descriptor, num_cols, num_rows, num_channels);
+	this->hog_recorder.SetObservationHOG(good_frame, hog_descriptor, num_cols, num_rows, num_channels);
 }
+
+void RecorderOpenFace::SetObservationTimestamp(double timestamp)
+{
+	this->timestamp = timestamp;
+}
+
+void RecorderOpenFace::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D,
+	const cv::Vec6d& params_global, const cv::Mat_<double>& params_local, double confidence, bool success)
+{
+	this->landmarks_2D = landmarks_2D;
+	this->landmarks_3D = landmarks_3D;
+	this->params_global = params_global;
+	this->params_local = params_local;
+	this->landmark_detection_confidence = confidence;
+	this->landmark_detection_success = success;
+
+}
+
+void RecorderOpenFace::SetObservationPose(const cv::Vec6d& pose)
+{
+	this->head_pose = pose;
+}
+
+void RecorderOpenFace::SetObservationActionUnits(const std::vector<std::pair<std::string, double> >& au_intensities,
+	const std::vector<std::pair<std::string, double> >& au_occurences)
+{
+	this->au_intensities = au_intensities;
+	this->au_occurences = au_occurences;
+}
+
+void RecorderOpenFace::SetObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1,
+	const cv::Vec2d& gaze_angle, const cv::Mat_<double>& eye_landmarks)
+{
+	this->gazeDirection0 = gazeDirection0;
+	this->gazeDirection1 = gazeDirection1;
+	this->gaze_angle = gaze_angle;
+	this->eye_landmarks = eye_landmarks;
+}
+
+
 
 // TODO the other 4 constructors + destructors?
 

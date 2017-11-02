@@ -38,6 +38,9 @@
 #include <vector>
 #include <opencv2/core/core.hpp>
 
+#include <iostream>
+#include <fstream>
+
 namespace Recorder
 {
 
@@ -53,7 +56,7 @@ namespace Recorder
 		RecorderHOG();
 		
 		// Adding observations to the recorder
-		void AddObservationHOG(bool success, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels);
+		void SetObservationHOG(bool success, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels);
 
 		bool Open(std::string filename);
 

@@ -44,10 +44,13 @@ RecorderCSV::RecorderCSV():output_file(){};
 // TODO the other 4 constructors + destructors?
 
 // Opening the file and preparing the header for it
-bool RecorderCSV::open(std::string output_file_name, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
+bool RecorderCSV::Open(std::string output_file_name, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
 	int num_face_landmarks, int num_model_modes, int num_eye_landmarks, std::vector<std::string> au_names_class, std::vector<std::string> au_names_reg)
 {
 	output_file.open(output_file_name, std::ios_base::out);
+
+	if (!output_file.is_open())
+		return false;
 
 	// Different headers if we are writing out the results on a sequence or an individual image
 	if(this->is_sequence)
@@ -133,6 +136,8 @@ bool RecorderCSV::open(std::string output_file_name, bool output_2D_landmarks, b
 
 	output_file << std::endl;
 
+	return true;
+
 }
 
 // TODO check if the stream is open
@@ -141,7 +146,7 @@ bool RecorderCSV::open(std::string output_file_name, bool output_2D_landmarks, b
 //	const FaceAnalysis::FaceAnalyser& face_analyser);
 
 // Closing the file and cleaning up
-void RecorderCSV::close()
+void RecorderCSV::Close()
 {
 	output_file.close();
 }

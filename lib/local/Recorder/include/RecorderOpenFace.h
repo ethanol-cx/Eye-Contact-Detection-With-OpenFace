@@ -67,17 +67,32 @@ namespace Recorder
 		void Close();
 
 		// Adding observations to the recorder
-		void AddObservationLandmarks(const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D);
-		void AddObservationLandmarkParameters(const cv::Vec6d& params_global, const cv::Mat_<double>& params_local);
-		void AddObservationPose(const cv::Vec6d& pose);
-		void AddObservationActionUnits(const std::vector<std::pair<std::string, double> >& au_intensities, 
+
+		// Required observations for video/image-sequence
+		void SetObservationTimestamp(double timestamp);
+
+		// All observations relevant to facial landmarks
+		void SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D, 
+			const cv::Vec6d& params_global, const cv::Mat_<double>& params_local, double confidence, bool success);
+
+		// Pose related observations
+		void SetObservationPose(const cv::Vec6d& pose);
+
+		// AU related observations
+		void SetObservationActionUnits(const std::vector<std::pair<std::string, double> >& au_intensities, 
 			const std::vector<std::pair<std::string, double> >& au_occurences);
-		void AddObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, 
+
+		// Gaze related observations
+		void SetObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1,
 			const cv::Vec2d& gaze_angle, const cv::Mat_<double>& eye_landmarks);
-		void AddObservationFaceAlign(const cv::Mat& aligned_face);
-		void AddObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels);
-		void AddObservationSuccess(double confidence, bool success);
-		void AddObservationTimestamp(double timestamp);
+
+		// Face alignment related observations
+		void SetObservationFaceAlign(const cv::Mat& aligned_face);
+
+		// HOG feature related observations
+		void SetObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels);
+
+		void WriteObservation();
 
 	private:
 
@@ -102,6 +117,30 @@ namespace Recorder
 		bool output_hog;
 		bool output_tracked_video;
 		bool output_aligned_faces;
+
+		// The actual temporary storage for the observations
+		double timestamp;
+
+		// Facial landmark related observations
+		cv::Mat_<double> landmarks_2D;
+		cv::Mat_<double> landmarks_3D;
+		cv::Vec6d params_global;
+		cv::Mat_<double> params_local;
+		double landmark_detection_confidence;
+		bool landmark_detection_success;
+
+		// Head pose related observations
+		cv::Vec6d head_pose;
+
+		// Action Unit related observations
+		std::vector<std::pair<std::string, double> > au_intensities;
+		std::vector<std::pair<std::string, double> > au_occurences;
+
+		// Gaze related observations
+		cv::Point3f& gazeDirection0;
+		cv::Point3f& gazeDirection1;
+		cv::Vec2d& gaze_angle;
+		cv::Mat_<double>& eye_landmarks;
 
 	};
 }
