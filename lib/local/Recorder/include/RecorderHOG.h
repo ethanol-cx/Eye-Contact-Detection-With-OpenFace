@@ -36,6 +36,8 @@
 
 // System includes
 #include <vector>
+
+// OpenCV includes
 #include <opencv2/core/core.hpp>
 
 #include <iostream>

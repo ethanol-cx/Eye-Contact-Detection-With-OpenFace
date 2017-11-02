@@ -39,6 +39,9 @@
 #include <sstream>
 #include <vector>
 
+// OpenCV includes
+#include <opencv2/core/core.hpp>
+
 namespace Recorder
 {
 
@@ -55,12 +58,15 @@ namespace Recorder
 
 		// Opening the file and preparing the header for it
 		bool Open(std::string output_file_name, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
-			int num_face_landmarks, int num_model_modes, int num_eye_landmarks, std::vector<std::string> au_names_class, std::vector<std::string> au_names_reg);
+			int num_face_landmarks, int num_model_modes, int num_eye_landmarks, const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg);
 
 		// Closing the file and cleaning up
 		void Close();
 
-		void WriteLine();
+		void WriteLine(int observation_count, double time_stamp, bool landmark_detection_success, double landmark_confidence,
+			const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D, const cv::Mat_<double>& pdm_model_params, const cv::Vec6d& rigid_shape_params, cv::Vec6d& pose_estimate,
+			const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const cv::Vec2d& gaze_angle, const cv::Mat_<double>& eye_landmarks,
+			const std::vector<std::pair<std::string, double> >& au_intensities, const std::vector<std::pair<std::string, double> >& au_occurences);
 
 		// TODO have set functions?
 
@@ -72,8 +78,16 @@ namespace Recorder
 		// If we are recording results from a sequence each row refers to a frame, if we are recording an image each row is a face
 		bool is_sequence;
 
-		// Internal storage of OF outputs
+		// Keep track of what we are recording
+		bool output_2D_landmarks;
+		bool output_3D_landmarks;
+		bool output_model_params;
+		bool output_pose;
+		bool output_AUs;
+		bool output_gaze;
 
+		std::vector<std::string> au_names_class;
+		std::vector<std::string> au_names_reg;
 
 	};
 }

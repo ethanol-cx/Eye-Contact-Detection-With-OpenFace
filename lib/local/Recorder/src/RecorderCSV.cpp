@@ -45,12 +45,23 @@ RecorderCSV::RecorderCSV():output_file(){};
 
 // Opening the file and preparing the header for it
 bool RecorderCSV::Open(std::string output_file_name, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
-	int num_face_landmarks, int num_model_modes, int num_eye_landmarks, std::vector<std::string> au_names_class, std::vector<std::string> au_names_reg)
+	int num_face_landmarks, int num_model_modes, int num_eye_landmarks, const std::vector<std::string> au_names_class, const std::vector<std::string> au_names_reg)
 {
 	output_file.open(output_file_name, std::ios_base::out);
 
 	if (!output_file.is_open())
 		return false;
+
+	// Set up what we are recording
+	this->output_2D_landmarks = output_2D_landmarks;
+	this->output_3D_landmarks = output_3D_landmarks;
+	this->output_AUs = output_AUs;
+	this->output_gaze = output_gaze;
+	this->output_model_params = output_model_params;
+	this->output_pose = output_pose;
+
+	this->au_names_class = au_names_class;
+	this->au_names_reg = au_names_reg;
 
 	// Different headers if we are writing out the results on a sequence or an individual image
 	if(this->is_sequence)
@@ -121,14 +132,14 @@ bool RecorderCSV::Open(std::string output_file_name, bool output_2D_landmarks, b
 
 	if (output_AUs)
 	{
-		std::sort(au_names_reg.begin(), au_names_reg.end());
-		for (std::string reg_name : au_names_reg)
+		std::sort(this->au_names_reg.begin(), this->au_names_reg.end());
+		for (std::string reg_name : this->au_names_reg)
 		{
 			output_file << ", " << reg_name << "_r";
 		}
 
-		std::sort(au_names_class.begin(), au_names_class.end());
-		for (std::string class_name : au_names_class)
+		std::sort(this->au_names_class.begin(), this->au_names_class.end());
+		for (std::string class_name : this->au_names_class)
 		{
 			output_file << ", " << class_name << "_c";
 		}
@@ -141,9 +152,129 @@ bool RecorderCSV::Open(std::string output_file_name, bool output_2D_landmarks, b
 }
 
 // TODO check if the stream is open
-//void writeLine(int frame_count, double time_stamp, bool detection_success,
-//	cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, cv::Vec2d gaze_angle, cv::Vec6d& pose_estimate, double fx, double fy, double cx, double cy,
-//	const FaceAnalysis::FaceAnalyser& face_analyser);
+void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landmark_detection_success, double landmark_confidence,
+	const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D, const cv::Mat_<double>& pdm_model_params, const cv::Vec6d& rigid_shape_params, cv::Vec6d& pose_estimate,
+	const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const cv::Vec2d& gaze_angle, const cv::Mat_<double>& eye_landmarks,
+	const std::vector<std::pair<std::string, double> >& au_intensities, const std::vector<std::pair<std::string, double> >& au_occurences)
+{
+
+	if (!output_file.is_open())
+	{
+		std::cout << "The output CSV file is not open" << std::endl;
+	}
+
+	if(is_sequence)
+	{
+		output_file << observation_count << ", " << time_stamp << ", " << landmark_confidence << ", " << landmark_detection_success;
+	}
+	else
+	{
+		output_file << observation_count << ", " << landmark_confidence;
+
+	}
+	// Output the estimated gaze
+	if (output_gaze)
+	{
+		output_file << ", " << gazeDirection0.x << ", " << gazeDirection0.y << ", " << gazeDirection0.z
+			<< ", " << gazeDirection1.x << ", " << gazeDirection1.y << ", " << gazeDirection1.z;
+
+		// Output gaze angle (same format as head pose angle)
+		output_file << ", " << gaze_angle[0] << ", " << gaze_angle[1];
+
+		// Output the 2D eye landmarks
+		for (auto eye_lmk : eye_landmarks)
+		{
+			output_file << ", " << eye_lmk;
+		}
+	}
+
+	// Output the estimated head pose
+	if (output_pose)
+	{
+		output_file << ", " << pose_estimate[0] << ", " << pose_estimate[1] << ", " << pose_estimate[2]
+				<< ", " << pose_estimate[3] << ", " << pose_estimate[4] << ", " << pose_estimate[5];
+	}
+
+	// Output the detected 2D facial landmarks
+	if (output_2D_landmarks)
+	{
+		// Output the 2D eye landmarks
+		for (auto lmk : landmarks_2D)
+		{
+			output_file << ", " << lmk;
+		}
+	}
+
+	// Output the detected 3D facial landmarks
+	if (output_3D_landmarks)
+	{
+		// Output the 2D eye landmarks
+		for (auto lmk : landmarks_3D)
+		{
+			output_file << ", " << lmk;
+		}
+	}
+
+	if (output_model_params)
+	{
+		for (int i = 0; i < 6; ++i)
+		{
+			output_file << ", " << rigid_shape_params[i];
+		}
+		// Output the non_rigid shape parameters
+		for (auto lmk : pdm_model_params)
+		{
+			output_file << ", " << lmk;
+		}
+	}
+
+	if (output_AUs)
+	{
+
+		// write out ar the correct index
+		for (std::string au_name : au_names_reg)
+		{
+			for (auto au_reg : au_intensities)
+			{
+				if (au_name.compare(au_reg.first) == 0)
+				{
+					output_file << ", " << au_reg.second;
+					break;
+				}
+			}
+		}
+
+		if (au_intensities.size() == 0)
+		{
+			for (size_t p = 0; p < au_names_reg.size(); ++p)
+			{
+				output_file << ", 0";
+			}
+		}
+
+		// write out ar the correct index
+		for (std::string au_name : au_names_class)
+		{
+			for (auto au_class : au_occurences)
+			{
+				if (au_name.compare(au_class.first) == 0)
+				{
+					output_file << ", " << au_class.second;
+					break;
+				}
+			}
+		}
+
+		if (au_occurences.size() == 0)
+		{
+			for (size_t p = 0; p < au_names_class.size(); ++p)
+			{
+				output_file << ", 0";
+			}
+		}
+	}
+	output_file << std::endl;
+}
 
 // Closing the file and cleaning up
 void RecorderCSV::Close()

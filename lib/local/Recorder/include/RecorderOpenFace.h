@@ -142,6 +142,8 @@ namespace Recorder
 		cv::Vec2d gaze_angle;
 		cv::Mat_<double> eye_landmarks;
 
+		int observation_count;
+
 	};
 }
 #endif

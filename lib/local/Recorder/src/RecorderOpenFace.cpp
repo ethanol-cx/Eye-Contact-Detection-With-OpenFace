@@ -99,7 +99,20 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 
 	// Prepare image recording
 
+	observation_count = 0;
+
 }
+
+void RecorderOpenFace::WriteObservation()
+{
+	observation_count++;
+
+	// Write out the CSV file (it will always be there, even if not outputting anything more but frame/face numbers)
+	this->csv_recorder.WriteLine(observation_count, timestamp, landmark_detection_success;
+
+	// TODO HOG
+}
+
 
 void RecorderOpenFace::SetObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels)
 {
