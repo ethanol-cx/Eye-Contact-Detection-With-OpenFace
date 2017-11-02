@@ -137,10 +137,10 @@ namespace Recorder
 		std::vector<std::pair<std::string, double> > au_occurences;
 
 		// Gaze related observations
-		cv::Point3f& gazeDirection0;
-		cv::Point3f& gazeDirection1;
-		cv::Vec2d& gaze_angle;
-		cv::Mat_<double>& eye_landmarks;
+		cv::Point3f gazeDirection0;
+		cv::Point3f gazeDirection1;
+		cv::Vec2d gaze_angle;
+		cv::Mat_<double> eye_landmarks;
 
 	};
 }

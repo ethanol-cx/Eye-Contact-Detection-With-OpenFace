@@ -387,7 +387,12 @@ int main (int argc, char **argv)
 			fx = (fx + fy) / 2.0;
 			fy = fx;
 		}
-	
+
+		// TODO this should always be video input
+		int num_eye_landmarks = LandmarkDetector::CalculateAllEyeLandmarks(face_model).size(); // TODO empty file check replaced
+		Recorder::RecorderOpenFace openFaceRec(output_files[f_n], input_files[f_n], true, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, !output_hog_align_files.empty(),
+			!tracked_videos_output.empty(), !output_similarity_align.empty(), face_model.pdm.NumberOfPoints(), face_model.pdm.NumberOfModes(), num_eye_landmarks, face_analyser.GetAUClassNames(), face_analyser.GetAURegNames());
+
 		// Creating output files
 		std::ofstream output_file;
 
@@ -399,13 +404,6 @@ int main (int argc, char **argv)
 			prepareOutputFile(&output_file, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, face_model.pdm.NumberOfPoints(), face_model.pdm.NumberOfModes(), num_eye_landmarks, face_analyser.GetAUClassNames(), face_analyser.GetAURegNames());
 		}
 
-		// TODO this should always be video input
-		int num_eye_landmarks = LandmarkDetector::CalculateAllEyeLandmarks(face_model).size(); // TODO empty file check replaced
-		Recorder::RecorderOpenFace openFaceRec(output_file, input_files[f_n], video_input || images_as_video, face_model.pdm.NumberOfPoints(), face_model.pdm.NumberOfModes(), num_eye_landmarks, output_pose, output_AUs, output_gaze, output_hog, !tracked_videos_output.empty(), !output_hog_align_files.empty()  face_analyser.GetAUClassNames(), face_analyser.GetAURegNames(), output_gaze, )
-
-//const std::string out_directory, const std::string in_filename, bool sequence, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, bool output_pose,
-			bool output_AUs, bool output_gaze, bool output_hog, bool output_tracked_video, bool output_aligned_faces, int num_face_landmarks, int num_model_modes, int num_eye_landmarks,
-			const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg
 
 		// Saving the HOG features
 		std::ofstream hog_output_file;
@@ -433,6 +431,7 @@ int main (int argc, char **argv)
 		int frame_count = 0;
 		
 		// This is useful for a second pass run (if want AU predictions)
+		// TODO remove these
 		vector<cv::Vec6d> params_global_video;
 		vector<bool> successes_video;
 		vector<cv::Mat_<double>> params_local_video;
