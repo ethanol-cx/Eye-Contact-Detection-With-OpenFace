@@ -96,8 +96,7 @@ void create_directories(string output_path)
 }
 
 // Extracting the following command line arguments -f, -op, -of, -ov (and possible ordered repetitions)
-void get_video_input_output_params(vector<string> &input_video_files, vector<string> &output_files,
-	vector<string> &output_video_files, string& output_codec, vector<string> &arguments)
+void get_video_input_output_params(vector<string> &input_video_files, vector<string> &output_files, string& output_codec, vector<string> &arguments)
 {
 	bool* valid = new bool[arguments.size()];
 
@@ -154,14 +153,6 @@ void get_video_input_output_params(vector<string> &input_video_files, vector<str
 			valid[i+1] = false;
 			i++;
 		}
-		else if (arguments[i].compare("-ov") == 0)
-		{
-			output_video_files.push_back(output_root + arguments[i + 1]);
-			create_directory_from_file(output_root + arguments[i + 1]);
-			valid[i] = false;
-			valid[i+1] = false;
-			i++;
-		}		
 		else if (arguments[i].compare("-oc") == 0)
 		{
 			if(arguments[i + 1].length() == 4)

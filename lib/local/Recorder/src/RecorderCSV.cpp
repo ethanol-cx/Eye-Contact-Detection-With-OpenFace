@@ -157,7 +157,7 @@ bool RecorderCSV::Open(std::string output_file_name, bool output_2D_landmarks, b
 // TODO check if the stream is open
 void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landmark_detection_success, double landmark_confidence,
 	const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D, const cv::Mat_<double>& pdm_model_params, const cv::Vec6d& rigid_shape_params, cv::Vec6d& pose_estimate,
-	const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const cv::Vec2d& gaze_angle, const cv::Mat_<double>& eye_landmarks,
+	const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks,
 	const std::vector<std::pair<std::string, double> >& au_intensities, const std::vector<std::pair<std::string, double> >& au_occurences)
 {
 

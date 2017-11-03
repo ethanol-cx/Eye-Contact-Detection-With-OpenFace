@@ -87,7 +87,7 @@ namespace Recorder
 
 		// Gaze related observations
 		void SetObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1,
-			const cv::Vec2d& gaze_angle, const cv::Mat_<double>& eye_landmarks);
+			const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks);
 
 		// Face alignment related observations
 		void SetObservationFaceAlign(const cv::Mat& aligned_face);
@@ -145,7 +145,7 @@ namespace Recorder
 		cv::Point3f gaze_direction0;
 		cv::Point3f gaze_direction1;
 		cv::Vec2d gaze_angle;
-		cv::Mat_<double> eye_landmarks;
+		std::vector<cv::Point2d> eye_landmarks;
 
 		int observation_count;
 

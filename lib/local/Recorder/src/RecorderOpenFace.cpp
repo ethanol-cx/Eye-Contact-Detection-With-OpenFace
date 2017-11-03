@@ -151,7 +151,7 @@ void RecorderOpenFace::WriteObservation()
 
 	if(output_tracked_video)
 	{
-		if (vis_to_out.empty)
+		if (vis_to_out.empty())
 		{
 			WARN_STREAM("Output tracked video frame is not set");
 		}
@@ -197,7 +197,7 @@ void RecorderOpenFace::SetObservationActionUnits(const std::vector<std::pair<std
 }
 
 void RecorderOpenFace::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv::Point3f& gaze_direction1,
-	const cv::Vec2d& gaze_angle, const cv::Mat_<double>& eye_landmarks)
+	const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks)
 {
 	this->gaze_direction0 = gaze_direction0;
 	this->gaze_direction1 = gaze_direction1;
