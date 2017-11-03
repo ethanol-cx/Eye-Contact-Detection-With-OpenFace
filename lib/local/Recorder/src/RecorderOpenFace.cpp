@@ -113,7 +113,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 
 }
 
-void RecorderOpenFace::SetObservationVisualization(const cv::Mat_<double> &vis_track)
+void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 {
 	if (output_tracked_video)
 	{
@@ -147,7 +147,10 @@ void RecorderOpenFace::WriteObservation()
 		landmark_detection_confidence, landmarks_2D, landmarks_3D, pdm_params_local, pdm_params_global, head_pose,
 		gaze_direction0, gaze_direction1, gaze_angle, eye_landmarks, au_intensities, au_occurences);
 
-	// TODO HOG
+	if(output_hog)
+	{
+		this->hog_recorder.Write();
+	}
 
 	if(output_tracked_video)
 	{
@@ -205,7 +208,18 @@ void RecorderOpenFace::SetObservationGaze(const cv::Point3f& gaze_direction0, co
 	this->eye_landmarks = eye_landmarks;
 }
 
+RecorderOpenFace::~RecorderOpenFace()
+{
+	this->Close();
+}
 
 
-// TODO the other 4 constructors + destructors?
+void RecorderOpenFace::Close()
+{
+	hog_recorder.Close();
+	csv_recorder.Close();
+	video_writer.release();
+}
+
+
 

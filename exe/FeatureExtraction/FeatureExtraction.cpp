@@ -57,6 +57,7 @@
 #include <FaceAnalyser.h>
 #include <GazeEstimation.h>
 #include <RecorderOpenFace.h>
+#include <RecorderOpenFaceParameters.h>
 
 #ifndef CONFIG_DIR
 #define CONFIG_DIR "~"
@@ -407,7 +408,7 @@ int main (int argc, char **argv)
 			// Do face alignment
 			cv::Mat sim_warped_img;
 			cv::Mat_<double> hog_descriptor;
-			int num_hog_rows, num_hog_cols;
+			int num_hog_rows = 0, num_hog_cols = 0;
 
 			// As this can be expensive only compute it if needed by output or visualization
 			if(!output_similarity_align.empty() || output_hog || output_AUs || visualize_align || visualize_hog)

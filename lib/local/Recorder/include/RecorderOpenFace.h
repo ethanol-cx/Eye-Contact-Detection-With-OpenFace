@@ -36,6 +36,7 @@
 
 #include "RecorderCSV.h"
 #include "RecorderHOG.h"
+#include "RecorderOpenFaceParameters.h"
 
 // System includes
 #include <vector>
@@ -49,22 +50,24 @@ namespace Recorder
 
 	//===========================================================================
 	/**
-	A class for recording CSV file from OpenFace
+	A class for recording data processed by OpenFace (facial landmarks, head pose, facial action units, aligned face, HOG features, and tracked video
 	*/
 	class RecorderOpenFace {
 
 	public:
 
 		// The constructor for the recorder, need to specify if we are recording a sequence or not
-		RecorderOpenFace(const std::string out_directory, const std::string in_filename, bool sequence, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, bool output_pose,
-			bool output_AUs, bool output_gaze, bool output_hog, bool output_tracked_video, bool output_aligned_faces, int num_face_landmarks, int num_model_modes, int num_eye_landmarks, 
+		RecorderOpenFace(const std::string out_directory, const std::string in_filename, Recorder::RecorderOpenFaceParameter params,
+		 // TODO here int num_face_landmarks, int num_model_modes, int num_eye_landmarks, 
 			const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg, const std::string& output_codec, double fps_vid_in);
 
 		// Simplified constructor that records all, TODO implement
 		RecorderOpenFace(const std::string out_directory, const std::string in_filename, bool sequence, int num_face_landmarks, int num_model_modes, int num_eye_landmarks,
 			const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg);
 
-		// TODO copy, move, destructors
+		~RecorderOpenFace();
+
+		// TODO copy, assignment and move operators? Do not allow
 
 		// Closing and cleaning up the recorder
 		void Close();
@@ -95,7 +98,7 @@ namespace Recorder
 		// HOG feature related observations
 		void SetObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels);
 
-		void SetObservationVisualization(const cv::Mat_<double> &vis_track);
+		void SetObservationVisualization(const cv::Mat &vis_track);
 
 		void WriteObservation();
 
@@ -109,19 +112,7 @@ namespace Recorder
 		RecorderCSV csv_recorder;
 		RecorderHOG hog_recorder;
 
-		// If we are recording results from a sequence each row refers to a frame, if we are recording an image each row is a face
-		bool is_sequence;
-		
-		// Keep track of what we are recording
-		bool output_2D_landmarks;
-		bool output_3D_landmarks;
-		bool output_model_params;
-		bool output_pose;
-		bool output_AUs;
-		bool output_gaze;
-		bool output_hog;
-		bool output_tracked_video;
-		bool output_aligned_faces;
+		const RecorderOpenFaceParameters params;
 
 		// The actual temporary storage for the observations
 		double timestamp;
@@ -154,7 +145,7 @@ namespace Recorder
 		std::string video_filename;
 		std::string output_codec;
 		double fps_vid_out;
-		cv::Mat_<double> vis_to_out;
+		cv::Mat vis_to_out;
 
 	};
 }

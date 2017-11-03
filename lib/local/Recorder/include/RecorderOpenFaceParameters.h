@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017, Tadas Baltrusaitis all rights reserved.
+// Copyright (C) 2017, Tadas Baltrusaitis, all rights reserved.
 //
 // ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
 //
@@ -31,52 +31,63 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __RECORDER_HOG_h_
-#define __RECORDER_HOG_h_
+//  Parameters of the Face analyser
+#ifndef __RECORDER_OPENFACE_PARAM_H
+#define __RECORDER_OPENFACE_PARAM_H
 
-// System includes
 #include <vector>
-
-// OpenCV includes
 #include <opencv2/core/core.hpp>
 
-#include <iostream>
-#include <fstream>
+// Boost includes
+#include <filesystem.hpp>
+#include <filesystem/fstream.hpp>
+
+using namespace std;
 
 namespace Recorder
 {
 
-	//===========================================================================
-	/**
-	A class for recording CSV file from OpenFace
-	*/
-	class RecorderHOG {
-
+	struct RecorderOpenFaceParameters
+	{
 	public:
+		// Constructors
+		RecorderOpenFaceParameters();
+		RecorderOpenFaceParameters(vector<string> &arguments);
 
-		// The constructor for the recorder, by default does not do anything
-		RecorderHOG();
-		
-		// Adding observations to the recorder
-		void SetObservationHOG(bool success, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels);
 
-		void Write();
 
-		bool Open(std::string filename);
-
-		void Close();
+		bool isSequence() const { return is_sequence; }
+		bool output2DLandmarks() const { return output_2D_landmarks; }
+		bool output3DLandmarks() const { return output_3D_landmarks; }
+		bool outputPDMParams() const { return output_model_params; }
+		bool outputPose() const { return output_pose; }
+		bool outputAUs() const { return output_AUs; }
+		bool outputGaze() const { return output_gaze; }
+		bool outputHOG() const { return output_hog; }
+		bool outputTrackedVideo() const { return output_tracked_video; }
+		bool outputAlignedFaces() const { return output_aligned_faces; }
 
 	private:
 
-		std::ofstream hog_file;
+		// The default values initializer
+		void init();
 
-		// Internals for recording
-		int num_cols;
-		int num_rows;
-		int num_channels;
-		cv::Mat_<double> hog_descriptor;
-		bool good_frame;
+		// If we are recording results from a sequence each row refers to a frame, if we are recording an image each row is a face
+		bool is_sequence;
+
+		// Keep track of what we are recording
+		bool output_2D_landmarks;
+		bool output_3D_landmarks;
+		bool output_model_params;
+		bool output_pose;
+		bool output_AUs;
+		bool output_gaze;
+		bool output_hog;
+		bool output_tracked_video;
+		bool output_aligned_faces;
 
 	};
+
 }
-#endif
+
+#endif // __FACE_ANALYSER_PARAM_H
