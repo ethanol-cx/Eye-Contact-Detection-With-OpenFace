@@ -66,6 +66,8 @@ namespace Recorder
 		bool outputHOG() const { return output_hog; }
 		bool outputTrackedVideo() const { return output_tracked_video; }
 		bool outputAlignedFaces() const { return output_aligned_faces; }
+		std::string outputCodec() const { return output_codec; }
+		double outputFps() const { return fps_vid_out; }
 
 	private:
 

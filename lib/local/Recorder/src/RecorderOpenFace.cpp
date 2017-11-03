@@ -86,7 +86,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 
 
 	// Consruct HOG recorder here
-	if(output_hog)
+	if(params.outputHOG())
 	{
 		std::string hog_filename = (path(record_root) / path(filename).replace_extension(".hog")).string();
 		hog_recorder.Open(hog_filename);
@@ -95,7 +95,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 	// TODO construct a video recorder
 	// saving the videos
 	
-	if (output_tracked_video)
+	if (params.outputTrackedVideo())
 	{
 		this->video_filename = (path(record_root) / path(filename).replace_extension(".avi")).string();
 	}
@@ -109,12 +109,13 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 
 void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 {
-	if (output_tracked_video)
+	if (params.outputTrackedVideo())
 	{
 		// Initialize the video writer if it has not been opened yet
 		if(!video_writer.isOpened())
 		{
 			std::string video_filename = (path(record_root) / path(filename).replace_extension(".avi")).string();
+			std::string output_codec = params.outputCodec();
 			try
 			{
 				video_writer.open(video_filename, CV_FOURCC(output_codec[0], output_codec[1], output_codec[2], output_codec[3]), fps_vid_out, vis_track.size(), true);

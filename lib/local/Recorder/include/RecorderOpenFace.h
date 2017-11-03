@@ -58,11 +58,7 @@ namespace Recorder
 
 		// The constructor for the recorder, need to specify if we are recording a sequence or not
 		RecorderOpenFace(const std::string out_directory, const std::string in_filename, RecorderOpenFaceParameters parameters);
-
-		// Simplified constructor that records all, TODO implement
-		RecorderOpenFace(const std::string out_directory, const std::string in_filename, bool sequence, int num_face_landmarks, int num_model_modes, int num_eye_landmarks,
-			const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg);
-
+		
 		~RecorderOpenFace();
 
 		// TODO copy, assignment and move operators? Do not allow
