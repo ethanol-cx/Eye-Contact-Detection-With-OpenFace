@@ -71,12 +71,7 @@ void CreateDirectory(std::string output_path)
 }
 
 
-RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::string in_filename, bool sequence, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, bool output_pose,
-	bool output_AUs, bool output_gaze, bool output_hog, bool output_tracked_video, bool output_aligned_faces, int num_face_landmarks, int num_model_modes, int num_eye_landmarks,
-	const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg, const std::string& output_codec, double fps_vid_in):
-	is_sequence(sequence), output_2D_landmarks(output_2D_landmarks), output_3D_landmarks(output_3D_landmarks), output_aligned_faces(output_aligned_faces),
-	output_AUs(output_AUs), output_gaze(output_gaze), output_hog(output_hog), output_model_params(output_model_params),
-	output_pose(output_pose), output_tracked_video(output_tracked_video), video_writer(), fps_vid_out(fps_vid_in), output_codec(output_codec)
+RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::string in_filename, RecorderOpenFaceParameters parameters):video_writer(), params(parameters)
 {
 
 	// From the filename, strip out the name without directory and extension
@@ -88,8 +83,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 
 	// Create the required individual recorders, CSV, HOG, aligned, video
 	std::string csv_filename = (path(record_root) / path(filename).replace_extension(".csv")).string();
-	csv_recorder.Open(csv_filename, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose,
-		output_AUs, output_gaze, num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
+
 
 	// Consruct HOG recorder here
 	if(output_hog)
@@ -143,6 +137,13 @@ void RecorderOpenFace::WriteObservation()
 	observation_count++;
 
 	// Write out the CSV file (it will always be there, even if not outputting anything more but frame/face numbers)
+	
+	if(observation_count == 1)
+	{
+		csv_recorder.Open(csv_filename, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose,
+			output_AUs, output_gaze, num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
+	}
+
 	this->csv_recorder.WriteLine(observation_count, timestamp, landmark_detection_success, 
 		landmark_detection_confidence, landmarks_2D, landmarks_3D, pdm_params_local, pdm_params_global, head_pose,
 		gaze_direction0, gaze_direction1, gaze_angle, eye_landmarks, au_intensities, au_occurences);

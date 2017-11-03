@@ -57,9 +57,7 @@ namespace Recorder
 	public:
 
 		// The constructor for the recorder, need to specify if we are recording a sequence or not
-		RecorderOpenFace(const std::string out_directory, const std::string in_filename, Recorder::RecorderOpenFaceParameter params,
-		 // TODO here int num_face_landmarks, int num_model_modes, int num_eye_landmarks, 
-			const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg, const std::string& output_codec, double fps_vid_in);
+		RecorderOpenFace(const std::string out_directory, const std::string in_filename, RecorderOpenFaceParameters parameters);
 
 		// Simplified constructor that records all, TODO implement
 		RecorderOpenFace(const std::string out_directory, const std::string in_filename, bool sequence, int num_face_landmarks, int num_model_modes, int num_eye_landmarks,
@@ -143,8 +141,6 @@ namespace Recorder
 		// For video writing
 		cv::VideoWriter video_writer;
 		std::string video_filename;
-		std::string output_codec;
-		double fps_vid_out;
 		cv::Mat vis_to_out;
 
 	};

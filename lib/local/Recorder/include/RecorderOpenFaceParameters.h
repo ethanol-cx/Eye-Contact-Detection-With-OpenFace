@@ -52,7 +52,7 @@ namespace Recorder
 	public:
 		// Constructors
 		RecorderOpenFaceParameters();
-		RecorderOpenFaceParameters(vector<string> &arguments);
+		RecorderOpenFaceParameters(vector<string> &arguments, double fps_vid_out = 30, std::string output_codec = "DIVX");
 
 
 
@@ -85,7 +85,10 @@ namespace Recorder
 		bool output_hog;
 		bool output_tracked_video;
 		bool output_aligned_faces;
-
+		
+		// Some video recording parameters
+		std::string output_codec;
+		double fps_vid_out;
 	};
 
 }

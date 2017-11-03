@@ -341,6 +341,8 @@ int main (int argc, char **argv)
 			fy = fx;
 		}
 
+		Recorder::RecorderOpenFaceParameters params(arguments);
+
 		// TODO this should always be video input
 		int num_eye_landmarks = LandmarkDetector::CalculateAllEyeLandmarks(face_model).size(); // TODO empty file check replaced
 		Recorder::RecorderOpenFace openFaceRec(output_files[f_n], input_files[f_n], true, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, !output_hog_align_files.empty(),
