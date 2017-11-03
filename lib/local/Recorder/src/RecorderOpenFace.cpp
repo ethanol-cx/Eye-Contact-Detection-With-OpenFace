@@ -50,6 +50,9 @@ using namespace boost::filesystem;
 
 using namespace Recorder;
 
+#define WARN_STREAM( stream ) \
+std::cout << "Warning: " << stream << std::endl
+
 void CreateDirectory(std::string output_path)
 {
 
@@ -70,10 +73,10 @@ void CreateDirectory(std::string output_path)
 
 RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::string in_filename, bool sequence, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, bool output_pose,
 	bool output_AUs, bool output_gaze, bool output_hog, bool output_tracked_video, bool output_aligned_faces, int num_face_landmarks, int num_model_modes, int num_eye_landmarks,
-	const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg):
+	const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg, const std::string& output_codec, double fps_vid_in):
 	is_sequence(sequence), output_2D_landmarks(output_2D_landmarks), output_3D_landmarks(output_3D_landmarks), output_aligned_faces(output_aligned_faces),
 	output_AUs(output_AUs), output_gaze(output_gaze), output_hog(output_hog), output_model_params(output_model_params),
-	output_pose(output_pose), output_tracked_video(output_tracked_video)
+	output_pose(output_pose), output_tracked_video(output_tracked_video), video_writer(), fps_vid_out(fps_vid_in), output_codec(output_codec)
 {
 
 	// From the filename, strip out the name without directory and extension
@@ -96,6 +99,13 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 	}
 
 	// TODO construct a video recorder
+	// saving the videos
+	
+	if (output_tracked_video)
+	{
+		this->video_filename = (path(record_root) / path(filename).replace_extension(".avi")).string();
+	}
+
 
 	// Prepare image recording
 
@@ -103,14 +113,52 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 
 }
 
+void RecorderOpenFace::SetObservationVisualization(const cv::Mat_<double> &vis_track)
+{
+	if (output_tracked_video)
+	{
+		// Initialize the video writer if it has not been opened yet
+		if(!video_writer.isOpened())
+		{
+			std::string video_filename = (path(record_root) / path(filename).replace_extension(".avi")).string();
+			try
+			{
+				video_writer.open(video_filename, CV_FOURCC(output_codec[0], output_codec[1], output_codec[2], output_codec[3]), fps_vid_out, vis_track.size(), true);
+			}
+			catch (cv::Exception e)
+			{
+				WARN_STREAM("Could not open VideoWriter, OUTPUT FILE WILL NOT BE WRITTEN. Currently using codec " << output_codec << ", try using an other one (-oc option)");
+			}
+		}
+
+		vis_to_out = vis_track;
+
+	}
+
+}
+
+
 void RecorderOpenFace::WriteObservation()
 {
 	observation_count++;
 
 	// Write out the CSV file (it will always be there, even if not outputting anything more but frame/face numbers)
-	this->csv_recorder.WriteLine(observation_count, timestamp, landmark_detection_success;
+	this->csv_recorder.WriteLine(observation_count, timestamp, landmark_detection_success, 
+		landmark_detection_confidence, landmarks_2D, landmarks_3D, pdm_params_local, pdm_params_global, head_pose,
+		gaze_direction0, gaze_direction1, gaze_angle, eye_landmarks, au_intensities, au_occurences);
 
 	// TODO HOG
+
+	if(output_tracked_video)
+	{
+		if (vis_to_out.empty)
+		{
+			WARN_STREAM("Output tracked video frame is not set");
+		}
+		video_writer.write(vis_to_out);
+		// Clear the output
+		vis_to_out = cv::Mat();
+	}
 }
 
 
@@ -125,12 +173,12 @@ void RecorderOpenFace::SetObservationTimestamp(double timestamp)
 }
 
 void RecorderOpenFace::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D,
-	const cv::Vec6d& params_global, const cv::Mat_<double>& params_local, double confidence, bool success)
+	const cv::Vec6d& pdm_params_global, const cv::Mat_<double>& pdm_params_local, double confidence, bool success)
 {
 	this->landmarks_2D = landmarks_2D;
 	this->landmarks_3D = landmarks_3D;
-	this->params_global = params_global;
-	this->params_local = params_local;
+	this->pdm_params_global = pdm_params_global;
+	this->pdm_params_local = pdm_params_local;
 	this->landmark_detection_confidence = confidence;
 	this->landmark_detection_success = success;
 
@@ -148,11 +196,11 @@ void RecorderOpenFace::SetObservationActionUnits(const std::vector<std::pair<std
 	this->au_occurences = au_occurences;
 }
 
-void RecorderOpenFace::SetObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1,
+void RecorderOpenFace::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv::Point3f& gaze_direction1,
 	const cv::Vec2d& gaze_angle, const cv::Mat_<double>& eye_landmarks)
 {
-	this->gazeDirection0 = gazeDirection0;
-	this->gazeDirection1 = gazeDirection1;
+	this->gaze_direction0 = gaze_direction0;
+	this->gaze_direction1 = gaze_direction1;
 	this->gaze_angle = gaze_angle;
 	this->eye_landmarks = eye_landmarks;
 }

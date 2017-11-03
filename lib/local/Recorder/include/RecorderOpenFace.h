@@ -39,7 +39,10 @@
 
 // System includes
 #include <vector>
+
+// OpenCV includes
 #include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 namespace Recorder
 {
@@ -55,9 +58,9 @@ namespace Recorder
 		// The constructor for the recorder, need to specify if we are recording a sequence or not
 		RecorderOpenFace(const std::string out_directory, const std::string in_filename, bool sequence, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, bool output_pose,
 			bool output_AUs, bool output_gaze, bool output_hog, bool output_tracked_video, bool output_aligned_faces, int num_face_landmarks, int num_model_modes, int num_eye_landmarks, 
-			const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg);
+			const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg, const std::string& output_codec, double fps_vid_in);
 
-		// Simplified constructor that records all
+		// Simplified constructor that records all, TODO implement
 		RecorderOpenFace(const std::string out_directory, const std::string in_filename, bool sequence, int num_face_landmarks, int num_model_modes, int num_eye_landmarks,
 			const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg);
 
@@ -92,6 +95,8 @@ namespace Recorder
 		// HOG feature related observations
 		void SetObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels);
 
+		void SetObservationVisualization(const cv::Mat_<double> &vis_track);
+
 		void WriteObservation();
 
 	private:
@@ -124,8 +129,8 @@ namespace Recorder
 		// Facial landmark related observations
 		cv::Mat_<double> landmarks_2D;
 		cv::Mat_<double> landmarks_3D;
-		cv::Vec6d params_global;
-		cv::Mat_<double> params_local;
+		cv::Vec6d pdm_params_global;
+		cv::Mat_<double> pdm_params_local;
 		double landmark_detection_confidence;
 		bool landmark_detection_success;
 
@@ -137,12 +142,19 @@ namespace Recorder
 		std::vector<std::pair<std::string, double> > au_occurences;
 
 		// Gaze related observations
-		cv::Point3f gazeDirection0;
-		cv::Point3f gazeDirection1;
+		cv::Point3f gaze_direction0;
+		cv::Point3f gaze_direction1;
 		cv::Vec2d gaze_angle;
 		cv::Mat_<double> eye_landmarks;
 
 		int observation_count;
+
+		// For video writing
+		cv::VideoWriter video_writer;
+		std::string video_filename;
+		std::string output_codec;
+		double fps_vid_out;
+		cv::Mat_<double> vis_to_out;
 
 	};
 }

@@ -203,10 +203,6 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 	}
 }
 
-void prepareOutputFile(std::ofstream* output_file, bool output_2D_landmarks, bool output_3D_landmarks,
-	bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
-	int num_face_landmarks, int num_model_modes, int num_eye_landmarks, vector<string> au_names_class, vector<string> au_names_reg);
-
 // Output all of the information into one file in one go (quite a few parameters, but simplifies the flow)
 void outputAllFeatures(std::ofstream* output_file, bool output_2D_landmarks, bool output_3D_landmarks,
 	bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
@@ -224,7 +220,8 @@ int main (int argc, char **argv)
 	
 	// Get the input output file parameters
 	
-	string output_codec; //not used but should
+	string output_codec;
+	// TODO rename
 	LandmarkDetector::get_video_input_output_params(input_files, output_files, tracked_videos_output, output_codec, arguments);
 
 	bool video_input = true;
@@ -312,6 +309,7 @@ int main (int argc, char **argv)
 
 		double fps_vid_in = -1.0;
 
+		// TODO this should be moved to a SequenceCapture class
 		if(video_input)
 		{
 			// We might specify multiple video files as arguments
@@ -391,27 +389,8 @@ int main (int argc, char **argv)
 		// TODO this should always be video input
 		int num_eye_landmarks = LandmarkDetector::CalculateAllEyeLandmarks(face_model).size(); // TODO empty file check replaced
 		Recorder::RecorderOpenFace openFaceRec(output_files[f_n], input_files[f_n], true, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, !output_hog_align_files.empty(),
-			!tracked_videos_output.empty(), !output_similarity_align.empty(), face_model.pdm.NumberOfPoints(), face_model.pdm.NumberOfModes(), num_eye_landmarks, face_analyser.GetAUClassNames(), face_analyser.GetAURegNames());
-
-		// Creating output files
-		std::ofstream output_file;
-
-		if (!output_files.empty())
-		{
-			output_file.open(output_files[f_n], ios_base::out);
-			int num_eye_landmarks = LandmarkDetector::CalculateAllEyeLandmarks(face_model).size();
+			!tracked_videos_output.empty(), !output_similarity_align.empty(), face_model.pdm.NumberOfPoints(), face_model.pdm.NumberOfModes(), num_eye_landmarks, face_analyser.GetAUClassNames(), face_analyser.GetAURegNames(), output_codec, fps_vid_in);
 		
-			prepareOutputFile(&output_file, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, face_model.pdm.NumberOfPoints(), face_model.pdm.NumberOfModes(), num_eye_landmarks, face_analyser.GetAUClassNames(), face_analyser.GetAURegNames());
-		}
-
-
-		// Saving the HOG features
-		std::ofstream hog_output_file;
-		if(!output_hog_align_files.empty())
-		{
-			hog_output_file.open(output_hog_align_files[f_n], ios_base::out | ios_base::binary);
-		}
-
 		// saving the videos
 		cv::VideoWriter writerFace;
 		if(!tracked_videos_output.empty())
@@ -424,19 +403,10 @@ int main (int argc, char **argv)
 			{
 				WARN_STREAM( "Could not open VideoWriter, OUTPUT FILE WILL NOT BE WRITTEN. Currently using codec " << output_codec << ", try using an other one (-oc option)");
 			}
-
-			
 		}
 
 		int frame_count = 0;
-		
-		// This is useful for a second pass run (if want AU predictions)
-		// TODO remove these
-		vector<cv::Vec6d> params_global_video;
-		vector<bool> successes_video;
-		vector<cv::Mat_<double>> params_local_video;
-		vector<cv::Mat_<double>> detected_landmarks_video;
-				
+						
 		// Use for timestamping if using a webcam
 		int64 t_initial = cv::getTickCount();
 
@@ -647,89 +617,6 @@ int main (int argc, char **argv)
 	}
 
 	return 0;
-}
-
-void prepareOutputFile(std::ofstream* output_file, bool output_2D_landmarks, bool output_3D_landmarks,
-	bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
-	int num_face_landmarks, int num_model_modes, int num_eye_landmarks, vector<string> au_names_class, vector<string> au_names_reg)
-{
-
-	*output_file << "frame, timestamp, confidence, success";
-
-	if (output_gaze)
-	{
-		*output_file << ", gaze_0_x, gaze_0_y, gaze_0_z, gaze_1_x, gaze_1_y, gaze_1_z, gaze_angle_x, gaze_angle_y";
-
-		for (int i = 0; i < num_eye_landmarks; ++i)
-		{
-			*output_file << ", eye_lmk_x_" << i;
-		}
-		for (int i = 0; i < num_eye_landmarks; ++i)
-		{
-			*output_file << ", eye_lmk_y_" << i;
-		}
-	}
-
-	if (output_pose)
-	{
-		*output_file << ", pose_Tx, pose_Ty, pose_Tz, pose_Rx, pose_Ry, pose_Rz";
-	}
-
-	if (output_2D_landmarks)
-	{
-		for (int i = 0; i < num_face_landmarks; ++i)
-		{
-			*output_file << ", x_" << i;
-		}
-		for (int i = 0; i < num_face_landmarks; ++i)
-		{
-			*output_file << ", y_" << i;
-		}
-	}
-
-	if (output_3D_landmarks)
-	{
-		for (int i = 0; i < num_face_landmarks; ++i)
-		{
-			*output_file << ", X_" << i;
-		}
-		for (int i = 0; i < num_face_landmarks; ++i)
-		{
-			*output_file << ", Y_" << i;
-		}
-		for (int i = 0; i < num_face_landmarks; ++i)
-		{
-			*output_file << ", Z_" << i;
-		}
-	}
-
-	// Outputting model parameters (rigid and non-rigid), the first parameters are the 6 rigid shape parameters, they are followed by the non rigid shape parameters
-	if (output_model_params)
-	{
-		*output_file << ", p_scale, p_rx, p_ry, p_rz, p_tx, p_ty";
-		for (int i = 0; i < num_model_modes; ++i)
-		{
-			*output_file << ", p_" << i;
-		}
-	}
-
-	if (output_AUs)
-	{
-		std::sort(au_names_reg.begin(), au_names_reg.end());
-		for (string reg_name : au_names_reg)
-		{
-			*output_file << ", " << reg_name << "_r";
-		}
-
-		std::sort(au_names_class.begin(), au_names_class.end());
-		for (string class_name : au_names_class)
-		{
-			*output_file << ", " << class_name << "_c";
-		}
-	}
-
-	*output_file << endl;
-
 }
 
 // Output all of the information into one file in one go (quite a few parameters, but simplifies the flow)

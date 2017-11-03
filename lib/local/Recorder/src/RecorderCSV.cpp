@@ -36,6 +36,9 @@
 // For sorting
 #include <algorithm>
 
+// For standard out
+#include <iostream>
+
 using namespace Recorder;
 
 // Default constructor initializes the variables
@@ -45,7 +48,7 @@ RecorderCSV::RecorderCSV():output_file(){};
 
 // Opening the file and preparing the header for it
 bool RecorderCSV::Open(std::string output_file_name, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
-	int num_face_landmarks, int num_model_modes, int num_eye_landmarks, const std::vector<std::string> au_names_class, const std::vector<std::string> au_names_reg)
+	int num_face_landmarks, int num_model_modes, int num_eye_landmarks, const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg)
 {
 	output_file.open(output_file_name, std::ios_base::out);
 
