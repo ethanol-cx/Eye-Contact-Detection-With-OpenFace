@@ -118,7 +118,7 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 			std::string output_codec = params.outputCodec();
 			try
 			{
-				video_writer.open(video_filename, CV_FOURCC(output_codec[0], output_codec[1], output_codec[2], output_codec[3]), fps_vid_out, vis_track.size(), true);
+				video_writer.open(video_filename, CV_FOURCC(output_codec[0], output_codec[1], output_codec[2], output_codec[3]), params.outputFps(), vis_track.size(), true);
 			}
 			catch (cv::Exception e)
 			{
@@ -141,20 +141,20 @@ void RecorderOpenFace::WriteObservation()
 	
 	if(observation_count == 1)
 	{
-		csv_recorder.Open(csv_filename, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose,
-			output_AUs, output_gaze, num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
+		csv_recorder.Open(csv_filename, params.output2DLandmarks(), params.output3DLandmarks(), params.outputPDMParams(), params.outputPose(),
+			params.outputAUs(), params.outputGaze(), num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
 	}
 
 	this->csv_recorder.WriteLine(observation_count, timestamp, landmark_detection_success, 
 		landmark_detection_confidence, landmarks_2D, landmarks_3D, pdm_params_local, pdm_params_global, head_pose,
 		gaze_direction0, gaze_direction1, gaze_angle, eye_landmarks, au_intensities, au_occurences);
 
-	if(output_hog)
+	if(params.outputHOG())
 	{
 		this->hog_recorder.Write();
 	}
 
-	if(output_tracked_video)
+	if(params.outputTrackedVideo())
 	{
 		if (vis_to_out.empty())
 		{

@@ -24,6 +24,9 @@
     <ClCompile Include="src\RecorderOpenFace.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\RecorderOpenFaceParameters.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\RecorderCSV.h">

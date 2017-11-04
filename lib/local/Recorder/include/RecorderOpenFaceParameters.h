@@ -47,14 +47,13 @@ using namespace std;
 namespace Recorder
 {
 
-	struct RecorderOpenFaceParameters
+	class RecorderOpenFaceParameters
 	{
+
 	public:
 		// Constructors
 		RecorderOpenFaceParameters();
-		RecorderOpenFaceParameters(vector<string> &arguments, double fps_vid_out = 30, std::string output_codec = "DIVX");
-
-
+		RecorderOpenFaceParameters(std::vector<std::string> &arguments, double fps_vid_out = 30, std::string output_codec = "DIVX");
 
 		bool isSequence() const { return is_sequence; }
 		bool output2DLandmarks() const { return output_2D_landmarks; }
@@ -91,8 +90,11 @@ namespace Recorder
 		// Some video recording parameters
 		std::string output_codec;
 		double fps_vid_out;
+
+		// For output location
+		std::string output_root = "";
 	};
 
 }
 
-#endif // __FACE_ANALYSER_PARAM_H
+#endif // ____RECORDER_OPENFACE_PARAM_H

@@ -557,12 +557,8 @@ int main (int argc, char **argv)
 	return 0;
 }
 
-void get_output_feature_params(vector<string> &output_similarity_aligned, vector<string> &output_hog_aligned_files, bool& visualize_track, 
-	bool& visualize_align, bool& visualize_hog, bool &output_2D_landmarks, bool &output_3D_landmarks, bool &output_model_params, 
-	bool &output_pose, bool &output_AUs, bool &output_gaze, vector<string> &arguments)
+void get_visualization_params(bool& visualize_track, bool& visualize_align, bool& visualize_hog,vector<string> &arguments)
 {
-	output_similarity_aligned.clear();
-	output_hog_aligned_files.clear();
 
 	bool* valid = new bool[arguments.size()];
 
@@ -630,36 +626,6 @@ void get_output_feature_params(vector<string> &output_similarity_aligned, vector
 		else if (arguments[i].compare("-vis-track") == 0)
 		{
 			visualize_track = true;
-			valid[i] = false;
-		}
-		else if (arguments[i].compare("-no2Dfp") == 0)
-		{
-			output_2D_landmarks = false;
-			valid[i] = false;
-		}
-		else if (arguments[i].compare("-no3Dfp") == 0)
-		{
-			output_3D_landmarks = false;
-			valid[i] = false;
-		}
-		else if (arguments[i].compare("-noMparams") == 0)
-		{
-			output_model_params = false;
-			valid[i] = false;
-		}
-		else if (arguments[i].compare("-noPose") == 0)
-		{
-			output_pose = false;
-			valid[i] = false;
-		}
-		else if (arguments[i].compare("-noAUs") == 0)
-		{
-			output_AUs = false;
-			valid[i] = false;
-		}
-		else if (arguments[i].compare("-noGaze") == 0)
-		{
-			output_gaze = false;
 			valid[i] = false;
 		}
 	}

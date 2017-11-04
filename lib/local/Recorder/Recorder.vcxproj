@@ -142,6 +142,7 @@
     <ClCompile Include="src\RecorderCSV.cpp" />
     <ClCompile Include="src\RecorderHOG.cpp" />
     <ClCompile Include="src\RecorderOpenFace.cpp" />
+    <ClCompile Include="src\RecorderOpenFaceParameters.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\RecorderCSV.h" />
