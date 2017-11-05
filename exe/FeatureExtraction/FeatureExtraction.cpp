@@ -157,11 +157,6 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 	fpsSt += fpsC;
 	cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, CV_AA);
 
-	if (!det_parameters.quiet_mode)
-	{
-		cv::namedWindow("tracking_result", 1);
-		cv::imshow("tracking_result", captured_image);
-	}
 }
 
 int main (int argc, char **argv)
@@ -415,7 +410,7 @@ int main (int argc, char **argv)
 			// Work out the pose of the head from the tracked model
 			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
-			// Visualising the tracker, TODO this should be in utility
+			// Drawing the visualization on the captured image
 			if (recording_params.outputTrackedVideo() || (visualize_track && !det_parameters.quiet_mode))
 			{
 				visualise_tracking(captured_image, face_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
@@ -430,6 +425,13 @@ int main (int argc, char **argv)
 			open_face_rec.SetObservationPose(pose_estimate);
 			open_face_rec.SetObservationTimestamp(time_stamp);
 			open_face_rec.WriteObservation();
+
+			// Visualize the image if desired
+			if (visualize_track && !det_parameters.quiet_mode)
+			{
+				cv::namedWindow("tracking_result", 1);
+				cv::imshow("tracking_result", captured_image);
+			}
 
 			// Grabbing the next frame (todo this should be part of capture)
 			if(video_input)
