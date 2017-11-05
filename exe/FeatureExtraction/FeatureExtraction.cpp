@@ -232,13 +232,13 @@ int main (int argc, char **argv)
 	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
 	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
-	while(!done) // this is not a for loop as we might also be reading from a webcam
+	while (!done) // this is not a for loop as we might also be reading from a webcam
 	{
-		
+
 		string current_file;
-		
+
 		cv::VideoCapture video_capture;
-		
+
 		cv::Mat captured_image;
 		int total_frames = -1;
 		int reported_completion = 0;
@@ -246,12 +246,12 @@ int main (int argc, char **argv)
 		double fps_vid_in = -1.0;
 
 		// TODO this should be moved to a SequenceCapture class
-		if(video_input)
+		if (video_input)
 		{
 			// We might specify multiple video files as arguments
-			if(input_files.size() > 0)
+			if (input_files.size() > 0)
 			{
-				f_n++;			
+				f_n++;
 				current_file = input_files[f_n];
 			}
 			else
@@ -260,10 +260,10 @@ int main (int argc, char **argv)
 				f_n = 0;
 			}
 			// Do some grabbing
-			if( current_file.size() > 0 )
+			if (current_file.size() > 0)
 			{
-				INFO_STREAM( "Attempting to read from file: " << current_file );
-				video_capture = cv::VideoCapture( current_file );
+				INFO_STREAM("Attempting to read from file: " << current_file);
+				video_capture = cv::VideoCapture(current_file);
 				total_frames = (int)video_capture.get(CV_CAP_PROP_FRAME_COUNT);
 				fps_vid_in = video_capture.get(CV_CAP_PROP_FPS);
 
@@ -285,29 +285,29 @@ int main (int argc, char **argv)
 				INFO_STREAM("Device or file opened");
 			}
 
-			video_capture >> captured_image;	
+			video_capture >> captured_image;
 		}
 		else
 		{
-			f_n++;	
+			f_n++;
 			curr_img++;
-			if(!input_image_files[f_n].empty())
+			if (!input_image_files[f_n].empty())
 			{
 				string curr_img_file = input_image_files[f_n][curr_img];
 				captured_image = cv::imread(curr_img_file, -1);
 			}
 			else
 			{
-				FATAL_STREAM( "No .jpg or .png images in a specified drectory, exiting" );
+				FATAL_STREAM("No .jpg or .png images in a specified drectory, exiting");
 				return 1;
 			}
 
 			// If image sequence provided, assume the fps is 30
 			fps_vid_in = 30;
-		}	
-		
+		}
+
 		// If optical centers are not defined just use center of image
-		if(cx_undefined)
+		if (cx_undefined)
 		{
 			cx = captured_image.cols / 2.0f;
 			cy = captured_image.rows / 2.0f;
@@ -326,21 +326,21 @@ int main (int argc, char **argv)
 		Recorder::RecorderOpenFace open_face_rec(output_files[f_n], input_files[f_n], recording_params);
 
 		int frame_count = 0;
-						
+
 		// Use for timestamping if using a webcam
 		int64 t_initial = cv::getTickCount();
 
 		// Timestamp in seconds of current processing
 		double time_stamp = 0;
 
-		INFO_STREAM( "Starting tracking");
-		while(!captured_image.empty())
-		{		
+		INFO_STREAM("Starting tracking");
+		while (!captured_image.empty())
+		{
 
 			// Grab the timestamp first
 			if (video_input)
 			{
-				time_stamp = (double)frame_count * (1.0 / fps_vid_in);				
+				time_stamp = (double)frame_count * (1.0 / fps_vid_in);
 			}
 			else
 			{
@@ -351,19 +351,19 @@ int main (int argc, char **argv)
 			// Reading the images
 			cv::Mat_<uchar> grayscale_image;
 
-			if(captured_image.channels() == 3)
+			if (captured_image.channels() == 3)
 			{
-				cvtColor(captured_image, grayscale_image, CV_BGR2GRAY);				
+				cvtColor(captured_image, grayscale_image, CV_BGR2GRAY);
 			}
 			else
 			{
-				grayscale_image = captured_image.clone();				
+				grayscale_image = captured_image.clone();
 			}
-		
+
 			// The actual facial landmark detection / tracking
 			bool detection_success;
-			
-			if(video_input || images_as_video)
+
+			if (video_input || images_as_video)
 			{
 				detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
 			}
@@ -371,7 +371,7 @@ int main (int argc, char **argv)
 			{
 				detection_success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_model, det_parameters);
 			}
-			
+
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, -1);
 			cv::Point3f gazeDirection1(0, 0, -1);
@@ -390,24 +390,24 @@ int main (int argc, char **argv)
 			int num_hog_rows = 0, num_hog_cols = 0;
 
 			// As this can be expensive only compute it if needed by output or visualization
-			if(recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualize_align || visualize_hog)
+			if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualize_align || visualize_hog)
 			{
 				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, time_stamp, false, !det_parameters.quiet_mode);
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 
-				if(!det_parameters.quiet_mode && visualize_align)
+				if (!det_parameters.quiet_mode && visualize_align)
 				{
-					cv::imshow("sim_warp", sim_warped_img);			
+					cv::imshow("sim_warp", sim_warped_img);
 				}
-				if(recording_params.outputHOG() || (visualize_hog && !det_parameters.quiet_mode))
+				if (recording_params.outputHOG() || (visualize_hog && !det_parameters.quiet_mode))
 				{
 					face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 
-					if(visualize_hog && !det_parameters.quiet_mode)
+					if (visualize_hog && !det_parameters.quiet_mode)
 					{
 						cv::Mat_<double> hog_descriptor_vis;
 						FaceAnalysis::Visualise_FHOG(hog_descriptor, num_hog_rows, num_hog_cols, hog_descriptor_vis);
-						cv::imshow("hog", hog_descriptor_vis);	
+						cv::imshow("hog", hog_descriptor_vis);
 					}
 				}
 			}
@@ -440,7 +440,7 @@ int main (int argc, char **argv)
 			//}
 
 			// Visualising the tracker, TODO this should be in utility
-			if(visualize_track && !det_parameters.quiet_mode)
+			if (recording_params.outputTrackedVideo() || (visualize_track && !det_parameters.quiet_mode))
 			{
 				visualise_tracking(captured_image, face_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
 			}
