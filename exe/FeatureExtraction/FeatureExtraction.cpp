@@ -169,7 +169,7 @@ int main (int argc, char **argv)
 	string output_codec;
 	LandmarkDetector::get_video_input_output_params(input_files, output_files, output_codec, arguments);
 
-	// TODO remove
+	// TODO remove, when have a capture class
 	bool video_input = true;
 	bool images_as_video = false;
 
@@ -488,8 +488,9 @@ int main (int argc, char **argv)
 		if (output_files.size() > 0 && recording_params.outputAUs())
 		{
 			cout << "Postprocessing the Action Unit predictions" << endl;
-			face_analyser.PostprocessOutputFile(open_face_rec.GetCSVFile()); // TODO this won't work, need the filename
+			face_analyser.PostprocessOutputFile(open_face_rec.GetCSVFile());
 		}
+
 		// Reset the models for the next video
 		face_analyser.Reset();
 		face_model.Reset();
