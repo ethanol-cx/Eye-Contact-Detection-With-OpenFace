@@ -107,6 +107,7 @@ namespace Recorder
 		std::string record_root;
 		std::string filename;
 		std::string csv_filename;
+		std::string aligned_output_directory;
 
 		// The actual output file stream that will be written
 		RecorderCSV csv_recorder;
@@ -142,6 +143,9 @@ namespace Recorder
 		cv::VideoWriter video_writer;
 		std::string video_filename;
 		cv::Mat vis_to_out;
+
+		// For aligned face writing
+		cv::Mat aligned_face;
 
 	};
 }

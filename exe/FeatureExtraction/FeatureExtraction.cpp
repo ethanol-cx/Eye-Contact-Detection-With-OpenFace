@@ -415,30 +415,6 @@ int main (int argc, char **argv)
 			// Work out the pose of the head from the tracked model
 			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
-			// TODO move to recorder Write the similarity normalised output
-			//if (!output_similarity_align.empty())
-			//{
-
-			//	char name[100];
-
-			//	// Filename is based on frame number
-			//	std::sprintf(name, "frame_det_%06d.bmp", frame_count + 1);
-
-			//	// Construct the output filename
-			//	boost::filesystem::path slash("/");
-
-			//	std::string preferredSlash = slash.make_preferred().string();
-
-			//	string out_file = output_similarity_align[f_n] + preferredSlash + string(name);
-			//	bool write_success = imwrite(out_file, sim_warped_img);
-
-			//	if (!write_success)
-			//	{
-			//		cout << "Could not output similarity aligned image image" << endl;
-			//		return 1;
-			//	}
-			//}
-
 			// Visualising the tracker, TODO this should be in utility
 			if (recording_params.outputTrackedVideo() || (visualize_track && !det_parameters.quiet_mode))
 			{

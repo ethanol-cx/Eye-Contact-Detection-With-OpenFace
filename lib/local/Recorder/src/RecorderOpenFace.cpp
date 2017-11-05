@@ -97,11 +97,25 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 		this->video_filename = (path(record_root) / path(filename).replace_extension(".avi")).string();
 	}
 
-	// TODO aligned Prepare image recording
+	// Prepare image recording
+	if (params.outputAlignedFaces())
+	{
+		aligned_output_directory = (path(record_root) / path(filename + "_aligned")).string();
+		CreateDirectory(aligned_output_directory);
+	}
+
 
 	observation_count = 0;
 
 }
+
+// TODO move to actual write
+void RecorderOpenFace::SetObservationFaceAlign(const cv::Mat& aligned_face)
+{
+	this->aligned_face = aligned_face;
+
+}
+
 
 void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 {
@@ -169,6 +183,28 @@ void RecorderOpenFace::WriteObservation()
 	if(params.outputHOG())
 	{
 		this->hog_recorder.Write();
+	}
+
+	// Write aligned faces
+	if (params.outputAlignedFaces())
+	{
+		char name[100];
+
+		// Filename is based on frame number
+		std::sprintf(name, "frame_det_%06d.bmp", observation_count);
+
+		// Construct the output filename
+		boost::filesystem::path slash("/");
+
+		std::string preferredSlash = slash.make_preferred().string();
+
+		string out_file = aligned_output_directory + preferredSlash + string(name);
+		bool write_success = cv::imwrite(out_file, aligned_face);
+
+		if (!write_success)
+		{
+			WARN_STREAM("Could not output similarity aligned image image");
+		}
 	}
 
 	if(params.outputTrackedVideo())
