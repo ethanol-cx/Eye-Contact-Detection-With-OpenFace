@@ -101,6 +101,7 @@ namespace Recorder
 		// Keep track of the file and output root location
 		std::string record_root;
 		std::string filename;
+		std::string csv_filename;
 
 		// The actual output file stream that will be written
 		RecorderCSV csv_recorder;

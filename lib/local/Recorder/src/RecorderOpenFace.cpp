@@ -82,8 +82,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 	CreateDirectory(record_root);
 
 	// Create the required individual recorders, CSV, HOG, aligned, video
-	std::string csv_filename = (path(record_root) / path(filename).replace_extension(".csv")).string();
-
+	csv_filename = (path(record_root) / path(filename).replace_extension(".csv")).string();
 
 	// Consruct HOG recorder here
 	if(params.outputHOG())
@@ -92,16 +91,13 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 		hog_recorder.Open(hog_filename);
 	}
 
-	// TODO construct a video recorder
-	// saving the videos
-	
+	// saving the videos	
 	if (params.outputTrackedVideo())
 	{
 		this->video_filename = (path(record_root) / path(filename).replace_extension(".avi")).string();
 	}
 
-
-	// Prepare image recording
+	// TODO aligned Prepare image recording
 
 	observation_count = 0;
 
@@ -141,6 +137,27 @@ void RecorderOpenFace::WriteObservation()
 	
 	if(observation_count == 1)
 	{
+		// As we are writing out the header, work out some things like number of landmarks, names of AUs etc.
+		int num_face_landmarks = landmarks_2D.rows / 2;
+		int num_eye_landmarks = eye_landmarks.size();
+		int num_model_modes = pdm_params_local.rows / 2;
+
+		std::vector<std::string> au_names_class;
+		for (auto au : au_occurences)
+		{
+			au_names_class.push_back(au.first);
+		}
+
+		std::sort(au_names_class.begin(), au_names_class.end());
+
+		std::vector<std::string> au_names_reg;
+		for (auto au : au_intensities)
+		{
+			au_names_reg.push_back(au.first);
+		}
+
+		std::sort(au_names_reg.begin(), au_names_reg.end());
+
 		csv_recorder.Open(csv_filename, params.output2DLandmarks(), params.output3DLandmarks(), params.outputPDMParams(), params.outputPose(),
 			params.outputAUs(), params.outputGaze(), num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
 	}
