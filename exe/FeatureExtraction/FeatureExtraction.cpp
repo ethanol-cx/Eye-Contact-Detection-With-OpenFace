@@ -97,9 +97,7 @@ vector<string> get_arguments(int argc, char **argv)
 	return arguments;
 }
 
-void get_output_feature_params(vector<string> &output_similarity_aligned, vector<string> &output_hog_aligned_files, bool& visualize_track,
-	bool& visualize_align, bool& visualize_hog, bool &output_2D_landmarks, bool &output_3D_landmarks, bool &output_model_params,
-	bool &output_pose, bool &output_AUs, bool &output_gaze, vector<string> &arguments);
+void get_visualization_params(bool& visualize_track, bool& visualize_align, bool& visualize_hog, vector<string> &arguments);
 
 void get_image_input_output_params_feats(vector<vector<string> > &input_image_files, bool& as_video, vector<string> &arguments);
 
@@ -212,28 +210,11 @@ int main (int argc, char **argv)
 		fx_undefined = true;
 	}
 
-	// TODO these should be removed
-	vector<string> output_similarity_align;
-	vector<string> output_hog_align_files;
-
-	// By default output all parameters, but these can be turned off to get smaller files or slightly faster processing times
-	// use -no2Dfp, -no3Dfp, -noMparams, -noPose, -noAUs, -noGaze to turn them off
-	bool output_2D_landmarks = true;
-	bool output_3D_landmarks = true;
-	bool output_model_params = true;
-	bool output_pose = true;
-	bool output_AUs = true;
-	bool output_gaze = true;
-
+	// Deciding what to visualize
 	bool visualize_track = false;
 	bool visualize_align = false;
 	bool visualize_hog = false;
-	get_output_feature_params(output_similarity_align, output_hog_align_files, visualize_track, visualize_align, visualize_hog,
-		output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, arguments);
-
-	bool output_hog = !output_hog_align_files.empty();
-	// TODO, these should be read in through output feature params, which should not be part of featureextraction
-	bool output_video = true;
+	get_visualization_params(visualize_track, visualize_align, visualize_hog, arguments);
 
 	// If multiple video files are tracked, use this to indicate if we are done
 	bool done = false;	
@@ -341,12 +322,8 @@ int main (int argc, char **argv)
 			fy = fx;
 		}
 
-		Recorder::RecorderOpenFaceParameters params(arguments);
-
-		// TODO this should always be video input
-		int num_eye_landmarks = LandmarkDetector::CalculateAllEyeLandmarks(face_model).size(); // TODO empty file check replaced
-		Recorder::RecorderOpenFace openFaceRec(output_files[f_n], input_files[f_n], true, output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs, output_gaze, !output_hog_align_files.empty(),
-			output_video, !output_similarity_align.empty(), face_model.pdm.NumberOfPoints(), face_model.pdm.NumberOfModes(), num_eye_landmarks, face_analyser.GetAUClassNames(), face_analyser.GetAURegNames(), output_codec, fps_vid_in);
+		Recorder::RecorderOpenFaceParameters recording_params(arguments);
+		Recorder::RecorderOpenFace open_face_rec(output_files[f_n], input_files[f_n], recording_params);
 
 		int frame_count = 0;
 						
@@ -413,7 +390,7 @@ int main (int argc, char **argv)
 			int num_hog_rows = 0, num_hog_cols = 0;
 
 			// As this can be expensive only compute it if needed by output or visualization
-			if(!output_similarity_align.empty() || output_hog || output_AUs || visualize_align || visualize_hog)
+			if(recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualize_align || visualize_hog)
 			{
 				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, time_stamp, false, !det_parameters.quiet_mode);
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
@@ -422,7 +399,7 @@ int main (int argc, char **argv)
 				{
 					cv::imshow("sim_warp", sim_warped_img);			
 				}
-				if(output_hog || (visualize_hog && !det_parameters.quiet_mode))
+				if(recording_params.outputHOG() || (visualize_hog && !det_parameters.quiet_mode))
 				{
 					face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 
@@ -438,29 +415,29 @@ int main (int argc, char **argv)
 			// Work out the pose of the head from the tracked model
 			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
-			// Write the similarity normalised output
-			if (!output_similarity_align.empty())
-			{
+			// TODO move to recorder Write the similarity normalised output
+			//if (!output_similarity_align.empty())
+			//{
 
-				char name[100];
+			//	char name[100];
 
-				// Filename is based on frame number
-				std::sprintf(name, "frame_det_%06d.bmp", frame_count + 1);
+			//	// Filename is based on frame number
+			//	std::sprintf(name, "frame_det_%06d.bmp", frame_count + 1);
 
-				// Construct the output filename
-				boost::filesystem::path slash("/");
+			//	// Construct the output filename
+			//	boost::filesystem::path slash("/");
 
-				std::string preferredSlash = slash.make_preferred().string();
+			//	std::string preferredSlash = slash.make_preferred().string();
 
-				string out_file = output_similarity_align[f_n] + preferredSlash + string(name);
-				bool write_success = imwrite(out_file, sim_warped_img);
+			//	string out_file = output_similarity_align[f_n] + preferredSlash + string(name);
+			//	bool write_success = imwrite(out_file, sim_warped_img);
 
-				if (!write_success)
-				{
-					cout << "Could not output similarity aligned image image" << endl;
-					return 1;
-				}
-			}
+			//	if (!write_success)
+			//	{
+			//		cout << "Could not output similarity aligned image image" << endl;
+			//		return 1;
+			//	}
+			//}
 
 			// Visualising the tracker, TODO this should be in utility
 			if(visualize_track && !det_parameters.quiet_mode)
@@ -469,14 +446,14 @@ int main (int argc, char **argv)
 			}
 
 			// Setting up the recorder output
-			openFaceRec.SetObservationHOG(detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
-			openFaceRec.SetObservationVisualization(captured_image);
-			openFaceRec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
-			openFaceRec.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model));
-			openFaceRec.SetObservationLandmarks(face_model.detected_landmarks, face_model.GetShape(fx, fy, cx, cy), face_model.params_global, face_model.params_local, face_model.detection_certainty, detection_success);
-			openFaceRec.SetObservationPose(pose_estimate);
-			openFaceRec.SetObservationTimestamp(time_stamp);
-			openFaceRec.WriteObservation();
+			open_face_rec.SetObservationHOG(detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
+			open_face_rec.SetObservationVisualization(captured_image);
+			open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
+			open_face_rec.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model));
+			open_face_rec.SetObservationLandmarks(face_model.detected_landmarks, face_model.GetShape(fx, fy, cx, cy), face_model.params_global, face_model.params_local, face_model.detection_certainty, detection_success);
+			open_face_rec.SetObservationPose(pose_estimate);
+			open_face_rec.SetObservationTimestamp(time_stamp);
+			open_face_rec.WriteObservation();
 
 			// Grabbing the next frame (todo this should be part of capture)
 			if(video_input)
@@ -528,12 +505,12 @@ int main (int argc, char **argv)
 
 		}
 		
-		openFaceRec.Close();
+		open_face_rec.Close();
 
-		if (output_files.size() > 0 && output_AUs)
+		if (output_files.size() > 0 && recording_params.outputAUs())
 		{
 			cout << "Postprocessing the Action Unit predictions" << endl;
-			face_analyser.PostprocessOutputFile(output_files[f_n]); // TODO this won't work, need the filename
+			face_analyser.PostprocessOutputFile(open_face_rec.GetCSVFile()); // TODO this won't work, need the filename
 		}
 		// Reset the models for the next video
 		face_analyser.Reset();
@@ -573,41 +550,9 @@ void get_visualization_params(bool& visualize_track, bool& visualize_align, bool
 	visualize_hog = false;
 	visualize_track = false;
 
-	string separator = string(1, boost::filesystem::path::preferred_separator);
-
-	// First check if there is a root argument (so that videos and outputs could be defined more easilly)
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
-		if (arguments[i].compare("-root") == 0)
-		{
-			output_root = arguments[i + 1] + separator;
-			i++;
-		}
-		if (arguments[i].compare("-outroot") == 0)
-		{
-			output_root = arguments[i + 1] + separator;
-			i++;
-		}
-	}
-
-	for (size_t i = 0; i < arguments.size(); ++i)
-	{
-		if (arguments[i].compare("-simalign") == 0)
-		{
-			output_similarity_aligned.push_back(output_root + arguments[i + 1]);
-			create_directory(output_root + arguments[i + 1]);
-			valid[i] = false;
-			valid[i + 1] = false;
-			i++;
-		}
-		else if (arguments[i].compare("-hogalign") == 0)
-		{
-			output_hog_aligned_files.push_back(output_root + arguments[i + 1]);
-			valid[i] = false;
-			valid[i + 1] = false;
-			i++;
-		}
-		else if (arguments[i].compare("-verbose") == 0)
+		if (arguments[i].compare("-verbose") == 0)
 		{
 			visualize_track = true;
 			visualize_align = true;
@@ -639,7 +584,6 @@ void get_visualization_params(bool& visualize_track, bool& visualize_align, bool
 	}
 
 }
-
 
 // Can process images via directories creating a separate output file per directory
 void get_image_input_output_params_feats(vector<vector<string> > &input_image_files, bool& as_video, vector<string> &arguments)
@@ -705,39 +649,4 @@ void get_image_input_output_params_feats(vector<vector<string> > &input_image_fi
 		}
 	}
 
-}
-
-void output_HOG_frame(std::ofstream* hog_file, bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_rows, int num_cols)
-{
-
-	// Using FHOGs, hence 31 channels
-	int num_channels = 31;
-
-	hog_file->write((char*)(&num_cols), 4);
-	hog_file->write((char*)(&num_rows), 4);
-	hog_file->write((char*)(&num_channels), 4);
-
-	// Not the best way to store a bool, but will be much easier to read it
-	float good_frame_float;
-	if (good_frame)
-		good_frame_float = 1;
-	else
-		good_frame_float = -1;
-
-	hog_file->write((char*)(&good_frame_float), 4);
-
-	cv::MatConstIterator_<double> descriptor_it = hog_descriptor.begin();
-
-	for (int y = 0; y < num_cols; ++y)
-	{
-		for (int x = 0; x < num_rows; ++x)
-		{
-			for (unsigned int o = 0; o < 31; ++o)
-			{
-
-				float hog_data = (float)(*descriptor_it++);
-				hog_file->write((char*)&hog_data, 4);
-			}
-		}
-	}
 }

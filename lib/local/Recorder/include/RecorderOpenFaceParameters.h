@@ -51,8 +51,8 @@ namespace Recorder
 	{
 
 	public:
+
 		// Constructors
-		RecorderOpenFaceParameters();
 		RecorderOpenFaceParameters(std::vector<std::string> &arguments, double fps_vid_out = 30, std::string output_codec = "DIVX");
 
 		bool isSequence() const { return is_sequence; }
@@ -69,10 +69,7 @@ namespace Recorder
 		double outputFps() const { return fps_vid_out; }
 
 	private:
-
-		// The default values initializer
-		void init();
-
+		
 		// If we are recording results from a sequence each row refers to a frame, if we are recording an image each row is a face
 		bool is_sequence;
 

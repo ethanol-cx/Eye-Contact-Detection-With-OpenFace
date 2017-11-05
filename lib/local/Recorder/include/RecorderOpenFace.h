@@ -96,7 +96,12 @@ namespace Recorder
 
 		void WriteObservation();
 
+		std::string GetCSVFile() { return csv_filename; }
+
 	private:
+
+		// Keeping track of what to output and how to output it
+		const RecorderOpenFaceParameters params;
 
 		// Keep track of the file and output root location
 		std::string record_root;
@@ -106,8 +111,6 @@ namespace Recorder
 		// The actual output file stream that will be written
 		RecorderCSV csv_recorder;
 		RecorderHOG hog_recorder;
-
-		const RecorderOpenFaceParameters params;
 
 		// The actual temporary storage for the observations
 		double timestamp;
