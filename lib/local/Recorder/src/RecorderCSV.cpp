@@ -187,7 +187,12 @@ void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landm
 		// Output the 2D eye landmarks
 		for (auto eye_lmk : eye_landmarks)
 		{
-			output_file << ", " << eye_lmk;
+			output_file << ", " << eye_lmk.x;
+		}
+
+		for (auto eye_lmk : eye_landmarks)
+		{
+			output_file << ", " << eye_lmk.y;
 		}
 	}
 

@@ -154,7 +154,7 @@ void RecorderOpenFace::WriteObservation()
 		// As we are writing out the header, work out some things like number of landmarks, names of AUs etc.
 		int num_face_landmarks = landmarks_2D.rows / 2;
 		int num_eye_landmarks = eye_landmarks.size();
-		int num_model_modes = pdm_params_local.rows / 2;
+		int num_model_modes = pdm_params_local.rows;
 
 		std::vector<std::string> au_names_class;
 		for (auto au : au_occurences)
