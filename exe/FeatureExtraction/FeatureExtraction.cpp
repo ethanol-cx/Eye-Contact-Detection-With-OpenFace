@@ -317,7 +317,7 @@ int main (int argc, char **argv)
 			fy = fx;
 		}
 
-		Recorder::RecorderOpenFaceParameters recording_params(arguments);
+		Recorder::RecorderOpenFaceParameters recording_params(arguments, true, fps_vid_in);
 		Recorder::RecorderOpenFace open_face_rec(output_files[f_n], input_files[f_n], recording_params);
 
 		int frame_count = 0;

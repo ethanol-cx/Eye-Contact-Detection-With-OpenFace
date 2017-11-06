@@ -53,7 +53,7 @@ namespace Recorder
 	public:
 
 		// Constructors
-		RecorderOpenFaceParameters(std::vector<std::string> &arguments, double fps_vid_out = 30, std::string output_codec = "DIVX");
+		RecorderOpenFaceParameters(std::vector<std::string> &arguments, bool sequence, double fps_vid_out = 30);
 
 		bool isSequence() const { return is_sequence; }
 		bool output2DLandmarks() const { return output_2D_landmarks; }

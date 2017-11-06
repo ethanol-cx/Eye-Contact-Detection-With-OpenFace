@@ -37,13 +37,17 @@ using namespace std;
 
 using namespace Recorder;
 
-RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> &arguments, double fps_vid_out, std::string output_codec)
+RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> &arguments, bool sequence, double fps_vid_out)
 {
 
 	string separator = string(1, boost::filesystem::path::preferred_separator);
 
+	this->is_sequence = sequence;
+
 	this->fps_vid_out = fps_vid_out;
-	this->output_codec = output_codec;
+
+	// Default output code
+	this->output_codec = "DIVX";
 
 	// First check if there is a root argument (so that videos and outputs could be defined more easilly)
 	for (size_t i = 0; i < arguments.size(); ++i)
