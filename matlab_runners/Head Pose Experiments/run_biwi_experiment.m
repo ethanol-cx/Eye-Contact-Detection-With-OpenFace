@@ -35,17 +35,17 @@ for i=3 + offset:numTogether:numel(dbSeqDir)
     for n=0:numTogether-1
         
         inputFile = [biwiDir dbSeqDir(i+n).name '/colour.avi'];
-        outputFile = [output_dir dbSeqDir(i+n).name '.txt'];
 
-        command = cat(2, command, [' -f "' inputFile '" -of "' outputFile  '"']);
+        command = cat(2, command, [' -f "' inputFile '" -of "' output_dir  '"']);
 
-        if(verbose)
-            outputVideo = [output_dir dbSeqDir(i).name '.avi'];
-            command = cat(2, command, [' -ov "' outputVideo '"']);    
-        end
+
     end    
     command = cat(2, command, [' -fx 505 -fy 505 -cx 320 -cy 240 -pose -vis-track ']);
-        
+       
+    if(verbose)
+        command = cat(2, command, [' -tracked ' outputVideo]);
+    end    
+    
     if(any(strcmp('model', varargin)))
         command = cat(2, command, [' -mloc "', varargin{find(strcmp('model', varargin))+1}, '"']);
     end

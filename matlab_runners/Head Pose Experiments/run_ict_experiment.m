@@ -30,14 +30,13 @@ for i=3:numTogether:numel(dbSeqDir)
     for n=0:numTogether-1
         
         inputFile = [ictDir dbSeqDir(i+n).name '/colour undist.avi'];
-        outputFile = [output_dir dbSeqDir(i+n).name '.txt'];
         
-        command = cat(2, command,  [' -f "' inputFile '" -of "' outputFile  '" ']);
-                
-        if(verbose)
-            outputVideo = [output_dir dbSeqDir(i+n).name '.avi'];
-            command = cat(2, command, [' -ov "' outputVideo '"']);
-        end
+        command = cat(2, command,  [' -f "' inputFile '" -of "' output_dir  '" ']);
+                    
+    end
+    
+    if(verbose)
+        command = cat(2, command, [' -tracked ' outputVideo]);
     end
     
     if(any(strcmp('model', varargin)))
