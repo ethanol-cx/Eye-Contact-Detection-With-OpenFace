@@ -172,7 +172,7 @@ void RecorderOpenFace::WriteObservation()
 
 		std::sort(au_names_reg.begin(), au_names_reg.end());
 
-		csv_recorder.Open(csv_filename, params.output2DLandmarks(), params.output3DLandmarks(), params.outputPDMParams(), params.outputPose(),
+		csv_recorder.Open(csv_filename, params.isSequence(), params.output2DLandmarks(), params.output3DLandmarks(), params.outputPDMParams(), params.outputPose(),
 			params.outputAUs(), params.outputGaze(), num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
 	}
 
