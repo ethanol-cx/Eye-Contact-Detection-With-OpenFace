@@ -72,6 +72,7 @@ vector<string> get_arguments(int argc, char **argv)
 	return arguments;
 }
 
+// TODO rem
 void convert_to_grayscale(const cv::Mat& in, cv::Mat& out)
 {
 	if(in.channels() == 3)

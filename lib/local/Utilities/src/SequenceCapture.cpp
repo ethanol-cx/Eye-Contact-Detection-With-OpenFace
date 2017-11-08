@@ -40,6 +40,9 @@
 #include <filesystem/fstream.hpp>
 #include <boost/algorithm/string.hpp>
 
+// OpenCV includes
+#include <opencv2/imgproc.hpp>
+
 using namespace Utilities;
 
 bool SequenceCapture::Open(std::vector<std::string> arguments)
@@ -274,7 +277,7 @@ bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 	for (std::vector<boost::filesystem::path>::const_iterator file_iterator(file_in_directory.begin()); file_iterator != file_in_directory.end(); ++file_iterator)
 	{
 		// Possible image extension .jpg and .png
-		if (file_iterator->extension().string().compare(".jpg") == 0 || file_iterator->extension().string().compare(".png") == 0)
+		if (file_iterator->extension().string().compare(".jpg") == 0 || file_iterator->extension().string().compare(".jpeg") == 0  || file_iterator->extension().string().compare(".png") == 0 || file_iterator->extension().string().compare(".bmp") == 0)
 		{
 			curr_dir_files.push_back(file_iterator->string());
 		}
@@ -316,6 +319,48 @@ bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 
 }
 
+void convertToGrayscale(const cv::Mat& in, cv::Mat& out)
+{
+	if (in.channels() == 3)
+	{
+		// Make sure it's in a correct format
+		if (in.depth() != CV_8U)
+		{
+			if (in.depth() == CV_16U)
+			{
+				cv::Mat tmp = in / 256;
+				tmp.convertTo(tmp, CV_8U);
+				cv::cvtColor(tmp, out, CV_BGR2GRAY);
+			}
+		}
+		else
+		{
+			cv::cvtColor(in, out, CV_BGR2GRAY);
+		}
+	}
+	else if (in.channels() == 4)
+	{
+		cv::cvtColor(in, out, CV_BGRA2GRAY);
+	}
+	else
+	{
+		if (in.depth() == CV_16U)
+		{
+			cv::Mat tmp = in / 256;
+			out = tmp.clone();
+		}
+		else if (in.depth() != CV_8U)
+		{
+			in.convertTo(out, CV_8U);
+		}
+		else
+		{
+			out = in.clone();
+		}
+	}
+}
+
+
 cv::Mat SequenceCapture::GetNextFrame()
 {
 	frame_num++;
@@ -343,15 +388,7 @@ cv::Mat SequenceCapture::GetNextFrame()
 	}
 
 	// Set the grayscale frame
-	if (grayFrame == nullptr) {
-		if (latestFrame->Width > 0) {
-			grayFrame = gcnew OpenCVWrappers::RawImage(latestFrame->Width, latestFrame->Height, CV_8UC1);
-		}
-	}
-
-	if (grayFrame != nullptr) {
-		cvtColor(latestFrame->Mat, grayFrame->Mat, CV_BGR2GRAY);
-	}
+	convertToGrayscale(latest_frame, latest_gray_frame);
 
 	return latest_frame;
 }
@@ -376,15 +413,7 @@ bool SequenceCapture::IsOpened()
 		return (image_files.size() > 0 && frame_num < image_files.size());
 }
 
-cv::Mat_<uchar> SequenceCapture::GetGrayFrame() {
-	if (img_grabbed)
-	{
-		img_grabbed = false;
-		return latest_gray_frame;
-	}
-	else
-	{
-		std::cout << "Need to call GetNextFrame(), before calling GetGrayFrame() " << std::endl;
-		return cv::Mat_<uchar>();
-	}
+cv::Mat_<uchar> SequenceCapture::GetGrayFrame() 
+{
+	return latest_gray_frame;
 }
