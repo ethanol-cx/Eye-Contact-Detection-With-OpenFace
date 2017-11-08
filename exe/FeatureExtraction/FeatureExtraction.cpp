@@ -332,7 +332,7 @@ int main (int argc, char **argv)
 		while (!captured_image.empty())
 		{
 
-			// Grab the timestamp first
+			// Grab the timestamp first (TODO timestamp should be grabbed from sequence)
 			if (video_input)
 			{
 				time_stamp = (double)frame_count * (1.0 / fps_vid_in);
@@ -343,7 +343,7 @@ int main (int argc, char **argv)
 				time_stamp = (double)frame_count * (1.0 / 30.0);
 			}
 
-			// Reading the images
+			// Reading the images, TODO grayscale should be grabbed another way
 			cv::Mat_<uchar> grayscale_image;
 
 			if (captured_image.channels() == 3)

@@ -42,12 +42,6 @@
 
 using namespace Utilities;
 
-// TODO initialize defaults
-SequenceCapture::SequenceCapture():
-{
-
-}
-
 bool SequenceCapture::Open(std::vector<std::string> arguments)
 {
 
@@ -198,7 +192,22 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 
 	this->fps = capture.get(CV_CAP_PROP_FPS);
 
-	// TODO estimate the fx, fy etc.
+	// If optical centers are not defined just use center of image
+	if (cx == -1)
+	{
+		cx = frame_width / 2.0f;
+		cy = frame_height / 2.0f;
+	}
+	// Use a rough guess-timate of focal length
+	if (fx == -1)
+	{
+		fx = 500 * (frame_width / 640.0);
+		fy = 500 * (frame_height / 480.0);
+
+		fx = (fx + fy) / 2.0;
+		fy = fx;
+	}
+
 	return true;
 
 }
@@ -229,13 +238,27 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 		return false;
 	}
 
-	// TODO estimate the fx, fy etc.
+	// If optical centers are not defined just use center of image
+	if (cx == -1)
+	{
+		cx = frame_width / 2.0f;
+		cy = frame_height / 2.0f;
+	}
+	// Use a rough guess-timate of focal length
+	if (fx == -1)
+	{
+		fx = 500 * (frame_width / 640.0);
+		fy = 500 * (frame_height / 480.0);
+
+		fx = (fx + fy) / 2.0;
+		fy = fx;
+	}
 
 	return true;
 
 }
 
-void SequenceCapture::OpenImageSequence(std::string directory, float fx, float fy, float cx, float cy)
+bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float fy, float cx, float cy)
 {
 	image_files.clear();
 
@@ -265,6 +288,103 @@ void SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 		return false;
 	}
 
+	// Assume all images are same size in an image sequence
+	cv::Mat tmp = cv::imread(image_files[0], -1);
+	this->frame_height = tmp.size().height;
+	this->frame_width = tmp.size().width;
+
+	// If optical centers are not defined just use center of image
+	if (cx == -1)
+	{
+		cx = frame_width / 2.0f;
+		cy = frame_height / 2.0f;
+	}
+	// Use a rough guess-timate of focal length
+	if (fx == -1)
+	{
+		fx = 500 * (frame_width / 640.0);
+		fy = 500 * (frame_height / 480.0);
+
+		fx = (fx + fy) / 2.0;
+		fy = fx;
+	}
+
+	// No fps as we have a sequence
+	this->fps = 0;
+
 	return true;
 
+}
+
+cv::Mat SequenceCapture::GetNextFrame()
+{
+	frame_num++;
+
+	if (is_webcam && !is_image_seq)
+	{
+
+		bool success = capture.read(latest_frame);
+
+		if (!success)
+		{
+			// Indicate lack of success by returning an empty image
+			latest_frame = cv::Mat();
+		}
+	}
+	else if (is_image_seq)
+	{
+		if (image_files.empty())
+		{
+			// Indicate lack of success by returning an empty image
+			latest_frame = cv::Mat();
+		}
+
+		latest_frame = cv::imread(image_files[frame_num-1], -1);
+	}
+
+	// Set the grayscale frame
+	if (grayFrame == nullptr) {
+		if (latestFrame->Width > 0) {
+			grayFrame = gcnew OpenCVWrappers::RawImage(latestFrame->Width, latestFrame->Height, CV_8UC1);
+		}
+	}
+
+	if (grayFrame != nullptr) {
+		cvtColor(latestFrame->Mat, grayFrame->Mat, CV_BGR2GRAY);
+	}
+
+	return latest_frame;
+}
+
+double SequenceCapture::GetProgress()
+{
+	if (is_webcam)
+	{
+		return -1.0;
+	}
+	else
+	{
+		return (double)frame_num / (double)vid_length;
+	}
+}
+
+bool SequenceCapture::IsOpened()
+{
+	if (is_webcam || !is_image_seq)
+		return capture.isOpened();
+	else
+		return (image_files.size() > 0 && frame_num < image_files.size());
+}
+
+cv::Mat_<uchar> SequenceCapture::GetGrayFrame() {
+	if (img_grabbed)
+	{
+		img_grabbed = false;
+		return latest_gray_frame;
+	}
+	else
+	{
+		std::cout << "Need to call GetNextFrame(), before calling GetGrayFrame() " << std::endl;
+		return cv::Mat_<uchar>();
+	}
 }

@@ -55,7 +55,9 @@ namespace Utilities
 	public:
 
 		// Default constructor
-		SequenceCapture();
+		SequenceCapture() {};
+
+		// TODO block copy, move etc.
 
 		// Opening based on command line arguments
 		bool Open(std::vector<std::string> arguments);
@@ -70,6 +72,16 @@ namespace Utilities
 
 		// Video file
 		bool OpenVideoFile(std::string video_file, float fx = -1, float fy = -1, float cx = -1, float cy = -1);
+
+		// Getting the next frame
+		cv::Mat GetNextFrame();
+
+		// Getting the most recent grayscale frame (need to call GetNextFrame first)
+		cv::Mat_<uchar> GetGrayFrame();
+
+		double GetProgress();
+
+		bool IsOpened();
 
 		int frame_width;
 		int frame_height;
@@ -97,6 +109,8 @@ namespace Utilities
 
 		// Length of video allowing to assess progress
 		int vid_length;
+
+		bool img_grabbed;
 
 	};
 }
