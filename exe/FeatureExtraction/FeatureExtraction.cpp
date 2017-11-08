@@ -58,6 +58,7 @@
 #include <GazeEstimation.h>
 #include <RecorderOpenFace.h>
 #include <RecorderOpenFaceParameters.h>
+#include <SequenceCapture.h>
 
 #ifndef CONFIG_DIR
 #define CONFIG_DIR "~"
@@ -82,8 +83,6 @@ printErrorAndAbort( std::string( "Fatal error: " ) + stream )
 
 using namespace std;
 
-using namespace boost::filesystem;
-
 vector<string> get_arguments(int argc, char **argv)
 {
 
@@ -98,12 +97,6 @@ vector<string> get_arguments(int argc, char **argv)
 }
 
 void get_visualization_params(bool& visualize_track, bool& visualize_align, bool& visualize_hog, vector<string> &arguments);
-
-void get_image_input_output_params_feats(vector<vector<string> > &input_image_files, bool& as_video, vector<string> &arguments);
-
-// Some globals for tracking timing information for visualisation
-double fps_tracker = -1.0;
-int64 t0 = 0;
 
 // Visualising the results
 void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& face_model, const LandmarkDetector::FaceModelParameters& det_parameters, cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, int frame_count, double fx, double fy, double cx, double cy)
@@ -163,58 +156,12 @@ int main (int argc, char **argv)
 {
 
 	vector<string> arguments = get_arguments(argc, argv);
-	
-	// Get the input output file parameters
-	vector<string> input_files, output_files;
-	string output_codec;
-	LandmarkDetector::get_video_input_output_params(input_files, output_files, output_codec, arguments);
-
-	// TODO remove, when have a capture class
-	bool video_input = true;
-	bool images_as_video = false;
-
-	vector<vector<string> > input_image_files;
-
-	// Adding image support (TODO should be moved to capture)
-	if(input_files.empty())
-	{
-		vector<string> o_img;
-		get_image_input_output_params_feats(input_image_files, images_as_video, arguments);	
-
-		if(!input_image_files.empty())
-		{
-			video_input = false;
-		}
-	}
-
-	// Grab camera parameters, if they are not defined (approximate values will be used)
-	float fx = 0, fy = 0, cx = 0, cy = 0;
-	int d = 0;
-	// Get camera parameters
-	LandmarkDetector::get_camera_params(d, fx, fy, cx, cy, arguments);    
-	
-	// If cx (optical axis centre) is undefined will use the image size/2 as an estimate
-	bool cx_undefined = false;
-	bool fx_undefined = false;
-	if (cx == 0 || cy == 0)
-	{
-		cx_undefined = true;
-	}
-	if (fx == 0 || fy == 0)
-	{
-		fx_undefined = true;
-	}
 
 	// Deciding what to visualize
 	bool visualize_track = false;
 	bool visualize_align = false;
 	bool visualize_hog = false;
 	get_visualization_params(visualize_track, visualize_align, visualize_hog, arguments);
-
-	// If multiple video files are tracked, use this to indicate if we are done
-	bool done = false;	
-	int f_n = -1;
-	int curr_img = -1;
 
 	// Load the modules that are being used for tracking and face analysis
 	// Load face landmark detector
@@ -227,96 +174,23 @@ int main (int argc, char **argv)
 	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
 	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
-	while (!done) // this is not a for loop as we might also be reading from a webcam
+	Utilities::SequenceCapture sequence_reader();
+
+	while (true) // this is not a for loop as we might also be reading from a webcam
 	{
 
+		// INFO_STREAM("Attempting to read from file: " << current_file); TODO add reading info stuff
+		// INFO_STREAM("FPS of the video file cannot be determined, assuming 30");
+		// INFO_STREAM("Device or file opened");
+
+		sequence_reader.Open(arguments);
+		if (!sequence_reader.IsOpen())
+			break;
+
 		string current_file;
-
-		cv::VideoCapture video_capture;
-
+		
 		cv::Mat captured_image;
-		int total_frames = -1;
-		int reported_completion = 0;
-
-		double fps_vid_in = -1.0;
-
-		// TODO this should be moved to a SequenceCapture class
-		if (video_input)
-		{
-			// We might specify multiple video files as arguments
-			if (input_files.size() > 0)
-			{
-				f_n++;
-				current_file = input_files[f_n];
-			}
-			else
-			{
-				// If we want to write out from webcam
-				f_n = 0;
-			}
-			// Do some grabbing
-			if (current_file.size() > 0)
-			{
-				INFO_STREAM("Attempting to read from file: " << current_file);
-				video_capture = cv::VideoCapture(current_file);
-				total_frames = (int)video_capture.get(CV_CAP_PROP_FRAME_COUNT);
-				fps_vid_in = video_capture.get(CV_CAP_PROP_FPS);
-
-				// Check if fps is nan or less than 0
-				if (fps_vid_in != fps_vid_in || fps_vid_in <= 0)
-				{
-					INFO_STREAM("FPS of the video file cannot be determined, assuming 30");
-					fps_vid_in = 30;
-				}
-			}
-
-			if (!video_capture.isOpened())
-			{
-				FATAL_STREAM("Failed to open video source, exiting");
-				return 1;
-			}
-			else
-			{
-				INFO_STREAM("Device or file opened");
-			}
-
-			video_capture >> captured_image;
-		}
-		else
-		{
-			f_n++;
-			curr_img++;
-			if (!input_image_files[f_n].empty())
-			{
-				string curr_img_file = input_image_files[f_n][curr_img];
-				captured_image = cv::imread(curr_img_file, -1);
-			}
-			else
-			{
-				FATAL_STREAM("No .jpg or .png images in a specified drectory, exiting");
-				return 1;
-			}
-
-			// If image sequence provided, assume the fps is 30
-			fps_vid_in = 30;
-		}
-
-		// If optical centers are not defined just use center of image
-		if (cx_undefined)
-		{
-			cx = captured_image.cols / 2.0f;
-			cy = captured_image.rows / 2.0f;
-		}
-		// Use a rough guess-timate of focal length
-		if (fx_undefined)
-		{
-			fx = 500 * (captured_image.cols / 640.0);
-			fy = 500 * (captured_image.rows / 480.0);
-
-			fx = (fx + fy) / 2.0;
-			fy = fx;
-		}
-
+		
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, fps_vid_in);
 		Utilities::RecorderOpenFace open_face_rec(output_files[f_n], input_files[f_n], recording_params);
 

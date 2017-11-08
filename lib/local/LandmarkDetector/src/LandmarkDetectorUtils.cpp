@@ -170,64 +170,6 @@ void get_video_input_output_params(vector<string> &input_video_files, vector<str
 
 }
 
-void get_camera_params(int &device, float &fx, float &fy, float &cx, float &cy, vector<string> &arguments)
-{
-	bool* valid = new bool[arguments.size()];
-
-	for(size_t i=0; i < arguments.size(); ++i)
-	{
-		valid[i] = true;
-		if (arguments[i].compare("-fx") == 0) 
-		{                   
-			stringstream data(arguments[i+1]);
-			data >> fx;
-			valid[i] = false;
-			valid[i+1] = false;			
-			i++;
-		}		
-		else if (arguments[i].compare("-fy") == 0) 
-		{
-			stringstream data(arguments[i+1]);
-			data >> fy;
-			valid[i] = false;
-			valid[i+1] = false;		
-			i++;
-		} 
-		else if (arguments[i].compare("-cx") == 0)
-		{
-			stringstream data(arguments[i+1]);
-			data >> cx;
-			valid[i] = false;
-			valid[i+1] = false;
-			i++;
-		} 
-		else if (arguments[i].compare("-cy") == 0)
-		{
-			stringstream data(arguments[i+1]);
-			data >> cy;
-			valid[i] = false;
-			valid[i+1] = false;
-			i++;
-		}
-		else if (arguments[i].compare("-device") == 0)
-		{
-			stringstream data(arguments[i+1]);
-			data >> device;
-			valid[i] = false;
-			valid[i+1] = false;
-			i++;
-		}
-	}
-
-	for(int i=arguments.size()-1; i >= 0; --i)
-	{
-		if(!valid[i])
-		{
-			arguments.erase(arguments.begin()+i);
-		}
-	}
-}
-
 void get_image_input_output_params(vector<string> &input_image_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
 		vector<cv::Rect_<double>> &input_bounding_boxes, vector<string> &arguments)
 {

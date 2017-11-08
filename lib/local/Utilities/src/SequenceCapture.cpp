@@ -195,6 +195,13 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 
 	this->fps = capture.get(CV_CAP_PROP_FPS);
 
+	// Check if fps is nan or less than 0
+	if (fps != fps || fps <= 0)
+	{
+		INFO_STREAM("FPS of the video file cannot be determined, assuming 30");
+		fps = 30;
+	}
+
 	// If optical centers are not defined just use center of image
 	if (cx == -1)
 	{
@@ -226,6 +233,13 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 
 	this->fps = capture.get(CV_CAP_PROP_FPS);
 	
+	// Check if fps is nan or less than 0
+	if (fps != fps || fps <= 0)
+	{
+		INFO_STREAM("FPS of the video file cannot be determined, assuming 30");
+		fps = 30;
+	}
+
 	is_webcam = false;
 	is_image_seq = false;
 	
