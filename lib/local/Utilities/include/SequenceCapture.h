@@ -58,18 +58,23 @@ namespace Utilities
 		SequenceCapture();
 
 		// Opening based on command line arguments
-		void Open(std::vector<std::string> arguments);
+		bool Open(std::vector<std::string> arguments);
 
 		// Direct opening
 
 		// Webcam
-		void OpenWebcam(int device_id);
+		bool OpenWebcam(int device_id, int image_width = 640, int image_height = 480, float fx = -1, float fy = -1, float cx = -1, float cy = -1);
 
 		// Image sequence in the directory
-		void OpenImageSequence(std::string directory);
+		bool OpenImageSequence(std::string directory, float fx = -1, float fy = -1, float cx = -1, float cy = -1);
 
 		// Video file
-		void OpenVideoFile(std::string video_file);
+		bool OpenVideoFile(std::string video_file, float fx = -1, float fy = -1, float cx = -1, float cy = -1);
+
+		int frame_width;
+		int frame_height;
+
+		float fx, fy, cx, cy;
 
 	private:
 
@@ -92,8 +97,6 @@ namespace Utilities
 
 		// Length of video allowing to assess progress
 		int vid_length;
-
-		// TODO fx and fy should be here
 
 	};
 }
