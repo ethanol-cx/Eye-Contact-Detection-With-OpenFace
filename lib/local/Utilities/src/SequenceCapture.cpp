@@ -145,6 +145,18 @@ bool SequenceCapture::Open(std::vector<std::string> arguments)
 	}
 
 	// Based on what was read in open the sequence TODO
+	if (device != -1)
+	{
+		return OpenWebcam(device, 640, 480, fx, fy, cx, cy);
+	}
+	if (!input_video_file.empty())
+	{
+		return OpenVideoFile(input_video_file, fx, fy, cx, cy);
+	}
+	if (!input_sequence_directory.empty())
+	{
+		return OpenImageSequence(input_sequence_directory, fx, fy, cx, cy);
+	}
 
 }
 
