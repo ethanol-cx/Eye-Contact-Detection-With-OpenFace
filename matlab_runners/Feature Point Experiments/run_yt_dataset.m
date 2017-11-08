@@ -27,18 +27,14 @@ database_root = [database_root, '/ytceleb/'];
 in_vids = dir([database_root '/*.avi']);
 
 command = executable;
-command = cat(2, command, ' -no3Dfp -noMparams -noPose -noGaze -noAUs ');
+command = cat(2, command, ' -2Dfp ');
 % add all videos to single argument list (so as not to load the model anew
 % for every video)
 for i=1:numel(in_vids)
     
-    [~, name, ~] = fileparts(in_vids(i).name);
-    
-    % where to output tracking results
-    outputFile_fp = [output name '_fp.txt'];
     in_file_name = [database_root, '/', in_vids(i).name];        
     
-    command = cat(2, command, [' -f "' in_file_name '" -of "' outputFile_fp '"']);                     
+    command = cat(2, command, [' -f "' in_file_name '" -of "' output '"']);                     
 end
 
 if(isunix)
@@ -56,19 +52,13 @@ end
     
 command = executable;
 command = cat(2, command, ' -mloc model/main_clm_general.txt ');
-command = cat(2, command, ' -no3Dfp -noMparams -noPose -noGaze -noAUs ');
+command = cat(2, command, ' -2Dfp ');
 
 % add all videos to single argument list (so as not to load the model anew
 % for every video)
-for i=1:numel(in_vids)
-    
-    [~, name, ~] = fileparts(in_vids(i).name);
-    
-    % where to output tracking results
-    outputFile_fp = [output name '_fp.txt'];
-    in_file_name = [database_root, '/', in_vids(i).name];        
-    
-    command = cat(2, command, [' -f "' in_file_name '" -of "' outputFile_fp '"']);                     
+for i=1:numel(in_vids)    
+    in_file_name = [database_root, '/', in_vids(i).name];            
+    command = cat(2, command, [' -f "' in_file_name '" -of "' output '"']);                     
 end
 
 if(isunix)
@@ -80,7 +70,7 @@ end
 d_loc = 'yt_features/';
 d_loc_clm = 'yt_features_clm/';
 
-files_yt = dir([d_loc, '/*.txt']);
+files_yt = dir([d_loc, '/*.csv']);
 preds_all = [];
 preds_all_clm = [];
 gts_all = [];

@@ -253,7 +253,7 @@ void FaceModelParameters::init()
 	reg_factor = 25;
 	weight_factor = 0; // By default do not use NU-RLMS for videos as it does not work as well for them
 
-	validation_boundary = -0.45;
+	validation_boundary = 0.725;
 
 	limit_pose = true;
 	multi_view = false;

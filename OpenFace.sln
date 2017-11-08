@@ -25,7 +25,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FaceLandmarkImg", "exe\Face
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GazeAnalyser", "lib\local\GazeAnalyser\GazeAnalyser.vcxproj", "{5F915541-F531-434F-9C81-79F5DB58012B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Recorder", "lib\local\Recorder\Recorder.vcxproj", "{8E741EA2-9386-4CF2-815E-6F9B08991EAC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utilities", "lib\local\Utilities\Utilities.vcxproj", "{8E741EA2-9386-4CF2-815E-6F9B08991EAC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

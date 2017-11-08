@@ -39,7 +39,7 @@
 // For standard out
 #include <iostream>
 
-using namespace Recorder;
+using namespace Utilities;
 
 // Default constructor initializes the variables
 RecorderCSV::RecorderCSV():output_file(){};

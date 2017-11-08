@@ -42,7 +42,7 @@
 // OpenCV includes
 #include <opencv2/core/core.hpp>
 
-namespace Recorder
+namespace Utilities
 {
 
 	//===========================================================================

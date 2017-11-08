@@ -650,7 +650,7 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 
 		detection_certainty = landmark_validator.Check(orientation, image, detected_landmarks);
 
-		detection_success = detection_certainty < params.validation_boundary;
+		detection_success = detection_certainty > params.validation_boundary;
 	}
 	else
 	{

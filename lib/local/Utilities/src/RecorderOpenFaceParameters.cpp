@@ -35,7 +35,7 @@
 
 using namespace std;
 
-using namespace Recorder;
+using namespace Utilities;
 
 RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> &arguments, bool sequence, double fps_vid_out)
 {

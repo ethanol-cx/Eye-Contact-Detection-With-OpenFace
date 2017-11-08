@@ -35,7 +35,7 @@
 
 #include <fstream>
 
-using namespace Recorder;
+using namespace Utilities;
 
 // Default constructor initializes the variables
 RecorderHOG::RecorderHOG() :hog_file() {};

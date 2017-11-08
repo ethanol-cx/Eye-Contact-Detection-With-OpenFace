@@ -48,7 +48,7 @@
 
 using namespace boost::filesystem;
 
-using namespace Recorder;
+using namespace Utilities;
 
 #define WARN_STREAM( stream ) \
 std::cout << "Warning: " << stream << std::endl

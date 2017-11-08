@@ -21,8 +21,9 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8E741EA2-9386-4CF2-815E-6F9B08991EAC}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Recorder</RootNamespace>
+    <RootNamespace>Utilities</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>Utilities</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
