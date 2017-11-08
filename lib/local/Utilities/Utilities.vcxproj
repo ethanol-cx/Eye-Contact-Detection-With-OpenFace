@@ -144,12 +144,14 @@
     <ClCompile Include="src\RecorderHOG.cpp" />
     <ClCompile Include="src\RecorderOpenFace.cpp" />
     <ClCompile Include="src\RecorderOpenFaceParameters.cpp" />
+    <ClCompile Include="src\SequenceCapture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\RecorderCSV.h" />
     <ClInclude Include="include\RecorderHOG.h" />
     <ClInclude Include="include\RecorderOpenFace.h" />
     <ClInclude Include="include\RecorderOpenFaceParameters.h" />
+    <ClInclude Include="include\SequenceCapture.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
