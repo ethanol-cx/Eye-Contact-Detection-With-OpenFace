@@ -268,6 +268,7 @@ int main (int argc, char **argv)
 				face_model.params_global, face_model.params_local, face_model.detection_certainty, detection_success);
 			open_face_rec.SetObservationPose(pose_estimate);
 			open_face_rec.SetObservationTimestamp(sequence_reader.time_stamp);
+			open_face_rec.SetObservationFaceAlign(sim_warped_img);
 			open_face_rec.WriteObservation();
 
 			// Visualize the image if desired
