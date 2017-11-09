@@ -71,12 +71,20 @@ void CreateDirectory(std::string output_path)
 }
 
 
-RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::string in_filename, RecorderOpenFaceParameters parameters):video_writer(), params(parameters)
+RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFaceParameters parameters, std::vector<std::string> arguments):video_writer(), params(parameters)
 {
 
 	// From the filename, strip out the name without directory and extension
 	filename = path(in_filename).replace_extension("").filename().string();
-	record_root = out_directory;
+
+	// Determine output directory
+	for (size_t i = 0; i < arguments.size(); ++i)
+	{
+		if (arguments[i].compare("-out_dir") == 0)
+		{
+			record_root = arguments[i + 1];
+		}
+	}
 
 	// Construct the directories required for the output
 	CreateDirectory(record_root);

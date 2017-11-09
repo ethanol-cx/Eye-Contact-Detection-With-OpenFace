@@ -57,8 +57,8 @@ namespace Utilities
 	public:
 
 		// The constructor for the recorder, need to specify if we are recording a sequence or not
-		RecorderOpenFace(const std::string out_directory, const std::string in_filename, RecorderOpenFaceParameters parameters);
-		
+		RecorderOpenFace(const std::string in_filename, RecorderOpenFaceParameters parameters, std::vector<std::string> arguments);
+
 		~RecorderOpenFace();
 
 		// TODO copy, assignment and move operators? Do not allow
@@ -104,7 +104,7 @@ namespace Utilities
 		const RecorderOpenFaceParameters params;
 
 		// Keep track of the file and output root location
-		std::string record_root;
+		std::string record_root = "processed"; // By default we are writing in the processed directory in the working directory 
 		std::string filename;
 		std::string csv_filename;
 		std::string aligned_output_directory;

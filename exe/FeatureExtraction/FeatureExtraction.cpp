@@ -188,7 +188,7 @@ int main (int argc, char **argv)
 		cv::Mat captured_image;
 		
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.fps);
-		Utilities::RecorderOpenFace open_face_rec(output_files[f_n], sequence_reader.name, recording_params);
+		Utilities::RecorderOpenFace open_face_rec(sequence_reader.name, recording_params, arguments);
 
 		int frame_count = 0;
 
@@ -211,8 +211,8 @@ int main (int argc, char **argv)
 
 			if (det_parameters.track_gaze && detection_success && face_model.eye_model)
 			{
-				GazeAnalysis::EstimateGaze(face_model, gazeDirection0, fx, fy, cx, cy, true);
-				GazeAnalysis::EstimateGaze(face_model, gazeDirection1, fx, fy, cx, cy, false);
+				GazeAnalysis::EstimateGaze(face_model, gazeDirection0, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, true);
+				GazeAnalysis::EstimateGaze(face_model, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, false);
 				gazeAngle = GazeAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
 			}
 
@@ -245,7 +245,7 @@ int main (int argc, char **argv)
 			}
 
 			// Work out the pose of the head from the tracked model
-			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
+			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 
 			// Drawing the visualization on the captured image
 			if (recording_params.outputTrackedVideo() || (visualize_track && !det_parameters.quiet_mode))
