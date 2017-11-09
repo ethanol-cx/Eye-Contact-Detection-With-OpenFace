@@ -69,6 +69,7 @@ bool SequenceCapture::Open(std::vector<std::string> arguments)
 	std::string input_root = "";
 	fx = -1; fy = -1; cx = -1; cy = -1;
 	frame_num = 0;
+	time_stamp = 0;
 
 	std::string separator = std::string(1, boost::filesystem::path::preferred_separator);
 
@@ -151,8 +152,8 @@ bool SequenceCapture::Open(std::vector<std::string> arguments)
 		{
 			arguments.erase(arguments.begin() + i);
 		}
-	}
-
+	}	
+	
 	// Based on what was read in open the sequence TODO
 	if (device != -1)
 	{
@@ -374,13 +375,13 @@ void SequenceCapture::SetCameraIntrinsics(float fx, float fy, float cx, float cy
 		this->cy = cy;
 	}
 	// Use a rough guess-timate of focal length
-	if (this->fx == -1)
+	if (fx == -1)
 	{
 		this->fx = 500.0f * (this->frame_width / 640.0f);
 		this->fy = 500.0f * (this->frame_height / 480.0f);
 
-		this->fx = (fx + fy) / 2.0f;
-		this->fy = fx;
+		this->fx = (this->fx + this->fy) / 2.0f;
+		this->fy = this->fx;
 	}
 	else
 	{
