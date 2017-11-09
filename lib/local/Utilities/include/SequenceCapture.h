@@ -111,16 +111,19 @@ namespace Utilities
 		bool is_image_seq;
 
 		// Keeping track of frame number and the files in the image sequence
-		int  frame_num;
+		size_t  frame_num;
 		std::vector<std::string> image_files;
 
 		// Length of video allowing to assess progress
-		int vid_length;
+		size_t vid_length;
 
 		bool img_grabbed;
 
 		// If using a webcam, helps to keep track of time
 		int64 start_time;
+
+		void SetCameraIntrinsics(float fx, float fy, float cx, float cy);
+
 	};
 }
 #endif

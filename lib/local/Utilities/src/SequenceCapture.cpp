@@ -65,7 +65,10 @@ bool SequenceCapture::Open(std::vector<std::string> arguments)
 		valid[i] = true;
 	}
 
+	// Some default values
 	std::string input_root = "";
+	fx = -1; fy = -1; cx = -1; cy = -1;
+	frame_num = 0;
 
 	std::string separator = std::string(1, boost::filesystem::path::preferred_separator);
 
@@ -142,7 +145,7 @@ bool SequenceCapture::Open(std::vector<std::string> arguments)
 		}
 	}
 
-	for (size_t i = arguments.size() - 1; i >= 0; --i)
+	for (int i = (int)arguments.size() - 1; i >= 0; --i)
 	{
 		if (!valid[i])
 		{
@@ -188,7 +191,6 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 	is_image_seq = false;
 
 	vid_length = 0;
-	frame_num = 0;
 
 	this->frame_width = (int)capture.get(CV_CAP_PROP_FRAME_WIDTH);
 	this->frame_height = (int)capture.get(CV_CAP_PROP_FRAME_HEIGHT);
@@ -213,21 +215,7 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 		fps = 30;
 	}
 
-	// If optical centers are not defined just use center of image
-	if (cx == -1)
-	{
-		cx = frame_width / 2.0f;
-		cy = frame_height / 2.0f;
-	}
-	// Use a rough guess-timate of focal length
-	if (fx == -1)
-	{
-		fx = (float)(500.0 * (frame_width / 640.0));
-		fy = (float)(500.0 * (frame_height / 480.0));
-
-		fx = (fx + fy) / 2.0f;
-		fy = fx;
-	}
+	SetCameraIntrinsics(fx, fy, cx, cy);
 
 	this->name = "webcam"; // TODO number
 	
@@ -264,7 +252,6 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 	this->frame_height = (int)capture.get(CV_CAP_PROP_FRAME_HEIGHT);
 
 	vid_length = (int)capture.get(CV_CAP_PROP_FRAME_COUNT);
-	frame_num = 0;
 
 	if (capture.isOpened())
 	{
@@ -272,21 +259,7 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 		return false;
 	}
 
-	// If optical centers are not defined just use center of image
-	if (cx == -1)
-	{
-		cx = frame_width / 2.0f;
-		cy = frame_height / 2.0f;
-	}
-	// Use a rough guess-timate of focal length
-	if (fx == -1)
-	{
-		fx = 500.0f * (frame_width / 640.0f);
-		fy = 500.0f * (frame_height / 480.0f);
-
-		fx = (fx + fy) / 2.0f;
-		fy = fx;
-	}
+	SetCameraIntrinsics(fx, fy, cx, cy);
 
 	this->name = boost::filesystem::path(video_file).filename().replace_extension("").string();
 
@@ -331,26 +304,16 @@ bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 	this->frame_height = tmp.size().height;
 	this->frame_width = tmp.size().width;
 
-	// If optical centers are not defined just use center of image
-	if (cx == -1)
-	{
-		cx = frame_width / 2.0f;
-		cy = frame_height / 2.0f;
-	}
-	// Use a rough guess-timate of focal length
-	if (fx == -1)
-	{
-		fx = 500.0f * (frame_width / 640.0f);
-		fy = 500.0f * (frame_height / 480.0f);
-
-		fx = (fx + fy) / 2.0f;
-		fy = fx;
-	}
+	SetCameraIntrinsics(fx, fy, cx, cy);
 
 	// No fps as we have a sequence
 	this->fps = 0;
 
 	this->name = boost::filesystem::path(directory).filename().string();
+
+	is_webcam = false;
+	is_image_seq = true;	
+	vid_length = image_files.size();
 
 	return true;
 
@@ -397,6 +360,34 @@ void convertToGrayscale(const cv::Mat& in, cv::Mat& out)
 	}
 }
 
+void SequenceCapture::SetCameraIntrinsics(float fx, float fy, float cx, float cy)
+{
+	// If optical centers are not defined just use center of image
+	if (cx == -1)
+	{
+		this->cx = this->frame_width / 2.0f;
+		this->cy = this->frame_height / 2.0f;
+	}
+	else
+	{
+		this->cx = cx;
+		this->cy = cy;
+	}
+	// Use a rough guess-timate of focal length
+	if (this->fx == -1)
+	{
+		this->fx = 500.0f * (this->frame_width / 640.0f);
+		this->fy = 500.0f * (this->frame_height / 480.0f);
+
+		this->fx = (fx + fy) / 2.0f;
+		this->fy = fx;
+	}
+	else
+	{
+		this->fx = fx;
+		this->fy = fy;
+	}
+}
 
 cv::Mat SequenceCapture::GetNextFrame()
 {
