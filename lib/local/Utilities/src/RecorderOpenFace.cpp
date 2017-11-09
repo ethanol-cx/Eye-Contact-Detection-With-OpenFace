@@ -109,13 +109,10 @@ RecorderOpenFace::RecorderOpenFace(const std::string out_directory, const std::s
 
 }
 
-// TODO move to actual write
 void RecorderOpenFace::SetObservationFaceAlign(const cv::Mat& aligned_face)
 {
 	this->aligned_face = aligned_face;
-
 }
-
 
 void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 {
@@ -141,7 +138,6 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 	}
 
 }
-
 
 void RecorderOpenFace::WriteObservation()
 {

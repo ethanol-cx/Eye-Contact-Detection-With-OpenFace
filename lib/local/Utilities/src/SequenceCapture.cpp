@@ -45,6 +45,15 @@
 
 using namespace Utilities;
 
+#define INFO_STREAM( stream ) \
+std::cout << stream << std::endl
+
+#define WARN_STREAM( stream ) \
+std::cout << "Warning: " << stream << std::endl
+
+#define ERROR_STREAM( stream ) \
+std::cout << "Error: " << stream << std::endl
+
 bool SequenceCapture::Open(std::vector<std::string> arguments)
 {
 
@@ -154,11 +163,13 @@ bool SequenceCapture::Open(std::vector<std::string> arguments)
 	{
 		return OpenImageSequence(input_sequence_directory, fx, fy, cx, cy);
 	}
-
+	// If none opened, return false
+	return false;
 }
 
 bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, float fx, float fy, float cx, float cy)
 {
+	INFO_STREAM("Attempting to read from webcam: " << device);
 
 	if (device < 0)
 	{
@@ -218,6 +229,8 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 		fy = fx;
 	}
 
+	this->name = "webcam"; // TODO number
+
 	return true;
 
 }
@@ -226,6 +239,8 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 
 bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, float cx, float cy)
 {
+	INFO_STREAM("Attempting to read from file: " << video_file);
+
 	latest_frame = cv::Mat();
 	latest_gray_frame = cv::Mat();
 
@@ -236,7 +251,7 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 	// Check if fps is nan or less than 0
 	if (fps != fps || fps <= 0)
 	{
-		INFO_STREAM("FPS of the video file cannot be determined, assuming 30");
+		WARN_STREAM("FPS of the video file cannot be determined, assuming 30");
 		fps = 30;
 	}
 
@@ -271,12 +286,16 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 		fy = fx;
 	}
 
+	this->name = boost::filesystem::path(video_file).filename.replace_extension("").string();
+
 	return true;
 
 }
 
 bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float fy, float cx, float cy)
 {
+	INFO_STREAM("Attempting to read from directory: " << directory);
+
 	image_files.clear();
 
 	boost::filesystem::path image_directory(directory);
@@ -328,6 +347,8 @@ bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 
 	// No fps as we have a sequence
 	this->fps = 0;
+
+	this->name = boost::filesystem::path(directory).filename.string();
 
 	return true;
 

@@ -98,7 +98,7 @@ vector<string> get_arguments(int argc, char **argv)
 
 void get_visualization_params(bool& visualize_track, bool& visualize_align, bool& visualize_hog, vector<string> &arguments);
 
-// Visualising the results
+// Visualising the results TODO separate class
 void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& face_model, const LandmarkDetector::FaceModelParameters& det_parameters, cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, int frame_count, double fx, double fy, double cx, double cy)
 {
 
@@ -135,20 +135,20 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 		}
 	}
 
-	// Work out the framerate
-	if (frame_count % 10 == 0)
-	{
-		double t1 = cv::getTickCount();
-		fps_tracker = 10.0 / (double(t1 - t0) / cv::getTickFrequency());
-		t0 = t1;
-	}
+	// Work out the framerate TODO
+	//if (frame_count % 10 == 0)
+	//{
+	//	double t1 = cv::getTickCount();
+	//	fps_tracker = 10.0 / (double(t1 - t0) / cv::getTickFrequency());
+	//	t0 = t1;
+	//}
 
-	// Write out the framerate on the image before displaying it
-	char fpsC[255];
-	std::sprintf(fpsC, "%d", (int)fps_tracker);
-	string fpsSt("FPS:");
-	fpsSt += fpsC;
-	cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, CV_AA);
+	//// Write out the framerate on the image before displaying it
+	//char fpsC[255];
+	//std::sprintf(fpsC, "%d", (int)fps_tracker);
+	//string fpsSt("FPS:");
+	//fpsSt += fpsC;
+	//cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, CV_AA);
 
 }
 
@@ -174,72 +174,35 @@ int main (int argc, char **argv)
 	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
 	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
-	Utilities::SequenceCapture sequence_reader();
+	Utilities::SequenceCapture sequence_reader;
 
 	while (true) // this is not a for loop as we might also be reading from a webcam
 	{
 
-		// INFO_STREAM("Attempting to read from file: " << current_file); TODO add reading info stuff
-		// INFO_STREAM("FPS of the video file cannot be determined, assuming 30");
-		// INFO_STREAM("Device or file opened");
-
-		sequence_reader.Open(arguments);
-		if (!sequence_reader.IsOpen())
+		// The sequence reader chooses what to open based on command line arguments provided
+		if(!sequence_reader.Open(arguments))
 			break;
 
-		string current_file;
+		INFO_STREAM("Device or file opened");
 		
 		cv::Mat captured_image;
 		
-		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, fps_vid_in);
-		Utilities::RecorderOpenFace open_face_rec(output_files[f_n], input_files[f_n], recording_params);
+		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.fps);
+		Utilities::RecorderOpenFace open_face_rec(output_files[f_n], sequence_reader.name, recording_params);
 
 		int frame_count = 0;
 
-		// Use for timestamping if using a webcam
-		int64 t_initial = cv::getTickCount();
-
-		// Timestamp in seconds of current processing
-		double time_stamp = 0;
+		captured_image = sequence_reader.GetNextFrame();
 
 		INFO_STREAM("Starting tracking");
 		while (!captured_image.empty())
 		{
 
-			// Grab the timestamp first (TODO timestamp should be grabbed from sequence)
-			if (video_input)
-			{
-				time_stamp = (double)frame_count * (1.0 / fps_vid_in);
-			}
-			else
-			{
-				// if loading images assume 30fps
-				time_stamp = (double)frame_count * (1.0 / 30.0);
-			}
-
-			// Reading the images, TODO grayscale should be grabbed another way
-			cv::Mat_<uchar> grayscale_image;
-
-			if (captured_image.channels() == 3)
-			{
-				cvtColor(captured_image, grayscale_image, CV_BGR2GRAY);
-			}
-			else
-			{
-				grayscale_image = captured_image.clone();
-			}
+			// Converting to grayscale
+			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
 			// The actual facial landmark detection / tracking
-			bool detection_success;
-
-			if (video_input || images_as_video)
-			{
-				detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
-			}
-			else
-			{
-				detection_success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_model, det_parameters);
-			}
+			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
 
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, -1);
@@ -308,24 +271,8 @@ int main (int argc, char **argv)
 			}
 
 			// Grabbing the next frame (todo this should be part of capture)
-			if(video_input)
-			{
-				video_capture >> captured_image;
-			}
-			else
-			{
-				curr_img++;
-				if(curr_img < (int)input_image_files[f_n].size())
-				{
-					string curr_img_file = input_image_files[f_n][curr_img];
-					captured_image = cv::imread(curr_img_file, -1);
-				}
-				else
-				{
-					captured_image = cv::Mat();
-				}
-			}
-			
+			captured_image = sequence_reader.GetNextFrame();
+
 			if (!det_parameters.quiet_mode)
 			{
 				// detect key presses
@@ -343,9 +290,6 @@ int main (int argc, char **argv)
 				}
 			}
 			
-			// Update the frame count
-			frame_count++;
-
 			if(total_frames != -1)
 			{
 				if((double)frame_count/(double)total_frames >= reported_completion / 10.0)
@@ -369,19 +313,6 @@ int main (int argc, char **argv)
 		face_analyser.Reset();
 		face_model.Reset();
 
-		frame_count = 0;
-		curr_img = -1;
-
-		if (total_frames != -1)
-		{
-			cout << endl;
-		}
-
-		// break out of the loop if done with all the files (or using a webcam)
-		if((video_input && f_n == input_files.size() -1) || (!video_input && f_n == input_image_files.size() - 1))
-		{
-			done = true;
-		}
 	}
 
 	return 0;
@@ -438,68 +369,3 @@ void get_visualization_params(bool& visualize_track, bool& visualize_align, bool
 
 }
 
-// Can process images via directories creating a separate output file per directory
-void get_image_input_output_params_feats(vector<vector<string> > &input_image_files, bool& as_video, vector<string> &arguments)
-{
-	bool* valid = new bool[arguments.size()];
-
-	for (size_t i = 0; i < arguments.size(); ++i)
-	{
-		valid[i] = true;
-		if (arguments[i].compare("-fdir") == 0)
-		{
-
-			// parse the -fdir directory by reading in all of the .png and .jpg files in it
-			path image_directory(arguments[i + 1]);
-
-			try
-			{
-				// does the file exist and is it a directory
-				if (exists(image_directory) && is_directory(image_directory))
-				{
-
-					vector<path> file_in_directory;
-					copy(directory_iterator(image_directory), directory_iterator(), back_inserter(file_in_directory));
-
-					// Sort the images in the directory first
-					sort(file_in_directory.begin(), file_in_directory.end());
-
-					vector<string> curr_dir_files;
-
-					for (vector<path>::const_iterator file_iterator(file_in_directory.begin()); file_iterator != file_in_directory.end(); ++file_iterator)
-					{
-						// Possible image extension .jpg and .png
-						if (file_iterator->extension().string().compare(".jpg") == 0 || file_iterator->extension().string().compare(".png") == 0)
-						{
-							curr_dir_files.push_back(file_iterator->string());
-						}
-					}
-
-					input_image_files.push_back(curr_dir_files);
-				}
-			}
-			catch (const filesystem_error& ex)
-			{
-				cout << ex.what() << '\n';
-			}
-
-			valid[i] = false;
-			valid[i + 1] = false;
-			i++;
-		}
-		else if (arguments[i].compare("-asvid") == 0)
-		{
-			as_video = true;
-		}
-	}
-
-	// Clear up the argument list
-	for (int i = arguments.size() - 1; i >= 0; --i)
-	{
-		if (!valid[i])
-		{
-			arguments.erase(arguments.begin() + i);
-		}
-	}
-
-}

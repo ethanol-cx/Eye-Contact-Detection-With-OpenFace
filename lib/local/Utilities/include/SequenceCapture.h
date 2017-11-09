@@ -88,6 +88,11 @@ namespace Utilities
 
 		float fx, fy, cx, cy;
 
+		double fps;
+
+		// Name of the video file, image directory, or the webcam
+		std::string name;
+
 	private:
 
 		// Used for capturing webcam and video
@@ -97,7 +102,6 @@ namespace Utilities
 		cv::Mat latest_frame;
 		cv::Mat latest_gray_frame;
 
-		double fps;
 
 		// Keeping track if we are opening a video, webcam or image sequence
 		bool is_webcam;
