@@ -79,6 +79,7 @@ namespace Utilities
 		// Getting the most recent grayscale frame (need to call GetNextFrame first)
 		cv::Mat_<uchar> GetGrayFrame();
 
+		// Parameters describing the sequence and it's progress
 		double GetProgress();
 
 		bool IsOpened();
@@ -89,6 +90,8 @@ namespace Utilities
 		float fx, fy, cx, cy;
 
 		double fps;
+
+		double time_stamp;
 
 		// Name of the video file, image directory, or the webcam
 		std::string name;
@@ -116,6 +119,8 @@ namespace Utilities
 
 		bool img_grabbed;
 
+		// If using a webcam, helps to keep track of time
+		int64 start_time;
 	};
 }
 #endif

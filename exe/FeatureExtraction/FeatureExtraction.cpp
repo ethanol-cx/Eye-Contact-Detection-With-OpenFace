@@ -98,8 +98,13 @@ vector<string> get_arguments(int argc, char **argv)
 
 void get_visualization_params(bool& visualize_track, bool& visualize_align, bool& visualize_hog, vector<string> &arguments);
 
+// Some globals for tracking timing information for visualisation (TODO bit ugly)
+double fps_tracker = -1.0;
+int64 t0 = 0;
+int frame_count = 0;
+
 // Visualising the results TODO separate class
-void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& face_model, const LandmarkDetector::FaceModelParameters& det_parameters, cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, int frame_count, double fx, double fy, double cx, double cy)
+void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& face_model, const LandmarkDetector::FaceModelParameters& det_parameters, cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, double fx, double fy, double cx, double cy)
 {
 
 	// Drawing the facial landmarks on the face and the bounding box around it if tracking is successful and initialised
@@ -136,20 +141,20 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 	}
 
 	// Work out the framerate TODO
-	//if (frame_count % 10 == 0)
-	//{
-	//	double t1 = cv::getTickCount();
-	//	fps_tracker = 10.0 / (double(t1 - t0) / cv::getTickFrequency());
-	//	t0 = t1;
-	//}
+	if (frame_count % 10 == 0)
+	{
+		double t1 = cv::getTickCount();
+		fps_tracker = 10.0 / (double(t1 - t0) / cv::getTickFrequency());
+		t0 = t1;
+	}
 
-	//// Write out the framerate on the image before displaying it
-	//char fpsC[255];
-	//std::sprintf(fpsC, "%d", (int)fps_tracker);
-	//string fpsSt("FPS:");
-	//fpsSt += fpsC;
-	//cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, CV_AA);
-
+	// Write out the framerate on the image before displaying it
+	char fpsC[255];
+	std::sprintf(fpsC, "%d", (int)fps_tracker);
+	string fpsSt("FPS:");
+	fpsSt += fpsC;
+	cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, CV_AA);
+	frame_count++;
 }
 
 int main (int argc, char **argv)
@@ -190,9 +195,10 @@ int main (int argc, char **argv)
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.fps);
 		Utilities::RecorderOpenFace open_face_rec(sequence_reader.name, recording_params, arguments);
 
-		int frame_count = 0;
-
 		captured_image = sequence_reader.GetNextFrame();
+
+		// For reporting progress
+		double reported_completion = 0;
 
 		INFO_STREAM("Starting tracking");
 		while (!captured_image.empty())
@@ -224,7 +230,7 @@ int main (int argc, char **argv)
 			// As this can be expensive only compute it if needed by output or visualization
 			if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualize_align || visualize_hog)
 			{
-				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, time_stamp, false, !det_parameters.quiet_mode);
+				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, sequence_reader.time_stamp, false, !det_parameters.quiet_mode);
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 
 				if (!det_parameters.quiet_mode && visualize_align)
@@ -250,7 +256,7 @@ int main (int argc, char **argv)
 			// Drawing the visualization on the captured image
 			if (recording_params.outputTrackedVideo() || (visualize_track && !det_parameters.quiet_mode))
 			{
-				visualise_tracking(captured_image, face_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
+				visualise_tracking(captured_image, face_model, det_parameters, gazeDirection0, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 			}
 
 			// Setting up the recorder output
@@ -258,9 +264,10 @@ int main (int argc, char **argv)
 			open_face_rec.SetObservationVisualization(captured_image);
 			open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
 			open_face_rec.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model));
-			open_face_rec.SetObservationLandmarks(face_model.detected_landmarks, face_model.GetShape(fx, fy, cx, cy), face_model.params_global, face_model.params_local, face_model.detection_certainty, detection_success);
+			open_face_rec.SetObservationLandmarks(face_model.detected_landmarks, face_model.GetShape(sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), 
+				face_model.params_global, face_model.params_local, face_model.detection_certainty, detection_success);
 			open_face_rec.SetObservationPose(pose_estimate);
-			open_face_rec.SetObservationTimestamp(time_stamp);
+			open_face_rec.SetObservationTimestamp(sequence_reader.time_stamp);
 			open_face_rec.WriteObservation();
 
 			// Visualize the image if desired
@@ -290,20 +297,18 @@ int main (int argc, char **argv)
 				}
 			}
 			
-			if(total_frames != -1)
+
+			if(sequence_reader.GetProgress() >= reported_completion / 10.0)
 			{
-				if((double)frame_count/(double)total_frames >= reported_completion / 10.0)
-				{
-					cout << reported_completion * 10 << "% ";
-					reported_completion = reported_completion + 1;
-				}
+				cout << reported_completion * 10 << "% ";
+				reported_completion = reported_completion + 1;
 			}
 
 		}
 		
 		open_face_rec.Close();
 
-		if (output_files.size() > 0 && recording_params.outputAUs())
+		if (recording_params.outputAUs())
 		{
 			cout << "Postprocessing the Action Unit predictions" << endl;
 			face_analyser.PostprocessOutputFile(open_face_rec.GetCSVFile());

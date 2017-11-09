@@ -142,7 +142,7 @@ bool SequenceCapture::Open(std::vector<std::string> arguments)
 		}
 	}
 
-	for (int i = arguments.size() - 1; i >= 0; --i)
+	for (size_t i = arguments.size() - 1; i >= 0; --i)
 	{
 		if (!valid[i])
 		{
@@ -190,8 +190,8 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 	vid_length = 0;
 	frame_num = 0;
 
-	this->frame_width = capture.get(CV_CAP_PROP_FRAME_WIDTH);
-	this->frame_height = capture.get(CV_CAP_PROP_FRAME_HEIGHT);
+	this->frame_width = (int)capture.get(CV_CAP_PROP_FRAME_WIDTH);
+	this->frame_height = (int)capture.get(CV_CAP_PROP_FRAME_HEIGHT);
 
 	if (!capture.isOpened())
 	{
@@ -222,14 +222,16 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 	// Use a rough guess-timate of focal length
 	if (fx == -1)
 	{
-		fx = 500 * (frame_width / 640.0);
-		fy = 500 * (frame_height / 480.0);
+		fx = (float)(500.0 * (frame_width / 640.0));
+		fy = (float)(500.0 * (frame_height / 480.0));
 
-		fx = (fx + fy) / 2.0;
+		fx = (fx + fy) / 2.0f;
 		fy = fx;
 	}
 
 	this->name = "webcam"; // TODO number
+	
+	start_time = cv::getTickCount();
 
 	return true;
 
@@ -258,10 +260,10 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 	is_webcam = false;
 	is_image_seq = false;
 	
-	this->frame_width = capture.get(CV_CAP_PROP_FRAME_WIDTH);
-	this->frame_height = capture.get(CV_CAP_PROP_FRAME_HEIGHT);
+	this->frame_width = (int)capture.get(CV_CAP_PROP_FRAME_WIDTH);
+	this->frame_height = (int)capture.get(CV_CAP_PROP_FRAME_HEIGHT);
 
-	vid_length = capture.get(CV_CAP_PROP_FRAME_COUNT);
+	vid_length = (int)capture.get(CV_CAP_PROP_FRAME_COUNT);
 	frame_num = 0;
 
 	if (capture.isOpened())
@@ -279,14 +281,14 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 	// Use a rough guess-timate of focal length
 	if (fx == -1)
 	{
-		fx = 500 * (frame_width / 640.0);
-		fy = 500 * (frame_height / 480.0);
+		fx = 500.0f * (frame_width / 640.0f);
+		fy = 500.0f * (frame_height / 480.0f);
 
-		fx = (fx + fy) / 2.0;
+		fx = (fx + fy) / 2.0f;
 		fy = fx;
 	}
 
-	this->name = boost::filesystem::path(video_file).filename.replace_extension("").string();
+	this->name = boost::filesystem::path(video_file).filename().replace_extension("").string();
 
 	return true;
 
@@ -338,17 +340,17 @@ bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 	// Use a rough guess-timate of focal length
 	if (fx == -1)
 	{
-		fx = 500 * (frame_width / 640.0);
-		fy = 500 * (frame_height / 480.0);
+		fx = 500.0f * (frame_width / 640.0f);
+		fy = 500.0f * (frame_height / 480.0f);
 
-		fx = (fx + fy) / 2.0;
+		fx = (fx + fy) / 2.0f;
 		fy = fx;
 	}
 
 	// No fps as we have a sequence
 	this->fps = 0;
 
-	this->name = boost::filesystem::path(directory).filename.string();
+	this->name = boost::filesystem::path(directory).filename().string();
 
 	return true;
 
@@ -400,7 +402,7 @@ cv::Mat SequenceCapture::GetNextFrame()
 {
 	frame_num++;
 
-	if (is_webcam && !is_image_seq)
+	if (is_webcam || !is_image_seq)
 	{
 
 		bool success = capture.read(latest_frame);
@@ -410,6 +412,17 @@ cv::Mat SequenceCapture::GetNextFrame()
 			// Indicate lack of success by returning an empty image
 			latest_frame = cv::Mat();
 		}
+
+		// Recording the timestamp
+		if (!is_webcam)
+		{
+			time_stamp = frame_num * (1.0 / fps);
+		}
+		else
+		{
+			time_stamp = (cv::getTickCount() - start_time) / cv::getTickFrequency();
+		}
+
 	}
 	else if (is_image_seq)
 	{
@@ -420,6 +433,7 @@ cv::Mat SequenceCapture::GetNextFrame()
 		}
 
 		latest_frame = cv::imread(image_files[frame_num-1], -1);
+		time_stamp = 0;
 	}
 
 	// Set the grayscale frame
