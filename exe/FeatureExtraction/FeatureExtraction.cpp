@@ -111,20 +111,19 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 	double detection_certainty = face_model.detection_certainty;
 	bool detection_success = face_model.detection_success;
 
-	double visualisation_boundary = 0.2;
+	double visualisation_boundary = 0.4;
 
 	// Only draw if the reliability is reasonable, the value is slightly ad-hoc
-	if (detection_certainty < visualisation_boundary)
+	if (detection_certainty > visualisation_boundary)
 	{
 		LandmarkDetector::Draw(captured_image, face_model);
 
 		double vis_certainty = detection_certainty;
 		if (vis_certainty > 1)
 			vis_certainty = 1;
-		if (vis_certainty < -1)
-			vis_certainty = -1;
 
-		vis_certainty = (vis_certainty + 1) / (visualisation_boundary + 1);
+		// Scale from 0 to 1, to allow to indicated by colour how confident we are in the tracking
+		vis_certainty = (vis_certainty - visualisation_boundary) / (1 - visualisation_boundary);
 
 		// A rough heuristic for box around the face width
 		int thickness = (int)std::ceil(2.0* ((double)captured_image.cols) / 640.0);
@@ -132,7 +131,7 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 		cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
 
 		// Draw it in reddish if uncertain, blueish if certain
-		LandmarkDetector::DrawBox(captured_image, pose_estimate_to_draw, cv::Scalar((1 - vis_certainty)*255.0, 0, vis_certainty * 255), thickness, fx, fy, cx, cy);
+		LandmarkDetector::DrawBox(captured_image, pose_estimate_to_draw, cv::Scalar(vis_certainty*255.0, 0, (1-vis_certainty) * 255), thickness, fx, fy, cx, cy);
 
 		if (det_parameters.track_gaze && detection_success && face_model.eye_model)
 		{
@@ -155,6 +154,7 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
 	fpsSt += fpsC;
 	cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, CV_AA);
 	frame_count++;
+
 }
 
 int main (int argc, char **argv)
@@ -276,29 +276,13 @@ int main (int argc, char **argv)
 			{
 				cv::namedWindow("tracking_result", 1);
 				cv::imshow("tracking_result", captured_image);
+				cv::waitKey(1);
 			}
 
 			// Grabbing the next frame (todo this should be part of capture)
 			captured_image = sequence_reader.GetNextFrame();
 
-			if (!det_parameters.quiet_mode)
-			{
-				// detect key presses
-				char character_press = cv::waitKey(1);
-			
-				// restart the tracker
-				if(character_press == 'r')
-				{
-					face_model.Reset();
-				}
-				// quit the application
-				else if(character_press=='q')
-				{
-					return(0);
-				}
-			}
-			
-
+			// Reporting progress
 			if(sequence_reader.GetProgress() >= reported_completion / 10.0)
 			{
 				cout << reported_completion * 10 << "% ";

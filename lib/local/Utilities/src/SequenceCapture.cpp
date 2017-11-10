@@ -254,7 +254,7 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 
 	vid_length = (int)capture.get(CV_CAP_PROP_FRAME_COUNT);
 
-	if (capture.isOpened())
+	if (!capture.isOpened())
 	{
 		std::cout << "Failed to open the video file at location: " << video_file << std::endl;
 		return false;
