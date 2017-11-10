@@ -96,6 +96,9 @@ namespace Utilities
 		// Name of the video file, image directory, or the webcam
 		std::string name;
 
+		// Allows to differentiate if failed because no input specified or if failed to open a specified input
+		bool no_input_specified;
+
 	private:
 
 		// Used for capturing webcam and video
@@ -123,6 +126,7 @@ namespace Utilities
 		int64 start_time;
 
 		void SetCameraIntrinsics(float fx, float fy, float cx, float cy);
+
 
 	};
 }

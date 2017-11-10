@@ -154,6 +154,8 @@ bool SequenceCapture::Open(std::vector<std::string> arguments)
 		}
 	}	
 	
+	no_input_specified = !file_found;
+
 	// Based on what was read in open the sequence TODO
 	if (device != -1)
 	{
@@ -167,13 +169,18 @@ bool SequenceCapture::Open(std::vector<std::string> arguments)
 	{
 		return OpenImageSequence(input_sequence_directory, fx, fy, cx, cy);
 	}
-	// If none opened, return false
+
+	// If no input found return false and set a flag for it
+	no_input_specified = true;
+
 	return false;
 }
 
 bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, float fx, float fy, float cx, float cy)
 {
 	INFO_STREAM("Attempting to read from webcam: " << device);
+
+	no_input_specified = false;
 
 	if (device < 0)
 	{
@@ -232,6 +239,8 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 {
 	INFO_STREAM("Attempting to read from file: " << video_file);
 
+	no_input_specified = false;
+
 	latest_frame = cv::Mat();
 	latest_gray_frame = cv::Mat();
 
@@ -271,6 +280,8 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float fy, float cx, float cy)
 {
 	INFO_STREAM("Attempting to read from directory: " << directory);
+
+	no_input_specified = false;
 
 	image_files.clear();
 
