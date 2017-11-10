@@ -418,7 +418,7 @@ cv::Mat SequenceCapture::GetNextFrame()
 	}
 	else if (is_image_seq)
 	{
-		if (image_files.empty())
+		if (image_files.empty() || frame_num - 1 > image_files.size())
 		{
 			// Indicate lack of success by returning an empty image
 			latest_frame = cv::Mat();
