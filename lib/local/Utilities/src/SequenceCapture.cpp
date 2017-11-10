@@ -54,7 +54,7 @@ std::cout << "Warning: " << stream << std::endl
 #define ERROR_STREAM( stream ) \
 std::cout << "Error: " << stream << std::endl
 
-bool SequenceCapture::Open(std::vector<std::string> arguments)
+bool SequenceCapture::Open(std::vector<std::string>& arguments)
 {
 
 	// Consuming the input arguments

@@ -60,7 +60,7 @@ namespace Utilities
 		// TODO block copy, move etc.
 
 		// Opening based on command line arguments
-		bool Open(std::vector<std::string> arguments);
+		bool Open(std::vector<std::string>& arguments);
 
 		// Direct opening
 
