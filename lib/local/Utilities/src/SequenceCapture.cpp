@@ -219,7 +219,7 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 	// Check if fps is nan or less than 0
 	if (fps != fps || fps <= 0)
 	{
-		INFO_STREAM("FPS of the video file cannot be determined, assuming 30");
+		INFO_STREAM("FPS of the webcam cannot be determined, assuming 30");
 		fps = 30;
 	}
 

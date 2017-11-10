@@ -161,9 +161,7 @@ int main (int argc, char **argv)
 	{
 
 		// The sequence reader chooses what to open based on command line arguments provided
-		bool reader_opened = sequence_reader.Open(arguments);
-
-		if(!reader_opened && sequence_reader.no_input_specified)
+		if(!sequence_reader.Open(arguments) && sequence_reader.no_input_specified)
 		{
 			// If that fails, revert to webcam
 			INFO_STREAM("No input specified, attempting to open a webcam 0");
@@ -178,17 +176,14 @@ int main (int argc, char **argv)
 
 		INFO_STREAM("Device or file opened");
 
-		cv::Mat captured_image;
-
-		cv::Mat captured_image;
-		captured_image = sequence_reader.GetNextFrame();
+		cv::Mat captured_image = sequence_reader.GetNextFrame();
 
 		INFO_STREAM("Starting tracking");
 		while (!captured_image.empty()) // this is not a for loop as we might also be reading from a webcam
 		{
 
 			// Reading the images
-			cv::Mat_<uchar> grayscale_image;
+			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
 			// The actual facial landmark detection / tracking
 			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, clnf_model, det_parameters);
