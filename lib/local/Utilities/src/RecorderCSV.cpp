@@ -91,6 +91,19 @@ bool RecorderCSV::Open(std::string output_file_name, bool is_sequence, bool outp
 		{
 			output_file << ", eye_lmk_y_" << i;
 		}
+
+		for (int i = 0; i < num_eye_landmarks; ++i)
+		{
+			output_file << ", eye_lmk_X_" << i;
+		}
+		for (int i = 0; i < num_eye_landmarks; ++i)
+		{
+			output_file << ", eye_lmk_Y_" << i;
+		}
+		for (int i = 0; i < num_eye_landmarks; ++i)
+		{
+			output_file << ", eye_lmk_Z_" << i;
+		}
 	}
 
 	if (output_pose)
@@ -160,7 +173,7 @@ bool RecorderCSV::Open(std::string output_file_name, bool is_sequence, bool outp
 // TODO check if the stream is open
 void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landmark_detection_success, double landmark_confidence,
 	const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D, const cv::Mat_<double>& pdm_model_params, const cv::Vec6d& rigid_shape_params, cv::Vec6d& pose_estimate,
-	const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks,
+	const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks2d, const std::vector<cv::Point3d>& eye_landmarks3d,
 	const std::vector<std::pair<std::string, double> >& au_intensities, const std::vector<std::pair<std::string, double> >& au_occurences)
 {
 
@@ -188,14 +201,30 @@ void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landm
 		output_file << ", " << gaze_angle[0] << ", " << gaze_angle[1];
 
 		// Output the 2D eye landmarks
-		for (auto eye_lmk : eye_landmarks)
+		for (auto eye_lmk : eye_landmarks2d)
 		{
 			output_file << ", " << eye_lmk.x;
 		}
 
-		for (auto eye_lmk : eye_landmarks)
+		for (auto eye_lmk : eye_landmarks2d)
 		{
 			output_file << ", " << eye_lmk.y;
+		}
+
+		// Output the 3D eye landmarks
+		for (auto eye_lmk : eye_landmarks3d)
+		{
+			output_file << ", " << eye_lmk.x;
+		}
+
+		for (auto eye_lmk : eye_landmarks3d)
+		{
+			output_file << ", " << eye_lmk.y;
+		}
+
+		for (auto eye_lmk : eye_landmarks3d)
+		{
+			output_file << ", " << eye_lmk.z;
 		}
 	}
 

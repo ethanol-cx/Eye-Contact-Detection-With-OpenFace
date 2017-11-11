@@ -259,12 +259,13 @@ void RecorderOpenFace::SetObservationActionUnits(const std::vector<std::pair<std
 }
 
 void RecorderOpenFace::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv::Point3f& gaze_direction1,
-	const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks)
+	const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks2D, const std::vector<cv::Point3d>& eye_landmarks3D)
 {
 	this->gaze_direction0 = gaze_direction0;
 	this->gaze_direction1 = gaze_direction1;
 	this->gaze_angle = gaze_angle;
-	this->eye_landmarks = eye_landmarks;
+	this->eye_landmarks2D = eye_landmarks2D;
+	this->eye_landmarks3D = eye_landmarks3D;
 }
 
 RecorderOpenFace::~RecorderOpenFace()

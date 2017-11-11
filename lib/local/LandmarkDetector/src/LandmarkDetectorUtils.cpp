@@ -51,10 +51,6 @@ using namespace std;
 namespace LandmarkDetector
 {
 
-// For subpixel accuracy drawing
-const int draw_shiftbits = 4;
-const int draw_multiplier = 1 << 4;
-
 
 // Useful utility for creating directories for storing the output files
 void create_directory_from_file(string output_path)
@@ -802,6 +798,32 @@ vector<cv::Point2d> CalculateVisibleEyeLandmarks(const CLNF& clnf_model)
 	return to_return;
 }
 
+// Computing the 3D eye landmarks
+vector<cv::Point3d> Calculate3DEyeLandmarks(const CLNF& clnf_model, double fx, double fy, double cx, double cy)
+{
+
+	vector<cv::Point3d> to_return;
+	// If the model has hierarchical updates draw those too
+	for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
+	{
+
+		if (clnf_model.hierarchical_model_names[i].compare("left_eye_28") == 0 ||
+			clnf_model.hierarchical_model_names[i].compare("right_eye_28") == 0)
+		{
+			
+			auto lmks = clnf_model.hierarchical_models[i].GetShape(fx, fy, cx, cy);
+
+			int num_landmarks = lmks.rows / 3;
+
+			for (int lmk = 0; lmk < num_landmarks; ++lmk)
+			{
+				cv::Point3d curr_lmk(lmks.at<double>(lmk), lmks.at<double>(lmk + num_landmarks), lmks.at<double>(lmk + 2 * num_landmarks));
+				to_return.push_back(curr_lmk);
+			}
+		}
+	}
+	return to_return;
+}
 // Computing eye landmarks (to be drawn later or in different interfaces)
 vector<cv::Point2d> CalculateAllEyeLandmarks(const CLNF& clnf_model)
 {

@@ -42,6 +42,7 @@
 
 #include "LandmarkDetectorUtils.h"
 #include "LandmarkDetectorFunc.h"
+#include "Utilities.h"
 
 using namespace std;
 
@@ -93,7 +94,7 @@ void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 {
 	cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
 	cv::Vec3d eulerAngles(headPose(3), headPose(4), headPose(5));
-	cv::Matx33d rotMat = LandmarkDetector::Euler2RotationMatrix(eulerAngles);
+	cv::Matx33d rotMat = Utilities::Euler2RotationMatrix(eulerAngles);
 
 	int part = -1;
 	for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
