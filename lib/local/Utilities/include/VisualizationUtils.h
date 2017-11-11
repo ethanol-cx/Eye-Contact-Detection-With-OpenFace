@@ -41,10 +41,6 @@
 namespace Utilities
 {
 
-	void DrawLandmarkDetResults(cv::Mat img, const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities);
-	void DrawPoseDetResults(cv::Mat image, cv::Vec6d pose, double confidence, float fx, float fy, float cx, float cy);
-	void DrawEyeTrackResults(cv::Mat image, const cv::Mat_<double>& eye_landmarks, cv::Point3f gazeVecAxisLeft, cv::Point3f gazeVecAxisRight, float fx, float fy, float cx, float cy);
-
 	// TODO draw AU results
 
 	// Helper utilities
@@ -52,11 +48,12 @@ namespace Utilities
 
 	// Drawing a bounding box around the face in an image
 	void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy);
-	void DrawBox(std::vector<std::pair<cv::Point, cv::Point>> lines, cv::Mat image, cv::Scalar color, int thickness);
+	void DrawBox(const std::vector<std::pair<cv::Point2d, cv::Point2d>>& lines, cv::Mat image, cv::Scalar color, int thickness);
 
 	// Computing a bounding box to be drawn
 	std::vector<std::pair<cv::Point2d, cv::Point2d>> CalculateBox(cv::Vec6d pose, float fx, float fy, float cx, float cy);
 
+	void Visualise_FHOG(const cv::Mat_<double>& descriptor, int num_rows, int num_cols, cv::Mat& visualisation);
 
 
 }

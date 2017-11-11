@@ -64,7 +64,7 @@ public:
 	// Constructor for FaceAnalyser using the parameters structure
 	FaceAnalyser(const FaceAnalysis::FaceAnalyserParameters& face_analyser_params);
 
-	void AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool success, double timestamp_seconds, bool online = false, bool visualise = true);
+	void AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool success, double timestamp_seconds, bool online = false);
 
 	cv::Mat GetLatestHOGDescriptorVisualisation();
 
@@ -77,7 +77,7 @@ public:
 
 	// A standalone call for predicting AUs from a static image, the first element in the pair represents occurence the second intensity
 	// This call is useful for detecting action units in images
-	std::pair<std::vector<std::pair<std::string, double>>, std::vector<std::pair<std::string, double>>> PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool visualise = true);
+	std::pair<std::vector<std::pair<std::string, double>>, std::vector<std::pair<std::string, double>>> PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks);
 
 	void Reset();
 

@@ -61,21 +61,29 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\3rdParty\OpenCV3.1\openCV3.1.props" />
     <Import Project="..\..\3rdParty\boost\boost_d.props" />
+    <Import Project="..\..\3rdParty\dlib\dlib.props" />
+    <Import Project="..\..\3rdParty\tbb\tbb_d.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\3rdParty\OpenCV3.1\openCV3.1.props" />
     <Import Project="..\..\3rdParty\boost\boost.props" />
+    <Import Project="..\..\3rdParty\dlib\dlib.props" />
+    <Import Project="..\..\3rdParty\tbb\tbb.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\3rdParty\OpenCV3.1\openCV3.1.props" />
     <Import Project="..\..\3rdParty\boost\boost_d.props" />
+    <Import Project="..\..\3rdParty\dlib\dlib.props" />
+    <Import Project="..\..\3rdParty\tbb\tbb_d.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\3rdParty\OpenCV3.1\openCV3.1.props" />
     <Import Project="..\..\3rdParty\boost\boost.props" />
+    <Import Project="..\..\3rdParty\dlib\dlib.props" />
+    <Import Project="..\..\3rdParty\tbb\tbb.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -146,14 +154,22 @@
     <ClCompile Include="src\RecorderOpenFaceParameters.cpp" />
     <ClCompile Include="src\SequenceCapture.cpp" />
     <ClCompile Include="src\VisualizationUtils.cpp" />
+    <ClCompile Include="src\Visualizer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\RecorderCSV.h" />
     <ClInclude Include="include\RecorderHOG.h" />
     <ClInclude Include="include\RecorderOpenFace.h" />
     <ClInclude Include="include\RecorderOpenFaceParameters.h" />
+    <ClInclude Include="include\RotationHelpers.h" />
     <ClInclude Include="include\SequenceCapture.h" />
     <ClInclude Include="include\VisualizationUtils.h" />
+    <ClInclude Include="include\Visualizer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\3rdParty\dlib\dlib.vcxproj">
+      <Project>{b47a5f12-2567-44e9-ae49-35763ec82149}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

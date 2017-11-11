@@ -45,6 +45,7 @@
 
 // Local includes
 #include <LandmarkDetectorUtils.h>
+#include <RotationHelpers.h>
 
 using namespace LandmarkDetector;
 
@@ -1098,7 +1099,7 @@ cv::Mat_<double> CLNF::GetShape(double fx, double fy, double cx, double cy) cons
 	// Need to rotate the shape to get the actual 3D representation
 	
 	// get the rotation matrix from the euler angles
-	cv::Matx33d R = LandmarkDetector::Euler2RotationMatrix(cv::Vec3d(params_global[1], params_global[2], params_global[3]));
+	cv::Matx33d R = Utilities::Euler2RotationMatrix(cv::Vec3d(params_global[1], params_global[2], params_global[3]));
 
 	shape3d = shape3d.reshape(1, 3);
 

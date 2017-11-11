@@ -248,7 +248,7 @@ int GetViewId(const vector<cv::Vec3d> orientations_all, const cv::Vec3d& orienta
 	
 }
 
-std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, double>>> FaceAnalyser::PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool visualise)
+std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, double>>> FaceAnalyser::PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks)
 {
 	
 	// Extract shape parameters from the detected landmarks
@@ -285,13 +285,7 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 	//cv::Mat_<uchar> aligned_face_cols(1, aligned_face_for_au.cols * aligned_face_for_au.rows * aligned_face_for_au.channels(), aligned_face_for_au.data, 1);
 	//cv::Mat_<double> aligned_face_cols_double;
 	//aligned_face_cols.convertTo(aligned_face_cols_double, CV_64F);
-
-	// Visualising the median HOG
-	if (visualise)
-	{
-		FaceAnalysis::Visualise_FHOG(hog_descriptor, num_hog_rows, num_hog_cols, hog_descriptor_visualisation);
-	}
-
+	
 	// Perform AU prediction	
 	auto AU_predictions_intensity = PredictCurrentAUs(orientation_to_use);
 	auto AU_predictions_occurence = PredictCurrentAUsClass(orientation_to_use);
@@ -310,7 +304,7 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 
 }
 
-void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool success, double timestamp_seconds, bool online, bool visualise)
+void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool success, double timestamp_seconds, bool online)
 {
 
 	frames_tracking++;
@@ -423,13 +417,7 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& det
 	{
 		UpdateRunningMedian(this->geom_desc_hist, this->geom_hist_sum, this->geom_descriptor_median, geom_descriptor_frame, update_median, this->num_bins_geom, this->min_val_geom, this->max_val_geom);
 	}
-
-	// Visualising the median HOG
-	if(visualise)
-	{
-		FaceAnalysis::Visualise_FHOG(hog_descriptor, num_hog_rows, num_hog_cols, hog_descriptor_visualisation);
-	}
-
+	
 	// Perform AU prediction	
 	AU_predictions_reg = PredictCurrentAUs(orientation_to_use);
 

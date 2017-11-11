@@ -35,6 +35,7 @@
 #include "stdafx.h"
 
 #include <LandmarkDetectorFunc.h>
+#include "RotationHelpers.h"
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -83,7 +84,7 @@ cv::Vec6d LandmarkDetector::GetPose(const CLNF& clnf_model, float fx, float fy, 
 
 		cv::solvePnP(landmarks_3D, landmarks_2D, camera_matrix, cv::Mat(), vec_rot, vec_trans, true);
 
-		cv::Vec3d euler = LandmarkDetector::AxisAngle2Euler(vec_rot);
+		cv::Vec3d euler = Utilities::AxisAngle2Euler(vec_rot);
 
 		return cv::Vec6d(vec_trans[0], vec_trans[1], vec_trans[2], euler[0], euler[1], euler[2]);
 	}
@@ -136,12 +137,12 @@ cv::Vec6d LandmarkDetector::GetPoseWRTCamera(const CLNF& clnf_model, float fx, f
 		double z_y = cv::sqrt(vec_trans[1] * vec_trans[1] + vec_trans[2] * vec_trans[2]);
 		double eul_y = -atan2(vec_trans[0], z_y);
 
-		cv::Matx33d camera_rotation = LandmarkDetector::Euler2RotationMatrix(cv::Vec3d(eul_x, eul_y, 0));
-		cv::Matx33d head_rotation = LandmarkDetector::AxisAngle2RotationMatrix(vec_rot);
+		cv::Matx33d camera_rotation = Utilities::Euler2RotationMatrix(cv::Vec3d(eul_x, eul_y, 0));
+		cv::Matx33d head_rotation = Utilities::AxisAngle2RotationMatrix(vec_rot);
 
 		cv::Matx33d corrected_rotation = camera_rotation * head_rotation;
 
-		cv::Vec3d euler_corrected = LandmarkDetector::RotationMatrix2Euler(corrected_rotation);
+		cv::Vec3d euler_corrected = Utilities::RotationMatrix2Euler(corrected_rotation);
 
 		return cv::Vec6d(vec_trans[0], vec_trans[1], vec_trans[2], euler_corrected[0], euler_corrected[1], euler_corrected[2]);
 	}

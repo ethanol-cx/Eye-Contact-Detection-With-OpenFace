@@ -32,134 +32,167 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "VisualizationUtils.h"
+#include "RotationHelpers.h"
 
-using namespace Utilities;
+// For FHOG visualisation
+#include <dlib/opencv.h>
+#include <dlib/image_processing/frontal_face_detector.h>
 
-void Project(cv::Mat_<double>& dest, const cv::Mat_<double>& mesh, double fx, double fy, double cx, double cy)
+// For drawing on images
+#include <opencv2/imgproc.hpp>
+
+namespace Utilities
 {
-	dest = cv::Mat_<double>(mesh.rows, 2, 0.0);
-
-	int num_points = mesh.rows;
-
-	double X, Y, Z;
-
-
-	cv::Mat_<double>::const_iterator mData = mesh.begin();
-	cv::Mat_<double>::iterator projected = dest.begin();
-
-	for (int i = 0; i < num_points; i++)
+	void Project(cv::Mat_<double>& dest, const cv::Mat_<double>& mesh, double fx, double fy, double cx, double cy)
 	{
-		// Get the points
-		X = *(mData++);
-		Y = *(mData++);
-		Z = *(mData++);
+		dest = cv::Mat_<double>(mesh.rows, 2, 0.0);
 
-		double x;
-		double y;
+		int num_points = mesh.rows;
 
-		// if depth is 0 the projection is different
-		if (Z != 0)
+		double X, Y, Z;
+
+
+		cv::Mat_<double>::const_iterator mData = mesh.begin();
+		cv::Mat_<double>::iterator projected = dest.begin();
+
+		for (int i = 0; i < num_points; i++)
 		{
-			x = ((X * fx / Z) + cx);
-			y = ((Y * fy / Z) + cy);
+			// Get the points
+			X = *(mData++);
+			Y = *(mData++);
+			Z = *(mData++);
+
+			double x;
+			double y;
+
+			// if depth is 0 the projection is different
+			if (Z != 0)
+			{
+				x = ((X * fx / Z) + cx);
+				y = ((Y * fy / Z) + cy);
+			}
+			else
+			{
+				x = X;
+				y = Y;
+			}
+
+			// Project and store in dest matrix
+			(*projected++) = x;
+			(*projected++) = y;
 		}
-		else
-		{
-			x = X;
-			y = Y;
-		}
-
-		// Project and store in dest matrix
-		(*projected++) = x;
-		(*projected++) = y;
-	}
-
-}
-
-void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy)
-{
-	auto edge_lines = CalculateBox(pose, fx, fy, cx, cy);
-	DrawBox(edge_lines, image, color, thickness);
-}
-
-std::vector<std::pair<cv::Point2d, cv::Point2d>> CalculateBox(cv::Vec6d pose, float fx, float fy, float cx, float cy)
-{
-	double boxVerts[] = { -1, 1, -1,
-		1, 1, -1,
-		1, 1, 1,
-		-1, 1, 1,
-		1, -1, 1,
-		1, -1, -1,
-		-1, -1, -1,
-		-1, -1, 1 };
-
-	std::vector<std::pair<int, int>> edges;
-	edges.push_back(std::pair<int, int>(0, 1));
-	edges.push_back(std::pair<int, int>(1, 2));
-	edges.push_back(std::pair<int, int>(2, 3));
-	edges.push_back(std::pair<int, int>(0, 3));
-	edges.push_back(std::pair<int, int>(2, 4));
-	edges.push_back(std::pair<int, int>(1, 5));
-	edges.push_back(std::pair<int, int>(0, 6));
-	edges.push_back(std::pair<int, int>(3, 7));
-	edges.push_back(std::pair<int, int>(6, 5));
-	edges.push_back(std::pair<int, int>(5, 4));
-	edges.push_back(std::pair<int, int>(4, 7));
-	edges.push_back(std::pair<int, int>(7, 6));
-
-	// The size of the head is roughly 200mm x 200mm x 200mm
-	cv::Mat_<double> box = cv::Mat(8, 3, CV_64F, boxVerts).clone() * 100;
-
-	cv::Matx33d rot = LandmarkDetector::Euler2RotationMatrix(cv::Vec3d(pose[3], pose[4], pose[5]));
-	cv::Mat_<double> rotBox;
-
-	// Rotate the box
-	rotBox = cv::Mat(rot) * box.t();
-	rotBox = rotBox.t();
-
-	// Move the bounding box to head position
-	rotBox.col(0) = rotBox.col(0) + pose[0];
-	rotBox.col(1) = rotBox.col(1) + pose[1];
-	rotBox.col(2) = rotBox.col(2) + pose[2];
-
-	// draw the lines
-	cv::Mat_<double> rotBoxProj;
-	Project(rotBoxProj, rotBox, fx, fy, cx, cy);
-
-	std::vector<std::pair<cv::Point2d, cv::Point2d>> lines;
-
-	for (size_t i = 0; i < edges.size(); ++i)
-	{
-		cv::Mat_<double> begin;
-		cv::Mat_<double> end;
-
-		rotBoxProj.row(edges[i].first).copyTo(begin);
-		rotBoxProj.row(edges[i].second).copyTo(end);
-
-		cv::Point2d p1(begin.at<double>(0), begin.at<double>(1));
-		cv::Point2d p2(end.at<double>(0), end.at<double>(1));
-
-		lines.push_back(std::pair<cv::Point2d, cv::Point2d>(p1, p2));
 
 	}
 
-	return lines;
-}
-
-void DrawBox(std::vector<std::pair<cv::Point, cv::Point>> lines, cv::Mat image, cv::Scalar color, int thickness)
-{
-	cv::Rect image_rect(0, 0, image.cols, image.rows);
-
-	for (size_t i = 0; i < lines.size(); ++i)
+	void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy)
 	{
-		cv::Point p1 = lines.at(i).first;
-		cv::Point p2 = lines.at(i).second;
-		// Only draw the line if one of the points is inside the image
-		if (p1.inside(image_rect) || p2.inside(image_rect))
+		auto edge_lines = CalculateBox(pose, fx, fy, cx, cy);
+		DrawBox(edge_lines, image, color, thickness);
+	}
+
+	std::vector<std::pair<cv::Point2d, cv::Point2d>> CalculateBox(cv::Vec6d pose, float fx, float fy, float cx, float cy)
+	{
+		double boxVerts[] = { -1, 1, -1,
+			1, 1, -1,
+			1, 1, 1,
+			-1, 1, 1,
+			1, -1, 1,
+			1, -1, -1,
+			-1, -1, -1,
+			-1, -1, 1 };
+
+		std::vector<std::pair<int, int>> edges;
+		edges.push_back(std::pair<int, int>(0, 1));
+		edges.push_back(std::pair<int, int>(1, 2));
+		edges.push_back(std::pair<int, int>(2, 3));
+		edges.push_back(std::pair<int, int>(0, 3));
+		edges.push_back(std::pair<int, int>(2, 4));
+		edges.push_back(std::pair<int, int>(1, 5));
+		edges.push_back(std::pair<int, int>(0, 6));
+		edges.push_back(std::pair<int, int>(3, 7));
+		edges.push_back(std::pair<int, int>(6, 5));
+		edges.push_back(std::pair<int, int>(5, 4));
+		edges.push_back(std::pair<int, int>(4, 7));
+		edges.push_back(std::pair<int, int>(7, 6));
+
+		// The size of the head is roughly 200mm x 200mm x 200mm
+		cv::Mat_<double> box = cv::Mat(8, 3, CV_64F, boxVerts).clone() * 100;
+
+		cv::Matx33d rot = Euler2RotationMatrix(cv::Vec3d(pose[3], pose[4], pose[5]));
+		cv::Mat_<double> rotBox;
+
+		// Rotate the box
+		rotBox = cv::Mat(rot) * box.t();
+		rotBox = rotBox.t();
+
+		// Move the bounding box to head position
+		rotBox.col(0) = rotBox.col(0) + pose[0];
+		rotBox.col(1) = rotBox.col(1) + pose[1];
+		rotBox.col(2) = rotBox.col(2) + pose[2];
+
+		// draw the lines
+		cv::Mat_<double> rotBoxProj;
+		Project(rotBoxProj, rotBox, fx, fy, cx, cy);
+
+		std::vector<std::pair<cv::Point2d, cv::Point2d>> lines;
+
+		for (size_t i = 0; i < edges.size(); ++i)
 		{
-			cv::line(image, p1, p2, color, thickness, CV_AA);
+			cv::Mat_<double> begin;
+			cv::Mat_<double> end;
+
+			rotBoxProj.row(edges[i].first).copyTo(begin);
+			rotBoxProj.row(edges[i].second).copyTo(end);
+
+			cv::Point2d p1(begin.at<double>(0), begin.at<double>(1));
+			cv::Point2d p2(end.at<double>(0), end.at<double>(1));
+
+			lines.push_back(std::pair<cv::Point2d, cv::Point2d>(p1, p2));
+
 		}
 
+		return lines;
+	}
+
+	void DrawBox(const std::vector<std::pair<cv::Point2d, cv::Point2d>>& lines, cv::Mat image, cv::Scalar color, int thickness)
+	{
+		cv::Rect image_rect(0, 0, image.cols, image.rows);
+
+		for (size_t i = 0; i < lines.size(); ++i)
+		{
+			cv::Point2d p1 = lines.at(i).first;
+			cv::Point2d p2 = lines.at(i).second;
+			// Only draw the line if one of the points is inside the image
+			if (p1.inside(image_rect) || p2.inside(image_rect))
+			{
+				cv::line(image, p1, p2, color, thickness, CV_AA);
+			}
+
+		}
+
+	}
+
+	void Visualise_FHOG(const cv::Mat_<double>& descriptor, int num_rows, int num_cols, cv::Mat& visualisation)
+	{
+
+		// First convert to dlib format
+		dlib::array2d<dlib::matrix<float, 31, 1> > hog(num_rows, num_cols);
+
+		cv::MatConstIterator_<double> descriptor_it = descriptor.begin();
+		for (int y = 0; y < num_cols; ++y)
+		{
+			for (int x = 0; x < num_rows; ++x)
+			{
+				for (unsigned int o = 0; o < 31; ++o)
+				{
+					hog[y][x](o) = *descriptor_it++;
+				}
+			}
+		}
+
+		// Draw the FHOG to OpenCV format
+		auto fhog_vis = dlib::draw_fhog(hog);
+		visualisation = dlib::toMat(fhog_vis).clone();
 	}
 
 }

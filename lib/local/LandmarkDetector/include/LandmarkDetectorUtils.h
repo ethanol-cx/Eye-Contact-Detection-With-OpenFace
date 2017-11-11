@@ -94,23 +94,6 @@ namespace LandmarkDetector
 	void Draw(cv::Mat img, const cv::Mat_<double>& shape2D);
 	void Draw(cv::Mat img, const CLNF& clnf_model);
 
-
-	//===========================================================================
-	// Angle representation conversion helpers
-	//===========================================================================
-	cv::Matx33d Euler2RotationMatrix(const cv::Vec3d& eulerAngles);
-
-	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	cv::Vec3d RotationMatrix2Euler(const cv::Matx33d& rotation_matrix);
-
-	cv::Vec3d Euler2AxisAngle(const cv::Vec3d& euler);
-
-	cv::Vec3d AxisAngle2Euler(const cv::Vec3d& axis_angle);
-
-	cv::Matx33d AxisAngle2RotationMatrix(const cv::Vec3d& axis_angle);
-
-	cv::Vec3d RotationMatrix2AxisAngle(const cv::Matx33d& rotation_matrix);
-
 	//============================================================================
 	// Face detection helpers
 	//============================================================================

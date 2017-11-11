@@ -33,6 +33,9 @@
     <ClCompile Include="src\VisualizationUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Visualizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\RecorderCSV.h">
@@ -50,7 +53,13 @@
     <ClInclude Include="include\SequenceCapture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Visualizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="include\VisualizationUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RotationHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

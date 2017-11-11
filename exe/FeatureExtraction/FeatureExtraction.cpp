@@ -59,6 +59,7 @@
 #include <RecorderOpenFace.h>
 #include <RecorderOpenFaceParameters.h>
 #include <SequenceCapture.h>
+#include <Visualizer.h>
 
 #ifndef CONFIG_DIR
 #define CONFIG_DIR "~"
@@ -95,8 +96,6 @@ vector<string> get_arguments(int argc, char **argv)
 	}
 	return arguments;
 }
-
-void get_visualization_params(bool& visualize_track, bool& visualize_align, bool& visualize_hog, vector<string> &arguments);
 
 // Some globals for tracking timing information for visualisation (TODO bit ugly)
 double fps_tracker = -1.0;
@@ -162,12 +161,6 @@ int main (int argc, char **argv)
 
 	vector<string> arguments = get_arguments(argc, argv);
 
-	// Deciding what to visualize
-	bool visualize_track = false;
-	bool visualize_align = false;
-	bool visualize_hog = false;
-	get_visualization_params(visualize_track, visualize_align, visualize_hog, arguments);
-
 	// Load the modules that are being used for tracking and face analysis
 	// Load face landmark detector
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);
@@ -180,6 +173,9 @@ int main (int argc, char **argv)
 	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
 	Utilities::SequenceCapture sequence_reader;
+
+	// A utility for visualizing the results
+	Utilities::Visualizer visualizer(arguments);
 
 	while (true) // this is not a for loop as we might also be reading from a webcam
 	{
@@ -211,9 +207,7 @@ int main (int argc, char **argv)
 			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
 
 			// Gaze tracking, absolute gaze direction
-			cv::Point3f gazeDirection0(0, 0, -1);
-			cv::Point3f gazeDirection1(0, 0, -1);
-			cv::Vec2d gazeAngle(0, 0);
+			cv::Point3f gazeDirection0(0, 0, -1); cv::Point3f gazeDirection1(0, 0, -1); cv::Vec2d gazeAngle(0, 0);
 
 			if (det_parameters.track_gaze && detection_success && face_model.eye_model)
 			{
@@ -224,44 +218,54 @@ int main (int argc, char **argv)
 
 			// Do face alignment
 			cv::Mat sim_warped_img;
-			cv::Mat_<double> hog_descriptor;
-			int num_hog_rows = 0, num_hog_cols = 0;
+			cv::Mat_<double> hog_descriptor; int num_hog_rows = 0, num_hog_cols = 0;
 
-			// As this can be expensive only compute it if needed by output or visualization
+			// Perform AU detection and HOG feature extraction, as this can be expensive only compute it if needed by output or visualization
 			if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualize_align || visualize_hog)
 			{
-				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, sequence_reader.time_stamp, false, !det_parameters.quiet_mode);
+				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, sequence_reader.time_stamp, false);
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
-
-				if (!det_parameters.quiet_mode && visualize_align)
-				{
-					cv::imshow("sim_warp", sim_warped_img);
-				}
-				if (recording_params.outputHOG() || (visualize_hog && !det_parameters.quiet_mode))
-				{
-					face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
-
-					if (visualize_hog && !det_parameters.quiet_mode)
-					{
-						cv::Mat_<double> hog_descriptor_vis;
-						FaceAnalysis::Visualise_FHOG(hog_descriptor, num_hog_rows, num_hog_cols, hog_descriptor_vis);
-						cv::imshow("hog", hog_descriptor_vis);
-					}
-				}
+				face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			}
 
 			// Work out the pose of the head from the tracked model
 			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 
 			// Drawing the visualization on the captured image
-			if (recording_params.outputTrackedVideo() || (visualize_track && !det_parameters.quiet_mode))
+			visualise_tracking(captured_image, face_model, det_parameters, gazeDirection0, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+
+			// Displaying the tracking visualizations
+			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+			visualizer.SetObservationFaceAlign(sim_warped_img);
+			visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model));
+			visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
+			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, detection_success);
+			visualizer.SetObservationPose(pose_estimate);
+			visualizer.ShowObservation();
+
+			if(!det_parameters.quiet_mode)
 			{
-				visualise_tracking(captured_image, face_model, det_parameters, gazeDirection0, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+				if (recording_params.outputTrackedVideo() || visualize_track)
+				{
+					cv::namedWindow("tracking_result", 1);
+					cv::imshow("tracking_result", captured_image);
+					cv::waitKey(1);
+				}
+				if (visualize_align)
+				{
+					cv::imshow("sim_warp", sim_warped_img);
+				}
+				if (visualize_hog)
+				{
+					cv::Mat_<double> hog_descriptor_vis;
+					FaceAnalysis::Visualise_FHOG(hog_descriptor, num_hog_rows, num_hog_cols, hog_descriptor_vis);
+					cv::imshow("hog", hog_descriptor_vis);
+				}
 			}
 
 			// Setting up the recorder output
 			open_face_rec.SetObservationHOG(detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
-			open_face_rec.SetObservationVisualization(captured_image);
+			open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
 			open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
 			open_face_rec.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model));
 			open_face_rec.SetObservationLandmarks(face_model.detected_landmarks, face_model.GetShape(sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), 
@@ -270,18 +274,7 @@ int main (int argc, char **argv)
 			open_face_rec.SetObservationTimestamp(sequence_reader.time_stamp);
 			open_face_rec.SetObservationFaceAlign(sim_warped_img);
 			open_face_rec.WriteObservation();
-
-			// Visualize the image if desired
-			if (visualize_track && !det_parameters.quiet_mode)
-			{
-				cv::namedWindow("tracking_result", 1);
-				cv::imshow("tracking_result", captured_image);
-				cv::waitKey(1);
-			}
-
-			// Grabbing the next frame (todo this should be part of capture)
-			captured_image = sequence_reader.GetNextFrame();
-
+			
 			// Reporting progress
 			if(sequence_reader.GetProgress() >= reported_completion / 10.0)
 			{
@@ -289,13 +282,16 @@ int main (int argc, char **argv)
 				reported_completion = reported_completion + 1;
 			}
 
+			// Grabbing the next frame in the sequence
+			captured_image = sequence_reader.GetNextFrame();
+
 		}
 		
 		open_face_rec.Close();
 
 		if (recording_params.outputAUs())
 		{
-			cout << "Postprocessing the Action Unit predictions" << endl;
+			INFO_STREAM("Postprocessing the Action Unit predictions");
 			face_analyser.PostprocessOutputFile(open_face_rec.GetCSVFile());
 		}
 
@@ -307,55 +303,3 @@ int main (int argc, char **argv)
 
 	return 0;
 }
-
-void get_visualization_params(bool& visualize_track, bool& visualize_align, bool& visualize_hog,vector<string> &arguments)
-{
-
-	bool* valid = new bool[arguments.size()];
-
-	for (size_t i = 0; i < arguments.size(); ++i)
-	{
-		valid[i] = true;
-	}
-
-	string output_root = "";
-
-	visualize_align = false;
-	visualize_hog = false;
-	visualize_track = false;
-
-	for (size_t i = 0; i < arguments.size(); ++i)
-	{
-		if (arguments[i].compare("-verbose") == 0)
-		{
-			visualize_track = true;
-			visualize_align = true;
-			visualize_hog = true;
-		}
-		else if (arguments[i].compare("-vis-align") == 0)
-		{
-			visualize_align = true;
-			valid[i] = false;
-		}
-		else if (arguments[i].compare("-vis-hog") == 0)
-		{
-			visualize_hog = true;
-			valid[i] = false;
-		}
-		else if (arguments[i].compare("-vis-track") == 0)
-		{
-			visualize_track = true;
-			valid[i] = false;
-		}
-	}
-
-	for (int i = arguments.size() - 1; i >= 0; --i)
-	{
-		if (!valid[i])
-		{
-			arguments.erase(arguments.begin() + i);
-		}
-	}
-
-}
-
