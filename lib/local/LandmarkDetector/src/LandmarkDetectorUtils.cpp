@@ -704,46 +704,6 @@ cv::Matx22d AlignShapesWithScale(cv::Mat_<double>& src, cv::Mat_<double> dst)
 //===========================================================================
 // Visualisation functions
 //===========================================================================
-void Project(cv::Mat_<double>& dest, const cv::Mat_<double>& mesh, double fx, double fy, double cx, double cy)
-{
-	dest = cv::Mat_<double>(mesh.rows,2, 0.0);
-
-	int num_points = mesh.rows;
-
-	double X, Y, Z;
-
-
-	cv::Mat_<double>::const_iterator mData = mesh.begin();
-	cv::Mat_<double>::iterator projected = dest.begin();
-
-	for(int i = 0;i < num_points; i++)
-	{
-		// Get the points
-		X = *(mData++);
-		Y = *(mData++);
-		Z = *(mData++);
-			
-		double x;
-		double y;
-
-		// if depth is 0 the projection is different
-		if(Z != 0)
-		{
-			x = ((X * fx / Z) + cx);
-			y = ((Y * fy / Z) + cy);
-		}
-		else
-		{
-			x = X;
-			y = Y;
-		}
-
-		// Project and store in dest matrix
-		(*projected++) = x;
-		(*projected++) = y;
-	}
-
-}
 
 void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy)
 {
