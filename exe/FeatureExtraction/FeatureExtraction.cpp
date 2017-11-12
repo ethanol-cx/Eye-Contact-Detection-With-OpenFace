@@ -203,20 +203,20 @@ int main (int argc, char **argv)
 			// Displaying the tracking visualizations
 			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 			visualizer.SetObservationFaceAlign(sim_warped_img);
-			visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy));
 			visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, detection_success);
 			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
+			visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy));
 			visualizer.ShowObservation();
 
 			// Setting up the recorder output
 			open_face_rec.SetObservationHOG(detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
 			open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
 			open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
-			open_face_rec.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy));
 			open_face_rec.SetObservationLandmarks(face_model.detected_landmarks, face_model.GetShape(sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), 
 				face_model.params_global, face_model.params_local, face_model.detection_certainty, detection_success);
 			open_face_rec.SetObservationPose(pose_estimate);
+			open_face_rec.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy));
 			open_face_rec.SetObservationTimestamp(sequence_reader.time_stamp);
 			open_face_rec.SetObservationFaceAlign(sim_warped_img);
 			open_face_rec.WriteObservation();
