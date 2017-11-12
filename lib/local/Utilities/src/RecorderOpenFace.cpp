@@ -77,32 +77,80 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 	// From the filename, strip out the name without directory and extension
 	filename = path(in_filename).replace_extension("").filename().string();
 
+	// Consuming the input arguments
+	bool* valid = new bool[arguments.size()];
+
+	for (size_t i = 0; i < arguments.size(); ++i)
+	{
+		valid[i] = true;
+	}
+
+	string record_root;
+	for (size_t i = 0; i < arguments.size(); ++i)
+	{
+		if (arguments[i].compare("-outroot") == 0)
+		{
+			record_root = arguments[i + 1];
+		}
+	}
+
 	// Determine output directory
+	bool output_found = false;
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
 		if (arguments[i].compare("-out_dir") == 0)
 		{
-			record_root = arguments[i + 1];
+			record_root = (boost::filesystem::path(record_root) / boost::filesystem::path(arguments[i + 1])).string();
+		}
+		else if (!output_found && arguments[i].compare("-of") == 0)
+		{
+			record_root = (boost::filesystem::path(record_root) / boost::filesystem::path(arguments[i + 1])).remove_filename().string();
+			filename = path(boost::filesystem::path(arguments[i + 1])).replace_extension("").filename().string();
+			valid[i] = false;
+			valid[i + 1] = false;
+			i++;
+			output_found = true;
+		}
+	}
+
+	for (int i = (int)arguments.size() - 1; i >= 0; --i)
+	{
+		if (!valid[i])
+		{
+			arguments.erase(arguments.begin() + i);
 		}
 	}
 
 	// Construct the directories required for the output
 	CreateDirectory(record_root);
 
+	// Create the filename for the general output file that contains all of the meta information about the recording
+	path of_det_name(filename);
+	of_det_name = path(record_root) / of_det_name.concat("_of_details.txt");
+
+	// Write in the of file what we are outputing what is the input etc.
+	metadata_file.open(of_det_name.string(), std::ios_base::out);
+
+	// Populate the metadata file
+	metadata_file << "Input:" << in_filename << endl;
+
 	// Create the required individual recorders, CSV, HOG, aligned, video
 	csv_filename = (path(record_root) / path(filename).replace_extension(".csv")).string();
+	metadata_file << "Output csv:" << csv_filename << endl;
 
 	// Consruct HOG recorder here
 	if(params.outputHOG())
 	{
 		std::string hog_filename = (path(record_root) / path(filename).replace_extension(".hog")).string();
 		hog_recorder.Open(hog_filename);
+		metadata_file << "Output HOG:" << csv_filename << endl;
 	}
 
 	// saving the videos	
 	if (params.outputTrackedVideo())
 	{
 		this->video_filename = (path(record_root) / path(filename).replace_extension(".avi")).string();
+		metadata_file << "Output video:" << this->video_filename << endl;
 	}
 
 	// Prepare image recording
@@ -110,9 +158,10 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 	{
 		aligned_output_directory = (path(record_root) / path(filename + "_aligned")).string();
 		CreateDirectory(aligned_output_directory);
+		metadata_file << "Output aligned directory:" << this->aligned_output_directory << endl;
 	}
-
-
+	
+	
 	observation_count = 0;
 
 }
@@ -279,6 +328,8 @@ void RecorderOpenFace::Close()
 	hog_recorder.Close();
 	csv_recorder.Close();
 	video_writer.release();
+	metadata_file.close();
+
 }
 
 

@@ -109,23 +109,26 @@ void Visualizer::SetObservationHOG(const cv::Mat_<double>& hog_descriptor, int n
 void Visualizer::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, double confidence, bool success, const cv::Mat_<int>& visibilities)
 {
 
-	// Draw 2D landmarks on the image
-	int n = landmarks_2D.rows / 2;
-
-	// Drawing feature points
-	for (int i = 0; i < n; ++i)
+	if(confidence > visualisation_boundary)
 	{
-		if (visibilities.empty() || visibilities.at<int>(i))
+		// Draw 2D landmarks on the image
+		int n = landmarks_2D.rows / 2;
+
+		// Drawing feature points
+		for (int i = 0; i < n; ++i)
 		{
-			cv::Point featurePoint(cvRound(landmarks_2D.at<double>(i) * (double)draw_multiplier), cvRound(landmarks_2D.at<double>(i + n) * (double)draw_multiplier));
+			if (visibilities.empty() || visibilities.at<int>(i))
+			{
+				cv::Point featurePoint(cvRound(landmarks_2D.at<double>(i) * (double)draw_multiplier), cvRound(landmarks_2D.at<double>(i + n) * (double)draw_multiplier));
 
-			// A rough heuristic for drawn point size
-			int thickness = (int)std::ceil(3.0* ((double)captured_image.cols) / 640.0);
-			int thickness_2 = (int)std::ceil(1.0* ((double)captured_image.cols) / 640.0);
+				// A rough heuristic for drawn point size
+				int thickness = (int)std::ceil(3.0* ((double)captured_image.cols) / 640.0);
+				int thickness_2 = (int)std::ceil(1.0* ((double)captured_image.cols) / 640.0);
 
-			cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(0, 0, 255), thickness, CV_AA, draw_shiftbits);
-			cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
+				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(0, 0, 255), thickness, CV_AA, draw_shiftbits);
+				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
 
+			}
 		}
 	}
 }
@@ -133,7 +136,7 @@ void Visualizer::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, d
 void Visualizer::SetObservationPose(const cv::Vec6d& pose, double confidence)
 {
 
-	double visualisation_boundary = 0.4;
+
 
 	// Only draw if the reliability is reasonable, the value is slightly ad-hoc
 	if (confidence > visualisation_boundary)
@@ -154,78 +157,79 @@ void Visualizer::SetObservationPose(const cv::Vec6d& pose, double confidence)
 }
 
 // Eye gaze infomration drawing, first of eye landmarks then of gaze
-void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv::Point3f& gaze_direction1, const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks2d, const std::vector<cv::Point3d>& eye_landmarks3d)
+void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv::Point3f& gaze_direction1, const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks2d, const std::vector<cv::Point3d>& eye_landmarks3d, double confidence)
 {
-
-	if (eye_landmarks2d.size() > 0)
+	if(confidence > visualisation_boundary)
 	{
-		// First draw the eye region landmarks
-		for (size_t i = 0; i < eye_landmarks2d.size(); ++i)
+		if (eye_landmarks2d.size() > 0)
 		{
-			cv::Point featurePoint(cvRound(eye_landmarks2d[i].x * (double)draw_multiplier), cvRound(eye_landmarks2d[i].y * (double)draw_multiplier));
+			// First draw the eye region landmarks
+			for (size_t i = 0; i < eye_landmarks2d.size(); ++i)
+			{
+				cv::Point featurePoint(cvRound(eye_landmarks2d[i].x * (double)draw_multiplier), cvRound(eye_landmarks2d[i].y * (double)draw_multiplier));
 
-			// A rough heuristic for drawn point size
-			int thickness = 1;
-			int thickness_2 = 1;
+				// A rough heuristic for drawn point size
+				int thickness = 1;
+				int thickness_2 = 1;
 
-			size_t next_point = i + 1;
-			if (i == 7)
-				next_point = 0;
-			if (i == 19)
-				next_point = 8;
-			if (i == 27)
-				next_point = 20;
+				size_t next_point = i + 1;
+				if (i == 7)
+					next_point = 0;
+				if (i == 19)
+					next_point = 8;
+				if (i == 27)
+					next_point = 20;
 
-			if (i == 7 + 28)
-				next_point = 0 + 28;
-			if (i == 19 + 28)
-				next_point = 8 + 28;
-			if (i == 27 + 28)
-				next_point = 20 + 28;
+				if (i == 7 + 28)
+					next_point = 0 + 28;
+				if (i == 19 + 28)
+					next_point = 8 + 28;
+				if (i == 27 + 28)
+					next_point = 20 + 28;
 
-			cv::Point nextFeaturePoint(cvRound(eye_landmarks2d[next_point].x * (double)draw_multiplier), cvRound(eye_landmarks2d[next_point].y * (double)draw_multiplier));
-			if ((i < 28 && (i < 8 || i > 19)) || (i >= 28 && (i < 8 + 28 || i > 19 + 28)))
-				cv::line(captured_image, featurePoint, nextFeaturePoint, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
-			else
-				cv::line(captured_image, featurePoint, nextFeaturePoint, cv::Scalar(0, 0, 255), thickness_2, CV_AA, draw_shiftbits);
+				cv::Point nextFeaturePoint(cvRound(eye_landmarks2d[next_point].x * (double)draw_multiplier), cvRound(eye_landmarks2d[next_point].y * (double)draw_multiplier));
+				if ((i < 28 && (i < 8 || i > 19)) || (i >= 28 && (i < 8 + 28 || i > 19 + 28)))
+					cv::line(captured_image, featurePoint, nextFeaturePoint, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
+				else
+					cv::line(captured_image, featurePoint, nextFeaturePoint, cv::Scalar(0, 0, 255), thickness_2, CV_AA, draw_shiftbits);
+
+			}
+
+			// Now draw the gaze lines themselves
+			cv::Mat cameraMat = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
+
+			// Grabbing the pupil location, to draw eye gaze need to know where the pupil is
+			cv::Point3d pupil_left(0, 0, 0);
+			cv::Point3d pupil_right(0, 0, 0);
+			for (size_t i = 0; i < 8; ++i)
+			{
+				pupil_left = pupil_left + eye_landmarks3d[i];
+				pupil_right = pupil_right + eye_landmarks3d[i + eye_landmarks3d.size()/2];
+			}
+			pupil_left = pupil_left / 8;
+			pupil_right = pupil_right / 8;
+
+			std::vector<cv::Point3d> points_left;
+			points_left.push_back(cv::Point3d(pupil_left));
+			points_left.push_back(cv::Point3d(pupil_left + cv::Point3d(gaze_direction0)*50.0));
+
+			std::vector<cv::Point3d> points_right;
+			points_right.push_back(cv::Point3d(pupil_right));
+			points_right.push_back(cv::Point3d(pupil_right + cv::Point3d(gaze_direction1)*50.0));
+
+			cv::Mat_<double> proj_points;
+			cv::Mat_<double> mesh_0 = (cv::Mat_<double>(2, 3) << points_left[0].x, points_left[0].y, points_left[0].z, points_left[1].x, points_left[1].y, points_left[1].z);
+			Project(proj_points, mesh_0, fx, fy, cx, cy);
+			cv::line(captured_image, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier)),
+				cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
+
+			cv::Mat_<double> mesh_1 = (cv::Mat_<double>(2, 3) << points_right[0].x, points_right[0].y, points_right[0].z, points_right[1].x, points_right[1].y, points_right[1].z);
+			Project(proj_points, mesh_1, fx, fy, cx, cy);
+			cv::line(captured_image, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier)),
+				cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
 
 		}
-
-		// Now draw the gaze lines themselves
-		cv::Mat cameraMat = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
-
-		// Grabbing the pupil location, to draw eye gaze need to know where the pupil is
-		cv::Point3d pupil_left(0, 0, 0);
-		cv::Point3d pupil_right(0, 0, 0);
-		for (size_t i = 0; i < 8; ++i)
-		{
-			pupil_left = pupil_left + eye_landmarks3d[i];
-			pupil_right = pupil_right + eye_landmarks3d[i + eye_landmarks3d.size()/2];
-		}
-		pupil_left = pupil_left / 8;
-		pupil_right = pupil_right / 8;
-
-		std::vector<cv::Point3d> points_left;
-		points_left.push_back(cv::Point3d(pupil_left));
-		points_left.push_back(cv::Point3d(pupil_left + cv::Point3d(gaze_direction0)*50.0));
-
-		std::vector<cv::Point3d> points_right;
-		points_right.push_back(cv::Point3d(pupil_right));
-		points_right.push_back(cv::Point3d(pupil_right + cv::Point3d(gaze_direction1)*50.0));
-
-		cv::Mat_<double> proj_points;
-		cv::Mat_<double> mesh_0 = (cv::Mat_<double>(2, 3) << points_left[0].x, points_left[0].y, points_left[0].z, points_left[1].x, points_left[1].y, points_left[1].z);
-		Project(proj_points, mesh_0, fx, fy, cx, cy);
-		cv::line(captured_image, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier)),
-			cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
-
-		cv::Mat_<double> mesh_1 = (cv::Mat_<double>(2, 3) << points_right[0].x, points_right[0].y, points_right[0].z, points_right[1].x, points_right[1].y, points_right[1].z);
-		Project(proj_points, mesh_1, fx, fy, cx, cy);
-		cv::line(captured_image, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier)),
-			cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
-
 	}
-
 }
 
 void Visualizer::ShowObservation()

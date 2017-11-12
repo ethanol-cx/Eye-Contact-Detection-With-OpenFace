@@ -14,7 +14,7 @@ dbSeqDir = dbSeqDir(3:end);
 
 output_dir = cat(2, output_dir, '/');
 
-command = sprintf('%s -inroot "%s" -out_dir "%s" -fx 505 -fy 505 -cx 320 -cy 240 -pose -vis-track ', executable, rootDir, output_dir);      
+command = sprintf('%s -inroot "%s" -outroot "%s" -fx 505 -fy 505 -cx 320 -cy 240 -pose -vis-track ', executable, rootDir, output_dir);      
      
 if(verbose)
     command = cat(2, command, [' -tracked ' outputVideo]);
@@ -26,7 +26,7 @@ end
     
 for i=1:numel(dbSeqDir)    
     inputFile = [biwiDir dbSeqDir(i).name '/colour.avi'];
-    command = cat(2, command, sprintf(' -f "%s" ', inputFile));
+    command = sprintf('%s -f "%s" -of "%s" ', command, inputFile, dbSeqDir(i).name);
 end
 
 if(isunix)

@@ -105,9 +105,11 @@ namespace Utilities
 
 		// Keep track of the file and output root location
 		std::string record_root = "processed"; // By default we are writing in the processed directory in the working directory 
+		std::string of_filename;
 		std::string filename;
 		std::string csv_filename;
 		std::string aligned_output_directory;
+		std::ofstream metadata_file;
 
 		// The actual output file stream that will be written
 		RecorderCSV csv_recorder;

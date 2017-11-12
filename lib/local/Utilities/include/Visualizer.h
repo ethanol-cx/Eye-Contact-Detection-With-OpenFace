@@ -72,7 +72,7 @@ namespace Utilities
 		void SetObservationPose(const cv::Vec6d& pose, double confidence);
 		
 		// Gaze related observations
-		void SetObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks, const std::vector<cv::Point3d>& eye_landmarks3d);
+		void SetObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks, const std::vector<cv::Point3d>& eye_landmarks3d, double confidence);
 
 		// Face alignment related observations
 		void SetObservationFaceAlign(const cv::Mat& aligned_face);
@@ -88,6 +88,9 @@ namespace Utilities
 		bool vis_track;
 		bool vis_hog;
 		bool vis_align;
+		
+		// Can be adjusted to show less confident frames
+		double visualisation_boundary = 0.4;
 
 	private:
 
