@@ -813,11 +813,11 @@ vector<cv::Point3d> Calculate3DEyeLandmarks(const CLNF& clnf_model, double fx, d
 			
 			auto lmks = clnf_model.hierarchical_models[i].GetShape(fx, fy, cx, cy);
 
-			int num_landmarks = lmks.rows / 3;
+			int num_landmarks = lmks.cols;
 
 			for (int lmk = 0; lmk < num_landmarks; ++lmk)
 			{
-				cv::Point3d curr_lmk(lmks.at<double>(lmk), lmks.at<double>(lmk + num_landmarks), lmks.at<double>(lmk + 2 * num_landmarks));
+				cv::Point3d curr_lmk(lmks.at<double>(0, lmk), lmks.at<double>(1, lmk), lmks.at<double>(2, lmk));
 				to_return.push_back(curr_lmk);
 			}
 		}

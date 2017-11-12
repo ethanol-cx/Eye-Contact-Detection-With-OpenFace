@@ -200,9 +200,6 @@ int main (int argc, char **argv)
 			// Work out the pose of the head from the tracked model
 			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 
-			// Drawing the visualization on the captured image
-			visualise_tracking(captured_image, face_model, det_parameters, gazeDirection0, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
-
 			// Displaying the tracking visualizations
 			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 			visualizer.SetObservationFaceAlign(sim_warped_img);

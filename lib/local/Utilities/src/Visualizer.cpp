@@ -99,7 +99,10 @@ void Visualizer::SetObservationFaceAlign(const cv::Mat& aligned_face)
 
 void Visualizer::SetObservationHOG(const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows)
 {
-	 Visualise_FHOG(hog_descriptor, num_rows, num_cols, this->hog_image);
+	if(vis_hog)
+	{
+		Visualise_FHOG(hog_descriptor, num_rows, num_cols, this->hog_image);
+	}
 }
 
 
@@ -173,6 +176,13 @@ void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv
 			if (i == 27)
 				next_point = 20;
 
+			if (i == 7 + 28)
+				next_point = 0 + 28;
+			if (i == 19 + 28)
+				next_point = 8 + 28;
+			if (i == 27 + 28)
+				next_point = 20 + 28;
+
 			cv::Point nextFeaturePoint(cvRound(eye_landmarks2d[next_point].x * (double)draw_multiplier), cvRound(eye_landmarks2d[next_point].y * (double)draw_multiplier));
 			if (i < 8 || i > 19)
 				cv::line(captured_image, featurePoint, nextFeaturePoint, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
@@ -190,7 +200,7 @@ void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv
 		for (size_t i = 0; i < 8; ++i)
 		{
 			pupil_left = pupil_left + eye_landmarks3d[i];
-			pupil_right = pupil_right + eye_landmarks3d[i + eye_landmarks3d.size()];
+			pupil_right = pupil_right + eye_landmarks3d[i + eye_landmarks3d.size()/2];
 		}
 		pupil_left = pupil_left / 8;
 		pupil_right = pupil_right / 8;
@@ -224,7 +234,6 @@ void Visualizer::ShowObservation()
 	{
 		cv::namedWindow("tracking_result", 1);
 		cv::imshow("tracking_result", captured_image);
-		cv::waitKey(1);
 	}
 	if (vis_align)
 	{
@@ -234,6 +243,7 @@ void Visualizer::ShowObservation()
 	{
 		cv::imshow("hog", hog_image);
 	}
+	cv::waitKey(1);
 }
 
 cv::Mat Visualizer::GetVisImage()
