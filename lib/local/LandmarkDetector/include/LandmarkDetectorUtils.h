@@ -54,8 +54,6 @@ namespace LandmarkDetector
 	//=============================================================================================
 	void get_video_input_output_params(vector<string> &input_video_file, vector<string> &output_files, string &output_codec, vector<string> &arguments);
 
-	void get_camera_params(int &device, float &fx, float &fy, float &cx, float &cy, vector<string> &arguments);
-
 	void get_image_input_output_params(vector<string> &input_image_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
 		vector<cv::Rect_<double>> &input_bounding_boxes, vector<string> &arguments);
 
@@ -88,11 +86,7 @@ namespace LandmarkDetector
 	vector<cv::Point2d> CalculateAllLandmarks(const cv::Mat_<double>& shape2D);
 	vector<cv::Point2d> CalculateAllLandmarks(const CLNF& clnf_model);
 	vector<cv::Point2d> CalculateAllEyeLandmarks(const CLNF& clnf_model);
-	void DrawLandmarks(cv::Mat img, vector<cv::Point> landmarks);
-
-	void Draw(cv::Mat img, const cv::Mat_<double>& shape2D, const cv::Mat_<int>& visibilities);
-	void Draw(cv::Mat img, const cv::Mat_<double>& shape2D);
-	void Draw(cv::Mat img, const CLNF& clnf_model);
+	vector<cv::Point3d> Calculate3DEyeLandmarks(const CLNF& clnf_model, double fx, double fy, double cx, double cy);
 
 	//============================================================================
 	// Face detection helpers

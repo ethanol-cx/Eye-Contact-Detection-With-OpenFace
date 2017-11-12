@@ -157,7 +157,7 @@ void RecorderOpenFace::WriteObservation()
 	{
 		// As we are writing out the header, work out some things like number of landmarks, names of AUs etc.
 		int num_face_landmarks = landmarks_2D.rows / 2;
-		int num_eye_landmarks = (int)eye_landmarks.size();
+		int num_eye_landmarks = (int)eye_landmarks2D.size();
 		int num_model_modes = pdm_params_local.rows;
 
 		std::vector<std::string> au_names_class;
@@ -182,7 +182,7 @@ void RecorderOpenFace::WriteObservation()
 
 	this->csv_recorder.WriteLine(observation_count, timestamp, landmark_detection_success, 
 		landmark_detection_confidence, landmarks_2D, landmarks_3D, pdm_params_local, pdm_params_global, head_pose,
-		gaze_direction0, gaze_direction1, gaze_angle, eye_landmarks, au_intensities, au_occurences);
+		gaze_direction0, gaze_direction1, gaze_angle, eye_landmarks2D, eye_landmarks3D, au_intensities, au_occurences);
 
 	if(params.outputHOG())
 	{

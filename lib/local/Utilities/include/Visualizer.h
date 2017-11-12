@@ -56,7 +56,7 @@ namespace Utilities
 		Visualizer(std::vector<std::string> arguments);
 		Visualizer(bool vis_track, bool vis_hog, bool vis_align);
 
-		~Visualizer();
+		//~Visualizer();
 
 		// TODO copy, assignment and move operators? Do not allow
 

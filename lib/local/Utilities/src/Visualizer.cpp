@@ -33,6 +33,7 @@
 
 #include "Visualizer.h"
 #include "VisualizationUtils.h"
+#include "RotationHelpers.h"
 
 // For drawing on images
 #include <opencv2/imgproc.hpp>
@@ -149,23 +150,22 @@ void Visualizer::SetObservationPose(const cv::Vec6d& pose, double confidence)
 	}
 }
 
-// TODO add 3D eye landmark locations
+// Eye gaze infomration drawing, first of eye landmarks then of gaze
 void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv::Point3f& gaze_direction1, const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks2d, const std::vector<cv::Point3d>& eye_landmarks3d)
 {
-	// TODO actual drawing, first of eye landmarks then of gaze
 
-	if (eye_landmarks.size() > 0)
+	if (eye_landmarks2d.size() > 0)
 	{
-		// FIrst draw the eye region landmarks
-		for (size_t i = 0; i < eye_landmarks.size(); ++i)
+		// First draw the eye region landmarks
+		for (size_t i = 0; i < eye_landmarks2d.size(); ++i)
 		{
-			cv::Point featurePoint(cvRound(eye_landmarks[i].x * (double)draw_multiplier), eye_landmarks[i].y * (double)draw_multiplier));
+			cv::Point featurePoint(cvRound(eye_landmarks2d[i].x * (double)draw_multiplier), cvRound(eye_landmarks2d[i].y * (double)draw_multiplier));
 
 			// A rough heuristic for drawn point size
-			int thickness = 1.0;
-			int thickness_2 = 1.0;
+			int thickness = 1;
+			int thickness_2 = 1;
 
-			int next_point = i + 1;
+			size_t next_point = i + 1;
 			if (i == 7)
 				next_point = 0;
 			if (i == 19)
@@ -173,7 +173,7 @@ void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv
 			if (i == 27)
 				next_point = 20;
 
-			cv::Point nextFeaturePoint(cvRound(eye_landmarks[next_point].x * (double)draw_multiplier), cvRound(eye_landmarks[next_point].y * (double)draw_multiplier));
+			cv::Point nextFeaturePoint(cvRound(eye_landmarks2d[next_point].x * (double)draw_multiplier), cvRound(eye_landmarks2d[next_point].y * (double)draw_multiplier));
 			if (i < 8 || i > 19)
 				cv::line(captured_image, featurePoint, nextFeaturePoint, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
 			else
@@ -184,36 +184,24 @@ void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv
 		// Now draw the gaze lines themselves
 		cv::Mat cameraMat = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
 
-		int part_left = -1;
-		int part_right = -1;
-		for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
+		// Grabbing the pupil location, to draw eye gaze need to know where the pupil is
+		cv::Point3d pupil_left(0, 0, 0);
+		cv::Point3d pupil_right(0, 0, 0);
+		for (size_t i = 0; i < 8; ++i)
 		{
-			if (clnf_model.hierarchical_model_names[i].compare("left_eye_28") == 0)
-			{
-				part_left = i;
-			}
-			if (clnf_model.hierarchical_model_names[i].compare("right_eye_28") == 0)
-			{
-				part_right = i;
-			}
+			pupil_left = pupil_left + eye_landmarks3d[i];
+			pupil_right = pupil_right + eye_landmarks3d[i + eye_landmarks3d.size()];
 		}
-
-		cv::Mat eyeLdmks3d_left = clnf_model.hierarchical_models[part_left].GetShape(fx, fy, cx, cy);
-		cv::Point3f pupil_left = GetPupilPosition(eyeLdmks3d_left);
-
-		cv::Mat_<double> irisLdmks3d_left = eyeLdmks3d_left.rowRange(0, 8);
-		cv::Point3f pupil_left(cv::mean(irisLdmks3d_left.col(0))[0], cv::mean(irisLdmks3d_left.col(1))[0], cv::mean(irisLdmks3d_left.col(2))[0]);
-
-		cv::Mat eyeLdmks3d_right = clnf_model.hierarchical_models[part_right].GetShape(fx, fy, cx, cy);
-		cv::Point3f pupil_right = GetPupilPosition(eyeLdmks3d_right);
+		pupil_left = pupil_left / 8;
+		pupil_right = pupil_right / 8;
 
 		std::vector<cv::Point3d> points_left;
 		points_left.push_back(cv::Point3d(pupil_left));
-		points_left.push_back(cv::Point3d(pupil_left + gaze_direction0*50.0));
+		points_left.push_back(cv::Point3d(pupil_left + cv::Point3d(gaze_direction0)*50.0));
 
 		std::vector<cv::Point3d> points_right;
 		points_right.push_back(cv::Point3d(pupil_right));
-		points_right.push_back(cv::Point3d(pupil_right + gaze_direction1*50.0));
+		points_right.push_back(cv::Point3d(pupil_right + cv::Point3d(gaze_direction1)*50.0));
 
 		cv::Mat_<double> proj_points;
 		cv::Mat_<double> mesh_0 = (cv::Mat_<double>(2, 3) << points_left[0].x, points_left[0].y, points_left[0].z, points_left[1].x, points_left[1].y, points_left[1].z);
@@ -248,4 +236,7 @@ void Visualizer::ShowObservation()
 	}
 }
 
-
+cv::Mat Visualizer::GetVisImage()
+{
+	return captured_image;
+}

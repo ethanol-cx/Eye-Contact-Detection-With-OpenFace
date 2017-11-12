@@ -43,8 +43,6 @@ namespace Utilities
 
 	// TODO draw AU results
 
-	// Helper utilities
-	void Project(cv::Mat_<double>& dest, const cv::Mat_<double>& mesh, double fx, double fy, double cx, double cy);
 
 	// Drawing a bounding box around the face in an image
 	void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy);
