@@ -180,6 +180,9 @@ int main (int argc, char **argv)
 				return(0);
 			}
 
+			// Grabbing the next frame in the sequence
+			captured_image = sequence_reader.GetNextFrame();
+
 		}
 		
 		// Reset the model, for the next video
