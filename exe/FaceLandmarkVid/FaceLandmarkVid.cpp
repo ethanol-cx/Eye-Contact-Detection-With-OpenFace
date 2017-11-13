@@ -47,6 +47,8 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include <SequenceCapture.h>
+#include <Visualizer.h>
+#include <VisualizationUtils.h>
 
 // Boost includes
 #include <filesystem.hpp>
@@ -84,65 +86,6 @@ vector<string> get_arguments(int argc, char **argv)
 	return arguments;
 }
 
-// Some globals for tracking timing information for visualisation
-double fps_tracker = -1.0;
-int64 t0 = 0;
-int frame_count = 0;
-
-// Visualising the results, TODO move to separate
-void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& face_model, const LandmarkDetector::FaceModelParameters& det_parameters, cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, double fx, double fy, double cx, double cy)
-{
-
-	// Drawing the facial landmarks on the face and the bounding box around it if tracking is successful and initialised
-	double detection_certainty = face_model.detection_certainty;
-	bool detection_success = face_model.detection_success;
-
-	double visualisation_boundary = 0.4;
-
-	// Only draw if the reliability is reasonable, the value is slightly ad-hoc
-	if (detection_certainty > visualisation_boundary)
-	{
-		LandmarkDetector::Draw(captured_image, face_model);
-
-		double vis_certainty = detection_certainty;
-		if (vis_certainty > 1)
-			vis_certainty = 1;
-
-		// Scale from 0 to 1, to allow to indicated by colour how confident we are in the tracking
-		vis_certainty = (vis_certainty - visualisation_boundary) / (1 - visualisation_boundary);
-
-		// A rough heuristic for box around the face width
-		int thickness = (int)std::ceil(2.0* ((double)captured_image.cols) / 640.0);
-
-		cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
-
-		// Draw it in reddish if uncertain, blueish if certain
-		LandmarkDetector::DrawBox(captured_image, pose_estimate_to_draw, cv::Scalar(vis_certainty*255.0, 0, (1 - vis_certainty) * 255), thickness, fx, fy, cx, cy);
-
-		if (det_parameters.track_gaze && detection_success && face_model.eye_model)
-		{
-			GazeAnalysis::DrawGaze(captured_image, face_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
-		}
-	}
-
-	// Work out the framerate TODO
-	if (frame_count % 10 == 0)
-	{
-		double t1 = cv::getTickCount();
-		fps_tracker = 10.0 / (double(t1 - t0) / cv::getTickFrequency());
-		t0 = t1;
-	}
-
-	// Write out the framerate on the image before displaying it
-	char fpsC[255];
-	std::sprintf(fpsC, "%d", (int)fps_tracker);
-	string fpsSt("FPS:");
-	fpsSt += fpsC;
-	cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, CV_AA);
-	frame_count++;
-
-}
-
 int main (int argc, char **argv)
 {
 
@@ -152,10 +95,17 @@ int main (int argc, char **argv)
 	det_parameters.track_gaze = true;
 
 	// The modules that are being used for tracking
-	LandmarkDetector::CLNF clnf_model(det_parameters.model_location);	
+	LandmarkDetector::CLNF face_model(det_parameters.model_location);
 
 	// Open a sequence
 	Utilities::SequenceCapture sequence_reader;
+
+	// A utility for visualizing the results
+	Utilities::Visualizer visualizer(arguments);
+
+	// Tracking FPS for visualization
+	Utilities::FpsTracker fps_tracker;
+	fps_tracker.AddFrame();
 
 	while (true) // this is not a for loop as we might also be reading from a webcam
 	{
@@ -186,23 +136,35 @@ int main (int argc, char **argv)
 			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
 			// The actual facial landmark detection / tracking
-			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, clnf_model, det_parameters);
+			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
 
 			// Visualising the results
 			// Drawing the facial landmarks on the face and the bounding box around it if tracking is successful and initialised
-			double detection_certainty = clnf_model.detection_certainty;
+			double detection_certainty = face_model.detection_certainty;
 
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, -1);
 			cv::Point3f gazeDirection1(0, 0, -1);
 
-			if (det_parameters.track_gaze && detection_success && clnf_model.eye_model)
+			if (det_parameters.track_gaze && detection_success && face_model.eye_model)
 			{
-				GazeAnalysis::EstimateGaze(clnf_model, gazeDirection0, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, true);
-				GazeAnalysis::EstimateGaze(clnf_model, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, false);
+				GazeAnalysis::EstimateGaze(face_model, gazeDirection0, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, true);
+				GazeAnalysis::EstimateGaze(face_model, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, false);
 			}
 
-			visualise_tracking(captured_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+			// Work out the pose of the head from the tracked model
+			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+
+			// Keeping track of FPS
+			fps_tracker.AddFrame();
+
+			// Displaying the tracking visualizations
+			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, detection_success);
+			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
+			visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_model.detection_certainty);
+			visualizer.SetFps(fps_tracker.GetFPS());
+			visualizer.ShowObservation();
 
 			// detect key presses
 			char character_press = cv::waitKey(1);
@@ -210,7 +172,7 @@ int main (int argc, char **argv)
 			// restart the tracker
 			if (character_press == 'r')
 			{
-				clnf_model.Reset();
+				face_model.Reset();
 			}
 			// quit the application
 			else if (character_press == 'q')
@@ -221,7 +183,7 @@ int main (int argc, char **argv)
 		}
 		
 		// Reset the model, for the next video
-		clnf_model.Reset();
+		face_model.Reset();
 
 	}
 	return 0;
