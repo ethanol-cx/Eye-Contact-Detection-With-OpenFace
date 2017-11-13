@@ -246,6 +246,12 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 
 	capture.open(video_file);
 
+	if (!capture.isOpened())
+	{
+		std::cout << "Failed to open the video file at location: " << video_file << std::endl;
+		return false;
+	}
+
 	this->fps = capture.get(CV_CAP_PROP_FPS);
 	
 	// Check if fps is nan or less than 0
@@ -262,12 +268,6 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 	this->frame_height = (int)capture.get(CV_CAP_PROP_FRAME_HEIGHT);
 
 	vid_length = (int)capture.get(CV_CAP_PROP_FRAME_COUNT);
-
-	if (!capture.isOpened())
-	{
-		std::cout << "Failed to open the video file at location: " << video_file << std::endl;
-		return false;
-	}
 
 	SetCameraIntrinsics(fx, fy, cx, cy);
 

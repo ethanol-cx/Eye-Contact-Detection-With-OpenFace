@@ -60,6 +60,7 @@
 #include <RecorderOpenFaceParameters.h>
 #include <SequenceCapture.h>
 #include <Visualizer.h>
+#include <VisualizationUtils.h>
 
 #ifndef CONFIG_DIR
 #define CONFIG_DIR "~"
@@ -97,34 +98,6 @@ vector<string> get_arguments(int argc, char **argv)
 	return arguments;
 }
 
-// Some globals for tracking timing information for visualisation (TODO bit ugly)
-double fps_tracker = -1.0;
-int64 t0 = 0;
-int frame_count = 0;
-
-// Visualising the results TODO separate class
-void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& face_model, const LandmarkDetector::FaceModelParameters& det_parameters, cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, double fx, double fy, double cx, double cy)
-{
-
-
-	// Work out the framerate TODO
-	if (frame_count % 10 == 0)
-	{
-		double t1 = cv::getTickCount();
-		fps_tracker = 10.0 / (double(t1 - t0) / cv::getTickFrequency());
-		t0 = t1;
-	}
-
-	// Write out the framerate on the image before displaying it
-	char fpsC[255];
-	std::sprintf(fpsC, "%d", (int)fps_tracker);
-	string fpsSt("FPS:");
-	fpsSt += fpsC;
-	cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, CV_AA);
-	frame_count++;
-
-}
-
 int main (int argc, char **argv)
 {
 
@@ -145,6 +118,10 @@ int main (int argc, char **argv)
 
 	// A utility for visualizing the results
 	Utilities::Visualizer visualizer(arguments);
+
+	// Tracking FPS for visualization
+	Utilities::FpsTracker fps_tracker;
+	fps_tracker.AddFrame();
 
 	while (true) // this is not a for loop as we might also be reading from a webcam
 	{
@@ -200,6 +177,9 @@ int main (int argc, char **argv)
 			// Work out the pose of the head from the tracked model
 			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 
+			// Keeping track of FPS
+			fps_tracker.AddFrame();
+
 			// Displaying the tracking visualizations
 			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 			visualizer.SetObservationFaceAlign(sim_warped_img);
@@ -207,6 +187,7 @@ int main (int argc, char **argv)
 			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, detection_success);
 			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
 			visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_model.detection_certainty);
+			visualizer.SetFps(fps_tracker.GetFPS());
 			visualizer.ShowObservation();
 
 			// Setting up the recorder output

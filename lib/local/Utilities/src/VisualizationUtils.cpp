@@ -44,6 +44,39 @@
 namespace Utilities
 {
 
+	FpsTracker::FpsTracker()
+	{
+		// Keep two seconds of history
+		history_length = 2;
+	}
+
+	void FpsTracker::AddFrame()
+	{
+		double current_time = cv::getTickCount() / cv::getTickFrequency();
+		frame_times.push(current_time);
+		DiscardOldFrames();
+	}
+
+	double FpsTracker::GetFPS()
+	{
+		DiscardOldFrames();
+
+		if (frame_times.size() == 0)
+			return 0;
+
+		double current_time = cv::getTickCount() / cv::getTickFrequency();
+
+		return ((double)frame_times.size()) / (current_time - frame_times.front());
+	}
+
+	void FpsTracker::DiscardOldFrames()
+	{
+		double current_time = cv::getTickCount() / cv::getTickFrequency();
+		// Remove old history
+		while (frame_times.size() > 0 && (current_time - frame_times.front()) > history_length)
+			frame_times.pop();
+	}
+
 	void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy)
 	{
 		auto edge_lines = CalculateBox(pose, fx, fy, cx, cy);

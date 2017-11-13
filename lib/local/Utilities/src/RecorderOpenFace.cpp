@@ -71,7 +71,7 @@ void CreateDirectory(std::string output_path)
 }
 
 
-RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFaceParameters parameters, std::vector<std::string> arguments):video_writer(), params(parameters)
+RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFaceParameters parameters, std::vector<std::string>& arguments):video_writer(), params(parameters)
 {
 
 	// From the filename, strip out the name without directory and extension
@@ -150,7 +150,14 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 	if (params.outputTrackedVideo())
 	{
 		this->video_filename = (path(record_root) / path(filename).replace_extension(".avi")).string();
-		metadata_file << "Output video:" << this->video_filename << endl;
+		if(parameters.isSequence())
+		{
+			metadata_file << "Output video:" << this->video_filename << endl;
+		}
+		else
+		{
+			metadata_file << "Output image:" << this->video_filename << endl;
+		}
 	}
 
 	// Prepare image recording

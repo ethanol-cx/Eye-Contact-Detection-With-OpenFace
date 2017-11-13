@@ -80,6 +80,8 @@ namespace Utilities
 		// HOG feature related observations
 		void SetObservationHOG(const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows);
 
+		void SetFps(double fps);
+
 		void ShowObservation();
 
 		cv::Mat GetVisImage();

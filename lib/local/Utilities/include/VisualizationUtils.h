@@ -37,12 +37,12 @@
 #include <opencv2/core/core.hpp>
 
 #include <vector>
+#include <queue>
 
 namespace Utilities
 {
 
 	// TODO draw AU results
-
 
 	// Drawing a bounding box around the face in an image
 	void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy);
@@ -53,6 +53,24 @@ namespace Utilities
 
 	void Visualise_FHOG(const cv::Mat_<double>& descriptor, int num_rows, int num_cols, cv::Mat& visualisation);
 
+	class FpsTracker
+	{
+	public:
+		
+		double history_length;
+
+		void AddFrame();
+
+		double GetFPS();
+
+		FpsTracker();
+
+	private:
+		std::queue<double> frame_times;
+
+		void DiscardOldFrames();
+
+	};
 
 }
 #endif

@@ -232,6 +232,16 @@ void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv
 	}
 }
 
+void Visualizer::SetFps(double fps)
+{
+	// Write out the framerate on the image before displaying it
+	char fpsC[255];
+	std::sprintf(fpsC, "%d", (int)fps);
+	std::string fpsSt("FPS:");
+	fpsSt += fpsC;
+	cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, CV_AA);
+}
+
 void Visualizer::ShowObservation()
 {
 	if (vis_track)
