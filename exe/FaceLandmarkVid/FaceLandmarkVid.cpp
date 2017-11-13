@@ -100,8 +100,8 @@ int main (int argc, char **argv)
 	// Open a sequence
 	Utilities::SequenceCapture sequence_reader;
 
-	// A utility for visualizing the results
-	Utilities::Visualizer visualizer(arguments);
+	// A utility for visualizing the results (show just the tracks)
+	Utilities::Visualizer visualizer(true, false, false);
 
 	// Tracking FPS for visualization
 	Utilities::FpsTracker fps_tracker;
