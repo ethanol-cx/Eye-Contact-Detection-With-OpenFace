@@ -91,7 +91,7 @@ for i = 1:numel(files_yt)
     pred_landmarks_clm(:,1,:) = xs';
     pred_landmarks_clm(:,2,:) = ys';    
     
-    load([database_root, name(1:end-3), '.mat']);
+    load([database_root, name, '.mat']);
     preds_all = cat(3, preds_all, pred_landmarks);
     preds_all_clm = cat(3, preds_all_clm, pred_landmarks_clm);
     gts_all = cat(3, gts_all, labels);
