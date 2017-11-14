@@ -26,15 +26,14 @@ database_root = [database_root, '/ytceleb/'];
 
 in_vids = dir([database_root '/*.avi']);
 
-command = executable;
-command = cat(2, command, ' -2Dfp ');
+command = sprintf('%s -2Dfp -out_dir "%s" ', executable, output);
 % add all videos to single argument list (so as not to load the model anew
 % for every video)
 for i=1:numel(in_vids)
     
     in_file_name = [database_root, '/', in_vids(i).name];        
     
-    command = cat(2, command, [' -f "' in_file_name '" -of "' output '"']);                     
+    command = cat(2, command, [' -f "' in_file_name '" ']);                     
 end
 
 if(isunix)
@@ -49,16 +48,14 @@ output = 'yt_features_clm/';
 if(~exist(output, 'file'))
     mkdir(output)
 end
-    
-command = executable;
-command = cat(2, command, ' -mloc model/main_clm_general.txt ');
-command = cat(2, command, ' -2Dfp ');
+
+command = sprintf('%s -2Dfp -out_dir "%s -mloc model/main_clm_general.txt " ', executable, output);
 
 % add all videos to single argument list (so as not to load the model anew
 % for every video)
 for i=1:numel(in_vids)    
     in_file_name = [database_root, '/', in_vids(i).name];            
-    command = cat(2, command, [' -f "' in_file_name '" -of "' output '"']);                     
+    command = cat(2, command, [' -f "' in_file_name '"']);                     
 end
 
 if(isunix)
@@ -85,7 +82,7 @@ for i = 1:numel(files_yt)
     pred_landmarks(:,1,:) = xs';
     pred_landmarks(:,2,:) = ys';
     
-    pred_landmarks_clm = dlmread([d_loc_clm, files_yt(i).name], ',', 1, 0);
+    pred_landmarks_clm = dlmread([d_loc_clm,  files_yt(i).name], ',', 1, 0);
     pred_landmarks_clm = pred_landmarks_clm(:,5:end);
     
     xs = pred_landmarks_clm(:, 1:end/2);
