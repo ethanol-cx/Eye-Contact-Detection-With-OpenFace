@@ -53,3 +53,4 @@ matlab_version/face_validation/vlfeat-0.9.20/
 matlab_version/face_validation/trained/intermediate/
 lib/local/GazeAnalyser/x64/
 lib/local/Utilities/x64/
+exe/FeatureExtraction/processed/
