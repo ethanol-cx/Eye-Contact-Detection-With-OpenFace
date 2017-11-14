@@ -65,7 +65,7 @@ namespace Utilities
 		// Direct opening
 
 		// Image sequence in the directory
-		bool OpenDirectory(std::string directory, float fx = -1, float fy = -1, float cx = -1, float cy = -1);
+		bool OpenDirectory(std::string directory, std::string bbox_directory="", float fx = -1, float fy = -1, float cx = -1, float cy = -1);
 
 		// Video file
 		bool OpenImageFiles(const std::vector<std::string>& image_files, float fx = -1, float fy = -1, float cx = -1, float cy = -1);
@@ -75,6 +75,9 @@ namespace Utilities
 
 		// Getting the most recent grayscale frame (need to call GetNextImage first)
 		cv::Mat_<uchar> GetGrayFrame();
+
+		// Return bounding boxes associated with the image (if defined)
+		std::vector<cv::Rect_<double> > GetBoundingBoxes();
 
 		// Parameters describing the sequence and it's progress (what's the proportion of images opened)
 		double GetProgress();
@@ -87,6 +90,8 @@ namespace Utilities
 		// Name of the video file, image directory, or the webcam
 		std::string name;
 
+		bool has_bounding_boxes;
+
 	private:
 
 		// Storing the latest captures
@@ -96,6 +101,9 @@ namespace Utilities
 		// Keeping track of how many files are read and the filenames
 		size_t  frame_num;
 		std::vector<std::string> image_files;
+
+		// Could optionally read the bounding box locations from files (each image could have multiple bounding boxes)
+		std::vector<std::vector<cv::Rect_<double> > > bounding_boxes;
 
 		void SetCameraIntrinsics(float fx, float fy, float cx, float cy);
 

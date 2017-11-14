@@ -88,8 +88,10 @@ bool ImageCapture::Open(std::vector<std::string>& arguments)
 	}
 
 	std::string input_directory;
+	std::string bbox_directory;
 
 	bool directory_found = false;
+	has_bounding_boxes = false;
 
 	std::vector<std::string> input_image_files;
 
@@ -116,6 +118,14 @@ bool ImageCapture::Open(std::vector<std::string>& arguments)
 				i++;
 				directory_found = true;
 			}
+		}
+		else if (arguments[i].compare("-bboxdir") == 0)
+		{
+			bbox_directory = (input_root + arguments[i + 1]);
+			valid[i] = false;
+			valid[i + 1] = false;
+			has_bounding_boxes = true;
+			i++;
 		}
 		else if (arguments[i].compare("-fx") == 0)
 		{
@@ -158,7 +168,7 @@ bool ImageCapture::Open(std::vector<std::string>& arguments)
 	}
 	if (!input_directory.empty())
 	{
-		return OpenDirectory(input_directory, fx, fy, cx, cy);
+		return OpenDirectory(input_directory, bbox_directory, fx, fy, cx, cy);
 	}
 
 	// If no input found return false and set a flag for it
@@ -192,7 +202,7 @@ bool ImageCapture::OpenImageFiles(const std::vector<std::string>& image_files, f
 
 }
 
-bool ImageCapture::OpenDirectory(std::string directory, float fx, float fy, float cx, float cy)
+bool ImageCapture::OpenDirectory(std::string directory, std::string bbox_directory, float fx, float fy, float cx, float cy)
 {
 	INFO_STREAM("Attempting to read from directory: " << directory);
 
@@ -215,6 +225,36 @@ bool ImageCapture::OpenDirectory(std::string directory, float fx, float fy, floa
 		if (file_iterator->extension().string().compare(".jpg") == 0 || file_iterator->extension().string().compare(".jpeg") == 0 || file_iterator->extension().string().compare(".png") == 0 || file_iterator->extension().string().compare(".bmp") == 0)
 		{
 			curr_dir_files.push_back(file_iterator->string());
+
+			// If bounding box directory is specified, read the bounding boxes from it
+			if (!bbox_directory.empty())
+			{
+				boost::filesystem::path current_file = *file_iterator;
+				boost::filesystem::path bbox_file = current_file.replace_extension("txt");
+
+				// If there is a bounding box file push it to the list of bounding boxes
+				if (boost::filesystem::exists(bbox_file))
+				{
+					std::ifstream in_bbox(bbox_file.string().c_str(), std::ios_base::in);
+
+					std::vector<cv::Rect_<double> > bboxes_image;
+					while (!in_bbox.eof())
+					{
+						double min_x, min_y, max_x, max_y;
+
+						in_bbox >> min_x >> min_y >> max_x >> max_y;
+						bboxes_image.push_back(cv::Rect_<double>(min_x, min_y, max_x - min_x, max_y - min_y));
+					}
+					in_bbox.close();
+
+					bounding_boxes.push_back(bboxes_image);
+				}
+
+			}
+			else
+			{
+				ERROR_STREAM("Could not find the corresponding bounding box for file:" + file_iterator->string());
+			}
 		}
 	}
 
@@ -342,6 +382,18 @@ cv::Mat ImageCapture::GetNextImage()
 	this->name = boost::filesystem::path(image_files[frame_num - 1]).filename().replace_extension("").string();
 
 	return latest_frame;
+}
+
+std::vector<cv::Rect_<double> > ImageCapture::GetBoundingBoxes()
+{
+	if (!bounding_boxes.empty())
+	{
+		return bounding_boxes[frame_num - 1];
+	}
+	else
+	{
+		return std::vector<cv::Rect_<double> >();
+	}
 }
 
 double ImageCapture::GetProgress()

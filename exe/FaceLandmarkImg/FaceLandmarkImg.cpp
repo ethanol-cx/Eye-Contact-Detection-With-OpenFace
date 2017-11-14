@@ -54,6 +54,13 @@
 #include <FaceAnalyser.h>
 #include <GazeEstimation.h>
 
+#include <ImageCapture.h>
+#include <Visualizer.h>
+#include <VisualizationUtils.h>
+#include <RecorderOpenFace.h>
+#include <RecorderOpenFaceParameters.h>
+
+
 #ifndef CONFIG_DIR
 #define CONFIG_DIR "~"
 #endif
@@ -141,84 +148,52 @@ int main (int argc, char **argv)
 	//Convert arguments to more convenient vector form
 	vector<string> arguments = get_arguments(argc, argv);
 
-	// Some initial parameters that can be overriden from command line
-	vector<string> files, output_images, output_landmark_locations, output_pose_locations;
+	// Prepare for image reading
+	Utilities::ImageCapture image_reader;
 
-	// Bounding boxes for a face in each image (optional)
-	vector<cv::Rect_<double> > bounding_boxes;
-	
-	LandmarkDetector::get_image_input_output_params(files, output_landmark_locations, output_pose_locations, output_images, bounding_boxes, arguments);
-	LandmarkDetector::FaceModelParameters det_parameters(arguments);	
+	// A utility for visualizing the results
+	Utilities::Visualizer visualizer(arguments);
+
+	// The sequence reader chooses what to open based on command line arguments provided
+	if (!image_reader.Open(arguments))
+	{
+		cout << "Could not open any images" << endl;
+		return 1;
+	}
+
+	// Load the models if images found
+	LandmarkDetector::FaceModelParameters det_parameters(arguments);
 	// No need to validate detections, as we're not doing tracking
 	det_parameters.validate_detections = false;
 
-	// Grab camera parameters if provided (only used for pose and eye gaze and are quite important for accurate estimates)
-	float fx = 0, fy = 0, cx = 0, cy = 0;
-	int device = -1;
-	LandmarkDetector::get_camera_params(device, fx, fy, cx, cy, arguments);
-
-	// If cx (optical axis centre) is undefined will use the image size/2 as an estimate
-	bool cx_undefined = false;
-	bool fx_undefined = false;
-	if (cx == 0 || cy == 0)
-	{
-		cx_undefined = true;
-	}
-	if (fx == 0 || fy == 0)
-	{
-		fx_undefined = true;
-	}
-
 	// The modules that are being used for tracking
 	cout << "Loading the model" << endl;
-	LandmarkDetector::CLNF clnf_model(det_parameters.model_location);
+	LandmarkDetector::CLNF face_model(det_parameters.model_location);
 	cout << "Model loaded" << endl;
-	
-	cv::CascadeClassifier classifier(det_parameters.face_detector_location);
-	dlib::frontal_face_detector face_detector_hog = dlib::get_frontal_face_detector();
 
 	// Load facial feature extractor and AU analyser (make sure it is static)
 	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
 	face_analysis_params.OptimizeForImages();
 	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
-	bool visualise = !det_parameters.quiet_mode;
 
-	// Do some image loading
-	for(size_t i = 0; i < files.size(); i++)
+	// If bounding boxes not provided, use a face detector
+	cv::CascadeClassifier classifier(det_parameters.face_detector_location);
+	dlib::frontal_face_detector face_detector_hog = dlib::get_frontal_face_detector();
+
+	cv::Mat captured_image;
+
+	captured_image = image_reader.GetNextImage();
+
+	cout << "Starting tracking" << endl;
+	while (!captured_image.empty())
 	{
-		string file = files.at(i);
 
-		// Loading image
-		cv::Mat read_image = cv::imread(file, -1);
+		Utilities::RecorderOpenFaceParameters recording_params(arguments, false);
+		Utilities::RecorderOpenFace open_face_rec(image_reader.name, recording_params, arguments);
 
-		if (read_image.empty())
-		{
-			cout << "Could not read the input image" << endl;
-			return 1;
-		}
-		
 		// Making sure the image is in uchar grayscale
-		cv::Mat_<uchar> grayscale_image;
-		convert_to_grayscale(read_image, grayscale_image);
-		
-
-		// If optical centers are not defined just use center of image
-		if (cx_undefined)
-		{
-			cx = grayscale_image.cols / 2.0f;
-			cy = grayscale_image.rows / 2.0f;
-		}
-		// Use a rough guess-timate of focal length
-		if (fx_undefined)
-		{
-			fx = 500 * (grayscale_image.cols / 640.0);
-			fy = 500 * (grayscale_image.rows / 480.0);
-
-			fx = (fx + fy) / 2.0;
-			fy = fx;
-		}
-
+		cv::Mat_<uchar> grayscale_image = image_reader.GetGrayFrame();
 
 		// if no pose defined we just use a face detector
 		if(bounding_boxes.empty())
