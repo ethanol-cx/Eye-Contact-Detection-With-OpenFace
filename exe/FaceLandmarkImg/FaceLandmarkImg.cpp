@@ -138,7 +138,7 @@ void create_display_image(const cv::Mat& orig, cv::Mat& display_image, LandmarkD
 
 	}
 
-	LandmarkDetector::Draw(display_image, clnf_model);
+	//LandmarkDetector::Draw(display_image, clnf_model);
 						
 }
 
@@ -176,7 +176,6 @@ int main (int argc, char **argv)
 	face_analysis_params.OptimizeForImages();
 	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
-
 	// If bounding boxes not provided, use a face detector
 	cv::CascadeClassifier classifier(det_parameters.face_detector_location);
 	dlib::frontal_face_detector face_detector_hog = dlib::get_frontal_face_detector();
@@ -195,33 +194,36 @@ int main (int argc, char **argv)
 		// Making sure the image is in uchar grayscale
 		cv::Mat_<uchar> grayscale_image = image_reader.GetGrayFrame();
 
-		// if no pose defined we just use a face detector
-		if(bounding_boxes.empty())
-		{
-			
 			// Detect faces in an image
 			vector<cv::Rect_<double> > face_detections;
 
-			if(det_parameters.curr_face_detector == LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR)
+			if (image_reader.has_bounding_boxes)
 			{
-				vector<double> confidences;
-				LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, face_detector_hog, confidences);
+				face_detections = image_reader.GetBoundingBoxes();
 			}
 			else
 			{
-				LandmarkDetector::DetectFaces(face_detections, grayscale_image, classifier);
+				if (det_parameters.curr_face_detector == LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR)
+				{
+					vector<double> confidences;
+					LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, face_detector_hog, confidences);
+				}
+				else
+				{
+					LandmarkDetector::DetectFaces(face_detections, grayscale_image, classifier);
+				}
 			}
 
 			// Detect landmarks around detected faces
 			int face_det = 0;
 			// perform landmark detection for every face detected
-			for(size_t face=0; face < face_detections.size(); ++face)
+			for (size_t face = 0; face < face_detections.size(); ++face)
 			{
 				// if there are multiple detections go through them
-				bool success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_detections[face], clnf_model, det_parameters);
+				bool success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_detections[face], face_model, det_parameters);
 
 				// Estimate head pose and eye gaze				
-				cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
+				cv::Vec6d headPose = LandmarkDetector::GetPose(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
 
 				// Gaze tracking, absolute gaze direction
 				cv::Point3f gazeDirection0(0, 0, -1);
@@ -230,180 +232,17 @@ int main (int argc, char **argv)
 
 				if (success && det_parameters.track_gaze)
 				{
-					GazeAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
-					GazeAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
+					GazeAnalysis::EstimateGaze(face_model, gazeDirection0, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy, true);
+					GazeAnalysis::EstimateGaze(face_model, gazeDirection1, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy, false);
 					gazeAngle = GazeAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
 				}
 
-				auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model.detected_landmarks, false);
+				auto ActionUnits = face_analyser.PredictStaticAUs(captured_image, face_model.detected_landmarks);
 
-				// Writing out the detected landmarks (in an OS independent manner)
-				if(!output_landmark_locations.empty())
-				{
-					char name[100];
-					// append detection number (in case multiple faces are detected)
-					sprintf(name, "_det_%d", face_det);
+				// TODO visualize
 
-					// Construct the output filename
-					boost::filesystem::path slash("/");
-					std::string preferredSlash = slash.make_preferred().string();
-
-					boost::filesystem::path out_feat_path(output_landmark_locations.at(i));
-					boost::filesystem::path dir = out_feat_path.parent_path();
-					boost::filesystem::path fname = out_feat_path.filename().replace_extension("");
-					boost::filesystem::path ext = out_feat_path.extension();
-					string outfeatures = dir.string() + preferredSlash + fname.string() + string(name) + ext.string();
-					write_out_landmarks(outfeatures, clnf_model, headPose, gazeDirection0, gazeDirection1, gazeAngle,  ActionUnits.first, ActionUnits.second, det_parameters.track_gaze);
-				}
-
-				if (!output_pose_locations.empty())
-				{
-					char name[100];
-					// append detection number (in case multiple faces are detected)
-					sprintf(name, "_det_%d", face_det);
-
-					// Construct the output filename
-					boost::filesystem::path slash("/");
-					std::string preferredSlash = slash.make_preferred().string();
-
-					boost::filesystem::path out_pose_path(output_pose_locations.at(i));
-					boost::filesystem::path dir = out_pose_path.parent_path();
-					boost::filesystem::path fname = out_pose_path.filename().replace_extension("");
-					boost::filesystem::path ext = out_pose_path.extension();
-					string outfeatures = dir.string() + preferredSlash + fname.string() + string(name) + ext.string();
-					write_out_pose_landmarks(outfeatures, clnf_model.GetShape(fx, fy, cx, cy), headPose, gazeDirection0, gazeDirection1);
-
-				}
-
-				if (det_parameters.track_gaze)
-				{
-					cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
-
-					// Draw it in reddish if uncertain, blueish if certain
-					LandmarkDetector::DrawBox(read_image, pose_estimate_to_draw, cv::Scalar(255.0, 0, 0), 3, fx, fy, cx, cy);
-					GazeAnalysis::DrawGaze(read_image, clnf_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
-				}
-
-				// displaying detected landmarks
-				cv::Mat display_image;
-				create_display_image(read_image, display_image, clnf_model);
-
-				if(visualise && success)
-				{
-					imshow("colour", display_image);
-					cv::waitKey(1);
-				}
-
-				// Saving the display images (in an OS independent manner)
-				if(!output_images.empty() && success)
-				{
-					string outimage = output_images.at(i);
-					if(!outimage.empty())
-					{
-						char name[100];
-						sprintf(name, "_det_%d", face_det);
-
-						boost::filesystem::path slash("/");
-						std::string preferredSlash = slash.make_preferred().string();
-
-						// append detection number
-						boost::filesystem::path out_feat_path(outimage);
-						boost::filesystem::path dir = out_feat_path.parent_path();
-						boost::filesystem::path fname = out_feat_path.filename().replace_extension("");
-						boost::filesystem::path ext = out_feat_path.extension();
-						outimage = dir.string() + preferredSlash + fname.string() + string(name) + ext.string();
-						create_directory_from_file(outimage);
-						bool write_success = cv::imwrite(outimage, display_image);	
-						
-						if (!write_success)
-						{
-							cout << "Could not output a processed image" << endl;
-							return 1;
-						}
-
-					}
-
-				}
-
-				if(success)
-				{
-					face_det++;
-				}
-
+				// TODO record
 			}
-		}
-		else
-		{
-			// Have provided bounding boxes
-			LandmarkDetector::DetectLandmarksInImage(grayscale_image, bounding_boxes[i], clnf_model, det_parameters);
-
-			// Estimate head pose and eye gaze				
-			cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
-
-			// Gaze tracking, absolute gaze direction
-			cv::Point3f gazeDirection0(0, 0, -1);
-			cv::Point3f gazeDirection1(0, 0, -1);
-			cv::Vec2d gazeAngle(0, 0);
-
-			if (det_parameters.track_gaze)
-			{
-				GazeAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
-				GazeAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
-				gazeAngle = GazeAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
-			}
-
-			auto ActionUnits = face_analyser.PredictStaticAUs(read_image, clnf_model.detected_landmarks, false);
-
-			// Writing out the detected landmarks
-			if(!output_landmark_locations.empty())
-			{
-				string outfeatures = output_landmark_locations.at(i);
-				write_out_landmarks(outfeatures, clnf_model, headPose, gazeDirection0, gazeDirection1, gazeAngle, ActionUnits.first, ActionUnits.second, det_parameters.track_gaze);
-			}
-
-			// Writing out the detected landmarks
-			if (!output_pose_locations.empty())
-			{
-				string outfeatures = output_pose_locations.at(i);
-				write_out_pose_landmarks(outfeatures, clnf_model.GetShape(fx, fy, cx, cy), headPose, gazeDirection0, gazeDirection1);
-			}
-
-			// displaying detected stuff
-			cv::Mat display_image;
-
-			if (det_parameters.track_gaze)
-			{
-				cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
-
-				// Draw it in reddish if uncertain, blueish if certain
-				LandmarkDetector::DrawBox(read_image, pose_estimate_to_draw, cv::Scalar(255.0, 0, 0), 3, fx, fy, cx, cy);
-				GazeAnalysis::DrawGaze(read_image, clnf_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
-			}
-
-			create_display_image(read_image, display_image, clnf_model);
-
-			if(visualise)
-			{
-				imshow("colour", display_image);
-				cv::waitKey(1);
-			}
-
-			if(!output_images.empty())
-			{
-				string outimage = output_images.at(i);
-				if(!outimage.empty())
-				{
-					create_directory_from_file(outimage);
-					bool write_success = imwrite(outimage, display_image);	
-
-					if (!write_success)
-					{
-						cout << "Could not output a processed image" << endl;
-						return 1;
-					}
-				}
-			}
-		}				
 
 	}
 	
