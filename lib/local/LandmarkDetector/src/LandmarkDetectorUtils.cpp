@@ -766,7 +766,7 @@ vector<cv::Point2d> CalculateVisibleLandmarks(const CLNF& clnf_model)
 	if (clnf_model.detection_success)
 	{
 		int idx = clnf_model.patch_experts.GetViewIdx(clnf_model.params_global, 0);
-		// Because we only draw visible points, need to find which points patch experts consider visible at a certain orientation
+		// Because we may want to draw visible points, need to find which points patch experts consider visible at a certain orientation
 		return CalculateVisibleLandmarks(clnf_model.detected_landmarks, clnf_model.patch_experts.visibilities[0][idx]);
 	}
 	else
@@ -775,12 +775,12 @@ vector<cv::Point2d> CalculateVisibleLandmarks(const CLNF& clnf_model)
 	}
 }
 
-// Computing eye landmarks (to be drawn later or in different interfaces)
+// Computing eye landmarks
 vector<cv::Point2d> CalculateVisibleEyeLandmarks(const CLNF& clnf_model)
 {
 
 	vector<cv::Point2d> to_return;
-	// If the model has hierarchical updates draw those too
+
 	for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
 	{
 
@@ -803,7 +803,7 @@ vector<cv::Point3d> Calculate3DEyeLandmarks(const CLNF& clnf_model, double fx, d
 {
 
 	vector<cv::Point3d> to_return;
-	// If the model has hierarchical updates draw those too
+
 	for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
 	{
 
@@ -824,12 +824,12 @@ vector<cv::Point3d> Calculate3DEyeLandmarks(const CLNF& clnf_model, double fx, d
 	}
 	return to_return;
 }
-// Computing eye landmarks (to be drawn later or in different interfaces)
+// Computing eye landmarks
 vector<cv::Point2d> CalculateAllEyeLandmarks(const CLNF& clnf_model)
 {
 
 	vector<cv::Point2d> to_return;
-	// If the model has hierarchical updates draw those too
+
 	for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
 	{
 

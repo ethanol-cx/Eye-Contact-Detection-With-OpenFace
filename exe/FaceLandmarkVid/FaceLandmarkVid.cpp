@@ -138,10 +138,6 @@ int main (int argc, char **argv)
 			// The actual facial landmark detection / tracking
 			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
 
-			// Visualising the results
-			// Drawing the facial landmarks on the face and the bounding box around it if tracking is successful and initialised
-			double detection_certainty = face_model.detection_certainty;
-
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, -1);
 			cv::Point3f gazeDirection1(0, 0, -1);

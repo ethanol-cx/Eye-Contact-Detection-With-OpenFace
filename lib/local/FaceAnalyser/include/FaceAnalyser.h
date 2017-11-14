@@ -66,8 +66,6 @@ public:
 
 	void AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool success, double timestamp_seconds, bool online = false);
 
-	cv::Mat GetLatestHOGDescriptorVisualisation();
-
 	double GetCurrentTimeSeconds();
 	
 	// Grab the current predictions about AUs from the face analyser
@@ -132,7 +130,6 @@ private:
 	// Cache of intermediate images
 	cv::Mat aligned_face_for_au;
 	cv::Mat aligned_face_for_output;
-	cv::Mat hog_descriptor_visualisation;
 	bool out_grayscale;
 
 	// Private members to be used for predictions

@@ -970,11 +970,6 @@ vector<pair<string, double>> FaceAnalyser::PredictCurrentAUsClass(int view)
 	return predictions;
 }
 
-cv::Mat FaceAnalyser::GetLatestHOGDescriptorVisualisation()
-{
-	return hog_descriptor_visualisation;
-}
-
 vector<pair<string, double>> FaceAnalyser::GetCurrentAUsClass() const
 {
 	return AU_predictions_class;
