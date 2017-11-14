@@ -148,6 +148,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ImageCapture.cpp" />
     <ClCompile Include="src\RecorderCSV.cpp" />
     <ClCompile Include="src\RecorderHOG.cpp" />
     <ClCompile Include="src\RecorderOpenFace.cpp" />
@@ -157,6 +158,7 @@
     <ClCompile Include="src\Visualizer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\ImageCapture.h" />
     <ClInclude Include="include\RecorderCSV.h" />
     <ClInclude Include="include\RecorderHOG.h" />
     <ClInclude Include="include\RecorderOpenFace.h" />

@@ -31,8 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __SEQUENCE_CAPTURE_h_
-#define __SEQUENCE_CAPTURE_h_
+#ifndef __IMAGE_CAPTURE_h_
+#define __IMAGE_CAPTURE_h_
 
 // System includes
 #include <fstream>
@@ -50,12 +50,12 @@ namespace Utilities
 	/**
 	A class for capturing sequences from video, webcam, and image directories
 	*/
-	class SequenceCapture {
+	class ImageCapture {
 
 	public:
 
 		// Default constructor
-		SequenceCapture() {};
+		ImageCapture() {};
 
 		// TODO block copy, move etc.
 
@@ -64,67 +64,46 @@ namespace Utilities
 
 		// Direct opening
 
-		// Webcam
-		bool OpenWebcam(int device_id, int image_width = 640, int image_height = 480, float fx = -1, float fy = -1, float cx = -1, float cy = -1);
-
 		// Image sequence in the directory
-		bool OpenImageSequence(std::string directory, float fx = -1, float fy = -1, float cx = -1, float cy = -1);
+		bool OpenDirectory(std::string directory, float fx = -1, float fy = -1, float cx = -1, float cy = -1);
 
 		// Video file
-		bool OpenVideoFile(std::string video_file, float fx = -1, float fy = -1, float cx = -1, float cy = -1);
+		bool OpenImageFiles(const std::vector<std::string>& image_files, float fx = -1, float fy = -1, float cx = -1, float cy = -1);
 
 		// Getting the next frame
-		cv::Mat GetNextFrame();
+		cv::Mat GetNextImage();
 
-		// Getting the most recent grayscale frame (need to call GetNextFrame first)
+		// Getting the most recent grayscale frame (need to call GetNextImage first)
 		cv::Mat_<uchar> GetGrayFrame();
 
-		// Parameters describing the sequence and it's progress
+		// Parameters describing the sequence and it's progress (what's the proportion of images opened)
 		double GetProgress();
 
-		bool IsOpened();
-
-		int frame_width;
-		int frame_height;
+		int image_width;
+		int image_height;
 
 		float fx, fy, cx, cy;
-
-		double fps;
-
-		double time_stamp;
 
 		// Name of the video file, image directory, or the webcam
 		std::string name;
 
-		// Allows to differentiate if failed because no input specified or if failed to open a specified input
-		bool no_input_specified;
-
 	private:
-
-		// Used for capturing webcam and video
-		cv::VideoCapture capture;
 
 		// Storing the latest captures
 		cv::Mat latest_frame;
 		cv::Mat latest_gray_frame;
 
-
-		// Keeping track if we are opening a video, webcam or image sequence
-		bool is_webcam;
-		bool is_image_seq;
-
-		// Keeping track of frame number and the files in the image sequence
+		// Keeping track of how many files are read and the filenames
 		size_t  frame_num;
 		std::vector<std::string> image_files;
 
-		// Length of video allowing to assess progress
-		size_t vid_length;
-
-		// If using a webcam, helps to keep track of time
-		int64 start_time;
-
 		void SetCameraIntrinsics(float fx, float fy, float cx, float cy);
 
+		// TODO make sure that can set fx, fy externally
+		bool image_intrinsics_set;
+
+		// TODO make sure the error message makes sense
+		bool no_input_specified;
 
 	};
 }
