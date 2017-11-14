@@ -49,7 +49,7 @@ if(~exist(output, 'file'))
     mkdir(output)
 end
 
-command = sprintf('%s -2Dfp -out_dir "%s -mloc model/main_clm_general.txt " ', executable, output);
+command = sprintf('%s -2Dfp -out_dir "%s" -mloc model/main_clm_general.txt ', executable, output);
 
 % add all videos to single argument list (so as not to load the model anew
 % for every video)

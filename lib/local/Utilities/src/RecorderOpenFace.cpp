@@ -130,6 +130,11 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 
 	// Write in the of file what we are outputing what is the input etc.
 	metadata_file.open(of_det_name.string(), std::ios_base::out);
+	if (!metadata_file.is_open())
+	{
+		cout << "ERROR: could not open the output file:" << of_det_name << ", either the path of the output directory is wrong or you do not have the permissions to write to it" << endl;
+		exit(1);
+	}
 
 	// Populate the metadata file
 	metadata_file << "Input:" << in_filename << endl;
