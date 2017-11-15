@@ -249,11 +249,11 @@ bool ImageCapture::OpenDirectory(std::string directory, std::string bbox_directo
 
 					bounding_boxes.push_back(bboxes_image);
 				}
-
-			}
-			else
-			{
-				ERROR_STREAM("Could not find the corresponding bounding box for file:" + file_iterator->string());
+				else
+				{
+					ERROR_STREAM("Could not find the corresponding bounding box for file:" + file_iterator->string());
+					exit(1);
+				}
 			}
 		}
 	}
