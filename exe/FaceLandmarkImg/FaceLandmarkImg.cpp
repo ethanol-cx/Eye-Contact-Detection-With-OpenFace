@@ -194,74 +194,74 @@ int main (int argc, char **argv)
 		// Making sure the image is in uchar grayscale
 		cv::Mat_<uchar> grayscale_image = image_reader.GetGrayFrame();
 
-			// Detect faces in an image
-			vector<cv::Rect_<double> > face_detections;
+		// Detect faces in an image
+		vector<cv::Rect_<double> > face_detections;
 
-			if (image_reader.has_bounding_boxes)
+		if (image_reader.has_bounding_boxes)
+		{
+			face_detections = image_reader.GetBoundingBoxes();
+		}
+		else
+		{
+			if (det_parameters.curr_face_detector == LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR)
 			{
-				face_detections = image_reader.GetBoundingBoxes();
+				vector<double> confidences;
+				LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, face_detector_hog, confidences);
 			}
 			else
 			{
-				if (det_parameters.curr_face_detector == LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR)
-				{
-					vector<double> confidences;
-					LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, face_detector_hog, confidences);
-				}
-				else
-				{
-					LandmarkDetector::DetectFaces(face_detections, grayscale_image, classifier);
-				}
+				LandmarkDetector::DetectFaces(face_detections, grayscale_image, classifier);
 			}
+		}
 
-			// Detect landmarks around detected faces
-			int face_det = 0;
-			// perform landmark detection for every face detected
-			for (size_t face = 0; face < face_detections.size(); ++face)
+		// Detect landmarks around detected faces
+		int face_det = 0;
+		// perform landmark detection for every face detected
+		for (size_t face = 0; face < face_detections.size(); ++face)
+		{
+			// if there are multiple detections go through them
+			bool success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_detections[face], face_model, det_parameters);
+
+			// Estimate head pose and eye gaze				
+			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
+
+			// Gaze tracking, absolute gaze direction
+			cv::Point3f gaze_direction0(0, 0, -1);
+			cv::Point3f gaze_direction1(0, 0, -1);
+			cv::Vec2d gaze_angle(0, 0);
+
+			if (success && det_parameters.track_gaze)
 			{
-				// if there are multiple detections go through them
-				bool success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_detections[face], face_model, det_parameters);
-
-				// Estimate head pose and eye gaze				
-				cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
-
-				// Gaze tracking, absolute gaze direction
-				cv::Point3f gaze_direction0(0, 0, -1);
-				cv::Point3f gaze_direction1(0, 0, -1);
-				cv::Vec2d gaze_angle(0, 0);
-
-				if (success && det_parameters.track_gaze)
-				{
-					GazeAnalysis::EstimateGaze(face_model, gaze_direction0, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy, true);
-					GazeAnalysis::EstimateGaze(face_model, gaze_direction1, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy, false);
-					gaze_angle = GazeAnalysis::GetGazeAngle(gaze_direction0, gaze_direction1);
-				}
-
-				auto ActionUnits = face_analyser.PredictStaticAUs(captured_image, face_model.detected_landmarks);
-
-				// Displaying the tracking visualizations
-				visualizer.SetImage(captured_image, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
-				//visualizer.SetObservationFaceAlign(sim_warped_img); TODO
-				//visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
-				visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.detection_success);
-				visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
-				visualizer.SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy), face_model.detection_certainty);
-				visualizer.ShowObservation();
-
-				// Setting up the recorder output
-				//open_face_rec.SetObservationHOG(detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG, TODO
-				open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
-				open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
-				open_face_rec.SetObservationLandmarks(face_model.detected_landmarks, face_model.GetShape(image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy),
-					face_model.params_global, face_model.params_local, face_model.detection_certainty, face_model.detection_success);
-				open_face_rec.SetObservationPose(pose_estimate);
-				open_face_rec.SetObservationGaze(gaze_direction0, gaze_direction1, gaze_angle, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy));
-				//open_face_rec.SetObservationFaceAlign(sim_warped_img); TODO
-				open_face_rec.WriteObservation();
-
-				// Grabbing the next frame in the sequence
-				captured_image = image_reader.GetNextImage();
+				GazeAnalysis::EstimateGaze(face_model, gaze_direction0, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy, true);
+				GazeAnalysis::EstimateGaze(face_model, gaze_direction1, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy, false);
+				gaze_angle = GazeAnalysis::GetGazeAngle(gaze_direction0, gaze_direction1);
 			}
+
+			auto ActionUnits = face_analyser.PredictStaticAUs(captured_image, face_model.detected_landmarks);
+
+			// Displaying the tracking visualizations
+			visualizer.SetImage(captured_image, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
+			//visualizer.SetObservationFaceAlign(sim_warped_img); TODO
+			//visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
+			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.detection_success);
+			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
+			visualizer.SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy), face_model.detection_certainty);
+			visualizer.ShowObservation();
+
+			// Setting up the recorder output
+			//open_face_rec.SetObservationHOG(detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG, TODO
+			open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
+			open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
+			open_face_rec.SetObservationLandmarks(face_model.detected_landmarks, face_model.GetShape(image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy),
+				face_model.params_global, face_model.params_local, face_model.detection_certainty, face_model.detection_success);
+			open_face_rec.SetObservationPose(pose_estimate);
+			open_face_rec.SetObservationGaze(gaze_direction0, gaze_direction1, gaze_angle, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy));
+			//open_face_rec.SetObservationFaceAlign(sim_warped_img); TODO
+			open_face_rec.WriteObservation();
+
+			// Grabbing the next frame in the sequence
+			captured_image = image_reader.GetNextImage();
+		}
 
 	}
 	
