@@ -182,7 +182,7 @@ int main (int argc, char **argv)
 
 	cv::Mat captured_image;
 
-	captured_image = image_reader.GetNextImage();
+ 	captured_image = image_reader.GetNextImage();
 
 	cout << "Starting tracking" << endl;
 	while (!captured_image.empty())

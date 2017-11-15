@@ -197,7 +197,10 @@ bool ImageCapture::OpenImageFiles(const std::vector<std::string>& image_files, f
 		this->cx = cx;
 		this->cy = cy;
 	}
-
+	else
+	{
+		image_intrinsics_set = false;
+	}
 	return true;
 
 }
@@ -275,7 +278,10 @@ bool ImageCapture::OpenDirectory(std::string directory, std::string bbox_directo
 		this->cx = cx;
 		this->cy = cy;
 	}
-
+	else
+	{
+		image_intrinsics_set = false;
+	}
 	return true;
 
 }
