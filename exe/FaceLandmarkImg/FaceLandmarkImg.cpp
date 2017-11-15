@@ -237,26 +237,35 @@ int main (int argc, char **argv)
 				gaze_angle = GazeAnalysis::GetGazeAngle(gaze_direction0, gaze_direction1);
 			}
 
-			auto ActionUnits = face_analyser.PredictStaticAUs(captured_image, face_model.detected_landmarks);
+			cv::Mat sim_warped_img;
+			cv::Mat_<double> hog_descriptor; int num_hog_rows = 0, num_hog_cols = 0;
+
+			// Perform AU detection and HOG feature extraction, as this can be expensive only compute it if needed by output or visualization
+			if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualizer.vis_align || visualizer.vis_hog)
+			{
+				face_analyser.PredictStaticAUs(captured_image, face_model.detected_landmarks);
+				face_analyser.GetLatestAlignedFace(sim_warped_img);
+				face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
+			}
 
 			// Displaying the tracking visualizations
 			visualizer.SetImage(captured_image, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
-			//visualizer.SetObservationFaceAlign(sim_warped_img); TODO
-			//visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
+			visualizer.SetObservationFaceAlign(sim_warped_img);
+			visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.detection_success);
 			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
 			visualizer.SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy), face_model.detection_certainty);
 			visualizer.ShowObservation();
 
 			// Setting up the recorder output
-			//open_face_rec.SetObservationHOG(detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG, TODO
+			open_face_rec.SetObservationHOG(face_model.detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
 			open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
 			open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
 			open_face_rec.SetObservationLandmarks(face_model.detected_landmarks, face_model.GetShape(image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy),
 				face_model.params_global, face_model.params_local, face_model.detection_certainty, face_model.detection_success);
 			open_face_rec.SetObservationPose(pose_estimate);
 			open_face_rec.SetObservationGaze(gaze_direction0, gaze_direction1, gaze_angle, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy));
-			//open_face_rec.SetObservationFaceAlign(sim_warped_img); TODO
+			open_face_rec.SetObservationFaceAlign(sim_warped_img);
 			open_face_rec.WriteObservation();
 
 			// Grabbing the next frame in the sequence

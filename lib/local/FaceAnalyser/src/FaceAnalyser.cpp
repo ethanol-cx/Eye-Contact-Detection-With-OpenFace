@@ -299,6 +299,9 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 		if (AU_predictions_intensity[au].second > 5)
 			AU_predictions_intensity[au].second = 5;
 	}
+	
+	AU_predictions_reg = AU_predictions_intensity;
+	AU_predictions_class = AU_predictions_occurence;
 
 	return std::pair<std::vector<std::pair<std::string, double>>, std::vector<std::pair<std::string, double>>>(AU_predictions_intensity, AU_predictions_occurence);
 
