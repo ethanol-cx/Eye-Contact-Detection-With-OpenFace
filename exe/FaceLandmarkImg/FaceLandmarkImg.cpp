@@ -191,6 +191,11 @@ int main (int argc, char **argv)
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, false);
 		Utilities::RecorderOpenFace open_face_rec(image_reader.name, recording_params, arguments);
 
+		visualizer.SetImage(captured_image, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
+
+		if (recording_params.outputGaze() && !face_model.eye_model)
+			cout << "WARNING: no eye model defined, but outputting gaze" << endl;
+
 		// Making sure the image is in uchar grayscale
 		cv::Mat_<uchar> grayscale_image = image_reader.GetGrayFrame();
 
@@ -230,7 +235,7 @@ int main (int argc, char **argv)
 			cv::Point3f gaze_direction1(0, 0, -1);
 			cv::Vec2d gaze_angle(0, 0);
 
-			if (success && det_parameters.track_gaze)
+			if (success && face_model.eye_model)
 			{
 				GazeAnalysis::EstimateGaze(face_model, gaze_direction0, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy, true);
 				GazeAnalysis::EstimateGaze(face_model, gaze_direction1, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy, false);
@@ -249,13 +254,11 @@ int main (int argc, char **argv)
 			}
 
 			// Displaying the tracking visualizations
-			visualizer.SetImage(captured_image, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
 			visualizer.SetObservationFaceAlign(sim_warped_img);
 			visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.detection_success);
 			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
 			visualizer.SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy), face_model.detection_certainty);
-			visualizer.ShowObservation();
 
 			// Setting up the recorder output
 			open_face_rec.SetObservationHOG(face_model.detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
@@ -271,6 +274,7 @@ int main (int argc, char **argv)
 			// Grabbing the next frame in the sequence
 			captured_image = image_reader.GetNextImage();
 		}
+		visualizer.ShowObservation();
 
 	}
 	

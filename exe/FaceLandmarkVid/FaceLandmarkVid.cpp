@@ -92,7 +92,6 @@ int main (int argc, char **argv)
 	vector<string> arguments = get_arguments(argc, argv);
 
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);
-	det_parameters.track_gaze = true;
 
 	// The modules that are being used for tracking
 	LandmarkDetector::CLNF face_model(det_parameters.model_location);
@@ -142,7 +141,8 @@ int main (int argc, char **argv)
 			cv::Point3f gazeDirection0(0, 0, -1);
 			cv::Point3f gazeDirection1(0, 0, -1);
 
-			if (det_parameters.track_gaze && detection_success && face_model.eye_model)
+			// If tracking succeeded and we have an eye model, estimate gaze
+			if (detection_success && face_model.eye_model)
 			{
 				GazeAnalysis::EstimateGaze(face_model, gazeDirection0, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, true);
 				GazeAnalysis::EstimateGaze(face_model, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, false);

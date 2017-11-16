@@ -65,7 +65,8 @@ void CreateDirectory(std::string output_path)
 
 		if (!success)
 		{
-			std::cout << "Failed to create a directory..." << p.string() << std::endl;
+			std::cout << "ERROR: failed to create output directory:" << p.string() << ", do you have permission to create directory" << std::endl;
+			exit(1);
 		}
 	}
 }
@@ -85,7 +86,6 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 		valid[i] = true;
 	}
 
-	string record_root;
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
 		if (arguments[i].compare("-outroot") == 0)

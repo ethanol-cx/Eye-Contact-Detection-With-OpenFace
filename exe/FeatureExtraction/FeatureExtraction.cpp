@@ -107,7 +107,6 @@ int main (int argc, char **argv)
 	// Load face landmark detector
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);
 	// Always track gaze in feature extraction
-	det_parameters.track_gaze = true;
 	LandmarkDetector::CLNF face_model(det_parameters.model_location);
 
 	// Load facial feature extractor and AU analyser
@@ -137,6 +136,9 @@ int main (int argc, char **argv)
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.fps);
 		Utilities::RecorderOpenFace open_face_rec(sequence_reader.name, recording_params, arguments);
 
+		if (recording_params.outputGaze() && !face_model.eye_model)
+			cout << "WARNING: no eye model defined, but outputting gaze" << endl;
+
 		captured_image = sequence_reader.GetNextFrame();
 
 		// For reporting progress
@@ -155,7 +157,7 @@ int main (int argc, char **argv)
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, -1); cv::Point3f gazeDirection1(0, 0, -1); cv::Vec2d gazeAngle(0, 0);
 
-			if (det_parameters.track_gaze && detection_success && face_model.eye_model)
+			if (detection_success && face_model.eye_model)
 			{
 				GazeAnalysis::EstimateGaze(face_model, gazeDirection0, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, true);
 				GazeAnalysis::EstimateGaze(face_model, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, false);
