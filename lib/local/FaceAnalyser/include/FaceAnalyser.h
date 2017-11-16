@@ -73,9 +73,8 @@ public:
 	std::vector<std::pair<std::string, double>> GetCurrentAUsReg() const;   // AU intensity
 	std::vector<std::pair<std::string, double>> GetCurrentAUsCombined() const; // Both presense and intensity
 
-	// A standalone call for predicting AUs from a static image, the first element in the pair represents occurence the second intensity
-	// This call is useful for detecting action units in images
-	std::pair<std::vector<std::pair<std::string, double>>, std::vector<std::pair<std::string, double>>> PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks);
+	// A standalone call for predicting AUs and computing face texture features from a static image
+	void PredictStaticAUsAndComputeFeatures(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks);
 
 	void Reset();
 

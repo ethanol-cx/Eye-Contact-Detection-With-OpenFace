@@ -248,7 +248,7 @@ int GetViewId(const vector<cv::Vec3d> orientations_all, const cv::Vec3d& orienta
 	
 }
 
-std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, double>>> FaceAnalyser::PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks)
+void FaceAnalyser::PredictStaticAUsAndComputeFeatures(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks)
 {
 	
 	// Extract shape parameters from the detected landmarks
@@ -259,6 +259,16 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 	// First align the face
 	AlignFaceMask(aligned_face_for_au, frame, detected_landmarks, params_global, pdm, triangulation, true, 0.7, 112, 112);
 	
+	// If the output requirement matches use the already computed one, else compute it again
+	if (align_scale_out == align_scale_au && align_width_out == align_width_au && align_height_out == align_height_au)
+	{
+		aligned_face_for_output = aligned_face_for_au.clone();
+	}
+	else
+	{
+		AlignFaceMask(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_out, align_width_out, align_height_out);
+	}
+
 	// Extract HOG descriptor from the frame and convert it to a useable format
 	cv::Mat_<double> hog_descriptor;
 	Extract_FHOG_descriptor(hog_descriptor, aligned_face_for_au, this->num_hog_rows, this->num_hog_cols);
@@ -302,8 +312,6 @@ std::pair<std::vector<std::pair<string, double>>, std::vector<std::pair<string, 
 	
 	AU_predictions_reg = AU_predictions_intensity;
 	AU_predictions_class = AU_predictions_occurence;
-
-	return std::pair<std::vector<std::pair<std::string, double>>, std::vector<std::pair<std::string, double>>>(AU_predictions_intensity, AU_predictions_occurence);
 
 }
 

@@ -82,6 +82,7 @@ Visualizer::Visualizer(bool vis_track, bool vis_hog, bool vis_align)
 	this->vis_align = vis_align;
 }
 
+// Setting the image on which to draw
 void Visualizer::SetImage(const cv::Mat& canvas, float fx, float fy, float cx, float cy)
 {
 	captured_image = canvas.clone();
@@ -89,20 +90,42 @@ void Visualizer::SetImage(const cv::Mat& canvas, float fx, float fy, float cx, f
 	this->fy = fy;
 	this->cx = cx;
 	this->cy = cy;
+
+	// Clearing other images
+	hog_image = cv::Mat();
+	aligned_face_image = cv::Mat();
+
 }
 
 
 void Visualizer::SetObservationFaceAlign(const cv::Mat& aligned_face)
 {
-	this->aligned_face_image = aligned_face;
+	if(this->aligned_face_image.empty())
+	{
+		this->aligned_face_image = aligned_face;
+	}
+	else
+	{
+		cv::vconcat(this->aligned_face_image, aligned_face, this->aligned_face_image);
+	}
 }
 
 void Visualizer::SetObservationHOG(const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows)
 {
 	if(vis_hog)
 	{
-		Visualise_FHOG(hog_descriptor, num_rows, num_cols, this->hog_image);
+		if (this->hog_image.empty())
+		{
+			Visualise_FHOG(hog_descriptor, num_rows, num_cols, this->hog_image);
+		}
+		else
+		{
+			cv::Mat tmp_hog;
+			Visualise_FHOG(hog_descriptor, num_rows, num_cols, tmp_hog);
+			cv::vconcat(this->hog_image, tmp_hog, this->hog_image);
+		}
 	}
+
 }
 
 

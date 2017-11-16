@@ -248,7 +248,7 @@ int main (int argc, char **argv)
 			// Perform AU detection and HOG feature extraction, as this can be expensive only compute it if needed by output or visualization
 			if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualizer.vis_align || visualizer.vis_hog)
 			{
-				face_analyser.PredictStaticAUs(captured_image, face_model.detected_landmarks);
+				face_analyser.PredictStaticAUsAndComputeFeatures(captured_image, face_model.detected_landmarks);
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 				face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			}
@@ -271,10 +271,11 @@ int main (int argc, char **argv)
 			open_face_rec.SetObservationFaceAlign(sim_warped_img);
 			open_face_rec.WriteObservation();
 
-			// Grabbing the next frame in the sequence
-			captured_image = image_reader.GetNextImage();
 		}
 		visualizer.ShowObservation();
+
+		// Grabbing the next frame in the sequence
+		captured_image = image_reader.GetNextImage();
 
 	}
 	
