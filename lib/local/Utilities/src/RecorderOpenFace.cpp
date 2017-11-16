@@ -86,21 +86,13 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 		valid[i] = true;
 	}
 
-	for (size_t i = 0; i < arguments.size(); ++i)
-	{
-		if (arguments[i].compare("-outroot") == 0)
-		{
-			record_root = arguments[i + 1];
-		}
-	}
-
 	// Determine output directory
 	bool output_found = false;
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
 		if (arguments[i].compare("-out_dir") == 0)
 		{
-			record_root = (boost::filesystem::path(record_root) / boost::filesystem::path(arguments[i + 1])).string();
+			record_root = arguments[i + 1];
 		}
 		else if (!output_found && arguments[i].compare("-of") == 0)
 		{
@@ -152,16 +144,17 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 	}
 
 	// saving the videos	
-	if (params.outputTrackedVideo())
+	if (params.outputTracked())
 	{
-		this->video_filename = (path(record_root) / path(filename).replace_extension(".avi")).string();
 		if(parameters.isSequence())
 		{
-			metadata_file << "Output video:" << this->video_filename << endl;
+			this->media_filename = (path(record_root) / path(filename).replace_extension(".avi")).string();
+			metadata_file << "Output video:" << this->media_filename << endl;
 		}
 		else
 		{
-			metadata_file << "Output image:" << this->video_filename << endl;
+			this->media_filename = (path(record_root) / path(filename).replace_extension(".bmp")).string();
+			metadata_file << "Output image:" << this->media_filename << endl;
 		}
 	}
 
@@ -185,7 +178,7 @@ void RecorderOpenFace::SetObservationFaceAlign(const cv::Mat& aligned_face)
 
 void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 {
-	if (params.outputTrackedVideo())
+	if (params.outputTracked())
 	{
 		// Initialize the video writer if it has not been opened yet
 		if(!video_writer.isOpened())
@@ -256,7 +249,10 @@ void RecorderOpenFace::WriteObservation()
 		char name[100];
 
 		// Filename is based on frame number
-		std::sprintf(name, "frame_det_%06d.bmp", observation_count);
+		if(params.isSequence())
+			std::sprintf(name, "frame_det_%06d.bmp", observation_count);
+		else
+			std::sprintf(name, "face_det_%06d.bmp", observation_count);
 
 		// Construct the output filename
 		boost::filesystem::path slash("/");
@@ -272,13 +268,25 @@ void RecorderOpenFace::WriteObservation()
 		}
 	}
 
-	if(params.outputTrackedVideo())
+	if(params.outputTracked())
 	{
 		if (vis_to_out.empty())
 		{
 			WARN_STREAM("Output tracked video frame is not set");
 		}
-		video_writer.write(vis_to_out);
+
+		if(video_writer.isOpened())
+		{
+			video_writer.write(vis_to_out);
+		}
+		else
+		{
+			bool out_success = cv::imwrite(media_filename, vis_to_out);
+			if (!out_success)
+			{
+				WARN_STREAM("Could not output tracked image");
+			}
+		}
 		// Clear the output
 		vis_to_out = cv::Mat();
 	}

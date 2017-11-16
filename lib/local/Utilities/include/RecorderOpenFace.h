@@ -144,7 +144,7 @@ namespace Utilities
 
 		// For video writing
 		cv::VideoWriter video_writer;
-		std::string video_filename;
+		std::string media_filename;
 		cv::Mat vis_to_out;
 
 		// For aligned face writing

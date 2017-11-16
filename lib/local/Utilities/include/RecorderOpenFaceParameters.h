@@ -63,7 +63,7 @@ namespace Utilities
 		bool outputAUs() const { return output_AUs; }
 		bool outputGaze() const { return output_gaze; }
 		bool outputHOG() const { return output_hog; }
-		bool outputTrackedVideo() const { return output_tracked_video; }
+		bool outputTracked() const { return output_tracked; }
 		bool outputAlignedFaces() const { return output_aligned_faces; }
 		std::string outputCodec() const { return output_codec; }
 		double outputFps() const { return fps_vid_out; }
@@ -81,7 +81,7 @@ namespace Utilities
 		bool output_AUs;
 		bool output_gaze;
 		bool output_hog;
-		bool output_tracked_video;
+		bool output_tracked;
 		bool output_aligned_faces;
 		
 		// Some video recording parameters
