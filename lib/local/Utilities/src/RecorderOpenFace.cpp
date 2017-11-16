@@ -86,15 +86,19 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 		valid[i] = true;
 	}
 
-	// Determine output directory
-	bool output_found = false;
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
 		if (arguments[i].compare("-out_dir") == 0)
 		{
 			record_root = arguments[i + 1];
 		}
-		else if (!output_found && arguments[i].compare("-of") == 0)
+	}
+
+	// Determine output directory
+	bool output_found = false;
+	for (size_t i = 0; i < arguments.size(); ++i)
+	{
+		if (!output_found && arguments[i].compare("-of") == 0)
 		{
 			record_root = (boost::filesystem::path(record_root) / boost::filesystem::path(arguments[i + 1])).remove_filename().string();
 			filename = path(boost::filesystem::path(arguments[i + 1])).replace_extension("").filename().string();
