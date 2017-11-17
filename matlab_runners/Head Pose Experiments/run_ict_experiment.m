@@ -15,7 +15,7 @@ dbSeqDir = dbSeqDir(3:end);
 
 output_dir = cat(2, output_dir, '/');
 
-command = sprintf('%s -inroot "%s" -outroot "%s" -fx 535 -fy 536 -cx 327 -cy 241 -pose -vis-track ', executable, rootDir, output_dir);      
+command = sprintf('%s -inroot "%s" -out_dir "%s" -fx 535 -fy 536 -cx 327 -cy 241 -pose -vis-track ', executable, rootDir, output_dir);      
      
 if(verbose)
     command = cat(2, command, [' -tracked ' outputVideo]);

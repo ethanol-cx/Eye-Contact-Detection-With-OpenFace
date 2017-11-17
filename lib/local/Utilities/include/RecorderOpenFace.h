@@ -104,7 +104,8 @@ namespace Utilities
 		const RecorderOpenFaceParameters params;
 
 		// Keep track of the file and output root location
-		std::string record_root = "processed"; // By default we are writing in the processed directory in the working directory 
+		std::string record_root;
+		std::string default_record_directory = "processed"; // By default we are writing in the processed directory in the working directory, if no output parameters provided
 		std::string of_filename;
 		std::string filename;
 		std::string csv_filename;

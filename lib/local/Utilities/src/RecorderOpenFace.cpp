@@ -109,6 +109,10 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 		}
 	}
 
+	// If recording directory not set, record to default location
+	if (record_root.empty())
+		record_root = default_record_directory;
+
 	for (int i = (int)arguments.size() - 1; i >= 0; --i)
 	{
 		if (!valid[i])

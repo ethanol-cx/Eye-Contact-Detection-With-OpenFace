@@ -73,7 +73,7 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 	output_AUs = false;
 	output_gaze = false;
 	output_hog = false;
-	output_tracked_video = false;
+	output_tracked = false;
 	output_aligned_faces = false;
 
 	for (size_t i = 0; i < arguments.size(); ++i)
@@ -120,7 +120,7 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 		}
 		else if (arguments[i].compare("-tracked") == 0)
 		{
-			output_tracked_video = true;
+			output_tracked = true;
 			output_set = true;
 		}
 	}
@@ -136,7 +136,7 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 		output_AUs = true;
 		output_gaze = true;
 		output_hog = true;
-		output_tracked_video = true;
+		output_tracked = true;
 		output_aligned_faces = true;
 	}
 
