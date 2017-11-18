@@ -49,21 +49,6 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 	// Default output code
 	this->output_codec = "DIVX";
 
-	// First check if there is a root argument (so that videos and outputs could be defined more easilly)
-	for (size_t i = 0; i < arguments.size(); ++i)
-	{
-		if (arguments[i].compare("-root") == 0)
-		{
-			output_root = arguments[i + 1] + separator;
-			i++;
-		}
-		if (arguments[i].compare("-outroot") == 0)
-		{
-			output_root = arguments[i + 1] + separator;
-			i++;
-		}
-	}
-
 	bool output_set = false;
 
 	output_2D_landmarks = false;

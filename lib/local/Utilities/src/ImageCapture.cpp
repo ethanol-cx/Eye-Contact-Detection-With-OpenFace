@@ -241,11 +241,21 @@ bool ImageCapture::OpenDirectory(std::string directory, std::string bbox_directo
 					std::ifstream in_bbox(bbox_file.string().c_str(), std::ios_base::in);
 
 					std::vector<cv::Rect_<double> > bboxes_image;
+
+					// Keep reading bounding boxes from a file, stop if empty line or 
 					while (!in_bbox.eof())
 					{
+						std::string bbox_string;
+						std::getline(in_bbox, bbox_string);
+
+						if (bbox_string.empty())
+							continue;
+
+						std::stringstream ss(bbox_string);
+
 						double min_x, min_y, max_x, max_y;
 
-						in_bbox >> min_x >> min_y >> max_x >> max_y;
+						ss >> min_x >> min_y >> max_x >> max_y;
 						bboxes_image.push_back(cv::Rect_<double>(min_x, min_y, max_x - min_x, max_y - min_y));
 					}
 					in_bbox.close();

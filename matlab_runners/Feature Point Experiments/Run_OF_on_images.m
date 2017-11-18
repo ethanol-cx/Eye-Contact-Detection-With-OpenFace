@@ -26,9 +26,9 @@ else
 end
       
 if(isunix)
-    command = '"../../build/bin/FaceLandmarkImg"';
+    executable = '"../../build/bin/FaceLandmarkImg"';
 else
-    command = '"../../x64/Release/FaceLandmarkImg.exe"';
+    executable = '"../../x64/Release/FaceLandmarkImg.exe"';
 end
     
 if(any(strcmp(varargin, 'model')))
@@ -44,24 +44,15 @@ else
     multi_view = 0;
 end
 
-command = cat(2, command, [' -mloc ' model ' ']);
-command = cat(2, command, [' -multi_view ' num2str(multi_view) ' ']);
-   
-tic
-parfor i=1:numel(dataset_dirs)
+command = sprintf("%s -mloc %s -multiview %s -2Dfp -tracked ", executable, model, num2str(multi_view));
 
-    input_loc = ['-fdir "', dataset_dirs{i}, '" '];
-    command_c = cat(2, command, input_loc);
-        
-    out_loc = ['-ofdir "', output_loc, '" '];
-    command_c = cat(2, command_c, out_loc);
- 
-    if(verbose)
-        out_im_loc = ['-oidir "', output_loc, '" '];
-        command_c = cat(2, command_c, out_im_loc);
-    end
+% TODO just landmarks + BBoxes
+
+tic
+for i=1:numel(dataset_dirs)
     
-    command_c = cat(2, command_c, ' -wild ');
+    command_c = sprintf('%s -fdir "%s" -bboxdir "%s" -out_dir "%s" -wild ',...
+        command, dataset_dirs{i},  dataset_dirs{i}, output_loc);
     
     if(isunix)
         unix(command_c, '-echo');

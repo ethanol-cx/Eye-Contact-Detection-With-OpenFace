@@ -189,13 +189,12 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 	if (params.outputTracked())
 	{
 		// Initialize the video writer if it has not been opened yet
-		if(!video_writer.isOpened())
+		if(video_writer.isOpened())
 		{
-			std::string video_filename = (path(record_root) / path(filename).replace_extension(".avi")).string();
 			std::string output_codec = params.outputCodec();
 			try
 			{
-				video_writer.open(video_filename, CV_FOURCC(output_codec[0], output_codec[1], output_codec[2], output_codec[3]), params.outputFps(), vis_track.size(), true);
+				video_writer.open(media_filename, CV_FOURCC(output_codec[0], output_codec[1], output_codec[2], output_codec[3]), params.outputFps(), vis_track.size(), true);
 			}
 			catch (cv::Exception e)
 			{

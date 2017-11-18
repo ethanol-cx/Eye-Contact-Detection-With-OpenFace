@@ -88,8 +88,6 @@ namespace Utilities
 		std::string output_codec;
 		double fps_vid_out;
 
-		// For output location
-		std::string output_root = "";
 	};
 
 }
