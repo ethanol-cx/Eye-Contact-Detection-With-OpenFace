@@ -369,18 +369,19 @@ void ImageCapture::SetCameraIntrinsics(float fx, float fy, float cx, float cy)
 
 cv::Mat ImageCapture::GetNextImage()
 {
-	frame_num++;
-	if (image_files.empty() || frame_num - 1 > image_files.size())
+	if (image_files.empty() || frame_num >= image_files.size())
 	{
 		// Indicate lack of success by returning an empty image
 		latest_frame = cv::Mat();
+		return latest_frame;
 	}
-
-	latest_frame = cv::imread(image_files[frame_num - 1], -1);
+		
+	latest_frame = cv::imread(image_files[frame_num], -1);
 
 	if (latest_frame.empty())
 	{
 		ERROR_STREAM("Could not open the image: " + image_files[frame_num - 1]);
+		exit(1);
 	}
 
 	image_height = latest_frame.size().height;
@@ -395,7 +396,9 @@ cv::Mat ImageCapture::GetNextImage()
 	// Set the grayscale frame
 	convertToGrayscale(latest_frame, latest_gray_frame);
 
-	this->name = boost::filesystem::path(image_files[frame_num - 1]).filename().replace_extension("").string();
+	this->name = boost::filesystem::path(image_files[frame_num]).filename().replace_extension("").string();
+
+	frame_num++;
 
 	return latest_frame;
 }

@@ -160,8 +160,6 @@ int main (int argc, char **argv)
 
 	// Load the models if images found
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);
-	// No need to validate detections, as we're not doing tracking
-	det_parameters.validate_detections = false;
 
 	// The modules that are being used for tracking
 	cout << "Loading the model" << endl;
@@ -256,8 +254,8 @@ int main (int argc, char **argv)
 			// Displaying the tracking visualizations
 			visualizer.SetObservationFaceAlign(sim_warped_img);
 			visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
-			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.detection_success);
-			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
+			visualizer.SetObservationLandmarks(face_model.detected_landmarks, 1.0, face_model.detection_success); // Set confidence to high to make sure we always visualize
+			visualizer.SetObservationPose(pose_estimate, 1.0);
 			visualizer.SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy), face_model.detection_certainty);
 
 			// Setting up the recorder output
