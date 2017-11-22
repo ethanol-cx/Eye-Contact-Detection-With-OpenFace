@@ -106,6 +106,8 @@ int main (int argc, char **argv)
 	Utilities::FpsTracker fps_tracker;
 	fps_tracker.AddFrame();
 
+	int sequence_number = 0;
+
 	while (true) // this is not a for loop as we might also be reading from a webcam
 	{
 
@@ -113,7 +115,7 @@ int main (int argc, char **argv)
 		if(!sequence_reader.Open(arguments))
 		{
 			// If failed to open because no input files specified, attempt to open a webcam
-			if (sequence_reader.no_input_specified)
+			if (sequence_reader.no_input_specified && sequence_number == 0)
 			{
 				// If that fails, revert to webcam
 				INFO_STREAM("No input specified, attempting to open a webcam 0");
@@ -189,6 +191,8 @@ int main (int argc, char **argv)
 		
 		// Reset the model, for the next video
 		face_model.Reset();
+
+		sequence_number++;
 
 	}
 	return 0;

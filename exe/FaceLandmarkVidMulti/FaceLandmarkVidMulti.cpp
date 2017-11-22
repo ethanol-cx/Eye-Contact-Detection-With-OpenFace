@@ -152,6 +152,8 @@ int main (int argc, char **argv)
 	Utilities::FpsTracker fps_tracker;
 	fps_tracker.AddFrame();
 
+	int sequence_number = 0;
+
 	while(true) // this is not a for loop as we might also be reading from a webcam
 	{
 
@@ -159,7 +161,7 @@ int main (int argc, char **argv)
 		if (!sequence_reader.Open(arguments))
 		{
 			// If failed to open because no input files specified, attempt to open a webcam
-			if (sequence_reader.no_input_specified)
+			if (sequence_reader.no_input_specified && sequence_number == 0)
 			{
 				// If that fails, revert to webcam
 				INFO_STREAM("No input specified, attempting to open a webcam 0");
@@ -290,11 +292,11 @@ int main (int argc, char **argv)
 				{
 					visualizer.SetObservationLandmarks(face_models[model].detected_landmarks, face_models[model].detection_certainty, face_models[model].detection_success);
 					visualizer.SetObservationPose(LandmarkDetector::GetPose(face_models[model], sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_models[model].detection_certainty);
-					visualizer.SetFps(fps_tracker.GetFPS());
-					visualizer.ShowObservation();
 				}
 			}
-					
+			visualizer.SetFps(fps_tracker.GetFPS());
+			visualizer.ShowObservation();
+
 			// detect key presses
 			char character_press = cv::waitKey(1);
 			
