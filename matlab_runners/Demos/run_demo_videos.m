@@ -1,3 +1,5 @@
+% A demo how to run a single-face face tracker
+
 clear
 
 if(isunix)
@@ -5,8 +7,6 @@ if(isunix)
 else
     executable = '"../../x64/Release/FaceLandmarkVid.exe"';
 end
-
-output = './demo_vids/';
     
 in_files = dir('../../samples/*.wmv');
 in_files = cat(1, in_files, dir('../../samples/*.avi'));
