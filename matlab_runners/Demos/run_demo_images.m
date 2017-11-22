@@ -23,7 +23,7 @@ command = sprintf('%s -fdir "%s" -out_dir "%s" -verbose -mloc "%s" ', executable
 % Demonstrates the multi-hypothesis slow landmark detection (more accurate
 % when dealing with non-frontal faces and less accurate face detections)
 % Comment to skip this functionality
-command = cat(2, command, ' -wild ');
+command = cat(2, command, ' -wild -multi_view 1');
 
 if(isunix)
     unix(command);
