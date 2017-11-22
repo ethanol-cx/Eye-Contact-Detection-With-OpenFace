@@ -71,7 +71,7 @@ dirs = {[database_root '/AFW/'];
     [database_root '/helen/testset/'];
     [database_root 'lfpw/testset/'];};
 
-landmark_dets = dir([output_loc '/*.pts']);
+landmark_dets = dir([output_loc '/*.csv']);
 
 landmark_det_dir = [output_loc '/'];
 
@@ -86,7 +86,7 @@ curr = 0;
 for i=1:numel(dirs)
     
     
-    gt_labels = dir([dirs{i}, '*.pts']);
+    gt_labels = dir([dirs{i}, '*.pts']); 
     
     for g=1:numel(gt_labels)
         curr = curr+1;
