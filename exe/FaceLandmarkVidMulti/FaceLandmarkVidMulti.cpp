@@ -295,10 +295,9 @@ int main (int argc, char **argv)
 				}
 			}
 			visualizer.SetFps(fps_tracker.GetFPS());
-			visualizer.ShowObservation();
 
-			// detect key presses
-			char character_press = cv::waitKey(1);
+			// show visualization and detect key presses
+			char character_press = visualizer.ShowObservation();
 			
 			// restart the trackers
 			if(character_press == 'r')
@@ -312,7 +311,7 @@ int main (int argc, char **argv)
 			// quit the application
 			else if(character_press=='q')
 			{
-				return(0);
+				return 0;
 			}
 
 			// Update the frame count
@@ -331,6 +330,8 @@ int main (int argc, char **argv)
 			face_models[model].Reset();
 			active_models[model] = false;
 		}
+
+		sequence_number++;
 
 	}
 

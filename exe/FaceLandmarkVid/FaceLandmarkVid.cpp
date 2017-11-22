@@ -168,10 +168,8 @@ int main (int argc, char **argv)
 			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
 			visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_model.detection_certainty);
 			visualizer.SetFps(fps_tracker.GetFPS());
-			visualizer.ShowObservation();
-
-			// detect key presses
-			char character_press = cv::waitKey(1);
+			// detect key presses (due to pecularities of OpenCV, you can get it when displaying images)
+			char character_press = visualizer.ShowObservation();
 
 			// restart the tracker
 			if (character_press == 'r')

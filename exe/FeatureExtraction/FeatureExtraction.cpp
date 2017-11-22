@@ -190,7 +190,15 @@ int main (int argc, char **argv)
 			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
 			visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_model.detection_certainty);
 			visualizer.SetFps(fps_tracker.GetFPS());
-			visualizer.ShowObservation();
+
+			// detect key presses
+			char character_press = visualizer.ShowObservation();
+
+			// quit processing the current sequence (useful when in Webcam mode)
+			if (character_press == 'q')
+			{
+				break;
+			}
 
 			// Setting up the recorder output
 			open_face_rec.SetObservationHOG(detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG

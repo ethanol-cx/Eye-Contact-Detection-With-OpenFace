@@ -82,7 +82,8 @@ namespace Utilities
 
 		void SetFps(double fps);
 
-		void ShowObservation();
+		// Return key-press that could have resulted in the open windows
+		char ShowObservation();
 
 		cv::Mat GetVisImage();
 

@@ -19,9 +19,8 @@ model = 'model/main_clnf_general.txt'; % Trained on in the wild and multi-pie da
 %model = 'model/main_clm_general.txt'; % Trained on in the wild and multi-pie data (less accurate SVR/CLM model)
 %model = 'model/main_clm_wild.txt'; % Trained on in-the-wild
 
-% Create a command that will run the tracker on set of videos, 
-% and visualize the output (-verbose)
-command = sprintf('%s -mloc "%s" -verbose', executable, model);
+% Create a command that will run the tracker on set of videos and display the output 
+command = sprintf('%s -mloc "%s" ', executable, model);
 
 % add all videos to single argument list (so as not to load the model anew
 % for every video)

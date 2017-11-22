@@ -265,7 +265,7 @@ void Visualizer::SetFps(double fps)
 	cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, CV_AA);
 }
 
-void Visualizer::ShowObservation()
+char Visualizer::ShowObservation()
 {
 	if (vis_track)
 	{
@@ -280,7 +280,7 @@ void Visualizer::ShowObservation()
 	{
 		cv::imshow("hog", hog_image);
 	}
-	cv::waitKey(1);
+	return cv::waitKey(1);
 }
 
 cv::Mat Visualizer::GetVisImage()
