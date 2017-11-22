@@ -156,19 +156,25 @@ int main (int argc, char **argv)
 	{
 
 		// The sequence reader chooses what to open based on command line arguments provided
-		if (!sequence_reader.Open(arguments) && sequence_reader.no_input_specified)
+		if (!sequence_reader.Open(arguments))
 		{
-			// If that fails, revert to webcam
-			INFO_STREAM("No input specified, attempting to open a webcam 0");
-			if (!sequence_reader.OpenWebcam(0))
-				ERROR_STREAM("Failed to open the webcam");
+			// If failed to open because no input files specified, attempt to open a webcam
+			if (sequence_reader.no_input_specified)
+			{
+				// If that fails, revert to webcam
+				INFO_STREAM("No input specified, attempting to open a webcam 0");
+				if (!sequence_reader.OpenWebcam(0))
+				{
+					ERROR_STREAM("Failed to open the webcam");
+					break;
+				}
+			}
+			else
+			{
+				ERROR_STREAM("Failed to open a sequence");
+				break;
+			}
 		}
-		else
-		{
-			ERROR_STREAM("Failed to open a sequence");
-			break;
-		}
-
 		INFO_STREAM("Device or file opened");
 
 		cv::Mat captured_image = sequence_reader.GetNextFrame();
