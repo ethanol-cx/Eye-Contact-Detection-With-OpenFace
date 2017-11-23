@@ -137,7 +137,7 @@ au_class_inds = cellfun(@(x) ~isempty(x) && x==5, strfind(column_names, '_c'));
 
 aus = all_params(valid_frames, au_class_inds);
 figure
-plot(time, aus);
+plot(time_stamps, aus);
 title('Facial Action Units (presense)');
 xlabel('Time (s)');
 ylim([0,2]);
@@ -146,7 +146,7 @@ pose_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'pose_'));
 
 pose = all_params(valid_frames, pose_inds);
 figure
-plot(pose);
+plot(time_stamps, pose);
 title('Pose (rotation and translation)');
 xlabel('Time (s)');
 
@@ -158,7 +158,7 @@ gaze = all_params(valid_frames, gaze_inds);
 
 plot(time, gaze(:,1), 'DisplayName', 'Left - right');
 hold on;
-plot(time, gaze(:,2), 'DisplayName', 'Up - down');
+plot(time_stamps, gaze(:,2), 'DisplayName', 'Up - down');
 xlabel('Time(s)') % x-axis label
 ylabel('Angle radians') % y-axis label
 legend('show');

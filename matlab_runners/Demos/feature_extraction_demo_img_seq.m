@@ -30,7 +30,7 @@ end
 
 % Most of the features will be in the csv file in the output directory with
 % the same name as the input file
-[~,name,~] = fileparts(in_file);
+[~,name,~] = fileparts(in_dir);
 output_csv = sprintf('%s/%s.csv', output_dir, name);
 
 % First read in the column names, to know which columns to read for
@@ -45,13 +45,13 @@ all_params  = dlmread(output_csv, ',', 1, 0);
 
 % Find which column contains success of tracking data and timestamp data
 valid_ind = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'success'));
-time_stamp_ind = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'timestamp'));
+frame_ind = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'frame'));
 
 % Extract tracking success data and only read those frame
 valid_frames = logical(all_params(:,valid_ind));
 
 % Get the timestamp data
-time_stamps = all_params(valid_frames, time_stamp_ind);
+frame_nums = all_params(valid_frames, frame_ind);
 
 %% Finding which header line starts with p_ (basically model params)
 shape_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'p_'));
@@ -60,9 +60,9 @@ shape_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'p_'));
 shape_params  = all_params(valid_frames, shape_inds);
 
 figure
-plot(time_stamps, shape_params);
+plot(frame_nums, shape_params);
 title('Shape parameters');
-xlabel('Time (s)');
+xlabel('Frame');
 
 %% Demonstrate 2D landmarks
 landmark_inds_x = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'x_'));
@@ -127,7 +127,7 @@ au_reg_inds = cellfun(@(x) ~isempty(x) && x==5, strfind(column_names, '_r'));
 
 aus = all_params(valid_frames, au_reg_inds);
 figure
-plot(time, aus);
+plot(frame_nums, aus);
 title('Facial Action Units (intensity)');
 xlabel('Time (s)');
 ylabel('Intensity');
@@ -137,7 +137,7 @@ au_class_inds = cellfun(@(x) ~isempty(x) && x==5, strfind(column_names, '_c'));
 
 aus = all_params(valid_frames, au_class_inds);
 figure
-plot(time, aus);
+plot(frame_nums, aus);
 title('Facial Action Units (presense)');
 xlabel('Time (s)');
 ylim([0,2]);
@@ -146,9 +146,9 @@ pose_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'pose_'));
 
 pose = all_params(valid_frames, pose_inds);
 figure
-plot(pose);
+plot(frame_nums, pose);
 title('Pose (rotation and translation)');
-xlabel('Time (s)');
+xlabel('Frame number');
 
 %% Demo gaze
 gaze_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'gaze_angle'));
@@ -156,10 +156,10 @@ gaze_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'gaze_angle'
 % Read gaze (x,y,z) for one eye and (x,y,z) for another
 gaze = all_params(valid_frames, gaze_inds);
 
-plot(time, gaze(:,1), 'DisplayName', 'Left - right');
+plot(frame_nums, gaze(:,1), 'DisplayName', 'Left - right');
 hold on;
-plot(time, gaze(:,2), 'DisplayName', 'Up - down');
-xlabel('Time(s)') % x-axis label
+plot(frame_nums, gaze(:,2), 'DisplayName', 'Up - down');
+xlabel('Frame number') % x-axis label
 ylabel('Angle radians') % y-axis label
 legend('show');
 hold off;

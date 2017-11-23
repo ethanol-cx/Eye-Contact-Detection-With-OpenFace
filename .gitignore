@@ -54,3 +54,6 @@ matlab_version/face_validation/trained/intermediate/
 lib/local/GazeAnalyser/x64/
 lib/local/Utilities/x64/
 exe/FeatureExtraction/processed/
+exe/FaceLandmarkImg/processed/
+exe/FeatureExtraction/processed_features/
+matlab_runners/Demos/processed_features/
