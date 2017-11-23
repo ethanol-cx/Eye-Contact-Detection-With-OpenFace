@@ -403,7 +403,6 @@ void SequenceCapture::SetCameraIntrinsics(float fx, float fy, float cx, float cy
 
 cv::Mat SequenceCapture::GetNextFrame()
 {
-	frame_num++;
 
 	if (is_webcam || !is_image_seq)
 	{
@@ -429,18 +428,22 @@ cv::Mat SequenceCapture::GetNextFrame()
 	}
 	else if (is_image_seq)
 	{
-		if (image_files.empty() || frame_num - 1 > image_files.size())
+		if (image_files.empty() || frame_num >= image_files.size())
 		{
 			// Indicate lack of success by returning an empty image
 			latest_frame = cv::Mat();
 		}
-
-		latest_frame = cv::imread(image_files[frame_num-1], -1);
+		else
+		{
+			latest_frame = cv::imread(image_files[frame_num], -1);			
+		}
 		time_stamp = 0;
 	}
 
 	// Set the grayscale frame
 	convertToGrayscale(latest_frame, latest_gray_frame);
+
+	frame_num++;
 
 	return latest_frame;
 }

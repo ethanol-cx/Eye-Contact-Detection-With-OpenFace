@@ -44,8 +44,14 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 
 	this->is_sequence = sequence;
 
-	this->fps_vid_out = fps_vid_out;
-
+	if(fps_vid_out > 0)
+	{
+		this->fps_vid_out = fps_vid_out;
+	}
+	else
+	{
+		this->fps_vid_out = 30; // If an illegal value for fps provided, default to 30
+	}
 	// Default output code
 	this->output_codec = "DIVX";
 

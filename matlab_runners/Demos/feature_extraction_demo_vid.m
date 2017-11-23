@@ -165,13 +165,15 @@ legend('show');
 hold off;
 
 %% Output HOG files
-[hog_data, valid_inds] = Read_HOG_file(outputHOG_aligned);
+output_hog_file = sprintf('%s/%s.hog', output_dir, name);
+[hog_data, valid_inds] = Read_HOG_file(output_hog_file);
 
 %% Output aligned images
-img_files = dir([outputDir_aligned, '/*.png']);
+output_aligned_dir = sprintf('%s/%s_aligned/', output_dir, name);
+img_files = dir([output_aligned_dir, '/*.bmp']);
 imgs = cell(numel(img_files, 1));
 for i=1:numel(img_files)
-   imgs{i} = imread([ outputDir_aligned, '/', img_files(i).name]);
+   imgs{i} = imread([ output_aligned_dir, '/', img_files(i).name]);
    imshow(imgs{i})
    drawnow
 end
