@@ -189,7 +189,7 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 	if (params.outputTracked())
 	{
 		// Initialize the video writer if it has not been opened yet
-		if(video_writer.isOpened())
+		if(params.isSequence())
 		{
 			std::string output_codec = params.outputCodec();
 			try

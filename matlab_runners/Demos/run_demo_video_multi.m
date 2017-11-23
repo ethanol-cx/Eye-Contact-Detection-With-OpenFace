@@ -7,12 +7,6 @@ if(isunix)
 else
     executable = '"../../x64/Release/FaceLandmarkVidMulti.exe"';
 end
-
-output = './demo_vid/';
-
-if(~exist(output, 'file'))
-    mkdir(output)
-end
     
 in_files = dir('../../samples/multi_face.avi');
 

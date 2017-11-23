@@ -22,8 +22,8 @@ model = 'model/main_clnf_general.txt'; % Trained on in the wild and multi-pie da
 % Create a command that will run the tracker on set of videos and display the output 
 command = sprintf('%s -mloc "%s" ', executable, model);
 
-% add all videos to single argument list (so as not to load the model anew
-% for every video)
+% add all videos to single argument list by appending -f comments
+% so as not to load the model anew for every video)
 for i=1:numel(in_files)
     inputFile = ['../../samples/', in_files(i).name];        
     command = cat(2, command, [' -f "' inputFile '" ']);
