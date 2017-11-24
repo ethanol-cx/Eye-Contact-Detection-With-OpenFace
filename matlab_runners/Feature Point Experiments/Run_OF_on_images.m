@@ -44,7 +44,7 @@ else
     multi_view = 0;
 end
 
-command = sprintf("%s -mloc %s -multi_view %s -2Dfp -tracked ", executable, model, num2str(multi_view));
+command = sprintf("%s -mloc %s -multi_view %s -2Dfp ", executable, model, num2str(multi_view));
 
 % TODO just landmarks + BBoxes
 
