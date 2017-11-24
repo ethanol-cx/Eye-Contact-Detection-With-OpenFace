@@ -161,7 +161,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 		}
 		else
 		{
-			this->media_filename = (path(record_root) / path(filename).replace_extension(".bmp")).string();
+			this->media_filename = (path(record_root) / path(filename).replace_extension(".jpg")).string();
 			metadata_file << "Output image:" << this->media_filename << endl;
 		}
 	}

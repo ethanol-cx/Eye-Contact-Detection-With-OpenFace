@@ -1,5 +1,5 @@
-% A demo script that demonstrates how to process a single video file using
-% OpenFace and extract and visualize all of the features
+% A demo script that demonstrates how to extract aligned faces from a sequence, 
+% also shows how to extract different sized aligned faces
 
 clear
 
@@ -18,22 +18,30 @@ output_dir = './processed_features/';
 
 img_sizes = [64, 112, 224];
 
-% This will take file after -f and output all the features to directory
-% after -out_dir
-command = sprintf('%s -f "%s" -out_dir "%s" -verbose -simalign', executable, in_file, output_dir);
-                 
-if(isunix)
-    unix(command);
-else
-    dos(command);
-end
+for s=1:numel(img_sizes)
+    % This will take file after -f and output all the features to directory
+    % after -out_dir, with name after -of
+    command = sprintf('%s -f "%s" -out_dir "%s" -simalign -simsize %d -of sample_%d', executable, in_file, output_dir, img_sizes(s), img_sizes(s) );
 
-%% Output aligned images
-output_aligned_dir = sprintf('%s/%s_aligned/', output_dir, name);
-img_files = dir([output_aligned_dir, '/*.bmp']);
-imgs = cell(numel(img_files, 1));
-for i=1:numel(img_files)
-   imgs{i} = imread([ output_aligned_dir, '/', img_files(i).name]);
-   imshow(imgs{i})
-   drawnow
+    if(isunix)
+        unix(command);
+    else
+        dos(command);
+    end
+
+    %% Output aligned images
+    output_aligned_dir = sprintf('%s/sample_%d_aligned/', output_dir, img_sizes(s));
+    img_files = dir([output_aligned_dir, '/*.bmp']);
+    imgs = cell(numel(img_files), 1);
+    
+    assert(numel(imgs) > 0);
+
+    for i=1:numel(img_files)
+        imgs{i} = imread([ output_aligned_dir, '/', img_files(i).name]);
+    
+        assert(size(imgs{i},1) == img_sizes(s) && size(imgs{i},2) == img_sizes(s));
+        
+        imshow(imgs{i})
+        drawnow
+    end
 end
