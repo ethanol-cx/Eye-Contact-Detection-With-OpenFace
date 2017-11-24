@@ -59,7 +59,7 @@ parfor i=1:numel(dataset_dirs)
     else
         dos(command_c);
     end
-
+    
 end
 toc
 
@@ -98,9 +98,9 @@ for i=1:numel(dirs)
         curr = curr+1;
         
         gt_landmarks = dlmread([dirs{i}, gt_labels(g).name], ' ', 'A4..B71');
-       
+        [~, name, ~] = gt_labels(g).name;
         % find the corresponding detection       
-        all_params  = dlmread([landmark_det_dir, landmark_dets(g).name], ',', 1, 0);
+        all_params  = dlmread([landmark_det_dir, name, '.csv'], ',', 1, 0);
 
         landmark_det = [all_params(landmark_inds_x); all_params(landmark_inds_y)]';
         
