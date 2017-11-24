@@ -49,7 +49,7 @@ command = sprintf("%s -mloc %s -multi_view %s -2Dfp -tracked ", executable, mode
 % TODO just landmarks + BBoxes
 
 tic
-for i=1:numel(dataset_dirs)
+parfor i=1:numel(dataset_dirs)
     
     command_c = sprintf('%s -fdir "%s" -bboxdir "%s" -out_dir "%s" -wild ',...
         command, dataset_dirs{i},  dataset_dirs{i}, output_loc);
@@ -83,6 +83,12 @@ shapes = zeros(68,2,num_imgs);
 
 curr = 0;
 
+% work out which columns in the csv file are relevant
+tab = readtable([landmark_det_dir, landmark_dets(1).name]);
+column_names = tab.Properties.VariableNames;
+landmark_inds_x = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'x_'));
+landmark_inds_y = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'y_'));
+
 for i=1:numel(dirs)
     
     
@@ -94,7 +100,9 @@ for i=1:numel(dirs)
         gt_landmarks = dlmread([dirs{i}, gt_labels(g).name], ' ', 'A4..B71');
        
         % find the corresponding detection       
-        landmark_det = dlmread([landmark_det_dir, gt_labels(g).name], ' ', 'A4..B71');
+        all_params  = dlmread([landmark_det_dir, landmark_dets(g).name], ',', 1, 0);
+
+        landmark_det = [all_params(landmark_inds_x); all_params(landmark_inds_y)]';
         
         labels(:,:,curr) = gt_landmarks;
             
