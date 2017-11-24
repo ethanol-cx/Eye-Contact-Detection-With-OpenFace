@@ -156,7 +156,7 @@ gaze_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'gaze_angle'
 % Read gaze (x,y,z) for one eye and (x,y,z) for another
 gaze = all_params(valid_frames, gaze_inds);
 
-plot(time, gaze(:,1), 'DisplayName', 'Left - right');
+plot(time_stamps, gaze(:,1), 'DisplayName', 'Left - right');
 hold on;
 plot(time_stamps, gaze(:,2), 'DisplayName', 'Up - down');
 xlabel('Time(s)') % x-axis label

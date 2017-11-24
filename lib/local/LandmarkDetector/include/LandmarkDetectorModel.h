@@ -102,7 +102,7 @@ public:
 	// Indicating if the tracking has been initialised (for video based tracking)
 	bool				tracking_initialised;
 
-	// The actual output of the regressor (-1 is perfect detection 1 is worst detection)
+	//  Representing how confident we are that tracking succeeds (0 - complete failure, 1 - perfect success)
 	double				detection_certainty; 
 
 	// Indicator if eye model is there for eye detection

@@ -323,11 +323,12 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& det
 	// Extract shape parameters from the detected landmarks
 	cv::Vec6f params_global;
 	cv::Mat_<float> params_local;
-	pdm.CalcParams(params_global, params_local, detected_landmarks);
 
 	// First align the face if tracking was successfull
 	if(success)
 	{
+
+		pdm.CalcParams(params_global, params_local, detected_landmarks);
 
 		// The aligned face requirement for AUs
 		AlignFaceMask(aligned_face_for_au, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_au, align_width_au, align_height_au);
@@ -348,6 +349,7 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& det
 		aligned_face_for_au = cv::Mat(align_height_au, align_width_au, CV_8UC3);
 		aligned_face_for_output.setTo(0);
 		aligned_face_for_au.setTo(0);
+		params_local = cv::Mat_<float>(pdm.NumberOfModes(), 1, 0.0f);
 	}
 
 	if (aligned_face_for_output.channels() == 3 && out_grayscale)
