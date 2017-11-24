@@ -98,7 +98,7 @@ for i=1:numel(dirs)
         curr = curr+1;
         
         gt_landmarks = dlmread([dirs{i}, gt_labels(g).name], ' ', 'A4..B71');
-        [~, name, ~] = gt_labels(g).name;
+        [~, name, ~] = fileparts(gt_labels(g).name);
         % find the corresponding detection       
         all_params  = dlmread([landmark_det_dir, name, '.csv'], ',', 1, 0);
 
@@ -125,8 +125,8 @@ if(size(shapes,2) == 66 && size(labels,2) == 68)
     shapes = shapes(inds_66,:,:);
 end
 
-% Center the pixel
-labels = labels - 0.5;
+% Center the pixel, and convert to OCV format
+labels = labels - 1.5;
 
 err_outline = compute_error(labels, shapes);
 

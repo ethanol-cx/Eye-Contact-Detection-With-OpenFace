@@ -77,7 +77,7 @@ load('landmark_det_baselines/zhu_wild.mat');
 load('out_wild_clnf_wild/res.mat');    
 for i=1:size(labels,3)
     
-    diffs = squeeze(sum(sum(bsxfun(@plus, labels_all(18:end,:,:)-0.5, - labels([18:60,62:64,66:end],:,i)),1),2));
+    diffs = squeeze(sum(sum(bsxfun(@plus, labels_all(18:end,:,:)-1.5, - labels([18:60,62:64,66:end],:,i)),1),2));
     inds_in_cpp = cat(1, inds_in_cpp, find(diffs == 0));
 
 end
