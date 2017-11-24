@@ -127,7 +127,7 @@ au_reg_inds = cellfun(@(x) ~isempty(x) && x==5, strfind(column_names, '_r'));
 
 aus = all_params(valid_frames, au_reg_inds);
 figure
-plot(time, aus);
+plot(time_stamps, aus);
 title('Facial Action Units (intensity)');
 xlabel('Time (s)');
 ylabel('Intensity');

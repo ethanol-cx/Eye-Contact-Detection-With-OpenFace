@@ -131,6 +131,11 @@ int main (int argc, char **argv)
 
 		INFO_STREAM("Device or file opened");
 		
+		if (sequence_reader.IsWebcam())
+		{
+			INFO_STREAM("WARNING: using a webcam in feature extraction, Action Unit predictions will not be as accurate in real-time webcam mode");
+		}
+
 		cv::Mat captured_image;
 		
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.fps);
@@ -171,7 +176,7 @@ int main (int argc, char **argv)
 			// Perform AU detection and HOG feature extraction, as this can be expensive only compute it if needed by output or visualization
 			if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualizer.vis_align || visualizer.vis_hog)
 			{
-				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, sequence_reader.time_stamp, false);
+				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, sequence_reader.time_stamp, sequence_reader.IsWebcam());
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 				face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			}
@@ -216,6 +221,10 @@ int main (int argc, char **argv)
 			if(sequence_reader.GetProgress() >= reported_completion / 10.0)
 			{
 				cout << reported_completion * 10 << "% ";
+				if (reported_completion == 10)
+				{
+					cout << endl;
+				}
 				reported_completion = reported_completion + 1;
 			}
 

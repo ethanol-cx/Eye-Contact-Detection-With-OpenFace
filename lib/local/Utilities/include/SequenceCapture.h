@@ -73,6 +73,8 @@ namespace Utilities
 		// Video file
 		bool OpenVideoFile(std::string video_file, float fx = -1, float fy = -1, float cx = -1, float cy = -1);
 
+		bool IsWebcam() { return is_webcam; }
+
 		// Getting the next frame
 		cv::Mat GetNextFrame();
 
@@ -99,6 +101,7 @@ namespace Utilities
 		// Allows to differentiate if failed because no input specified or if failed to open a specified input
 		bool no_input_specified;
 
+
 	private:
 
 		// Used for capturing webcam and video
@@ -107,12 +110,7 @@ namespace Utilities
 		// Storing the latest captures
 		cv::Mat latest_frame;
 		cv::Mat latest_gray_frame;
-
-
-		// Keeping track if we are opening a video, webcam or image sequence
-		bool is_webcam;
-		bool is_image_seq;
-
+		
 		// Keeping track of frame number and the files in the image sequence
 		size_t  frame_num;
 		std::vector<std::string> image_files;
@@ -122,6 +120,10 @@ namespace Utilities
 
 		// If using a webcam, helps to keep track of time
 		int64 start_time;
+
+		// Keeping track if we are opening a video, webcam or image sequence
+		bool is_webcam;
+		bool is_image_seq;
 
 		void SetCameraIntrinsics(float fx, float fy, float cx, float cy);
 
