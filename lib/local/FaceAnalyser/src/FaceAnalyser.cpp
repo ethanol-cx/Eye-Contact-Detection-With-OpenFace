@@ -434,12 +434,6 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& det
 	// Perform AU prediction	
 	AU_predictions_reg = PredictCurrentAUs(orientation_to_use);
 
-	std::vector<std::pair<std::string, double>> AU_predictions_reg_corrected;
-	if(online)
-	{
-		AU_predictions_reg_corrected = CorrectOnlineAUs(AU_predictions_reg, orientation_to_use, true, false, success, true);
-	}
-
 	// Add the reg predictions to the historic data
 	for (size_t au = 0; au < AU_predictions_reg.size(); ++au)
 	{
@@ -453,6 +447,9 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& det
 		else
 		{
 			AU_predictions_reg_all_hist[AU_predictions_reg[au].first].push_back(0);
+
+			// Also invalidate AU if not successful
+			AU_predictions_reg[au].second = 0;
 		}
 	}
 	
@@ -470,9 +467,18 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& det
 		else
 		{
 			AU_predictions_class_all_hist[AU_predictions_class[au].first].push_back(0);
+
+			// Also invalidate AU if not successful
+			AU_predictions_class[au].second = 0;
 		}
+	}	
+
+	// A workaround for online predictions to make them a bit more accurate
+	std::vector<std::pair<std::string, double>> AU_predictions_reg_corrected;
+	if (online)
+	{
+		AU_predictions_reg_corrected = CorrectOnlineAUs(AU_predictions_reg, orientation_to_use, true, false, success, true);
 	}
-	
 
 	if(online)
 	{
