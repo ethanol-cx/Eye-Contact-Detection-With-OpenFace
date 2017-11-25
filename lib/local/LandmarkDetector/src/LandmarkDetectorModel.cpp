@@ -1081,36 +1081,42 @@ cv::Mat_<double> CLNF::GetShape(double fx, double fy, double cx, double cy) cons
 {
 	int n = this->detected_landmarks.rows/2;
 
-	cv::Mat_<double> shape3d(n*3, 1);
+	cv::Mat_<double> outShape(n, 3, 0.0);
 
-	this->pdm.CalcShape3D(shape3d, this->params_local);
-	
-	// Need to rotate the shape to get the actual 3D representation
-	
-	// get the rotation matrix from the euler angles
-	cv::Matx33d R = Utilities::Euler2RotationMatrix(cv::Vec3d(params_global[1], params_global[2], params_global[3]));
-
-	shape3d = shape3d.reshape(1, 3);
-
-	shape3d = shape3d.t() * cv::Mat(R).t();
-	
-	// from the weak perspective model can determine the average depth of the object
-	double Zavg = fx / params_global[0];	
-
-	cv::Mat_<double> outShape(n,3,0.0);
-
-	// this is described in the paper in section 3.4 (equation 10) (of the CLM-Z paper)
-	for(int i = 0; i < n; i++)
+	// If the tracking started (otherwise no point reporting 3D shape)
+	if(this->tracking_initialised)
 	{
-		double Z = Zavg + shape3d.at<double>(i,2);
 
-		double X = Z * ((this->detected_landmarks.at<double>(i) - cx)/fx);
-		double Y = Z * ((this->detected_landmarks.at<double>(i + n) - cy)/fy);
+		cv::Mat_<double> shape3d(n * 3, 1);
 
-		outShape.at<double>(i,0) = (double)X;
-		outShape.at<double>(i,1) = (double)Y;
-		outShape.at<double>(i,2) = (double)Z;
+		this->pdm.CalcShape3D(shape3d, this->params_local);
+	
+		// Need to rotate the shape to get the actual 3D representation
+	
+		// get the rotation matrix from the euler angles
+		cv::Matx33d R = Utilities::Euler2RotationMatrix(cv::Vec3d(params_global[1], params_global[2], params_global[3]));
 
+		shape3d = shape3d.reshape(1, 3);
+
+		shape3d = shape3d.t() * cv::Mat(R).t();
+	
+		// from the weak perspective model can determine the average depth of the object
+		double Zavg = fx / params_global[0];	
+
+
+		// this is described in the paper in section 3.4 (equation 10) (of the CLM-Z paper)
+		for(int i = 0; i < n; i++)
+		{
+			double Z = Zavg + shape3d.at<double>(i,2);
+
+			double X = Z * ((this->detected_landmarks.at<double>(i) - cx)/fx);
+			double Y = Z * ((this->detected_landmarks.at<double>(i + n) - cy)/fy);
+
+			outShape.at<double>(i,0) = (double)X;
+			outShape.at<double>(i,1) = (double)Y;
+			outShape.at<double>(i,2) = (double)Z;
+
+		}
 	}
 
 	// The format is 3 rows - n cols

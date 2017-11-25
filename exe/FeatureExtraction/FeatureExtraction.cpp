@@ -162,7 +162,7 @@ int main (int argc, char **argv)
 			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
 
 			// Gaze tracking, absolute gaze direction
-			cv::Point3f gazeDirection0(0, 0, -1); cv::Point3f gazeDirection1(0, 0, -1); cv::Vec2d gazeAngle(0, 0);
+			cv::Point3f gazeDirection0(0, 0, 0); cv::Point3f gazeDirection1(0, 0, 0); cv::Vec2d gazeAngle(0, 0);
 
 			if (detection_success && face_model.eye_model)
 			{
