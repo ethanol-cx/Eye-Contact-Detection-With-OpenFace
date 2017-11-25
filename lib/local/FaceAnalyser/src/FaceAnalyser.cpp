@@ -478,20 +478,15 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& det
 	if (online)
 	{
 		AU_predictions_reg_corrected = CorrectOnlineAUs(AU_predictions_reg, orientation_to_use, true, false, success, true);
-	}
-
-	if(online)
-	{
 		AU_predictions_reg = AU_predictions_reg_corrected;
 	}
-	else
+
+	// Useful for prediction corrections (calibration after the whole video is processed)
+	if (success && frames_tracking_succ - 1 < max_init_frames)
 	{
-		if (success && frames_tracking_succ - 1 < max_init_frames)
-		{
-			hog_desc_frames_init.push_back(hog_descriptor);
-			geom_descriptor_frames_init.push_back(geom_descriptor_frame);
-			views.push_back(orientation_to_use);
-		}
+		hog_desc_frames_init.push_back(hog_descriptor);
+		geom_descriptor_frames_init.push_back(geom_descriptor_frame);
+		views.push_back(orientation_to_use);
 	}
 
 	this->current_time_seconds = timestamp_seconds;
