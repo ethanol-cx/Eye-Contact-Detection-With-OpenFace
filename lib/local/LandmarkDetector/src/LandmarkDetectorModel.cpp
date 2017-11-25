@@ -520,7 +520,7 @@ void CLNF::Read(string main_location)
 	params_local.setTo(0.0);
 
 	// global parameters (pose) [scale, euler_x, euler_y, euler_z, tx, ty]
-	params_global = cv::Vec6d(1, 0, 0, 0, 0, 0);
+	params_global = cv::Vec6d(0, 0, 0, 0, 0, 0);
 
 	failures_in_a_row = -1;
 
