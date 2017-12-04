@@ -76,7 +76,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 {
 
 	// From the filename, strip out the name without directory and extension
-	filename = path(in_filename).replace_extension("").filename().string();
+	filename = path(string(in_filename)).replace_extension("").filename().string();
 
 	// Consuming the input arguments
 	bool* valid = new bool[arguments.size()];

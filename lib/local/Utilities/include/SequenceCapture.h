@@ -95,6 +95,9 @@ namespace Utilities
 
 		double time_stamp;
 
+		std::string input_name_relative;
+		std::string input_name_full;
+
 		// Name of the video file, image directory, or the webcam
 		std::string name;
 

@@ -156,17 +156,28 @@ bool SequenceCapture::Open(std::vector<std::string>& arguments)
 	
 	no_input_specified = !file_found;
 
+
 	// Based on what was read in open the sequence TODO
 	if (device != -1)
 	{
+		input_name_relative = "webcam";
+		input_name_full = "webcam";
 		return OpenWebcam(device, 640, 480, fx, fy, cx, cy);
 	}
 	if (!input_video_file.empty())
 	{
+		input_name_relative = input_video_file;
+		if (boost::filesystem::path(input_name_relative).is_absolute())
+		{
+			input_name_full = input_name_relative;
+		}
+
+		boost::filesystem::path(input_name_full).is_absolute();
 		return OpenVideoFile(input_video_file, fx, fy, cx, cy);
 	}
 	if (!input_sequence_directory.empty())
 	{
+		input_name_relative = input_sequence_directory;
 		return OpenImageSequence(input_sequence_directory, fx, fy, cx, cy);
 	}
 
@@ -175,6 +186,20 @@ bool SequenceCapture::Open(std::vector<std::string>& arguments)
 
 	return false;
 }
+
+// Get current date/time, format is YYYY-MM-DD.HH:mm, useful for saving data from webcam
+const std::string currentDateTime() {
+	time_t     now = time(0);
+	struct tm  tstruct;
+	char       buf[200];
+	localtime_s(&tstruct, &now);
+	// Visit http://www.cplusplus.com/reference/clibrary/ctime/strftime/
+	// for more information about date/time format
+	strftime(buf, sizeof(buf), "%Y-%m-%d-%H-%M", &tstruct);
+
+	return buf;
+}
+
 
 bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, float fx, float fy, float cx, float cy)
 {
@@ -224,9 +249,9 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 	}
 
 	SetCameraIntrinsics(fx, fy, cx, cy);
+	std::string time = currentDateTime();
+	this->name = "webcam_" + time;
 
-	this->name = "webcam"; // TODO number
-	
 	start_time = cv::getTickCount();
 
 	return true;
