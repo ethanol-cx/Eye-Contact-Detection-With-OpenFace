@@ -23,7 +23,7 @@ cd('../');
 cd('Action Unit Experiments');
 run_AU_prediction_Bosphorus
 assert(mean(cccs_reg) > 0.56);
-assert(mean(f1s_class) > 0.46);
+assert(mean(f1s_class) > 0.49);
 
 run_AU_prediction_BP4D
 assert(mean(ints_cccs) > 0.6);

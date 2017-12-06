@@ -508,8 +508,8 @@ void CLNF::Read(string main_location)
 	detected_landmarks.create(2 * pdm.NumberOfPoints(), 1);
 	detected_landmarks.setTo(0);
 
-	detection_success = false;
-	tracking_initialised = false;
+	SetDetectionSuccess(false);
+	SetInitialized(false);
 	model_likelihood = -10; // very low
 	detection_certainty = 0; // very uncertain
 
@@ -526,13 +526,35 @@ void CLNF::Read(string main_location)
 
 }
 
+void CLNF::SetDetectionSuccess(bool success)
+{
+	this->detection_success = success;
+
+	for (size_t i = 0; i < hierarchical_models.size(); ++i) 
+	{
+		hierarchical_models[i].SetDetectionSuccess(success);
+	}
+
+}
+
+void CLNF::SetInitialized(bool initialized)
+{
+	this->tracking_initialised = initialized;
+
+	for (size_t i = 0; i < hierarchical_models.size(); ++i)
+	{
+		hierarchical_models[i].SetInitialized(initialized);
+	}
+
+}
+
 // Resetting the model (for a new video, or complet reinitialisation
 void CLNF::Reset()
 {
 	detected_landmarks.setTo(0);
 
-	detection_success = false;
-	tracking_initialised = false;
+	SetDetectionSuccess(false);
+	SetInitialized(false);
 	model_likelihood = -10;  // very low
 	detection_certainty = 0; // very uncertain
 
@@ -1084,7 +1106,7 @@ cv::Mat_<double> CLNF::GetShape(double fx, double fy, double cx, double cy) cons
 	cv::Mat_<double> outShape(n, 3, 0.0);
 
 	// If the tracking started (otherwise no point reporting 3D shape)
-	if(this->tracking_initialised)
+	if(this->IsInitialized())
 	{
 
 		cv::Mat_<double> shape3d(n * 3, 1);
