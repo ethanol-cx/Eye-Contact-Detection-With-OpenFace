@@ -56,7 +56,7 @@ namespace Utilities
 
 	public:
 
-		// The constructor for the recorder, need to specify if we are recording a sequence or not
+		// The constructor for the recorder, need to specify if we are recording a sequence or not, in_filename should be just the name and not contain extensions
 		RecorderOpenFace(const std::string in_filename, RecorderOpenFaceParameters parameters, std::vector<std::string>& arguments);
 
 		~RecorderOpenFace();

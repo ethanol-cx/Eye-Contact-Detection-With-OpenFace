@@ -76,7 +76,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 {
 
 	// From the filename, strip out the name without directory and extension
-	filename = path(string(in_filename)).replace_extension("").filename().string();
+	filename = in_filename;
 
 	// Consuming the input arguments
 	bool* valid = new bool[arguments.size()];
@@ -140,7 +140,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 	metadata_file << "Input:" << in_filename << endl;
 
 	// Create the required individual recorders, CSV, HOG, aligned, video
-	csv_filename = (path(record_root) / path(filename).replace_extension(".csv")).string();
+	csv_filename = (path(record_root) / path(filename).concat(".csv")).string();
 	metadata_file << "Output csv:" << csv_filename << endl;
 
 	// Consruct HOG recorder here
