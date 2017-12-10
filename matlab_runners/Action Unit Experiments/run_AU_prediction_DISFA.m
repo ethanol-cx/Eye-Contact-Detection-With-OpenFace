@@ -22,19 +22,19 @@ output = 'out_DISFA/';
 %%
 % Do it in parrallel for speed (replace the parfor with for if no parallel
 % toolbox is available)
-% parfor v = 1:numel(videos)
-%    
-%     vid_file = [DISFA_dir, videos(v).name];
-%     
-%     command = sprintf('%s -f "%s" -out_dir "%s" -aus ', executable, vid_file, output);
-%         
-%     if(isunix)
-%         unix(command, '-echo');
-%     else
-%         dos(command);
-%     end
-%     
-% end
+parfor v = 1:numel(videos)
+   
+    vid_file = [DISFA_dir, videos(v).name];
+    
+    command = sprintf('%s -f "%s" -out_dir "%s" -aus ', executable, vid_file, output);
+        
+    if(isunix)
+        unix(command, '-echo');
+    else
+        dos(command);
+    end
+    
+end
 
 %% Now evaluate the predictions
 

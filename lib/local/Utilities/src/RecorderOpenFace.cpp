@@ -141,7 +141,6 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 
 	// Create the required individual recorders, CSV, HOG, aligned, video
 	csv_filename = (path(record_root) / path(filename).concat(".csv")).string();
-	metadata_file << "Output csv:" << csv_filename << endl;
 
 	// Consruct HOG recorder here
 	if(params.outputHOG())
@@ -239,6 +238,9 @@ void RecorderOpenFace::WriteObservation()
 
 		csv_recorder.Open(csv_filename, params.isSequence(), params.output2DLandmarks(), params.output3DLandmarks(), params.outputPDMParams(), params.outputPose(),
 			params.outputAUs(), params.outputGaze(), num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
+
+		metadata_file << "Output csv:" << csv_filename << endl;
+
 	}
 
 	this->csv_recorder.WriteLine(observation_count, timestamp, landmark_detection_success, 
