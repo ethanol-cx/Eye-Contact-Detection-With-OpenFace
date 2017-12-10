@@ -48,6 +48,8 @@ assert(median_error < 9.0)
 cd('../');
 
 %% Demos
+clear;
+close all;
 cd('Demos');
 run_demo_images;
 run_demo_videos;
