@@ -186,7 +186,8 @@ int main (int argc, char **argv)
 	while (!captured_image.empty())
 	{
 
-		Utilities::RecorderOpenFaceParameters recording_params(arguments, false);
+		Utilities::RecorderOpenFaceParameters recording_params(arguments, false,
+			image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
 		Utilities::RecorderOpenFace open_face_rec(image_reader.name, recording_params, arguments);
 
 		visualizer.SetImage(captured_image, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);

@@ -156,28 +156,18 @@ bool SequenceCapture::Open(std::vector<std::string>& arguments)
 	
 	no_input_specified = !file_found;
 
-
-	// Based on what was read in open the sequence TODO
+	// Based on what was read in open the sequence
 	if (device != -1)
 	{
-		input_name_relative = "webcam";
-		input_name_full = "webcam";
+		// TODO allow to specify webcam resolution
 		return OpenWebcam(device, 640, 480, fx, fy, cx, cy);
 	}
 	if (!input_video_file.empty())
 	{
-		input_name_relative = input_video_file;
-		if (boost::filesystem::path(input_name_relative).is_absolute())
-		{
-			input_name_full = input_name_relative;
-		}
-
-		boost::filesystem::path(input_name_full).is_absolute();
 		return OpenVideoFile(input_video_file, fx, fy, cx, cy);
 	}
 	if (!input_sequence_directory.empty())
 	{
-		input_name_relative = input_sequence_directory;
 		return OpenImageSequence(input_sequence_directory, fx, fy, cx, cy);
 	}
 
@@ -296,7 +286,7 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 
 	SetCameraIntrinsics(fx, fy, cx, cy);
 
-	this->name = boost::filesystem::path(video_file).filename().replace_extension("").string();
+	this->name = video_file;
 
 	return true;
 
@@ -346,7 +336,7 @@ bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 	// No fps as we have a sequence
 	this->fps = 0;
 
-	this->name = boost::filesystem::path(directory).filename().string();
+	this->name = directory;
 
 	is_webcam = false;
 	is_image_seq = true;	

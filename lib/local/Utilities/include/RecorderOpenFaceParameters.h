@@ -53,7 +53,7 @@ namespace Utilities
 	public:
 
 		// Constructors
-		RecorderOpenFaceParameters(std::vector<std::string> &arguments, bool sequence, double fps_vid_out = 30);
+		RecorderOpenFaceParameters(std::vector<std::string> &arguments, bool sequence, float fx = -1, float fy = -1, float cx = -1, float cy = -1, double fps_vid_out = 30);
 
 		bool isSequence() const { return is_sequence; }
 		bool output2DLandmarks() const { return output_2D_landmarks; }
@@ -67,6 +67,11 @@ namespace Utilities
 		bool outputAlignedFaces() const { return output_aligned_faces; }
 		std::string outputCodec() const { return output_codec; }
 		double outputFps() const { return fps_vid_out; }
+
+		float getFx() const { return fx; }
+		float getFy() const { return fy; }
+		float getCx() const { return cx; }
+		float getCy() const { return cy; }
 
 	private:
 		
@@ -87,6 +92,9 @@ namespace Utilities
 		// Some video recording parameters
 		std::string output_codec;
 		double fps_vid_out;
+
+		// Camera parameters for recording in the meta file;
+		float fx, fy, cx, cy;
 
 	};
 

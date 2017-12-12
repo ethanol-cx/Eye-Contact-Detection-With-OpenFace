@@ -76,7 +76,14 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 {
 
 	// From the filename, strip out the name without directory and extension
-	filename = in_filename;
+	if (boost::filesystem::is_directory(in_filename))
+	{
+		filename = boost::filesystem::canonical(boost::filesystem::path(in_filename)).filename().string();
+	}
+	else
+	{
+		filename = boost::filesystem::path(in_filename).filename().replace_extension("").string();
+	}
 
 	// Consuming the input arguments
 	bool* valid = new bool[arguments.size()];
@@ -136,18 +143,37 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 		exit(1);
 	}
 
-	// Populate the metadata file
-	metadata_file << "Input:" << in_filename << endl;
+	// Populate relative and full path names in the meta file, unless it is a webcam
+	if(in_filename.compare("webcam") != 0)
+	{
+		string input_filename_relative = in_filename;
+		string input_filename_full = in_filename;
+		if (!boost::filesystem::path(input_filename_full).is_absolute())
+		{
+			input_filename_full = boost::filesystem::canonical(input_filename_relative).string();
+		}
+		metadata_file << "Input:" << input_filename_relative << endl;
+		metadata_file << "Input full path:" << input_filename_full << endl;
+	}
+	else
+	{
+		// Populate the metadata file
+		metadata_file << "Input:" << in_filename << endl;
+	}
+
+	metadata_file << "Camera parameters:" << parameters.getFx() << "," << parameters.getFy() << parameters.getCx() << "," << parameters.getCy() << endl;
 
 	// Create the required individual recorders, CSV, HOG, aligned, video
-	csv_filename = (path(record_root) / path(filename).concat(".csv")).string();
+	csv_filename = path(filename).concat(".csv").string();
 
 	// Consruct HOG recorder here
 	if(params.outputHOG())
 	{
-		std::string hog_filename = (path(record_root) / path(filename).replace_extension(".hog")).string();
+		// Output the data based on record_root, but do not include record_root in the meta file, as it is also in that directory
+		std::string hog_filename = path(filename).concat(".hog").string();
+		metadata_file << "Output HOG:" << hog_filename << endl;
+		hog_filename = (path(record_root) / hog_filename).string();
 		hog_recorder.Open(hog_filename);
-		metadata_file << "Output HOG:" << csv_filename << endl;
 	}
 
 	// saving the videos	
@@ -155,25 +181,28 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 	{
 		if(parameters.isSequence())
 		{
-			this->media_filename = (path(record_root) / path(filename).replace_extension(".avi")).string();
+			// Output the data based on record_root, but do not include record_root in the meta file, as it is also in that directory
+			this->media_filename = path(filename).concat(".avi").string();
 			metadata_file << "Output video:" << this->media_filename << endl;
+			this->media_filename = (path(record_root) / this->media_filename).string();
 		}
 		else
 		{
-			this->media_filename = (path(record_root) / path(filename).replace_extension(".jpg")).string();
+			this->media_filename = path(filename).concat(".jpg").string();
 			metadata_file << "Output image:" << this->media_filename << endl;
+			this->media_filename = (path(record_root) / this->media_filename).string();
 		}
 	}
 
 	// Prepare image recording
 	if (params.outputAlignedFaces())
 	{
-		aligned_output_directory = (path(record_root) / path(filename + "_aligned")).string();
-		CreateDirectory(aligned_output_directory);
+		aligned_output_directory = path(filename + "_aligned").string();
 		metadata_file << "Output aligned directory:" << this->aligned_output_directory << endl;
+		this->aligned_output_directory = (path(record_root) / this->aligned_output_directory).string();
+		CreateDirectory(aligned_output_directory);
 	}
-	
-	
+		
 	observation_count = 0;
 
 }
@@ -188,17 +217,23 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 	if (params.outputTracked())
 	{
 		// Initialize the video writer if it has not been opened yet
-		if(params.isSequence())
+		if(params.isSequence() && !video_writer.isOpened())
 		{
 			std::string output_codec = params.outputCodec();
 			try
 			{
 				video_writer.open(media_filename, CV_FOURCC(output_codec[0], output_codec[1], output_codec[2], output_codec[3]), params.outputFps(), vis_track.size(), true);
+
+				if (!video_writer.isOpened())
+				{
+					WARN_STREAM("Could not open VideoWriter, OUTPUT FILE WILL NOT BE WRITTEN.");
+				}
 			}
 			catch (cv::Exception e)
 			{
 				WARN_STREAM("Could not open VideoWriter, OUTPUT FILE WILL NOT BE WRITTEN. Currently using codec " << output_codec << ", try using an other one (-oc option)");
 			}
+
 		}
 
 		vis_to_out = vis_track;
@@ -240,7 +275,12 @@ void RecorderOpenFace::WriteObservation()
 			params.outputAUs(), params.outputGaze(), num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
 
 		metadata_file << "Output csv:" << csv_filename << endl;
-
+		metadata_file << "Gaze: " << params.outputGaze() << endl;
+		metadata_file << "AUs: " << params.outputAUs() << endl;
+		metadata_file << "Landmarks 2D: " << params.output2DLandmarks() << endl;
+		metadata_file << "Landmarks 3D: " << params.output3DLandmarks() << endl;
+		metadata_file << "Pose: " << params.outputPose() << endl;
+		metadata_file << "Shape parameters: " << params.outputPDMParams() << endl;
 	}
 
 	this->csv_recorder.WriteLine(observation_count, timestamp, landmark_detection_success, 
@@ -284,9 +324,12 @@ void RecorderOpenFace::WriteObservation()
 			WARN_STREAM("Output tracked video frame is not set");
 		}
 
-		if(video_writer.isOpened())
+		if(params.isSequence() )
 		{
-			video_writer.write(vis_to_out);
+			if(video_writer.isOpened())
+			{
+				video_writer.write(vis_to_out);
+			}
 		}
 		else
 		{
