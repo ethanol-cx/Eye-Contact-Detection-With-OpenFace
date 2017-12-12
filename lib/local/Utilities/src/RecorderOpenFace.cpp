@@ -161,7 +161,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 		metadata_file << "Input:" << in_filename << endl;
 	}
 
-	metadata_file << "Camera parameters:" << parameters.getFx() << "," << parameters.getFy() << parameters.getCx() << "," << parameters.getCy() << endl;
+	metadata_file << "Camera parameters:" << parameters.getFx() << "," << parameters.getFy() << "," << parameters.getCx() << "," << parameters.getCy() << endl;
 
 	// Create the required individual recorders, CSV, HOG, aligned, video
 	csv_filename = path(filename).concat(".csv").string();
