@@ -140,7 +140,7 @@ int main (int argc, char **argv)
 
 		cv::Mat captured_image;
 		
-		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, 
+		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.IsWebcam(),
 			sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, sequence_reader.fps);
 		Utilities::RecorderOpenFace open_face_rec(sequence_reader.name, recording_params, arguments);
 

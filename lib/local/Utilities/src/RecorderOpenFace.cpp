@@ -144,7 +144,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 	}
 
 	// Populate relative and full path names in the meta file, unless it is a webcam
-	if(in_filename.compare("webcam") != 0)
+	if(!params.isFromWebcam())
 	{
 		string input_filename_relative = in_filename;
 		string input_filename_full = in_filename;
@@ -158,7 +158,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 	else
 	{
 		// Populate the metadata file
-		metadata_file << "Input:" << in_filename << endl;
+		metadata_file << "Input:webcam" << endl;
 	}
 
 	metadata_file << "Camera parameters:" << parameters.getFx() << "," << parameters.getFy() << "," << parameters.getCx() << "," << parameters.getCy() << endl;
@@ -271,9 +271,6 @@ void RecorderOpenFace::WriteObservation()
 
 		std::sort(au_names_reg.begin(), au_names_reg.end());
 
-		csv_recorder.Open(csv_filename, params.isSequence(), params.output2DLandmarks(), params.output3DLandmarks(), params.outputPDMParams(), params.outputPose(),
-			params.outputAUs(), params.outputGaze(), num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
-
 		metadata_file << "Output csv:" << csv_filename << endl;
 		metadata_file << "Gaze: " << params.outputGaze() << endl;
 		metadata_file << "AUs: " << params.outputAUs() << endl;
@@ -281,6 +278,10 @@ void RecorderOpenFace::WriteObservation()
 		metadata_file << "Landmarks 3D: " << params.output3DLandmarks() << endl;
 		metadata_file << "Pose: " << params.outputPose() << endl;
 		metadata_file << "Shape parameters: " << params.outputPDMParams() << endl;
+
+		csv_filename = (path(record_root) / csv_filename).string();
+		csv_recorder.Open(csv_filename, params.isSequence(), params.output2DLandmarks(), params.output3DLandmarks(), params.outputPDMParams(), params.outputPose(),
+			params.outputAUs(), params.outputGaze(), num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
 	}
 
 	this->csv_recorder.WriteLine(observation_count, timestamp, landmark_detection_success, 

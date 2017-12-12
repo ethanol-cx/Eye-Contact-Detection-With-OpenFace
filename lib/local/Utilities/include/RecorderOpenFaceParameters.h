@@ -53,9 +53,10 @@ namespace Utilities
 	public:
 
 		// Constructors
-		RecorderOpenFaceParameters(std::vector<std::string> &arguments, bool sequence, float fx = -1, float fy = -1, float cx = -1, float cy = -1, double fps_vid_out = 30);
+		RecorderOpenFaceParameters(std::vector<std::string> &arguments, bool sequence, bool is_from_webcam, float fx = -1, float fy = -1, float cx = -1, float cy = -1, double fps_vid_out = 30);
 
 		bool isSequence() const { return is_sequence; }
+		bool isFromWebcam() const { return is_from_webcam; }
 		bool output2DLandmarks() const { return output_2D_landmarks; }
 		bool output3DLandmarks() const { return output_3D_landmarks; }
 		bool outputPDMParams() const { return output_model_params; }
@@ -77,6 +78,8 @@ namespace Utilities
 		
 		// If we are recording results from a sequence each row refers to a frame, if we are recording an image each row is a face
 		bool is_sequence;
+		// If the data is coming from a webcam
+		bool is_from_webcam;
 
 		// Keep track of what we are recording
 		bool output_2D_landmarks;

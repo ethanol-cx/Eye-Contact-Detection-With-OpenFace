@@ -37,13 +37,13 @@ using namespace std;
 
 using namespace Utilities;
 
-RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> &arguments, bool sequence, float fx, float fy, float cx, float cy, double fps_vid_out)
+RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> &arguments, bool sequence, bool from_webcam, float fx, float fy, float cx, float cy, double fps_vid_out)
 {
 
 	string separator = string(1, boost::filesystem::path::preferred_separator);
 
 	this->is_sequence = sequence;
-
+	this->is_from_webcam = from_webcam;
 	this->fx = fx;
 	this->fy = fy;
 	this->cx = cx;
