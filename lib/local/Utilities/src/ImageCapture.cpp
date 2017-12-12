@@ -396,7 +396,7 @@ cv::Mat ImageCapture::GetNextImage()
 	// Set the grayscale frame
 	convertToGrayscale(latest_frame, latest_gray_frame);
 
-	this->name = boost::filesystem::path(image_files[frame_num]).filename().replace_extension("").string();
+	this->name = image_files[frame_num];
 
 	frame_num++;
 
