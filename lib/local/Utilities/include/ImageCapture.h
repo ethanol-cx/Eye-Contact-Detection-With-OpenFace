@@ -107,8 +107,8 @@ namespace Utilities
 
 		void SetCameraIntrinsics(float fx, float fy, float cx, float cy);
 
-		// TODO make sure that can set fx, fy externally
-		bool image_intrinsics_set;
+		bool image_focal_length_set;
+		bool image_optical_center_set;
 
 		// TODO make sure the error message makes sense
 		bool no_input_specified;

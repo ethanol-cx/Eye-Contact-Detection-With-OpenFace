@@ -189,18 +189,29 @@ bool ImageCapture::OpenImageFiles(const std::vector<std::string>& image_files, f
 	this->image_files = image_files;
 
 	// Allow for setting the camera intrinsics, but have to be the same ones for every image
-	if (fx != -1 && fy != -1 && cx != -1 && cy != -1)
+	if (fx != -1 && fy != -1 )
 	{
-		image_intrinsics_set = true;
+		image_focal_length_set = true;
 		this->fx = fx;
 		this->fy = fy;
-		this->cx = cx;
-		this->cy = cy;
+
 	}
 	else
 	{
-		image_intrinsics_set = false;
+		image_focal_length_set = false;
 	}
+
+	if (cx != -1 && cy != -1)
+	{
+		this->cx = cx;
+		this->cy = cy;
+		image_optical_center_set = true;
+	}
+	else
+	{
+		image_optical_center_set = false;
+	}
+
 	return true;
 
 }
@@ -280,18 +291,29 @@ bool ImageCapture::OpenDirectory(std::string directory, std::string bbox_directo
 	}
 
 	// Allow for setting the camera intrinsics, but have to be the same ones for every image
-	if (fx != -1 && fy != -1 && cx != -1 && cy != -1)
+	if (fx != -1 && fy != -1)
 	{
-		image_intrinsics_set = true;
+		image_focal_length_set = true;
 		this->fx = fx;
 		this->fy = fy;
-		this->cx = cx;
-		this->cy = cy;
+
 	}
 	else
 	{
-		image_intrinsics_set = false;
+		image_focal_length_set = false;
 	}
+
+	if (cx != -1 && cy != -1)
+	{
+		this->cx = cx;
+		this->cy = cy;
+		image_optical_center_set = true;
+	}
+	else
+	{
+		image_optical_center_set = false;
+	}
+
 	return true;
 
 }
@@ -388,10 +410,25 @@ cv::Mat ImageCapture::GetNextImage()
 	image_width = latest_frame.size().width;
 
 	// Reset the intrinsics for every image if they are not set globally
-	if (!image_intrinsics_set)
+	float _fx = -1;
+	float _fy = -1;
+	
+	if (image_focal_length_set)
 	{
-		SetCameraIntrinsics(-1, -1, -1, -1);
+		_fx = fx;
+		_fy = fy;
 	}
+	
+	float _cx = -1;
+	float _cy = -1;
+
+	if (image_optical_center_set)
+	{
+		_cx = cx;
+		_cy = cy;
+	}
+
+	SetCameraIntrinsics(_fx, _fy, _cx, _cy);
 
 	// Set the grayscale frame
 	convertToGrayscale(latest_frame, latest_gray_frame);
