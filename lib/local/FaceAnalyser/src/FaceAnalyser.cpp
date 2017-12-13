@@ -1321,7 +1321,10 @@ void FaceAnalyser::PostprocessOutputFile(string output_file)
 	// Now overwrite the whole file
 	std::ofstream outfile(output_file, ios_base::out);
 	// Write the header
-	outfile << std::setprecision(4);
+	outfile << std::setprecision(2);
+	outfile << std::fixed;
+	outfile << std::noshowpoint;
+
 	outfile << output_file_contents[0].c_str() << endl;
 
 	// Write the contents

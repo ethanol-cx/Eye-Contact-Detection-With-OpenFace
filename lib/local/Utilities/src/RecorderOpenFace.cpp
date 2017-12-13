@@ -71,7 +71,6 @@ void CreateDirectory(std::string output_path)
 	}
 }
 
-
 RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFaceParameters parameters, std::vector<std::string>& arguments):video_writer(), params(parameters)
 {
 

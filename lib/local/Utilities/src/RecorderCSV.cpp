@@ -38,6 +38,8 @@
 
 // For standard out
 #include <iostream>
+#include <iomanip>
+#include <locale>
 
 using namespace Utilities;
 
@@ -46,12 +48,18 @@ RecorderCSV::RecorderCSV():output_file(){};
 
 // TODO the other 4 constructors + destructors?
 
+// Making sure full stop is used for decimal point separation
+struct fullstop : std::numpunct<char> {
+	char do_decimal_point() const { return '.'; }
+};
+
 // Opening the file and preparing the header for it
 bool RecorderCSV::Open(std::string output_file_name, bool is_sequence, bool output_2D_landmarks, bool output_3D_landmarks, bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze,
 	int num_face_landmarks, int num_model_modes, int num_eye_landmarks, const std::vector<std::string>& au_names_class, const std::vector<std::string>& au_names_reg)
 {
 
 	output_file.open(output_file_name, std::ios_base::out);
+	output_file.imbue(std::locale(output_file.getloc(), new fullstop));
 
 	if (!output_file.is_open())
 		return false;
@@ -182,18 +190,27 @@ void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landm
 		std::cout << "The output CSV file is not open" << std::endl;
 	}
 
+	// Making sure fixed and not scientific notation is used
+	output_file << std::fixed;
+	output_file << std::noshowpoint;
 	if(is_sequence)
 	{
-		output_file << observation_count << ", " << time_stamp << ", " << landmark_confidence << ", " << landmark_detection_success;
+		output_file << std::setprecision(3);
+		output_file << observation_count << ", " << time_stamp;
+		output_file << std::setprecision(2);
+		output_file << ", " << landmark_confidence;
+		output_file << std::setprecision(0);
+		output_file << ", " << landmark_detection_success;
 	}
 	else
 	{
+		output_file << std::setprecision(3);
 		output_file << observation_count << ", " << landmark_confidence;
-
 	}
 	// Output the estimated gaze
 	if (output_gaze)
 	{
+		output_file << std::setprecision(3);
 		output_file << ", " << gazeDirection0.x << ", " << gazeDirection0.y << ", " << gazeDirection0.z
 			<< ", " << gazeDirection1.x << ", " << gazeDirection1.y << ", " << gazeDirection1.z;
 
@@ -201,6 +218,7 @@ void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landm
 		output_file << ", " << gaze_angle[0] << ", " << gaze_angle[1];
 
 		// Output the 2D eye landmarks
+		output_file << std::setprecision(1);
 		for (auto eye_lmk : eye_landmarks2d)
 		{
 			output_file << ", " << eye_lmk.x;
@@ -231,13 +249,16 @@ void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landm
 	// Output the estimated head pose
 	if (output_pose)
 	{
-		output_file << ", " << pose_estimate[0] << ", " << pose_estimate[1] << ", " << pose_estimate[2]
-				<< ", " << pose_estimate[3] << ", " << pose_estimate[4] << ", " << pose_estimate[5];
+		output_file << std::setprecision(1);
+		output_file << ", " << pose_estimate[0] << ", " << pose_estimate[1] << ", " << pose_estimate[2];
+		output_file << std::setprecision(3);
+		output_file << ", " << pose_estimate[3] << ", " << pose_estimate[4] << ", " << pose_estimate[5];
 	}
 
 	// Output the detected 2D facial landmarks
 	if (output_2D_landmarks)
 	{
+		output_file.precision(1);
 		// Output the 2D eye landmarks
 		for (auto lmk : landmarks_2D)
 		{
@@ -248,6 +269,7 @@ void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landm
 	// Output the detected 3D facial landmarks
 	if (output_3D_landmarks)
 	{
+		output_file.precision(1);
 		// Output the 2D eye landmarks
 		for (auto lmk : landmarks_3D)
 		{
@@ -257,6 +279,7 @@ void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landm
 
 	if (output_model_params)
 	{
+		output_file.precision(3);
 		for (int i = 0; i < 6; ++i)
 		{
 			output_file << ", " << rigid_shape_params[i];
@@ -272,6 +295,7 @@ void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landm
 	{
 
 		// write out ar the correct index
+		output_file.precision(2);
 		for (std::string au_name : au_names_reg)
 		{
 			for (auto au_reg : au_intensities)
@@ -292,6 +316,7 @@ void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landm
 			}
 		}
 
+		output_file.precision(1);
 		// write out ar the correct index
 		for (std::string au_name : au_names_class)
 		{
