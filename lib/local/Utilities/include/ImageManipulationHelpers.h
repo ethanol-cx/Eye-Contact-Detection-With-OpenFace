@@ -43,39 +43,6 @@ namespace Utilities
 	// Converting between color spaces and bit depths
 	//===========================================================================
 
-	// Perform the conversion inplace
-	static void ConvertToRGB_8bit(cv::Mat& in_out)
-	{
-		if (in_out.channels() == 3 && in_out.depth() == CV_16U)
-		{
-			in_out = in_out / 256;
-		}
-		else if (in_out.channels() == 4)
-		{
-			if (in_out.depth() == CV_16U)
-			{
-				in_out = in_out / 256;
-				cv::cvtColor(in_out, in_out, CV_BGRA2BGR);
-			}
-			else
-			{
-				cv::cvtColor(in_out, in_out, CV_BGRA2BGR);
-			}
-		}
-		else if (in_out.channels() == 1)
-		{
-			if (in_out.depth() == CV_16U)
-			{
-				in_out = in_out / 256;
-				cv::cvtColor(in_out, in_out, CV_GRAY2BGR);
-			}
-			else
-			{
-				cv::cvtColor(in_out, in_out, CV_GRAY2BGR);
-			}
-		}
-	}
-
 	static void ConvertToGrayscale_8bit(const cv::Mat& in, cv::Mat& out)
 	{
 		if (in.channels() == 3)

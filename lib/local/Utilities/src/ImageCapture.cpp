@@ -364,9 +364,6 @@ cv::Mat ImageCapture::GetNextImage()
 		exit(1);
 	}
 
-	// Convert the latest frame to 3 channel 8 bit format if it is not in it already
-	//ConvertToRGB_8bit(latest_frame); TODO check
-
 	image_height = latest_frame.size().height;
 	image_width = latest_frame.size().width;
 
