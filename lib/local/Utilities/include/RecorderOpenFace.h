@@ -61,8 +61,6 @@ namespace Utilities
 
 		~RecorderOpenFace();
 
-		// TODO copy, assignment and move operators? Do not allow
-
 		// Closing and cleaning up the recorder
 		void Close();
 
@@ -99,6 +97,12 @@ namespace Utilities
 		std::string GetCSVFile() { return csv_filename; }
 
 	private:
+
+		// Blocking copy, assignment and move operators, as it does not make sense to save to the same location
+		RecorderOpenFace & operator= (const RecorderOpenFace& other);
+		RecorderOpenFace & operator= (const RecorderOpenFace&& other);
+		RecorderOpenFace(const RecorderOpenFace&& other);
+		RecorderOpenFace(const RecorderOpenFace& other);
 
 		// Keeping track of what to output and how to output it
 		const RecorderOpenFaceParameters params;

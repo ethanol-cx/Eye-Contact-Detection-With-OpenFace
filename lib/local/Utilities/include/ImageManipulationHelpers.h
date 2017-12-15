@@ -31,58 +31,94 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __RECORDER_HOG_h_
-#define __RECORDER_HOG_h_
+#ifndef __IMAGE_MANIPULATION_HELPERS_h_
+#define __IMAGE_MANIPULATION_HELPERS_h_
 
-// System includes
-#include <vector>
-
-// OpenCV includes
 #include <opencv2/core/core.hpp>
-
-#include <iostream>
-#include <fstream>
+#include <opencv2/imgproc.hpp>
 
 namespace Utilities
 {
-
 	//===========================================================================
-	/**
-	A class for recording CSV file from OpenFace
-	*/
-	class RecorderHOG {
+	// Converting between color spaces and bit depths
+	//===========================================================================
 
-	public:
+	// Perform the conversion inplace
+	static void ConvertToRGB_8bit(cv::Mat& in_out)
+	{
+		if (in_out.channels() == 3 && in_out.depth() == CV_16U)
+		{
+			in_out = in_out / 256;
+		}
+		else if (in_out.channels() == 4)
+		{
+			if (in_out.depth() == CV_16U)
+			{
+				in_out = in_out / 256;
+				cv::cvtColor(in_out, in_out, CV_BGRA2BGR);
+			}
+			else
+			{
+				cv::cvtColor(in_out, in_out, CV_BGRA2BGR);
+			}
+		}
+		else if (in_out.channels() == 1)
+		{
+			if (in_out.depth() == CV_16U)
+			{
+				in_out = in_out / 256;
+				cv::cvtColor(in_out, in_out, CV_GRAY2BGR);
+			}
+			else
+			{
+				cv::cvtColor(in_out, in_out, CV_GRAY2BGR);
+			}
+		}
+	}
 
-		// The constructor for the recorder, by default does not do anything
-		RecorderHOG();
-		
-		// Adding observations to the recorder
-		void SetObservationHOG(bool success, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels);
+	static void ConvertToGrayscale_8bit(const cv::Mat& in, cv::Mat& out)
+	{
+		if (in.channels() == 3)
+		{
+			// Make sure it's in a correct format
+			if (in.depth() == CV_16U)
+			{
+				cv::Mat tmp = in / 256;
+				tmp.convertTo(out, CV_8U);
+				cv::cvtColor(out, out, CV_BGR2GRAY);
+			}
+			else
+			{
+				cv::cvtColor(in, out, CV_BGR2GRAY);
+			}
+		}
+		else if (in.channels() == 4)
+		{
+			if (in.depth() == CV_16U)
+			{
+				cv::Mat tmp = in / 256;
+				tmp.convertTo(out, CV_8U);
+				cv::cvtColor(out, out, CV_BGRA2GRAY);
+			}
+			else
+			{
+				cv::cvtColor(in, out, CV_BGRA2GRAY);
+			}
+		}
+		else
+		{
+			if (in.depth() == CV_16U)
+			{
+				cv::Mat tmp = in / 256;
+				tmp.convertTo(out, CV_8U);
+			}
+			else if (in.depth() == CV_8U)
+			{
+				out = in.clone();
+			}
+		}
+	}
 
-		void Write();
 
-		bool Open(std::string filename);
-
-		void Close();
-
-	private:
-
-		// Blocking copy and move, as it doesn't make sense to read to write to the same file
-		RecorderHOG & operator= (const RecorderHOG& other);
-		RecorderHOG & operator= (const RecorderHOG&& other);
-		RecorderHOG(const RecorderHOG&& other);
-		RecorderHOG(const RecorderHOG& other);
-
-		std::ofstream hog_file;
-
-		// Internals for recording
-		int num_cols;
-		int num_rows;
-		int num_channels;
-		cv::Mat_<double> hog_descriptor;
-		bool good_frame;
-
-	};
 }
 #endif

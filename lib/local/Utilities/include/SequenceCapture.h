@@ -57,7 +57,8 @@ namespace Utilities
 		// Default constructor
 		SequenceCapture() {};
 
-		// TODO block copy, move etc.
+		// Destructor
+		~SequenceCapture();
 
 		// Opening based on command line arguments
 		bool Open(std::vector<std::string>& arguments);
@@ -104,12 +105,18 @@ namespace Utilities
 
 	private:
 
+		// Blocking copy and move, as it doesn't make sense to have several readers pointed at the same source, and this would cause issues, especially with webcams
+		SequenceCapture & operator= (const SequenceCapture& other);
+		SequenceCapture & operator= (const SequenceCapture&& other);
+		SequenceCapture(const SequenceCapture&& other);
+		SequenceCapture(const SequenceCapture& other);
+
 		// Used for capturing webcam and video
 		cv::VideoCapture capture;
 
 		// Storing the latest captures
 		cv::Mat latest_frame;
-		cv::Mat latest_gray_frame;
+		cv::Mat_<uchar> latest_gray_frame;
 		
 		// Keeping track of frame number and the files in the image sequence
 		size_t  frame_num;

@@ -79,69 +79,6 @@ vector<string> get_arguments(int argc, char **argv)
 	return arguments;
 }
 
-// TODO rem
-void create_display_image(const cv::Mat& orig, cv::Mat& display_image, LandmarkDetector::CLNF& clnf_model)
-{
-	
-	// Draw head pose if present and draw eye gaze as well
-
-	// preparing the visualisation image
-	display_image = orig.clone();		
-
-	// Creating a display image			
-	cv::Mat xs = clnf_model.detected_landmarks(cv::Rect(0, 0, 1, clnf_model.detected_landmarks.rows/2));
-	cv::Mat ys = clnf_model.detected_landmarks(cv::Rect(0, clnf_model.detected_landmarks.rows/2, 1, clnf_model.detected_landmarks.rows/2));
-	double min_x, max_x, min_y, max_y;
-
-	cv::minMaxLoc(xs, &min_x, &max_x);
-	cv::minMaxLoc(ys, &min_y, &max_y);
-
-	double width = max_x - min_x;
-	double height = max_y - min_y;
-
-	int minCropX = max((int)(min_x-width/3.0),0);
-	int minCropY = max((int)(min_y-height/3.0),0);
-
-	int widthCrop = min((int)(width*5.0/3.0), display_image.cols - minCropX - 1);
-	int heightCrop = min((int)(height*5.0/3.0), display_image.rows - minCropY - 1);
-
-	double scaling = 350.0/widthCrop;
-	
-	// first crop the image
-	display_image = display_image(cv::Rect((int)(minCropX), (int)(minCropY), (int)(widthCrop), (int)(heightCrop)));
-		
-	// now scale it
-	cv::resize(display_image.clone(), display_image, cv::Size(), scaling, scaling);
-
-	// Make the adjustments to points
-	xs = (xs - minCropX)*scaling;
-	ys = (ys - minCropY)*scaling;
-
-	cv::Mat shape = clnf_model.detected_landmarks.clone();
-
-	xs.copyTo(shape(cv::Rect(0, 0, 1, clnf_model.detected_landmarks.rows/2)));
-	ys.copyTo(shape(cv::Rect(0, clnf_model.detected_landmarks.rows/2, 1, clnf_model.detected_landmarks.rows/2)));
-
-	// Do the shifting for the hierarchical models as well
-	for (size_t part = 0; part < clnf_model.hierarchical_models.size(); ++part)
-	{
-		cv::Mat xs = clnf_model.hierarchical_models[part].detected_landmarks(cv::Rect(0, 0, 1, clnf_model.hierarchical_models[part].detected_landmarks.rows / 2));
-		cv::Mat ys = clnf_model.hierarchical_models[part].detected_landmarks(cv::Rect(0, clnf_model.hierarchical_models[part].detected_landmarks.rows / 2, 1, clnf_model.hierarchical_models[part].detected_landmarks.rows / 2));
-
-		xs = (xs - minCropX)*scaling;
-		ys = (ys - minCropY)*scaling;
-
-		cv::Mat shape = clnf_model.hierarchical_models[part].detected_landmarks.clone();
-
-		xs.copyTo(shape(cv::Rect(0, 0, 1, clnf_model.hierarchical_models[part].detected_landmarks.rows / 2)));
-		ys.copyTo(shape(cv::Rect(0, clnf_model.hierarchical_models[part].detected_landmarks.rows / 2, 1, clnf_model.hierarchical_models[part].detected_landmarks.rows / 2)));
-
-	}
-
-	//LandmarkDetector::Draw(display_image, clnf_model);
-						
-}
-
 int main (int argc, char **argv)
 {
 		
@@ -271,7 +208,10 @@ int main (int argc, char **argv)
 			open_face_rec.WriteObservation();
 
 		}
-		visualizer.ShowObservation();
+		if(face_detections.size() > 0)
+		{
+			visualizer.ShowObservation();
+		}
 
 		// Grabbing the next frame in the sequence
 		captured_image = image_reader.GetNextImage();

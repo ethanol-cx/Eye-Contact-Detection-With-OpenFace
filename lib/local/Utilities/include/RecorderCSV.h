@@ -68,9 +68,13 @@ namespace Utilities
 			const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks2d, const std::vector<cv::Point3d>& eye_landmarks3d,
 			const std::vector<std::pair<std::string, double> >& au_intensities, const std::vector<std::pair<std::string, double> >& au_occurences);
 
-		// TODO have set functions?
-
 	private:
+
+		// Blocking copy and move, as it doesn't make sense to read to write to the same file
+		RecorderCSV & operator= (const RecorderCSV& other);
+		RecorderCSV & operator= (const RecorderCSV&& other);
+		RecorderCSV(const RecorderCSV&& other);
+		RecorderCSV(const RecorderCSV& other);
 
 		// The actual output file stream that will be written
 		std::ofstream output_file;

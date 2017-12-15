@@ -55,11 +55,7 @@ namespace Utilities
 		// The constructor for the visualizer that specifies what to visualize
 		Visualizer(std::vector<std::string> arguments);
 		Visualizer(bool vis_track, bool vis_hog, bool vis_align);
-
-		//~Visualizer();
-
-		// TODO copy, assignment and move operators? Do not allow
-
+		
 		// Adding observations to the visualizer
 		
 		// Pose related observations

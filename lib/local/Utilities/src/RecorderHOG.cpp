@@ -40,8 +40,6 @@ using namespace Utilities;
 // Default constructor initializes the variables
 RecorderHOG::RecorderHOG() :hog_file() {};
 
-// TODO the other 4 constructors + destructors?
-
 // Opening the file and preparing the header for it
 bool RecorderHOG::Open(std::string output_file_name)
 {

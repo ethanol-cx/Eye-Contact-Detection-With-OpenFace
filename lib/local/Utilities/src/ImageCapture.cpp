@@ -32,7 +32,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "ImageCapture.h"
-
+#include "ImageManipulationHelpers.h"
 #include <iostream>
 
 // Boost includes
@@ -177,8 +177,6 @@ bool ImageCapture::Open(std::vector<std::string>& arguments)
 	return false;
 }
 
-// TODO proper destructors and move constructors
-
 bool ImageCapture::OpenImageFiles(const std::vector<std::string>& image_files, float fx, float fy, float cx, float cy)
 {
 
@@ -318,48 +316,6 @@ bool ImageCapture::OpenDirectory(std::string directory, std::string bbox_directo
 
 }
 
-// TODO this should be shared somewhere
-void convertToGrayscale(const cv::Mat& in, cv::Mat& out)
-{
-	if (in.channels() == 3)
-	{
-		// Make sure it's in a correct format
-		if (in.depth() != CV_8U)
-		{
-			if (in.depth() == CV_16U)
-			{
-				cv::Mat tmp = in / 256;
-				tmp.convertTo(tmp, CV_8U);
-				cv::cvtColor(tmp, out, CV_BGR2GRAY);
-			}
-		}
-		else
-		{
-			cv::cvtColor(in, out, CV_BGR2GRAY);
-		}
-	}
-	else if (in.channels() == 4)
-	{
-		cv::cvtColor(in, out, CV_BGRA2GRAY);
-	}
-	else
-	{
-		if (in.depth() == CV_16U)
-		{
-			cv::Mat tmp = in / 256;
-			out = tmp.clone();
-		}
-		else if (in.depth() != CV_8U)
-		{
-			in.convertTo(out, CV_8U);
-		}
-		else
-		{
-			out = in.clone();
-		}
-	}
-}
-
 void ImageCapture::SetCameraIntrinsics(float fx, float fy, float cx, float cy)
 {
 	// If optical centers are not defined just use center of image
@@ -389,6 +345,7 @@ void ImageCapture::SetCameraIntrinsics(float fx, float fy, float cx, float cy)
 	}
 }
 
+// Returns a read image in 3 channel RGB format, also prepares a grayscale frame if needed
 cv::Mat ImageCapture::GetNextImage()
 {
 	if (image_files.empty() || frame_num >= image_files.size())
@@ -398,13 +355,17 @@ cv::Mat ImageCapture::GetNextImage()
 		return latest_frame;
 	}
 		
-	latest_frame = cv::imread(image_files[frame_num], -1);
+	// Load the image as an 8 bit RGB
+	latest_frame = cv::imread(image_files[frame_num], CV_LOAD_IMAGE_COLOR);
 
 	if (latest_frame.empty())
 	{
-		ERROR_STREAM("Could not open the image: " + image_files[frame_num - 1]);
+		ERROR_STREAM("Could not open the image: " + image_files[frame_num]);
 		exit(1);
 	}
+
+	// Convert the latest frame to 3 channel 8 bit format if it is not in it already
+	//ConvertToRGB_8bit(latest_frame); TODO check
 
 	image_height = latest_frame.size().height;
 	image_width = latest_frame.size().width;
@@ -431,7 +392,7 @@ cv::Mat ImageCapture::GetNextImage()
 	SetCameraIntrinsics(_fx, _fy, _cx, _cy);
 
 	// Set the grayscale frame
-	convertToGrayscale(latest_frame, latest_gray_frame);
+	ConvertToGrayscale_8bit(latest_frame, latest_gray_frame);
 
 	this->name = image_files[frame_num];
 

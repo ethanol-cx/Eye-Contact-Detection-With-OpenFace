@@ -57,8 +57,6 @@ namespace Utilities
 		// Default constructor
 		ImageCapture() {};
 
-		// TODO block copy, move etc.
-
 		// Opening based on command line arguments
 		bool Open(std::vector<std::string>& arguments);
 
@@ -94,9 +92,15 @@ namespace Utilities
 
 	private:
 
+		// Blocking copy and move, as it doesn't make sense to have several readers pointed at the same source
+		ImageCapture & operator= (const ImageCapture& other);
+		ImageCapture & operator= (const ImageCapture&& other);
+		ImageCapture(const ImageCapture&& other);
+		ImageCapture(const ImageCapture& other);
+
 		// Storing the latest captures
 		cv::Mat latest_frame;
-		cv::Mat latest_gray_frame;
+		cv::Mat_<uchar> latest_gray_frame;
 
 		// Keeping track of how many files are read and the filenames
 		size_t  frame_num;
@@ -110,7 +114,6 @@ namespace Utilities
 		bool image_focal_length_set;
 		bool image_optical_center_set;
 
-		// TODO make sure the error message makes sense
 		bool no_input_specified;
 
 	};

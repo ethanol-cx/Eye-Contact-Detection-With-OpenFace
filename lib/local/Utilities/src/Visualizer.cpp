@@ -34,6 +34,7 @@
 #include "Visualizer.h"
 #include "VisualizationUtils.h"
 #include "RotationHelpers.h"
+#include "ImageManipulationHelpers.h"
 
 // For drawing on images
 #include <opencv2/imgproc.hpp>
@@ -82,10 +83,15 @@ Visualizer::Visualizer(bool vis_track, bool vis_hog, bool vis_align)
 	this->vis_align = vis_align;
 }
 
+
+
 // Setting the image on which to draw
 void Visualizer::SetImage(const cv::Mat& canvas, float fx, float fy, float cx, float cy)
 {
+	// Convert the image to 8 bit RGB
 	captured_image = canvas.clone();
+	ConvertToRGB_8bit(captured_image);
+
 	this->fx = fx;
 	this->fy = fy;
 	this->cx = cx;

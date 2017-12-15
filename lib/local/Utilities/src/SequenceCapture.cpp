@@ -32,6 +32,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "SequenceCapture.h"
+#include "ImageManipulationHelpers.h"
 
 #include <iostream>
 
@@ -248,7 +249,12 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 
 }
 
-// TODO proper destructors and move constructors
+// Destructor that releases the capture
+SequenceCapture::~SequenceCapture()
+{
+	if (capture.isOpened())
+		capture.release();
+}
 
 bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, float cx, float cy)
 {
@@ -327,7 +333,7 @@ bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 	}
 
 	// Assume all images are same size in an image sequence
-	cv::Mat tmp = cv::imread(image_files[0], -1);
+	cv::Mat tmp = cv::imread(image_files[0], CV_LOAD_IMAGE_COLOR);
 	this->frame_height = tmp.size().height;
 	this->frame_width = tmp.size().width;
 
@@ -344,47 +350,6 @@ bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 
 	return true;
 
-}
-
-void convertToGrayscale(const cv::Mat& in, cv::Mat& out)
-{
-	if (in.channels() == 3)
-	{
-		// Make sure it's in a correct format
-		if (in.depth() != CV_8U)
-		{
-			if (in.depth() == CV_16U)
-			{
-				cv::Mat tmp = in / 256;
-				tmp.convertTo(tmp, CV_8U);
-				cv::cvtColor(tmp, out, CV_BGR2GRAY);
-			}
-		}
-		else
-		{
-			cv::cvtColor(in, out, CV_BGR2GRAY);
-		}
-	}
-	else if (in.channels() == 4)
-	{
-		cv::cvtColor(in, out, CV_BGRA2GRAY);
-	}
-	else
-	{
-		if (in.depth() == CV_16U)
-		{
-			cv::Mat tmp = in / 256;
-			out = tmp.clone();
-		}
-		else if (in.depth() != CV_8U)
-		{
-			in.convertTo(out, CV_8U);
-		}
-		else
-		{
-			out = in.clone();
-		}
-	}
 }
 
 void SequenceCapture::SetCameraIntrinsics(float fx, float fy, float cx, float cy)
@@ -450,13 +415,13 @@ cv::Mat SequenceCapture::GetNextFrame()
 		}
 		else
 		{
-			latest_frame = cv::imread(image_files[frame_num], -1);			
+			latest_frame = cv::imread(image_files[frame_num], CV_LOAD_IMAGE_COLOR);			
 		}
 		time_stamp = 0;
 	}
-
+	
 	// Set the grayscale frame
-	convertToGrayscale(latest_frame, latest_gray_frame);
+	ConvertToGrayscale_8bit(latest_frame, latest_gray_frame);
 
 	frame_num++;
 

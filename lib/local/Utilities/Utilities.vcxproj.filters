@@ -68,5 +68,8 @@
     <ClInclude Include="include\ImageCapture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\ImageManipulationHelpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

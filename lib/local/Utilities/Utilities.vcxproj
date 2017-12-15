@@ -159,6 +159,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\ImageCapture.h" />
+    <ClInclude Include="include\ImageManipulationHelpers.h" />
     <ClInclude Include="include\RecorderCSV.h" />
     <ClInclude Include="include\RecorderHOG.h" />
     <ClInclude Include="include\RecorderOpenFace.h" />
