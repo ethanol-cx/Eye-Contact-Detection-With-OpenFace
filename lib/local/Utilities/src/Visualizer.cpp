@@ -90,7 +90,6 @@ void Visualizer::SetImage(const cv::Mat& canvas, float fx, float fy, float cx, f
 {
 	// Convert the image to 8 bit RGB
 	captured_image = canvas.clone();
-	ConvertToRGB_8bit(captured_image);
 
 	this->fx = fx;
 	this->fy = fy;

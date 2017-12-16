@@ -171,7 +171,7 @@ int main (int argc, char **argv)
 			cv::Point3f gaze_direction1(0, 0, -1);
 			cv::Vec2d gaze_angle(0, 0);
 
-			if (success && face_model.eye_model)
+			if (face_model.eye_model)
 			{
 				GazeAnalysis::EstimateGaze(face_model, gaze_direction0, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy, true);
 				GazeAnalysis::EstimateGaze(face_model, gaze_direction1, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy, false);

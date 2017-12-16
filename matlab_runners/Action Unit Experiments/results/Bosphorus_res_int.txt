@@ -10,7 +10,7 @@ AU12 intensity, Corr - 0.804, RMS - 0.715, CCC - 0.766
 AU14 intensity, Corr - 0.357, RMS - 0.931, CCC - 0.277
 AU15 intensity, Corr - 0.516, RMS - 0.565, CCC - 0.431
 AU17 intensity, Corr - 0.554, RMS - 0.893, CCC - 0.477
-AU20 intensity, Corr - 0.411, RMS - 0.900, CCC - 0.277
+AU20 intensity, Corr - 0.411, RMS - 0.901, CCC - 0.277
 AU23 intensity, Corr - 0.351, RMS - 0.736, CCC - 0.274
 AU25 intensity, Corr - 0.846, RMS - 0.809, CCC - 0.822
 AU26 intensity, Corr - 0.516, RMS - 0.995, CCC - 0.453
