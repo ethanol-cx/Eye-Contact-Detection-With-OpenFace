@@ -18,8 +18,7 @@ before_install:
   - if [ ${TRAVIS_OS_NAME} = linux ]; then  
       apt-get install git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev;      
       apt-get install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev checkinstall;
-      apt-get install cmake
-      #sudo add-apt-repository -y ppa:boost-latest/ppa;
+      apt-get install cmake;
       apt-get update;
       apt-get install libboost1.55-all-dev;
       wget https://github.com/Itseez/opencv/archive/3.1.0.zip;
@@ -32,10 +31,6 @@ before_install:
   # g++4.8.1
   - if [ "$CXX" = "g++" ]; then
       if [ ${TRAVIS_OS_NAME} = linux ]; then
-        #sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; 
-        #sudo apt-get update -qq;
-        #sudo apt-get install -qq g++-4.8; 
-        #export CXX="g++-4.8";		
         $CXX --version;
         cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF ..;
       fi 
@@ -45,7 +40,6 @@ before_install:
   - if [ "$CXX" = "clang++" ]; then
       if [ ${TRAVIS_OS_NAME} = linux ]; then  
         $CXX --version;
-        #sudo sed -i -e 's/^Defaults\tsecure_path.*$//' /etc/sudoers;
         cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF -D WITH_TBB=ON ..;
       fi
     fi
@@ -53,12 +47,7 @@ before_install:
   - if [ ${TRAVIS_OS_NAME} = osx ]; then
       brew update;
       brew install tbb;
-      wget https://github.com/Itseez/opencv/archive/3.1.0.zip;
-      sudo unzip 3.1.0.zip;
-      cd opencv-3.1.0;
-      sudo mkdir build;
-      cd build;
-      sudo cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF ..;
+      brew install opencv3 --HEAD
     fi
 
 before_script:
