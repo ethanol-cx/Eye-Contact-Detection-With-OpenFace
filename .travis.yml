@@ -49,10 +49,9 @@ before_install:
     fi
 
   - if [ ${TRAVIS_OS_NAME} = osx ]; then  
-      sudo brew update;
-      sudo brew install tbb;
-      sudo brew tap homebrew/science
-      sudo brew install opencv3 --HEAD;
+      brew update;
+      brew install tbb;
+      brew install homebrew/science/opencv || brew link --overwrite homebrew/python/numpy
     fi
 
 before_script:
