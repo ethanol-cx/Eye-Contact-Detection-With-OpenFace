@@ -25,7 +25,7 @@ before_install:
       unzip 3.1.0.zip;
       opencv-3.1.0;
       mkdir build;
-      build;
+      cd build;
     fi
 
   # g++4.8.1
@@ -44,10 +44,10 @@ before_install:
       fi
     fi
 
-  - if [ ${TRAVIS_OS_NAME} = osx ]; then
+  - if [ ${TRAVIS_OS_NAME} = osx ]; then  
       brew update;
       brew install tbb;
-      brew install opencv3 --HEAD
+      brew install opencv3 --HEAD;
     fi
 
 before_script:
