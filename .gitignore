@@ -57,3 +57,4 @@ exe/FeatureExtraction/processed/
 exe/FaceLandmarkImg/processed/
 exe/FeatureExtraction/processed_features/
 matlab_runners/Demos/processed_features/
+*.db

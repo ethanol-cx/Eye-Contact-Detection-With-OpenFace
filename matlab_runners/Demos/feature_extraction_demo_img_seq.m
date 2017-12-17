@@ -11,7 +11,7 @@ else
 end
 
 % Input file
-in_dir = '../../image_sequence';
+in_dir = '../../samples/image_sequence';
 
 % Where to store the output
 output_dir = './processed_features/';
