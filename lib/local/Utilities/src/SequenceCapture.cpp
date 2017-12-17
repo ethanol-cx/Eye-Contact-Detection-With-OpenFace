@@ -44,6 +44,10 @@
 // OpenCV includes
 #include <opencv2/imgproc.hpp>
 
+// For timing
+#include <chrono>
+#include <ctime>
+
 using namespace Utilities;
 
 #define INFO_STREAM( stream ) \
@@ -179,16 +183,19 @@ bool SequenceCapture::Open(std::vector<std::string>& arguments)
 }
 
 // Get current date/time, format is YYYY-MM-DD.HH:mm, useful for saving data from webcam
-const std::string currentDateTime() {
-	time_t     now = time(0);
-	struct tm  tstruct;
-	char       buf[200];
-	localtime_s(&tstruct, &now);
-	// Visit http://www.cplusplus.com/reference/clibrary/ctime/strftime/
-	// for more information about date/time format
-	strftime(buf, sizeof(buf), "%Y-%m-%d-%H-%M", &tstruct);
+const std::string currentDateTime() 
+{
 
-	return buf;
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer[80];
+
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+
+	strftime(buffer, sizeof(buffer), "%Y-%m-%d-%H-%M", timeinfo);
+
+	return buffer;
 }
 
 

@@ -132,7 +132,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 
 	// Create the filename for the general output file that contains all of the meta information about the recording
 	path of_det_name(filename);
-	of_det_name = path(record_root) / of_det_name.concat("_of_details.txt");
+	of_det_name = path(record_root) / path(filename + "_of_details.txt");
 
 	// Write in the of file what we are outputing what is the input etc.
 	metadata_file.open(of_det_name.string(), std::ios_base::out);
@@ -163,13 +163,13 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 	metadata_file << "Camera parameters:" << parameters.getFx() << "," << parameters.getFy() << "," << parameters.getCx() << "," << parameters.getCy() << endl;
 
 	// Create the required individual recorders, CSV, HOG, aligned, video
-	csv_filename = path(filename).concat(".csv").string();
+	csv_filename = filename + ".csv";
 
 	// Consruct HOG recorder here
 	if(params.outputHOG())
 	{
 		// Output the data based on record_root, but do not include record_root in the meta file, as it is also in that directory
-		std::string hog_filename = path(filename).concat(".hog").string();
+		std::string hog_filename = filename + ".hog";
 		metadata_file << "Output HOG:" << hog_filename << endl;
 		hog_filename = (path(record_root) / hog_filename).string();
 		hog_recorder.Open(hog_filename);
@@ -181,13 +181,13 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 		if(parameters.isSequence())
 		{
 			// Output the data based on record_root, but do not include record_root in the meta file, as it is also in that directory
-			this->media_filename = path(filename).concat(".avi").string();
+			this->media_filename = filename + ".avi";
 			metadata_file << "Output video:" << this->media_filename << endl;
 			this->media_filename = (path(record_root) / this->media_filename).string();
 		}
 		else
 		{
-			this->media_filename = path(filename).concat(".jpg").string();
+			this->media_filename = filename + ".jpg";
 			metadata_file << "Output image:" << this->media_filename << endl;
 			this->media_filename = (path(record_root) / this->media_filename).string();
 		}
@@ -196,7 +196,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 	// Prepare image recording
 	if (params.outputAlignedFaces())
 	{
-		aligned_output_directory = path(filename + "_aligned").string();
+		aligned_output_directory = filename + "_aligned";
 		metadata_file << "Output aligned directory:" << this->aligned_output_directory << endl;
 		this->aligned_output_directory = (path(record_root) / this->aligned_output_directory).string();
 		CreateDirectory(aligned_output_directory);
