@@ -10,8 +10,12 @@ if(exist('D:/Datasets/DISFA/Videos_LeftCamera/', 'file'))
     DISFA_dir = 'D:/Datasets/DISFA/Videos_LeftCamera/';  
 elseif(exist('E:/Datasets/DISFA/Videos_LeftCamera/', 'file'))   
     DISFA_dir = 'E:/Datasets/DISFA/Videos_LeftCamera/';  
-else
+elseif(exist('/multicomp/datasets/face_datasets/DISFA/Videos_LeftCamera/', 'file'))
     DISFA_dir = '/multicomp/datasets/face_datasets/DISFA/Videos_LeftCamera/';
+elseif(exist('/media/tadas/2EBEA130BEA0F20F/datasets/DISFA/', 'file'))
+    DISFA_dir = '/media/tadas/2EBEA130BEA0F20F/datasets/DISFA/Videos_LeftCamera/';
+else
+    fprintf('Cannot find DIFA location\n');
 end
 
 

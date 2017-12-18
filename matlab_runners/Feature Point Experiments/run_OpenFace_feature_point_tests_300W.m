@@ -9,8 +9,10 @@ elseif(exist('D:/Dropbox/Dropbox/AAM/test data/', 'file'))
     database_root = 'D:/Dropbox/Dropbox/AAM/test data/';
 elseif(exist('F:/Dropbox/AAM/test data/', 'file'))
     database_root = 'F:/Dropbox/AAM/test data/';
-else
+elseif(exist('/multicomp/datasets/300-W/', 'file'))
     database_root = '/multicomp/datasets/300-W/';
+elseif(exist('/media/tadas/5E08AE0D08ADE3ED/Dropbox/AAM/test data/', 'file'))
+    database_root = '/media/tadas/5E08AE0D08ADE3ED/Dropbox/AAM/test data/';
 end
 
 %% Run using CLNF in the wild model

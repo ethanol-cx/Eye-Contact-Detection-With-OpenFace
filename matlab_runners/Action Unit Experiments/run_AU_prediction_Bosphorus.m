@@ -8,7 +8,11 @@ find_Bosphorus;
 out_loc = './out_bosph/';
 
 %%
-executable = '"../../x64/Release/FaceLandmarkImg.exe"';
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
+end
 
 bosph_dirs = dir([Bosphorus_dir, '/BosphorusDB/BosphorusDB/bs*']);
 
@@ -21,8 +25,11 @@ parfor f1=1:numel(bosph_dirs)
     command = cat(2, command, [' -fdir "' input_dir '" -out_dir "' out_loc '"']);
     command = cat(2, command, ' -multi_view 1 -wild -aus ');
 
-    dos(command);
-
+    if(isunix)
+        unix(command, '-echo')
+    else
+        dos(command);
+    end
 end
 
 %%

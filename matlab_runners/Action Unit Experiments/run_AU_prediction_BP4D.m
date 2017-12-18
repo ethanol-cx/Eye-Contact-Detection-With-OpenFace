@@ -5,7 +5,11 @@ BP4D_dir = [BP4D_dir, '../BP4D-training/'];
 out_loc = './out_bp4d/';
 
 %%
-executable = '"../../x64/Release/FeatureExtraction.exe"';
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
+end
 
 bp4d_dirs = {'F002', 'F004', 'F006', 'F008', 'F010', 'F012', 'F014', 'F016', 'F018', 'F020', 'F022', 'M002', 'M004', 'M006', 'M008', 'M010', 'M012', 'M014', 'M016', 'M018'};
 
@@ -50,8 +54,12 @@ end
 for f1=1:numel(new_bp4d_dirs)
     
     command = sprintf('%s -aus -fdir "%s" -out_dir "%s"', executable, new_bp4d_dirs{f1}, out_loc);
-    dos(command);
 
+    if(isunix)
+        unix(command, '-echo')
+    else
+        dos(command);
+    end
 end
 
 %%

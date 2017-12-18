@@ -44,12 +44,10 @@ else
     multi_view = 0;
 end
 
-command = sprintf("%s -mloc %s -multi_view %s -2Dfp ", executable, model, num2str(multi_view));
-
-% TODO just landmarks + BBoxes
+command = sprintf('%s -mloc %s -multi_view %s -2Dfp ', executable, model, num2str(multi_view));
 
 tic
-parfor i=1:numel(dataset_dirs)
+for i=1:numel(dataset_dirs)
     
     command_c = sprintf('%s -fdir "%s" -bboxdir "%s" -out_dir "%s" -wild ',...
         command, dataset_dirs{i},  dataset_dirs{i}, output_loc);
