@@ -26,7 +26,7 @@ before_install:
       sudo apt-get install cmake;
       sudo apt-get install libboost1.55-all-dev;
       wget https://github.com/Itseez/opencv/archive/3.1.0.zip;
-      unzip 3.1.0.zip -q;
+      unzip -q 3.1.0.zip;
       cd opencv-3.1.0;
       mkdir build;
       cd build;
@@ -51,8 +51,7 @@ before_install:
   - if [ ${TRAVIS_OS_NAME} = osx ]; then  
       brew update;
       brew install tbb;
-      brew install homebrew/science/opencv
-      homebrew/python/numpy
+      brew install homebrew/science/opencv;
     fi
 
 before_script:
