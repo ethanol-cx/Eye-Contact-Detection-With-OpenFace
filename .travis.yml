@@ -51,7 +51,8 @@ before_install:
   - if [ ${TRAVIS_OS_NAME} = osx ]; then  
       brew update;
       brew install tbb;
-      brew install homebrew/science/opencv;
+      brew tap homebrew/science;
+      brew install opencv;
     fi
 
 before_script:
@@ -67,7 +68,5 @@ script:
   - make -j2
   - ../build/bin/FaceLandmarkImg -fdir "../samples/" -out_dir "./demo_img/"  -wild -q
   - ../build/bin/FaceLandmarkImg -inroot ../samples -f sample1.jpg -out_dir data -of sample1.txt -multi_view 1 -wild -q
-  - ../build/bin/FaceLandmarkVidMulti -inroot ../samples -f multi_face.avi -q
   - ../build/bin/FeatureExtraction -f "../samples/2015-10-15-15-14.avi" -out_dir -q
   - ../build/bin/FeatureExtraction -f "../samples/2015-10-15-15-14.avi"  -simsize 200 -simscale 0.5 -q
-  - ../build/bin/FaceLandmarkVid -inroot ../samples -f 2015-10-15-15-14.avi -f multi_face.avi -q
