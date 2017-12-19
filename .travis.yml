@@ -66,7 +66,7 @@ script:
   - cd build
   - cmake -D CMAKE_BUILD_TYPE=RELEASE CMAKE_CXX_FLAGS="-std=c++11" -D CMAKE_EXE_LINKER_FLAGS="-std=c++11" .. 
   - make -j2
-  - ../build/bin/FaceLandmarkImg -fdir "../samples/" -out_dir "./demo_img/"  -wild -q
+  - ../build/bin/FaceLandmarkImg -fdir "../samples/" -out_dir "./demo_img"  -wild -q
   - ../build/bin/FaceLandmarkImg -inroot ../samples -f sample1.jpg -out_dir data -of sample1.txt -multi_view 1 -wild -q
-  - ../build/bin/FeatureExtraction -f "../samples/2015-10-15-15-14.avi" -out_dir -q
+  - ../build/bin/FeatureExtraction -f "../samples/2015-10-15-15-14.avi" -out_dir output -q
   - ../build/bin/FeatureExtraction -f "../samples/2015-10-15-15-14.avi"  -simsize 200 -simscale 0.5 -q
