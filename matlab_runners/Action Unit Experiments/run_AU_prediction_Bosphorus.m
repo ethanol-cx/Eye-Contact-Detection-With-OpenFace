@@ -9,9 +9,9 @@ out_loc = './out_bosph/';
 
 %%
 if(isunix)
-    executable = '"../../build/bin/FeatureExtraction"';
+    executable = '"../../build/bin/FaceLandmarkImg"';
 else
-    executable = '"../../x64/Release/FeatureExtraction.exe"';
+    executable = '"../../x64/Release/FaceLandmarkImg.exe"';
 end
 
 bosph_dirs = dir([Bosphorus_dir, '/BosphorusDB/BosphorusDB/bs*']);
