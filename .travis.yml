@@ -52,7 +52,12 @@ before_install:
       brew update;
       brew install tbb;
       brew tap homebrew/science;
-      brew install opencv;
+      brew install vtk;
+      wget https://github.com/Itseez/opencv/archive/3.1.0.zip;
+      unzip -q 3.1.0.zip;
+      cd opencv-3.1.0;
+      mkdir build;
+      cd build;
     fi
 
 before_script:
