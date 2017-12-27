@@ -48,15 +48,6 @@ namespace LandmarkDetector
 	//===========================================================================	
 	// Defining a set of useful utility functions to be used within CLNF
 
-
-	//=============================================================================================
-	// Helper functions for parsing the inputs
-	//=============================================================================================
-	void get_video_input_output_params(vector<string> &input_video_file, vector<string> &output_files, string &output_codec, vector<string> &arguments);
-
-	void get_image_input_output_params(vector<string> &input_image_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
-		vector<cv::Rect_<double>> &input_bounding_boxes, vector<string> &arguments);
-
 	//===========================================================================
 	// Fast patch expert response computation (linear model across a ROI) using normalised cross-correlation
 	//===========================================================================
