@@ -12,7 +12,6 @@ compiler:
   - gcc
 
 os:
-  - osx
   - linux  
   
 before_install:
