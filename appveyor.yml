@@ -6,7 +6,6 @@ branches:
   - /^feature-.*$/
 max_jobs: 4  
 configuration:
-- Debug
 - Release
 platform:
 - x64
