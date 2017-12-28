@@ -12,7 +12,6 @@ compiler:
   - gcc
 
 os:
-  - osx
   - linux  
   
 before_install:
@@ -26,8 +25,8 @@ before_install:
       sudo apt-get install cmake;
       sudo apt-get install libboost1.55-all-dev;
       wget https://github.com/Itseez/opencv/archive/3.1.0.zip;
-      unzip 3.1.0.zip;
-      opencv-3.1.0;
+      unzip -q 3.1.0.zip;
+      cd opencv-3.1.0;
       mkdir build;
       cd build;
     fi
@@ -51,7 +50,14 @@ before_install:
   - if [ ${TRAVIS_OS_NAME} = osx ]; then  
       brew update;
       brew install tbb;
-      brew install homebrew/science/opencv || brew link --overwrite homebrew/python/numpy
+      brew tap homebrew/science;
+      brew install vtk;
+      wget https://github.com/Itseez/opencv/archive/3.1.0.zip;
+      unzip -q 3.1.0.zip;
+      cd opencv-3.1.0;
+      sudo mkdir build;
+      cd build;
+      sudo cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON ..;
     fi
 
 before_script:
@@ -65,9 +71,7 @@ script:
   - cd build
   - cmake -D CMAKE_BUILD_TYPE=RELEASE CMAKE_CXX_FLAGS="-std=c++11" -D CMAKE_EXE_LINKER_FLAGS="-std=c++11" .. 
   - make -j2
-  - ../build/bin/FaceLandmarkImg -fdir "../samples/" -out_dir "./demo_img/"  -wild -q
+  - ../build/bin/FaceLandmarkImg -fdir "../samples/" -out_dir "./demo_img"  -wild -q
   - ../build/bin/FaceLandmarkImg -inroot ../samples -f sample1.jpg -out_dir data -of sample1.txt -multi_view 1 -wild -q
-  - ../build/bin/FaceLandmarkVidMulti -inroot ../samples -f multi_face.avi -q
-  - ../build/bin/FeatureExtraction -f "../samples/2015-10-15-15-14.avi" -out_dir -q
+  - ../build/bin/FeatureExtraction -f "../samples/2015-10-15-15-14.avi" -out_dir output -q
   - ../build/bin/FeatureExtraction -f "../samples/2015-10-15-15-14.avi"  -simsize 200 -simscale 0.5 -q
-  - ../build/bin/FaceLandmarkVid -inroot ../samples -f 2015-10-15-15-14.avi -f multi_face.avi -q
