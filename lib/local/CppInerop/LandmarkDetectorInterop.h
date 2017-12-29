@@ -97,7 +97,6 @@ namespace CppInterop {
 					params->model_location = "model/main_clnf_demos.txt";
 				}
 
-				params->track_gaze = true;
 			}
 
 			// TODO this could have optimize for demo mode (also could appropriately update sigma, reg_factor as well)

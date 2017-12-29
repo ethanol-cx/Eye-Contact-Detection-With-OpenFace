@@ -187,7 +187,7 @@ public:
 		face_analyser->PostprocessOutputFile(msclr::interop::marshal_as<std::string>(file));
 	}
 
-	void AddNextFrame(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks, bool success, bool online, bool vis_hog) {
+	void AddNextFrame(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks, bool success, bool online) {
 			
 		// Construct an OpenCV matric from the landmarks
 		cv::Mat_<double> landmarks_mat(landmarks->Count * 2, 1, 0.0);
@@ -197,7 +197,9 @@ public:
 			landmarks_mat.at<double>(i + landmarks->Count, 0) = landmarks[i]->Item2;
 		}
 
-		face_analyser->AddNextFrame(frame->Mat, landmarks_mat, success, 0, online, vis_hog);
+		//(captured_image, face_model.detected_landmarks, face_model.detection_success, sequence_reader.time_stamp, sequence_reader.IsWebcam());
+
+		face_analyser->AddNextFrame(frame->Mat, landmarks_mat, success, 0, online);
 
 		face_analyser->GetLatestHOG(*hog_features, *num_rows, *num_cols);
 		

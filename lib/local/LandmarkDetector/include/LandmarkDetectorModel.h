@@ -93,16 +93,13 @@ public:
 	dlib::frontal_face_detector face_detector_HOG;
 
 
-	// Validate if the detected landmarks are correct using an SVR regressor
+	// Validate if the detected landmarks are correct using a predictor on detected landmarks
 	DetectionValidator	landmark_validator; 
 
-	// Indicating if landmark detection succeeded (based on SVR validator)
+	// Indicating if landmark detection succeeded (based on detection validator)
 	bool				detection_success; 
 
-	// Indicating if the tracking has been initialised (for video based tracking)
-	bool				tracking_initialised;
-
-	// The actual output of the regressor (-1 is perfect detection 1 is worst detection)
+	//  Representing how confident we are that tracking succeeds (0 - complete failure, 1 - perfect success)
 	double				detection_certainty; 
 
 	// Indicator if eye model is there for eye detection
@@ -130,11 +127,7 @@ public:
 
 	// Useful when resetting or initialising the model closer to a specific location (when multiple faces are present)
 	cv::Point_<double> preference_det;
-
-	// Useful to control where face detections should not occur (for live demos etc.)
-	double detect_Z_max = -1; // Do not detect faces further than this in mm. (-1) refers to detecting all faces
-	cv::Rect_<double> detect_ROI = cv::Rect(0, 0, 1, 1); // the face detection bounds (0,0,1,1) means full image (0.25,0.25,0.5,0.5) would imply region of the face only
-
+	
 	// A default constructor
 	CLNF();
 
@@ -178,7 +171,16 @@ public:
 	// Helper reading function
 	void Read_CLNF(string clnf_location);
 	
+	// Allows to set initialization accross hierarchical models as well
+	bool IsInitialized() const { return tracking_initialised; }
+	void SetInitialized(bool initialized);
+	void SetDetectionSuccess(bool detection_success);
+
 private:
+
+
+	// Indicating if the tracking has been initialised (for video based tracking)
+	bool				tracking_initialised;
 
 	// the speedup of RLMS using precalculated KDE responses (described in Saragih 2011 RLMS paper)
 	map<int, cv::Mat_<float> >		kde_resp_precalc;
