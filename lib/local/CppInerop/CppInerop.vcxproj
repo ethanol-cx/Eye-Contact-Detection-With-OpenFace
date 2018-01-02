@@ -116,7 +116,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;CPPINEROP_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;$(SolutionDir)lib\local\LandmarkDetector\include;$(SolutionDir)lib\local\FaceAnalyser\include;$(SolutionDir)lib\local\GazeAnalyser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;$(SolutionDir)lib\local\LandmarkDetector\include;$(SolutionDir)lib\local\FaceAnalyser\include;$(SolutionDir)lib\local\GazeAnalyser\include;$(SolutionDir)lib\local\Utilities\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -130,7 +130,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;CPPINEROP_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;$(SolutionDir)lib\local\LandmarkDetector\include;$(SolutionDir)lib\local\FaceAnalyser\include;$(SolutionDir)lib\local\GazeAnalyser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;$(SolutionDir)lib\local\LandmarkDetector\include;$(SolutionDir)lib\local\FaceAnalyser\include;$(SolutionDir)lib\local\GazeAnalyser\include;$(SolutionDir)lib\local\Utilities\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -146,7 +146,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;CPPINEROP_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;$(SolutionDir)lib\local\LandmarkDetector\include;$(SolutionDir)lib\local\FaceAnalyser\include;$(SolutionDir)lib\local\GazeAnalyser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;$(SolutionDir)lib\local\LandmarkDetector\include;$(SolutionDir)lib\local\FaceAnalyser\include;$(SolutionDir)lib\local\GazeAnalyser\include;$(SolutionDir)lib\local\Utilities\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -164,7 +164,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;CPPINEROP_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;$(SolutionDir)lib\local\LandmarkDetector\include;$(SolutionDir)lib\local\FaceAnalyser\include;$(SolutionDir)lib\local\GazeAnalyser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;$(SolutionDir)lib\local\LandmarkDetector\include;$(SolutionDir)lib\local\FaceAnalyser\include;$(SolutionDir)lib\local\GazeAnalyser\include;$(SolutionDir)lib\local\Utilities\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -181,6 +181,7 @@
     <ClInclude Include="CameraInterop.h" />
     <ClInclude Include="FaceAnalyserInterop.h" />
     <ClInclude Include="GazeAnalyserInterop.h" />
+    <ClInclude Include="ImageReader.h" />
     <ClInclude Include="LandmarkDetectorInterop.h" />
     <ClInclude Include="OpenCVWrappers.h" />
   </ItemGroup>
@@ -199,6 +200,9 @@
     </ProjectReference>
     <ProjectReference Include="..\LandmarkDetector\LandmarkDetector.vcxproj">
       <Project>{bdc1d107-de17-4705-8e7b-cdde8bfb2bf8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Utilities\Utilities.vcxproj">
+      <Project>{8e741ea2-9386-4cf2-815e-6f9b08991eac}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

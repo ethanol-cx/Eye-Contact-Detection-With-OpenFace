@@ -49,6 +49,7 @@ using CppInterop.LandmarkDetector;
 using CameraInterop;
 using FaceAnalyser_Interop;
 using GazeAnalyser_Interop;
+using MediaReader;
 using System.Globalization;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
@@ -85,6 +86,7 @@ namespace OpenFaceOffline
 
         // Some members for displaying the results
         private Capture capture;
+        private ImageReader image_reader;
         private WriteableBitmap latest_img;
         private WriteableBitmap latest_aligned_face;
         private WriteableBitmap latest_HOG_descriptor;

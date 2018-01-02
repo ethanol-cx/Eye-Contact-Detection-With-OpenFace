@@ -63,6 +63,7 @@
 
 #include <Face_utils.h>
 #include <FaceAnalyser.h>
+#include <VisualizationUtils.h>
 
 #ifdef __cplusplus_cli
 #undef generic
@@ -325,26 +326,11 @@ namespace CppInterop {
 				return landmarks_3D;
 			}
 
-
-			// Static functions from the LandmarkDetector namespace.
-			void DrawLandmarks(OpenCVWrappers::RawImage^ img, List<System::Windows::Point>^ landmarks) {
-
-				vector<cv::Point> vecLandmarks;
-
-				for(int i = 0; i < landmarks->Count; i++) {
-					System::Windows::Point p = landmarks[i];
-					vecLandmarks.push_back(cv::Point(p.X, p.Y));
-				}
-
-				::LandmarkDetector::DrawLandmarks(img->Mat, vecLandmarks);
-			}
-
-
 			List<System::Tuple<System::Windows::Point, System::Windows::Point>^>^ CalculateBox(float fx, float fy, float cx, float cy) {
 
 				cv::Vec6d pose = ::LandmarkDetector::GetPose(*clnf, fx,fy, cx, cy);
 
-				vector<pair<cv::Point2d, cv::Point2d>> vecLines = ::LandmarkDetector::CalculateBox(pose, fx, fy, cx, cy);
+				vector<pair<cv::Point2d, cv::Point2d>> vecLines = ::Utilities::CalculateBox(pose, fx, fy, cx, cy);
 
 				auto lines = gcnew List<System::Tuple<System::Windows::Point,System::Windows::Point>^>();
 
@@ -353,19 +339,6 @@ namespace CppInterop {
 				}
 
 				return lines;
-			}
-
-			void DrawBox(List<System::Tuple<System::Windows::Point, System::Windows::Point>^>^ lines, OpenCVWrappers::RawImage^ image, double r, double g, double b, int thickness) {
-				cv::Scalar color = cv::Scalar(r,g,b,1);
-
-				vector<pair<cv::Point, cv::Point>> vecLines;
-
-				for(int i = 0; i < lines->Count; i++) {
-					System::Tuple<System::Windows::Point, System::Windows::Point>^ points = lines[i];
-					vecLines.push_back(pair<cv::Point, cv::Point>(cv::Point(points->Item1.X, points->Item1.Y), cv::Point(points->Item2.X, points->Item2.Y)));
-				}
-
-				::LandmarkDetector::DrawBox(vecLines, image->Mat, color, thickness);
 			}
 
 			int GetNumPoints()

@@ -61,6 +61,7 @@
 #include <OpenCVWrappers.h>
 #include <Face_utils.h>
 #include <FaceAnalyser.h>
+#include <VisualizationUtils.h>
 
 // Boost stuff
 #include <filesystem.hpp>
@@ -187,7 +188,7 @@ public:
 		face_analyser->PostprocessOutputFile(msclr::interop::marshal_as<std::string>(file));
 	}
 
-	void AddNextFrame(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks, bool success, bool online) {
+	void AddNextFrame(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks, bool success, bool online, bool vis_hog) {
 			
 		// Construct an OpenCV matric from the landmarks
 		cv::Mat_<double> landmarks_mat(landmarks->Count * 2, 1, 0.0);
@@ -209,7 +210,7 @@ public:
 
 		if(vis_hog)
 		{
-			*visualisation = face_analyser->GetLatestHOGDescriptorVisualisation();
+			Utilities::Visualise_FHOG(*hog_features, *num_rows, *num_cols, *visualisation);
 		}
 
 	}
@@ -227,10 +228,10 @@ public:
 			landmarks_mat.at<double>(i + landmarks->Count, 0) = landmarks[i]->Item2;
 		}
 
-		auto aus = face_analyser->PredictStaticAUs(frame->Mat, landmarks_mat, false);
+		face_analyser->PredictStaticAUsAndComputeFeatures(frame->Mat, landmarks_mat);
 
-		auto AU_predictions_intensity = aus.first;
-		auto AU_predictions_occurence = aus.second;
+		auto AU_predictions_intensity = face_analyser->GetCurrentAUsReg();
+		auto AU_predictions_occurence = face_analyser->GetCurrentAUsClass();
 
 		auto au_intensities = gcnew Dictionary<System::String^, double>();
 		auto au_occurences = gcnew Dictionary<System::String^, double>();

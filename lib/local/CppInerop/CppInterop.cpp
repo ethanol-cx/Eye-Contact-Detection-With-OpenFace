@@ -38,3 +38,4 @@
 #include "GazeAnalyserInterop.h"
 #include "OpenCVWrappers.h"
 #include "CameraInterop.h"
+#include "ImageReader.h"
