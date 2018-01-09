@@ -41,5 +41,8 @@
     <ClInclude Include="ImageReader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FaceDetectorInterop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

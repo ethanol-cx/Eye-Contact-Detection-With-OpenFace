@@ -25,9 +25,11 @@
             <MenuItem Header="File">
                 <MenuItem Header="Open video(s)" Click="videoFileOpenClick">
                 </MenuItem>
-                <MenuItem Header="Open image(s)" Click="imageFileOpenClick">
+                <MenuItem Header="Open image directory (as sequence)" Click="imageSequenceFileOpenClick">
                 </MenuItem>
-                <MenuItem Header="Open image sequence" Click="imageSequenceFileOpenClick">
+                <MenuItem Header="Open image(s)" Click="individualImageFilesOpenClick">
+                </MenuItem>
+                <MenuItem Header="Open image directory" Click="imageFileOpenClick">
                 </MenuItem>
             </MenuItem>
             <MenuItem Name="RecordingMenu" Header="Record" >

@@ -85,12 +85,13 @@ namespace MediaReader {
 		ImageReader(System::String^ image_directory)
 		{
 			m_image_capture = new Utilities::ImageCapture();
+			m_is_opened = new bool;
 
 			std::string image_dir_std = msclr::interop::marshal_as<std::string>(image_directory);
 
 			*m_is_opened = m_image_capture->OpenDirectory(image_dir_std);
 
-			if (*m_is_opened)
+			if (!*m_is_opened)
 			{
 				throw gcnew ReadingFailedException("Failed to open a directory or an image");
 			}
@@ -99,6 +100,7 @@ namespace MediaReader {
 		ImageReader(System::Collections::Generic::List<System::String^>^ image_files)
 		{
 			m_image_capture = new Utilities::ImageCapture();
+			m_is_opened = new bool;
 
 			std::vector<std::string> image_files_std;
 
@@ -106,11 +108,12 @@ namespace MediaReader {
 			{
 				std::string image_file = msclr::interop::marshal_as<std::string>(image_files[i]);
 				image_files_std.push_back(image_file);
+
 			}
 
-			bool success = m_image_capture->OpenImageFiles(image_files_std);
+			*m_is_opened = m_image_capture->OpenImageFiles(image_files_std);
 
-			if (!success)
+			if (!*m_is_opened)
 			{
 				throw gcnew ReadingFailedException("Failed to open a directory or an image");
 			}
@@ -127,6 +130,11 @@ namespace MediaReader {
 			}
 
 			next_image.copyTo(m_rgb_frame->Mat);
+
+			if (next_image.empty())
+			{
+				*m_is_opened = false;
+			}
 
 			return m_rgb_frame;
 		}

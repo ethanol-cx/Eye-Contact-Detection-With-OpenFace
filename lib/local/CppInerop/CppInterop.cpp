@@ -39,3 +39,4 @@
 #include "OpenCVWrappers.h"
 #include "CameraInterop.h"
 #include "ImageReader.h"
+#include "FaceDetectorInterop.h"

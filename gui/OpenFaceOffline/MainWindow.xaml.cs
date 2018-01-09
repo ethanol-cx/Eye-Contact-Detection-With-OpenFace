@@ -44,13 +44,12 @@ using Microsoft.Win32;
 
 // Internal libraries
 using OpenCVWrappers;
-using CppInterop;
 using CppInterop.LandmarkDetector;
 using CameraInterop;
 using FaceAnalyser_Interop;
 using GazeAnalyser_Interop;
+using FaceDetectorInterop;
 using MediaReader;
-using System.Globalization;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace OpenFaceOffline
@@ -86,7 +85,7 @@ namespace OpenFaceOffline
 
         // Some members for displaying the results
         private Capture capture;
-        private ImageReader image_reader;
+        private FaceDetector face_detector;
         private WriteableBitmap latest_img;
         private WriteableBitmap latest_aligned_face;
         private WriteableBitmap latest_HOG_descriptor;
@@ -154,6 +153,7 @@ namespace OpenFaceOffline
             face_analyser = new FaceAnalyserManaged(root, DynamicAUModels, image_output_size);
 
             gaze_analyser = new GazeAnalyserManaged();
+
         }
 
         // ----------------------------------------------------------
@@ -245,7 +245,132 @@ namespace OpenFaceOffline
 
         }
 
-        // 
+        // TODO here
+        private void ProcessIndividualImages(ImageReader reader) // TODO need interface for recording settings
+        {
+            // Make sure the GUI is setup appropriately
+            SetupFeatureExtractionMode();
+
+            // Indicate we will start running the thread
+            thread_running = true;
+
+            // Turn off unneeded visualisations and recording settings (this will change)
+            // TODO controlled by recorder settings, also all features will be done
+            bool TrackVid = ShowTrackedVideo; ShowTrackedVideo = true;
+            bool ShowApp = ShowAppearance; ShowAppearance = false;
+            bool ShowGeo = ShowGeometry; ShowGeometry = false;
+            bool showAU = ShowAUs; ShowAUs = false;
+            bool recAlign = RecordAligned;
+            bool recHOG = RecordHOG;
+
+            // Actually update the GUI accordingly
+            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
+            {
+                VisualisationChange(null, null);
+            }));
+
+            // Setup the parameters optimized for working on individual images rather than sequences
+            face_model_params.optimiseForImages();
+
+            // Initialize the face detector if it has not been initialized yet
+            if(face_detector == null)
+            {
+                face_detector = new FaceDetector();
+            }
+
+            // Loading an image file (or a number of them)
+            while (reader.isOpened())
+            {
+                if (!thread_running)
+                {
+                    continue;
+                }
+
+                // Start the actual processing, TODO this should change?
+                Thread.CurrentThread.IsBackground = true;
+
+                clnf_model.Reset();
+                face_analyser.Reset();
+
+                var frame = new RawImage(reader.GetNextImage());
+                var grayFrame = new RawImage(reader.GetCurrentFrameGray());
+
+                double progress = reader.GetProgress();
+
+                // Detect faces here and return bounding boxes
+                List<Rect> face_detections = new List<Rect>();
+                List<double> confidences = new List<double>();
+                face_detector.DetectFacesHOG(face_detections, grayFrame, confidences);
+
+                //Rectangle
+                var landmark_detections = clnf_model.DetectMultiFaceLandmarksInImage(grayFrame, face_model_params);
+
+                // Go over all detected faces
+                for (int i = 0; i < landmark_detections.Count; ++i)
+                {
+                    // Predict action units
+                    var au_preds = face_analyser.PredictStaticAUs(grayFrame, landmark_detections[i]);
+                }
+
+                List<Point> landmark_points = new List<Point>();
+
+                for (int i = 0; i < landmark_detections.Count; ++i)
+                {
+
+                    List<Tuple<double, double>> landmarks = landmark_detections[i];
+                    foreach (var p in landmarks)
+                    {
+                        landmark_points.Add(new Point(p.Item1, p.Item2));
+                    }
+                }
+
+                // Visualisation TODO this should be lifted out? and actually be grabbed from the visualizer? rather than drawing points ourselves?
+                if (ShowTrackedVideo)
+                {
+                    Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
+                    {
+                        if (latest_img == null)
+                        {
+                            latest_img = frame.CreateWriteableBitmap();
+                        }
+
+                        frame.UpdateWriteableBitmap(latest_img);
+
+                        video.Source = latest_img;
+                        video.Confidence = 1;
+                        video.FPS = processing_fps.GetFPS();
+                        video.Progress = progress;
+
+                        video.OverlayLines = new List<Tuple<Point, Point>>();
+
+                        video.OverlayPoints = landmark_points;
+
+                    }));
+                }
+                latest_img = null;
+
+                // TODO how to report errors from the reader here? exceptions? logging? Problem for future versions?
+            }
+
+            // Clear image setup, restore the views, TODO this will change
+            ShowTrackedVideo = TrackVid;
+            ShowAppearance = ShowApp;
+            ShowGeometry = ShowGeo;
+            ShowAUs = showAU;
+            RecordHOG = recHOG;
+            RecordAligned = recAlign;
+
+            // Actually update the GUI accordingly
+            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
+            {
+                VisualisationChange(null, null);
+            }));
+
+            EndMode();
+
+        }
+
+        // TODO old, remove
         private void ProcessImages(string[] filenames)
         {
             // Turn off unneeded visualisations and recording settings
@@ -836,12 +961,62 @@ namespace OpenFaceOffline
             }));
         }
 
-
-        private void imageFileOpenClick(object sender, RoutedEventArgs e)
+        // Some utilities for opening images/videos and directories
+        private ImageReader openMediaDialog(bool images)
         {
+            string[] image_files = new string[0];
+            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
+            {
+                var d = new OpenFileDialog();
+                d.Multiselect = true;
+                if(images)
+                { 
+                    d.Filter = "Image files|*.jpg;*.jpeg;*.bmp;*.png;*.gif";
+                }
+                else
+                {
+                    d.Filter = "Video files|*.avi;*.wmv;*.mov;*.mpg;*.mpeg;*.mp4";
+                }
+                if (d.ShowDialog(this) == true)
+                {
+
+                    image_files = d.FileNames;
+
+                }
+            }));
+            List<string> img_files_list = new List<string>(image_files);
+            return new ImageReader(img_files_list);
+        }
+
+        private void individualImageFilesOpenClick(object sender, RoutedEventArgs e)
+        {
+            // First clean up existing tracking
+            StopTracking();
+
+            ImageReader reader = openMediaDialog(true);
+
+            processing_thread = new Thread(() => ProcessIndividualImages(reader));
+            processing_thread.Start();
+
+        }
+
+        private void individualImageDirectoryOpenClick(object sender, RoutedEventArgs e)
+        {
+
+            StopTracking();
+
+            // TODO open directory here
             new Thread(() => imageOpen()).Start();
         }
 
+        // TODO old
+        private void imageFileOpenClick(object sender, RoutedEventArgs e)
+        {
+            
+            new Thread(() => imageOpen()).Start();
+        }
+
+        // TODO old
         private void imageOpen()
         {
             StopTracking();
