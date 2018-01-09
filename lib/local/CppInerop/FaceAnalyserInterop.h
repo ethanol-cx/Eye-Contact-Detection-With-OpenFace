@@ -102,6 +102,12 @@ public:
 	{
 		string root_std = msclr::interop::marshal_as<std::string>(root);
 		FaceAnalysis::FaceAnalyserParameters params(root_std);
+		
+		if (!dynamic)
+		{
+			params.OptimizeForImages();
+		}
+
 		params.setAlignedOutput(output_width);
 		face_analyser = new FaceAnalysis::FaceAnalyser(params);
 

@@ -68,7 +68,6 @@ bool ImageCapture::Open(std::vector<std::string>& arguments)
 	// Some default values
 	std::string input_root = "";
 	fx = -1; fy = -1; cx = -1; cy = -1;
-	frame_num = 0;
 
 	std::string separator = std::string(1, boost::filesystem::path::preferred_separator);
 
@@ -179,7 +178,8 @@ bool ImageCapture::Open(std::vector<std::string>& arguments)
 
 bool ImageCapture::OpenImageFiles(const std::vector<std::string>& image_files, float fx, float fy, float cx, float cy)
 {
-
+	// Setting some defaults
+	frame_num = 0;
 	no_input_specified = false;
 
 	latest_frame = cv::Mat();
@@ -218,6 +218,8 @@ bool ImageCapture::OpenDirectory(std::string directory, std::string bbox_directo
 {
 	INFO_STREAM("Attempting to read from directory: " << directory);
 
+	// Setup some defaults
+	frame_num = 0;
 	no_input_specified = false;
 
 	image_files.clear();

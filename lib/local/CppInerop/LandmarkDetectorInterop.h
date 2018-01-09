@@ -204,6 +204,7 @@ namespace CppInterop {
 				return ::LandmarkDetector::DetectLandmarksInImage(image->Mat, *clnf, *modelParams->getParams());
 			}
 
+			// TODO rem old
 			List<List<System::Tuple<double,double>^>^>^ DetectMultiFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {
 
 				auto all_landmarks = gcnew List<List<System::Tuple<double,double>^>^>();

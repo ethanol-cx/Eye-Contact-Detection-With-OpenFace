@@ -85,7 +85,6 @@ namespace OpenFaceOffline
 
         // Some members for displaying the results
         private Capture capture;
-        private FaceDetector face_detector;
         private WriteableBitmap latest_img;
         private WriteableBitmap latest_aligned_face;
         private WriteableBitmap latest_HOG_descriptor;
@@ -100,11 +99,15 @@ namespace OpenFaceOffline
         FpsTracker processing_fps = new FpsTracker();
 
         volatile bool detectionSucceeding = false;
-        
+
         // For tracking
+        private FaceDetector face_detector;
         FaceModelParameters face_model_params;
         CLNF clnf_model;
-        FaceAnalyserManaged face_analyser;
+
+        // For face analysis
+        FaceAnalyserManaged face_analyser_sequence;
+        FaceAnalyserManaged face_analyser_image;
         GazeAnalyserManaged gaze_analyser;
 
         // Recording parameters (default values)
@@ -150,7 +153,8 @@ namespace OpenFaceOffline
 
             face_model_params = new FaceModelParameters(root, false);
             clnf_model = new CLNF(face_model_params);
-            face_analyser = new FaceAnalyserManaged(root, DynamicAUModels, image_output_size);
+            face_analyser_sequence = new FaceAnalyserManaged(root, true, image_output_size); // TODO how to deal with dynamic and static models here
+            face_analyser_image = new FaceAnalyserManaged(root, false, image_output_size);
 
             gaze_analyser = new GazeAnalyserManaged();
 
@@ -302,14 +306,17 @@ namespace OpenFaceOffline
                 List<double> confidences = new List<double>();
                 face_detector.DetectFacesHOG(face_detections, grayFrame, confidences);
 
-                //Rectangle
-                var landmark_detections = clnf_model.DetectMultiFaceLandmarksInImage(grayFrame, face_model_params);
-
-                // Go over all detected faces
-                for (int i = 0; i < landmark_detections.Count; ++i)
+                for (int i = 0; i < face_detections.Count; ++i)
                 {
+                    bool success = clnf_model.DetectFaceLandmarksInImage(grayFrame, face_model_params);
+
                     // Predict action units
-                    var au_preds = face_analyser.PredictStaticAUs(grayFrame, landmark_detections[i]);
+                    // TODO face analyser should be optimized for single images
+                    var au_preds = face_analyser.PredictStaticAUs(grayFrame, clnf_model.CalculateAllLandmarks());
+
+                    // Predic eye gaze
+                    gaze_analyser.AddNextFrame(clnf_model, success, fx, fy, cx, cy); // TODO fx should be from reader
+
                 }
 
                 List<Point> landmark_points = new List<Point>();
