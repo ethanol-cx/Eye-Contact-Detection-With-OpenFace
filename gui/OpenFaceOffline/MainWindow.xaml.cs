@@ -294,7 +294,6 @@ namespace OpenFaceOffline
                 Thread.CurrentThread.IsBackground = true;
 
                 clnf_model.Reset();
-                face_analyser.Reset();
 
                 var frame = new RawImage(reader.GetNextImage());
                 var grayFrame = new RawImage(reader.GetCurrentFrameGray());
@@ -312,7 +311,7 @@ namespace OpenFaceOffline
 
                     // Predict action units
                     // TODO face analyser should be optimized for single images
-                    var au_preds = face_analyser.PredictStaticAUs(grayFrame, clnf_model.CalculateAllLandmarks());
+                    var au_preds = face_analyser_image.PredictStaticAUs(grayFrame, clnf_model.CalculateAllLandmarks());
 
                     // Predic eye gaze
                     gaze_analyser.AddNextFrame(clnf_model, success, fx, fy, cx, cy); // TODO fx should be from reader
