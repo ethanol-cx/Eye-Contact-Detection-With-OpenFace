@@ -47,7 +47,7 @@
                 <MenuItem Header="Set output image size..." Click="setOutputImageSize_Click"></MenuItem>
             </MenuItem>
             <MenuItem Name="AUSetting" Header="OpenFace settings" >
-                <MenuItem IsCheckable="True" Header="Use dynamic AU models" Click="UseDynamicModelsCheckBox_Click" IsChecked="{Binding DynamicAUModels}"/>
+                <MenuItem IsCheckable="True" Header="Use dynamic AU models" IsChecked="{Binding DynamicAUModels}"/>
                 <MenuItem Header="Set Camera parameters..." Click="setCameraParameters_Click"/>
             </MenuItem>
             <MenuItem Header="View">

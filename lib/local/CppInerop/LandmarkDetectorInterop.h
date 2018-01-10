@@ -203,6 +203,11 @@ namespace CppInterop {
 			bool DetectFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {
 				return ::LandmarkDetector::DetectLandmarksInImage(image->Mat, *clnf, *modelParams->getParams());
 			}
+			
+			bool DetectFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, Rect^ bounding_box, FaceModelParameters^ modelParams) {
+				cv::Rect_<double> bbox(bounding_box->Left, bounding_box->Top, bounding_box->Width, bounding_box->Height);
+				return ::LandmarkDetector::DetectLandmarksInImage(image->Mat, bbox, *clnf, *modelParams->getParams());
+			}
 
 			// TODO rem old
 			List<List<System::Tuple<double,double>^>^>^ DetectMultiFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {

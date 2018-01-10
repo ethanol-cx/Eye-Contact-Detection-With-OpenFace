@@ -106,8 +106,7 @@ namespace OpenFaceOffline
         CLNF clnf_model;
 
         // For face analysis
-        FaceAnalyserManaged face_analyser_sequence;
-        FaceAnalyserManaged face_analyser_image;
+        FaceAnalyserManaged face_analyser;
         GazeAnalyserManaged gaze_analyser;
 
         // Recording parameters (default values)
@@ -153,8 +152,6 @@ namespace OpenFaceOffline
 
             face_model_params = new FaceModelParameters(root, false);
             clnf_model = new CLNF(face_model_params);
-            face_analyser_sequence = new FaceAnalyserManaged(root, true, image_output_size); // TODO how to deal with dynamic and static models here
-            face_analyser_image = new FaceAnalyserManaged(root, false, image_output_size);
 
             gaze_analyser = new GazeAnalyserManaged();
 
@@ -203,12 +200,6 @@ namespace OpenFaceOffline
                         // Display message box
                         MessageBox.Show(messageBoxText, caption, button, icon);
                     }
-                }
-                else if (cam_id == -3)
-                {
-                    // Process all the provided images
-                    ProcessImages(filenames);
-
                 }
                 else
                 {
@@ -282,6 +273,9 @@ namespace OpenFaceOffline
                 face_detector = new FaceDetector();
             }
 
+            // Initialize the face analyser
+            face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, DynamicAUModels, image_output_size);
+
             // Loading an image file (or a number of them)
             while (reader.isOpened())
             {
@@ -305,29 +299,26 @@ namespace OpenFaceOffline
                 List<double> confidences = new List<double>();
                 face_detector.DetectFacesHOG(face_detections, grayFrame, confidences);
 
+                // For visualizing landmarks
+                List<Point> landmark_points = new List<Point>();
+
                 for (int i = 0; i < face_detections.Count; ++i)
                 {
-                    bool success = clnf_model.DetectFaceLandmarksInImage(grayFrame, face_model_params);
+                    bool success = clnf_model.DetectFaceLandmarksInImage(grayFrame, face_detections[i], face_model_params);
 
+                    var landmarks = clnf_model.CalculateAllLandmarks();
+                    
                     // Predict action units
-                    // TODO face analyser should be optimized for single images
-                    var au_preds = face_analyser_image.PredictStaticAUs(grayFrame, clnf_model.CalculateAllLandmarks());
+                    var au_preds = face_analyser.PredictStaticAUs(grayFrame, landmarks);
 
                     // Predic eye gaze
                     gaze_analyser.AddNextFrame(clnf_model, success, fx, fy, cx, cy); // TODO fx should be from reader
 
-                }
-
-                List<Point> landmark_points = new List<Point>();
-
-                for (int i = 0; i < landmark_detections.Count; ++i)
-                {
-
-                    List<Tuple<double, double>> landmarks = landmark_detections[i];
                     foreach (var p in landmarks)
                     {
                         landmark_points.Add(new Point(p.Item1, p.Item2));
                     }
+
                 }
 
                 // Visualisation TODO this should be lifted out? and actually be grabbed from the visualizer? rather than drawing points ourselves?
@@ -376,152 +367,6 @@ namespace OpenFaceOffline
 
         }
 
-        // TODO old, remove
-        private void ProcessImages(string[] filenames)
-        {
-            // Turn off unneeded visualisations and recording settings
-            bool TrackVid = ShowTrackedVideo; ShowTrackedVideo = true;
-            bool ShowApp = ShowAppearance; ShowAppearance = false;
-            bool ShowGeo = ShowGeometry; ShowGeometry = false;
-            bool showAU = ShowAUs; ShowAUs = false;
-            bool recAlign = RecordAligned;
-            bool recHOG = RecordHOG;
-
-            // Actually update the GUI accordingly
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
-            {
-                VisualisationChange(null, null);
-            }));
-
-            face_model_params.optimiseForImages();
-            // Loading an image file (or a number of them)
-            foreach (string filename in filenames)
-            {
-                if (!thread_running)
-                {
-                    continue;
-                }
-
-                capture = new Capture(filename);
-
-                if (capture.isOpened())
-                {
-                    // Start the actual processing                        
-                    ProcessImage();
-
-                }
-                else
-                {
-                    string messageBoxText = "File is not an image or the decoder is not supported.";
-                    string caption = "Not valid file";
-                    MessageBoxButton button = MessageBoxButton.OK;
-                    MessageBoxImage icon = MessageBoxImage.Warning;
-
-                    // Display message box
-                    MessageBox.Show(messageBoxText, caption, button, icon);
-                }
-            }
-
-            // Clear image setup, restore the views
-            ShowTrackedVideo = TrackVid;
-            ShowAppearance = ShowApp;
-            ShowGeometry = ShowGeo;
-            ShowAUs = showAU;
-            RecordHOG = recHOG;
-            RecordAligned = recAlign;
-
-            // Actually update the GUI accordingly
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
-            {
-                VisualisationChange(null, null);
-            }));
-        }
-
-        // Capturing and processing the video frame by frame
-        private void ProcessImage()
-        {
-            Thread.CurrentThread.IsBackground = true;
-
-            clnf_model.Reset();
-            face_analyser.Reset();
-
-            //////////////////////////////////////////////
-            // CAPTURE FRAME AND DETECT LANDMARKS FOLLOWED BY THE REQUIRED IMAGE PROCESSING
-            //////////////////////////////////////////////
-            RawImage frame = null;
-            double progress = -1;
-
-            frame = new RawImage(capture.GetNextFrame(false));
-            progress = capture.GetProgress();
-
-            if (frame.Width == 0)
-            {
-                // This indicates that we reached the end of the video file
-                return;
-            }
-
-            var grayFrame = new RawImage(capture.GetCurrentFrameGray());
-
-            if (grayFrame == null)
-            {
-                Console.WriteLine("Gray is empty");
-                return;
-            }
-
-            var landmark_detections = clnf_model.DetectMultiFaceLandmarksInImage(grayFrame, face_model_params);
-
-            // Go over all detected faces
-            for(int i = 0; i < landmark_detections.Count; ++i)
-            {
-
-                // Predict action units
-                var au_preds = face_analyser.PredictStaticAUs(grayFrame, landmark_detections[i]);
-
-                // Record the predictions
-                //String output_name = record_root + 
-                //Recorder.RecordImg();
-
-            }
-
-            List<Point> landmark_points = new List<Point>();
-
-            for (int i = 0; i < landmark_detections.Count; ++i)
-            {
-
-                List<Tuple<double, double>> landmarks = landmark_detections[i];
-                foreach (var p in landmarks)
-                {
-                    landmark_points.Add(new Point(p.Item1, p.Item2));
-                }
-            }
-
-            // Visualisation
-            if (ShowTrackedVideo)
-            {
-                Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
-                {
-                    if (latest_img == null)
-                    {
-                        latest_img = frame.CreateWriteableBitmap();
-                    }
-
-                    frame.UpdateWriteableBitmap(latest_img);
-
-                    video.Source = latest_img;
-                    video.Confidence = 1;
-                    video.FPS = processing_fps.GetFPS();
-                    video.Progress = progress;
-
-                    video.OverlayLines = new List<Tuple<Point, Point>>();
-
-                    video.OverlayPoints = landmark_points;
-
-                }));
-            }
-            latest_img = null;
-        }
-
-
         // Capturing and processing the video frame by frame
         private void FeatureExtractionLoop(string output_file_name)
         {
@@ -531,7 +376,7 @@ namespace OpenFaceOffline
             var lastFrameTime = CurrentTime;
 
             clnf_model.Reset();
-            face_analyser.Reset();
+            face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, DynamicAUModels, image_output_size);
 
             // If the camera calibration parameters are not set (indicated by -1), guesstimate them
             if(estimate_camera_parameters || fx == -1 || fy == -1 || cx == -1 || cy == -1)
@@ -623,92 +468,6 @@ namespace OpenFaceOffline
 
         }
 
-        // Replaying the features frame by frame
-        private void FeatureVisualizationLoop(string input_feature_file, string input_video_file)
-        {
-
-            DateTime? startTime = CurrentTime;
-
-            var lastFrameTime = CurrentTime;
-           
-            int frame_id = 0;
-
-            double fps = capture.GetFPS();
-            if (fps <= 0) fps = 30;
-
-            while (thread_running)
-            {
-                //////////////////////////////////////////////
-                // CAPTURE FRAME AND DETECT LANDMARKS FOLLOWED BY THE REQUIRED IMAGE PROCESSING
-                //////////////////////////////////////////////
-                RawImage frame = null;
-                double progress = -1;
-
-                frame = new RawImage(capture.GetNextFrame(false));
-                progress = capture.GetProgress();
-
-                if (frame.Width == 0)
-                {
-                    // This indicates that we reached the end of the video file
-                    break;
-                }
-
-                // TODO stop button should actually clear the video
-                lastFrameTime = CurrentTime;
-                processing_fps.AddFrame();
-
-                var grayFrame = new RawImage(capture.GetCurrentFrameGray());
-
-                if (grayFrame == null)
-                {
-                    Console.WriteLine("Gray is empty");
-                    continue;
-                }
-
-                detectionSucceeding = ProcessFrame(clnf_model, face_model_params, frame, grayFrame, fx, fy, cx, cy);
-
-                // The face analysis step (for AUs)
-                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, false, ShowAppearance);
-
-                // For gaze analysis
-                gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, fx, fy, cx, cy);
-
-                recorder.RecordFrame(clnf_model, face_analyser, gaze_analyser, detectionSucceeding, frame_id + 1, ((double)frame_id) / fps);
-
-                List<Tuple<double, double>> landmarks = clnf_model.CalculateVisibleLandmarks();
-
-                VisualizeFeatures(frame, landmarks, fx, fy, cx, cy, progress);
-                
-
-                while (thread_running & thread_paused && skip_frames == 0)
-                {
-                    Thread.Sleep(10);
-                }
-
-                frame_id++;
-
-                if (skip_frames > 0)
-                    skip_frames--;
-
-            }
-
-            latest_img = null;
-            skip_frames = 0;
-
-            // Unpause if it's paused
-            if (thread_paused)
-            {
-                Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
-                {
-                    PauseButton_Click(null, null);
-                }));
-            }
-
-            recorder.FinishRecording(clnf_model, face_analyser);
-
-        }
-
-
         private void VisualizeFeatures(RawImage frame, List<Tuple<double, double>> landmarks, double fx, double fy, double cx, double cy, double progress)
         {
             List<Tuple<Point, Point>> lines = null;
@@ -746,6 +505,7 @@ namespace OpenFaceOffline
             {
                 if (ShowAUs)
                 {
+                    // TODO this should be done through the visualizer?
                     var au_classes = face_analyser.GetCurrentAUsClass();
                     var au_regs = face_analyser.GetCurrentAUsReg();
 
@@ -834,6 +594,7 @@ namespace OpenFaceOffline
 
                 if (ShowAppearance)
                 {
+                    // TODO how to do this for images, now this is only for videos, one possibility is only doing this on replay for images, and showing the selected face only
                     RawImage aligned_face = face_analyser.GetLatestAlignedFace();
                     RawImage hog_face = face_analyser.GetLatestHOGDescriptorVisualisation();
 
@@ -1190,14 +951,7 @@ namespace OpenFaceOffline
             }
 
         }
-
-        private void UseDynamicModelsCheckBox_Click(object sender, RoutedEventArgs e)
-        {
-            // Change the face analyser, this should be safe as the model is only allowed to change when not running
-            String root = AppDomain.CurrentDomain.BaseDirectory;
-            face_analyser = new FaceAnalyserManaged(root, DynamicAUModels, image_output_size);
-        }
-
+       
         private void setOutputImageSize_Click(object sender, RoutedEventArgs e)
         {
 
@@ -1209,9 +963,6 @@ namespace OpenFaceOffline
             if (number_entry_window.ShowDialog() == true)
             {
                 image_output_size = number_entry_window.OutputInt;
-                String root = AppDomain.CurrentDomain.BaseDirectory;
-                face_analyser = new FaceAnalyserManaged(root, DynamicAUModels, image_output_size);
-
             }
         }
 
