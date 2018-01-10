@@ -223,7 +223,7 @@ public:
 	
 	// Predicting AUs from a single image
     System::Tuple<Dictionary<System::String^, double>^, Dictionary<System::String^, double>^>^
-		PredictStaticAUs(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks) 
+		PredictStaticAUsAndComputeFeatures(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks)
 	{
 		
 		// Construct an OpenCV matric from the landmarks
@@ -236,6 +236,11 @@ public:
 
 		face_analyser->PredictStaticAUsAndComputeFeatures(frame->Mat, landmarks_mat);
 
+		// Set the computed appearance features
+		face_analyser->GetLatestHOG(*hog_features, *num_rows, *num_cols);
+		face_analyser->GetLatestAlignedFace(*aligned_face);
+
+		// Set the computed AUs
 		auto AU_predictions_intensity = face_analyser->GetCurrentAUsReg();
 		auto AU_predictions_occurence = face_analyser->GetCurrentAUsClass();
 

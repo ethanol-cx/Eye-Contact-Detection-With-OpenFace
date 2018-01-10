@@ -249,21 +249,6 @@ namespace OpenFaceOffline
             // Indicate we will start running the thread
             thread_running = true;
 
-            // Turn off unneeded visualisations and recording settings (this will change)
-            // TODO controlled by recorder settings, also all features will be done
-            bool TrackVid = ShowTrackedVideo; ShowTrackedVideo = true;
-            bool ShowApp = ShowAppearance; ShowAppearance = false;
-            bool ShowGeo = ShowGeometry; ShowGeometry = false;
-            bool showAU = ShowAUs; ShowAUs = false;
-            bool recAlign = RecordAligned;
-            bool recHOG = RecordHOG;
-
-            // Actually update the GUI accordingly
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
-            {
-                VisualisationChange(null, null);
-            }));
-
             // Setup the parameters optimized for working on individual images rather than sequences
             face_model_params.optimiseForImages();
 
@@ -309,10 +294,13 @@ namespace OpenFaceOffline
                     var landmarks = clnf_model.CalculateAllLandmarks();
                     
                     // Predict action units
-                    var au_preds = face_analyser.PredictStaticAUs(grayFrame, landmarks);
+                    var au_preds = face_analyser.PredictStaticAUsAndComputeFeatures(grayFrame, landmarks);
 
                     // Predic eye gaze
                     gaze_analyser.AddNextFrame(clnf_model, success, fx, fy, cx, cy); // TODO fx should be from reader
+
+                    // Only the final face will contain the details
+                    VisualizeFeatures(frame, landmarks, fx, fy, cx, cy, progress);
 
                     foreach (var p in landmarks)
                     {
@@ -322,47 +310,37 @@ namespace OpenFaceOffline
                 }
 
                 // Visualisation TODO this should be lifted out? and actually be grabbed from the visualizer? rather than drawing points ourselves?
-                if (ShowTrackedVideo)
-                {
-                    Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
-                    {
-                        if (latest_img == null)
-                        {
-                            latest_img = frame.CreateWriteableBitmap();
-                        }
+                //if (ShowTrackedVideo)
+                //{
 
-                        frame.UpdateWriteableBitmap(latest_img);
+                //    Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
+                //    {
+                //        if (latest_img == null)
+                //        {
+                //            latest_img = frame.CreateWriteableBitmap();
+                //        }
 
-                        video.Source = latest_img;
-                        video.Confidence = 1;
-                        video.FPS = processing_fps.GetFPS();
-                        video.Progress = progress;
+                //        frame.UpdateWriteableBitmap(latest_img);
 
-                        video.OverlayLines = new List<Tuple<Point, Point>>();
+                //        video.Source = latest_img;
+                //        video.Confidence = 1;
+                //        video.FPS = processing_fps.GetFPS();
+                //        video.Progress = progress;
 
-                        video.OverlayPoints = landmark_points;
+                //        video.OverlayLines = new List<Tuple<Point, Point>>();
 
-                    }));
-                }
+                //        video.OverlayPoints = landmark_points;
+
+                //        // TODO unify with other visualization
+
+                //    }));
+                //}
                 latest_img = null;
 
                 // TODO how to report errors from the reader here? exceptions? logging? Problem for future versions?
             }
 
-            // Clear image setup, restore the views, TODO this will change
-            ShowTrackedVideo = TrackVid;
-            ShowAppearance = ShowApp;
-            ShowGeometry = ShowGeo;
-            ShowAUs = showAU;
-            RecordHOG = recHOG;
-            RecordAligned = recAlign;
-
-            // Actually update the GUI accordingly
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 2000), (Action)(() =>
-            {
-                VisualisationChange(null, null);
-            }));
-
+            // TODO is this still needed?
             EndMode();
 
         }
