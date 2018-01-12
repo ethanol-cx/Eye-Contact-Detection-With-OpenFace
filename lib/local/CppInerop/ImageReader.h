@@ -144,6 +144,26 @@ namespace MediaReader {
 			return m_image_capture->GetProgress();
 		}
 
+		double GetFx()
+		{
+			return m_image_capture->fx;
+		}
+
+		double GetFy()
+		{
+			return m_image_capture->fy;
+		}
+
+		double GetCx()
+		{
+			return m_image_capture->cx;
+		}
+
+		double GetCy()
+		{
+			return m_image_capture->cy;
+		}
+
 		bool isOpened()
 		{
 			return *m_is_opened;

@@ -284,28 +284,29 @@ namespace OpenFaceOffline
                 List<double> confidences = new List<double>();
                 face_detector.DetectFacesHOG(face_detections, grayFrame, confidences);
 
-                // For visualizing landmarks
+                // For visualizing landmarks, TODO rem
                 List<Point> landmark_points = new List<Point>();
 
                 for (int i = 0; i < face_detections.Count; ++i)
                 {
-                    bool success = clnf_model.DetectFaceLandmarksInImage(grayFrame, face_detections[i], face_model_params);
+                    detectionSucceeding = clnf_model.DetectFaceLandmarksInImage(grayFrame, face_detections[i], face_model_params);
 
                     var landmarks = clnf_model.CalculateAllLandmarks();
                     
                     // Predict action units
-                    var au_preds = face_analyser.PredictStaticAUsAndComputeFeatures(grayFrame, landmarks);
+                    var au_preds = face_analyser.PredictStaticAUsAndComputeFeatures(grayFrame, landmarks, ShowAppearance);
 
                     // Predic eye gaze
-                    gaze_analyser.AddNextFrame(clnf_model, success, fx, fy, cx, cy); // TODO fx should be from reader
+                    gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy()); 
 
                     // Only the final face will contain the details
-                    VisualizeFeatures(frame, landmarks, fx, fy, cx, cy, progress);
+                    VisualizeFeatures(frame, landmarks, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
-                    foreach (var p in landmarks)
-                    {
-                        landmark_points.Add(new Point(p.Item1, p.Item2));
-                    }
+                    // TODO rem
+                    //foreach (var p in landmarks)
+                    //{
+                    //    landmark_points.Add(new Point(p.Item1, p.Item2));
+                    //}
 
                 }
 
@@ -335,7 +336,9 @@ namespace OpenFaceOffline
 
                 //    }));
                 //}
-                latest_img = null;
+                
+                // TODO is this needed
+                //latest_img = null;
 
                 // TODO how to report errors from the reader here? exceptions? logging? Problem for future versions?
             }
@@ -457,7 +460,7 @@ namespace OpenFaceOffline
             clnf_model.GetPose(pose, fx, fy, cx, cy);
             List<double> non_rigid_params = clnf_model.GetNonRigidParams();
 
-            double confidence = (-clnf_model.GetConfidence()) / 2.0 + 0.5;
+            double confidence = clnf_model.GetConfidence();
 
             if (confidence < 0)
                 confidence = 0;
@@ -483,7 +486,6 @@ namespace OpenFaceOffline
             {
                 if (ShowAUs)
                 {
-                    // TODO this should be done through the visualizer?
                     var au_classes = face_analyser.GetCurrentAUsClass();
                     var au_regs = face_analyser.GetCurrentAUsReg();
 
@@ -572,7 +574,6 @@ namespace OpenFaceOffline
 
                 if (ShowAppearance)
                 {
-                    // TODO how to do this for images, now this is only for videos, one possibility is only doing this on replay for images, and showing the selected face only
                     RawImage aligned_face = face_analyser.GetLatestAlignedFace();
                     RawImage hog_face = face_analyser.GetLatestHOGDescriptorVisualisation();
 
