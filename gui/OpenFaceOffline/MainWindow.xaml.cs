@@ -261,7 +261,11 @@ namespace OpenFaceOffline
             // Initialize the face analyser
             face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, DynamicAUModels, image_output_size);
 
-            // Loading an image file (or a number of them)
+            // Loading an image file
+            var frame = new RawImage(reader.GetNextImage());
+            var grayFrame = new RawImage(reader.GetCurrentFrameGray());
+
+            // This will be false when the image is not available
             while (reader.isOpened())
             {
                 if (!thread_running)
@@ -269,13 +273,7 @@ namespace OpenFaceOffline
                     continue;
                 }
 
-                // Start the actual processing, TODO this should change?
-                Thread.CurrentThread.IsBackground = true;
-
                 clnf_model.Reset();
-
-                var frame = new RawImage(reader.GetNextImage());
-                var grayFrame = new RawImage(reader.GetCurrentFrameGray());
 
                 double progress = reader.GetProgress();
 
@@ -283,9 +281,6 @@ namespace OpenFaceOffline
                 List<Rect> face_detections = new List<Rect>();
                 List<double> confidences = new List<double>();
                 face_detector.DetectFacesHOG(face_detections, grayFrame, confidences);
-
-                // For visualizing landmarks, TODO rem
-                List<Point> landmark_points = new List<Point>();
 
                 for (int i = 0; i < face_detections.Count; ++i)
                 {
@@ -302,44 +297,12 @@ namespace OpenFaceOffline
                     // Only the final face will contain the details
                     VisualizeFeatures(frame, landmarks, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
-                    // TODO rem
-                    //foreach (var p in landmarks)
-                    //{
-                    //    landmark_points.Add(new Point(p.Item1, p.Item2));
-                    //}
-
                 }
 
-                // Visualisation TODO this should be lifted out? and actually be grabbed from the visualizer? rather than drawing points ourselves?
-                //if (ShowTrackedVideo)
-                //{
+                latest_img = null;
 
-                //    Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
-                //    {
-                //        if (latest_img == null)
-                //        {
-                //            latest_img = frame.CreateWriteableBitmap();
-                //        }
-
-                //        frame.UpdateWriteableBitmap(latest_img);
-
-                //        video.Source = latest_img;
-                //        video.Confidence = 1;
-                //        video.FPS = processing_fps.GetFPS();
-                //        video.Progress = progress;
-
-                //        video.OverlayLines = new List<Tuple<Point, Point>>();
-
-                //        video.OverlayPoints = landmark_points;
-
-                //        // TODO unify with other visualization
-
-                //    }));
-                //}
-                
-                // TODO is this needed
-                //latest_img = null;
-
+                frame = new RawImage(reader.GetNextImage());
+                grayFrame = new RawImage(reader.GetCurrentFrameGray());
                 // TODO how to report errors from the reader here? exceptions? logging? Problem for future versions?
             }
 

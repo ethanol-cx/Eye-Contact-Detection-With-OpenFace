@@ -141,9 +141,7 @@ namespace OpenFaceOffline
             // Update the bars
             foreach (var value in data)
             {
-                double old_value = graphs[value.Key].GetTarget();
-                // some smoothing as well
-                graphs[value.Key].SetValue(old_value * 0.15 + 0.85 * value.Value);
+                graphs[value.Key].SetValue(value.Value);
             }
         }
     }
