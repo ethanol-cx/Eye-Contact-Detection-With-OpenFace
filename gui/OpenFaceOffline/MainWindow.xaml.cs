@@ -295,7 +295,7 @@ namespace OpenFaceOffline
                     gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy()); 
 
                     // Only the final face will contain the details
-                    VisualizeFeatures(frame, landmarks, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
+                    VisualizeFeatures(frame, landmarks, i==0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                 }
 
@@ -382,7 +382,7 @@ namespace OpenFaceOffline
 
                 List<Tuple<double, double>> landmarks = clnf_model.CalculateVisibleLandmarks();
 
-                VisualizeFeatures(frame, landmarks, fx, fy, cx, cy, progress);
+                VisualizeFeatures(frame, landmarks, true, fx, fy, cx, cy, progress);
 
                 while (thread_running & thread_paused && skip_frames == 0)
                 {
@@ -412,7 +412,7 @@ namespace OpenFaceOffline
 
         }
 
-        private void VisualizeFeatures(RawImage frame, List<Tuple<double, double>> landmarks, double fx, double fy, double cx, double cy, double progress)
+        private void VisualizeFeatures(RawImage frame, List<Tuple<double, double>> landmarks, bool new_image, double fx, double fy, double cx, double cy, double progress)
         {
             List<Tuple<Point, Point>> lines = null;
             List<Tuple<double, double>> eye_landmarks = null;
@@ -496,9 +496,9 @@ namespace OpenFaceOffline
                     {
                         latest_img = frame.CreateWriteableBitmap();
                     }
-
+                    
                     frame.UpdateWriteableBitmap(latest_img);
-
+                    
                     video.Source = latest_img;
                     video.Confidence = confidence;
                     video.FPS = processing_fps.GetFPS();
@@ -514,7 +514,14 @@ namespace OpenFaceOffline
                     }
                     else
                     {
-                        video.OverlayLines = lines;
+                        if(new_image)
+                        { 
+                            video.OverlayLines = lines;
+                        }
+                        else
+                        {
+                            video.OverlayLines.AddRange(lines.GetRange(0, lines.Count));
+                        }
 
                         List<Point> landmark_points = new List<Point>();
                         foreach (var p in landmarks)
