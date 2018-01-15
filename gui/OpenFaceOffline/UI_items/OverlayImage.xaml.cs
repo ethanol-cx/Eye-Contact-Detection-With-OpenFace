@@ -140,19 +140,23 @@ namespace OpenFaceOffline
 
                 var q1 = new Point(ActualWidth * OverlayEyePoints[id].X / width, ActualHeight * OverlayEyePoints[id].Y / height);
 
+                // The the eye points can be defined for multiple faces, turn id's to be relevant to one face
+                int id_internal = id % 56;
+                int multiplier = id / 56;
+
                 int next_point = id + 1;
 
-                if (id == 7) next_point = 0;
-                if (id == 19) next_point = 8;
-                if (id == 27) next_point = 20;
+                if (id_internal == 7) next_point = 0 * multiplier;
+                if (id_internal == 19) next_point = 8 * multiplier;
+                if (id_internal == 27) next_point = 20 * multiplier;
 
-                if (id == 35) next_point = 28;
-                if (id == 47) next_point = 36;
-                if (id == 55) next_point = 48;
+                if (id_internal == 35) next_point = 28 * multiplier;
+                if (id_internal == 47) next_point = 36 * multiplier;
+                if (id_internal == 55) next_point = 48 * multiplier;
 
                 var q2 = new Point(ActualWidth * OverlayEyePoints[next_point].X / width, ActualHeight * OverlayEyePoints[next_point].Y / height);
 
-                if (id < 28 && (id < 8 || id > 19) || (id>=28 &&(id-28<8 || id-28 >19)))
+                if (id_internal < 28 && (id_internal < 8 || id_internal > 19) || (id_internal >= 28 &&(id_internal - 28<8 || id_internal - 28 >19)))
                 { 
                     dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(200, (byte)(240), (byte)(30), (byte)100)), 1.5 * scaling_p), q1, q2);
                 }

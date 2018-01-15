@@ -514,14 +514,6 @@ namespace OpenFaceOffline
                     }
                     else
                     {
-                        if(new_image)
-                        { 
-                            video.OverlayLines = lines;
-                        }
-                        else
-                        {
-                            video.OverlayLines.AddRange(lines.GetRange(0, lines.Count));
-                        }
 
                         List<Point> landmark_points = new List<Point>();
                         foreach (var p in landmarks)
@@ -536,8 +528,19 @@ namespace OpenFaceOffline
                         }
 
 
-                        video.OverlayPoints = landmark_points;
-                        video.OverlayEyePoints = eye_landmark_points;
+                        if (new_image)
+                        {
+                            video.OverlayLines = lines;
+                            video.OverlayPoints = landmark_points;
+                            video.OverlayEyePoints = eye_landmark_points;
+                        }
+                        else
+                        {
+                            // In case of multiple faces just add them to the existing drawing list
+                            video.OverlayLines.AddRange(lines.GetRange(0, lines.Count));
+                            video.OverlayPoints.AddRange(landmark_points.GetRange(0, landmark_points.Count));
+                            video.OverlayEyePoints.AddRange(eye_landmark_points.GetRange(0, eye_landmark_points.Count));
+                        }
                         video.GazeLines = gaze_lines;
                     }
                 }
