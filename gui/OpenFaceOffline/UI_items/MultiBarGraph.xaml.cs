@@ -101,6 +101,7 @@ namespace OpenFaceOffline
                 foreach (var value in data)
                 {
                     BarGraph newBar = new BarGraph();
+                    newBar.SetValue(value);
                     graphs.Add(newBar);
                     barGrid.ColumnDefinitions.Add(new ColumnDefinition());
                     Grid.SetColumn(newBar, graphs.Count);

@@ -131,18 +131,20 @@ namespace OpenFaceOffline
                 foreach (var label in data_labels)
                 {
                     BarGraphHorizontal newBar = new BarGraphHorizontal(label + " - " + mapping[label]);
+                    newBar.SetValue(data[label]);
                     barGrid.RowDefinitions.Add(new RowDefinition());
                     Grid.SetRow(newBar, graphs.Count);
                     graphs.Add(label, newBar);
                     barGrid.Children.Add(newBar);
-                }
+                }                
+
             }
 
             // Update the bars
             foreach (var value in data)
             {
                 graphs[value.Key].SetValue(value.Value);
-            }
+            }            
         }
     }
 }
