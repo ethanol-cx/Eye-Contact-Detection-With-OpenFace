@@ -289,7 +289,7 @@ namespace OpenFaceOffline
                     var landmarks = clnf_model.CalculateAllLandmarks();
                     
                     // Predict action units
-                    var au_preds = face_analyser.PredictStaticAUsAndComputeFeatures(grayFrame, landmarks, ShowAppearance);
+                    var au_preds = face_analyser.PredictStaticAUsAndComputeFeatures(frame, landmarks, ShowAppearance);
 
                     // Predic eye gaze
                     gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy()); 
