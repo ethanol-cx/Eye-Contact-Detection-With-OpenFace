@@ -51,6 +51,7 @@ using GazeAnalyser_Interop;
 using FaceDetectorInterop;
 using MediaReader;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using System.Windows.Forms;
 
 namespace OpenFaceOffline
 {
@@ -198,7 +199,7 @@ namespace OpenFaceOffline
                         MessageBoxImage icon = MessageBoxImage.Warning;
 
                         // Display message box
-                        MessageBox.Show(messageBoxText, caption, button, icon);
+                        System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
                     }
                 }
                 else
@@ -230,7 +231,7 @@ namespace OpenFaceOffline
                             MessageBoxImage icon = MessageBoxImage.Warning;
 
                             // Display message box
-                            MessageBox.Show(messageBoxText, caption, button, icon);
+                            System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
                         }
                     }
                 }
@@ -664,7 +665,7 @@ namespace OpenFaceOffline
 
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
             {
-                var d = new OpenFileDialog();
+                var d = new Microsoft.Win32.OpenFileDialog();
                 d.Multiselect = true;
                 d.Filter = "Video files|*.avi;*.wmv;*.mov;*.mpg;*.mpeg;*.mp4";
 
@@ -686,7 +687,7 @@ namespace OpenFaceOffline
             string[] image_files = new string[0];
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
             {
-                var d = new OpenFileDialog();
+                var d = new Microsoft.Win32.OpenFileDialog();
                 d.Multiselect = true;
                 if(images)
                 { 
@@ -706,7 +707,34 @@ namespace OpenFaceOffline
             List<string> img_files_list = new List<string>(image_files);
             return new ImageReader(img_files_list);
         }
+        
+        private string openDirectory()
+        {
+            string to_return = "";
+            using (var fbd = new FolderBrowserDialog())
+            {
+                DialogResult result = fbd.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                {
+                    to_return = fbd.SelectedPath;
+                }
+                else
+                {
+                    // TODO warning message here
+                    string messageBoxText = "Could not open the directory.";
+                    string caption = "Invalid directory";
+                    MessageBoxButton button = MessageBoxButton.OK;
+                    MessageBoxImage icon = MessageBoxImage.Warning;
 
+                    // Display message box
+                    System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
+
+                }
+            }
+            return to_return;
+        }
+
+        // Selecting one or more images in a directory
         private void individualImageFilesOpenClick(object sender, RoutedEventArgs e)
         {
             // First clean up existing tracking
@@ -719,57 +747,37 @@ namespace OpenFaceOffline
 
         }
 
+        // Selecting a directory containing images
         private void individualImageDirectoryOpenClick(object sender, RoutedEventArgs e)
         {
-
-            StopTracking();
-
-            // TODO open directory here
-            new Thread(() => imageOpen()).Start();
-        }
-
-        // TODO old
-        private void imageFileOpenClick(object sender, RoutedEventArgs e)
-        {
             
-            new Thread(() => imageOpen()).Start();
-        }
-
-        // TODO old
-        private void imageOpen()
-        {
+            // First clean up existing tracking
             StopTracking();
 
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
-            {
-                var d = new OpenFileDialog();
-                d.Multiselect = true;
-                d.Filter = "Image files|*.jpg;*.jpeg;*.bmp;*.png;*.gif";
+            string directory = openDirectory();
+            if(!string.IsNullOrWhiteSpace(directory))
+            { 
+                ImageReader reader = new ImageReader(directory);
 
-                if (d.ShowDialog(this) == true)
-                {
-
-                    string[] image_files = d.FileNames;
-
-                    processing_thread = new Thread(() => ProcessingLoop(image_files, -3));
-                    processing_thread.Start();
-
-                }
-            }));
+                processing_thread = new Thread(() => ProcessIndividualImages(reader));
+                processing_thread.Start();
+            }
         }
+
 
         private void imageSequenceFileOpenClick(object sender, RoutedEventArgs e)
         {
             new Thread(() => imageSequenceOpen()).Start();
         }
 
+        // TODO this should be removed and replace with directory open
         private void imageSequenceOpen()
         {
             StopTracking();
 
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
             {
-                var d = new OpenFileDialog();
+                var d = new Microsoft.Win32.OpenFileDialog();
                 d.Multiselect = true;
                 d.Filter = "Image files|*.jpg;*.jpeg;*.bmp;*.png;*.gif";
 

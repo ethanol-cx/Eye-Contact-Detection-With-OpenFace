@@ -146,13 +146,13 @@ namespace OpenFaceOffline
 
                 int next_point = id + 1;
 
-                if (id_internal == 7) next_point = 0 * multiplier;
-                if (id_internal == 19) next_point = 8 * multiplier;
-                if (id_internal == 27) next_point = 20 * multiplier;
+                if (id_internal == 7) next_point = 0 + (multiplier * 56);
+                if (id_internal == 19) next_point = 8 + (multiplier * 56);
+                if (id_internal == 27) next_point = 20 + (multiplier * 56);
 
-                if (id_internal == 35) next_point = 28 * multiplier;
-                if (id_internal == 47) next_point = 36 * multiplier;
-                if (id_internal == 55) next_point = 48 * multiplier;
+                if (id_internal == 35) next_point = 28 + (multiplier * 56);
+                if (id_internal == 47) next_point = 36 + (multiplier * 56);
+                if (id_internal == 55) next_point = 48 + (multiplier * 56);
 
                 var q2 = new Point(ActualWidth * OverlayEyePoints[next_point].X / width, ActualHeight * OverlayEyePoints[next_point].Y / height);
 
