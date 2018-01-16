@@ -44,5 +44,8 @@
     <ClInclude Include="FaceDetectorInterop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RecorderInterop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

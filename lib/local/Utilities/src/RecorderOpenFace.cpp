@@ -71,6 +71,87 @@ void CreateDirectory(std::string output_path)
 	}
 }
 
+void RecorderOpenFace::PrepareRecording(std::string in_filename)
+{
+	// Construct the directories required for the output
+	CreateDirectory(record_root);
+
+	// Create the filename for the general output file that contains all of the meta information about the recording
+	path of_det_name(filename);
+	of_det_name = path(record_root) / path(filename + "_of_details.txt");
+
+	// Write in the of file what we are outputing what is the input etc.
+	metadata_file.open(of_det_name.string(), std::ios_base::out);
+	if (!metadata_file.is_open())
+	{
+		cout << "ERROR: could not open the output file:" << of_det_name << ", either the path of the output directory is wrong or you do not have the permissions to write to it" << endl;
+		exit(1);
+	}
+
+	// Populate relative and full path names in the meta file, unless it is a webcam
+	if (!params.isFromWebcam())
+	{
+		string input_filename_relative = in_filename;
+		string input_filename_full = in_filename;
+		if (!boost::filesystem::path(input_filename_full).is_absolute())
+		{
+			input_filename_full = boost::filesystem::canonical(input_filename_relative).string();
+		}
+		metadata_file << "Input:" << input_filename_relative << endl;
+		metadata_file << "Input full path:" << input_filename_full << endl;
+	}
+	else
+	{
+		// Populate the metadata file
+		metadata_file << "Input:webcam" << endl;
+	}
+
+	metadata_file << "Camera parameters:" << parameters.getFx() << "," << parameters.getFy() << "," << parameters.getCx() << "," << parameters.getCy() << endl;
+
+	// Create the required individual recorders, CSV, HOG, aligned, video
+	csv_filename = filename + ".csv";
+
+	// Consruct HOG recorder here
+	if (params.outputHOG())
+	{
+		// Output the data based on record_root, but do not include record_root in the meta file, as it is also in that directory
+		std::string hog_filename = filename + ".hog";
+		metadata_file << "Output HOG:" << hog_filename << endl;
+		hog_filename = (path(record_root) / hog_filename).string();
+		hog_recorder.Open(hog_filename);
+	}
+
+	// saving the videos	
+	if (params.outputTracked())
+	{
+		if (parameters.isSequence())
+		{
+			// Output the data based on record_root, but do not include record_root in the meta file, as it is also in that directory
+			this->media_filename = filename + ".avi";
+			metadata_file << "Output video:" << this->media_filename << endl;
+			this->media_filename = (path(record_root) / this->media_filename).string();
+		}
+		else
+		{
+			this->media_filename = filename + ".jpg";
+			metadata_file << "Output image:" << this->media_filename << endl;
+			this->media_filename = (path(record_root) / this->media_filename).string();
+		}
+	}
+
+	// Prepare image recording
+	if (params.outputAlignedFaces())
+	{
+		aligned_output_directory = filename + "_aligned";
+		metadata_file << "Output aligned directory:" << this->aligned_output_directory << endl;
+		this->aligned_output_directory = (path(record_root) / this->aligned_output_directory).string();
+		CreateDirectory(aligned_output_directory);
+	}
+
+	observation_count = 0;
+
+}
+
 RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFaceParameters parameters, std::vector<std::string>& arguments):video_writer(), params(parameters)
 {
 
@@ -127,84 +208,31 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFa
 		}
 	}
 
-	// Construct the directories required for the output
-	CreateDirectory(record_root);
+	PrepareRecording();
+}
 
-	// Create the filename for the general output file that contains all of the meta information about the recording
-	path of_det_name(filename);
-	of_det_name = path(record_root) / path(filename + "_of_details.txt");
-
-	// Write in the of file what we are outputing what is the input etc.
-	metadata_file.open(of_det_name.string(), std::ios_base::out);
-	if (!metadata_file.is_open())
+RecorderOpenFace::RecorderOpenFace(const std::string in_filename, RecorderOpenFaceParameters parameters, std::string output_directory, std::string output_name)
+{
+	// From the filename, strip out the name without directory and extension
+	if (boost::filesystem::is_directory(in_filename))
 	{
-		cout << "ERROR: could not open the output file:" << of_det_name << ", either the path of the output directory is wrong or you do not have the permissions to write to it" << endl;
-		exit(1);
-	}
-
-	// Populate relative and full path names in the meta file, unless it is a webcam
-	if(!params.isFromWebcam())
-	{
-		string input_filename_relative = in_filename;
-		string input_filename_full = in_filename;
-		if (!boost::filesystem::path(input_filename_full).is_absolute())
-		{
-			input_filename_full = boost::filesystem::canonical(input_filename_relative).string();
-		}
-		metadata_file << "Input:" << input_filename_relative << endl;
-		metadata_file << "Input full path:" << input_filename_full << endl;
+		filename = boost::filesystem::canonical(boost::filesystem::path(in_filename)).filename().string();
 	}
 	else
 	{
-		// Populate the metadata file
-		metadata_file << "Input:webcam" << endl;
+		filename = boost::filesystem::path(in_filename).filename().replace_extension("").string();
 	}
 
-	metadata_file << "Camera parameters:" << parameters.getFx() << "," << parameters.getFy() << "," << parameters.getCx() << "," << parameters.getCy() << endl;
+	record_root = output_directory;
+	filename = output_name;
 
-	// Create the required individual recorders, CSV, HOG, aligned, video
-	csv_filename = filename + ".csv";
+	// If recording directory not set, record to default location
+	if (record_root.empty())
+		record_root = default_record_directory;
 
-	// Consruct HOG recorder here
-	if(params.outputHOG())
-	{
-		// Output the data based on record_root, but do not include record_root in the meta file, as it is also in that directory
-		std::string hog_filename = filename + ".hog";
-		metadata_file << "Output HOG:" << hog_filename << endl;
-		hog_filename = (path(record_root) / hog_filename).string();
-		hog_recorder.Open(hog_filename);
-	}
-
-	// saving the videos	
-	if (params.outputTracked())
-	{
-		if(parameters.isSequence())
-		{
-			// Output the data based on record_root, but do not include record_root in the meta file, as it is also in that directory
-			this->media_filename = filename + ".avi";
-			metadata_file << "Output video:" << this->media_filename << endl;
-			this->media_filename = (path(record_root) / this->media_filename).string();
-		}
-		else
-		{
-			this->media_filename = filename + ".jpg";
-			metadata_file << "Output image:" << this->media_filename << endl;
-			this->media_filename = (path(record_root) / this->media_filename).string();
-		}
-	}
-
-	// Prepare image recording
-	if (params.outputAlignedFaces())
-	{
-		aligned_output_directory = filename + "_aligned";
-		metadata_file << "Output aligned directory:" << this->aligned_output_directory << endl;
-		this->aligned_output_directory = (path(record_root) / this->aligned_output_directory).string();
-		CreateDirectory(aligned_output_directory);
-	}
-		
-	observation_count = 0;
-
+	PrepareRecording();
 }
+
 
 void RecorderOpenFace::SetObservationFaceAlign(const cv::Mat& aligned_face)
 {

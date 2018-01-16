@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017, Carnegie Mellon University and University of Cambridge,
-// all rights reserved.
+// Copyright (C) 2017, Tadas Baltrusaitis.
 //
 // ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
 //
@@ -44,7 +43,49 @@
 
 #pragma managed
 
-namespace Utilities {
+namespace UtilitiesOF {
+
+	public ref class RecorderOpenFaceParameters
+	{
+
+	private:
+
+		Utilities::RecorderOpenFaceParameters *m_params;
+
+	public:
+		RecorderOpenFaceParameters(bool sequence, bool is_from_webcam, bool output_2D_landmarks, bool output_3D_landmarks,
+			bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze, bool output_hog, bool output_tracked,
+			bool output_aligned_faces, float fx, float fy, float cx, float cy, double fps_vid_out)
+		{
+
+			m_params = new Utilities::RecorderOpenFaceParameters(sequence, is_from_webcam, 
+				output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs,
+				output_gaze, output_hog, output_tracked, output_aligned_faces, fx, fy, cx, cy, fps_vid_out);
+
+		}
+
+		Utilities::RecorderOpenFaceParameters * GetParams()
+		{
+			return m_params;
+		}
+
+		!RecorderOpenFaceParameters()
+		{
+			// Automatically closes capture object before freeing memory.	
+			if (m_params != nullptr)
+			{
+				delete m_params;
+			}
+
+		}
+
+		// Destructor. Called on explicit Dispose() only.
+		~RecorderOpenFaceParameters()
+		{
+			this->!RecorderOpenFaceParameters();
+		}
+
+	};
 
 	public ref class RecorderOpenFace
 	{
@@ -56,8 +97,9 @@ namespace Utilities {
 	public:
 
 		// Can provide a directory, or a list of files
-		RecorderOpenFace()
+		RecorderOpenFace(const std::string in_filename, UtilitiesOF::RecorderOpenFaceParameters^ parameters, std::string output_directory, std::string output_name)
 		{
+			m_recorder = new Utilities::RecorderOpenFace(in_filename, parameters->GetParams(), output_directory, output_name);
 		}
 
 

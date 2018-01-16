@@ -40,8 +40,6 @@ using namespace Utilities;
 RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> &arguments, bool sequence, bool from_webcam, float fx, float fy, float cx, float cy, double fps_vid_out)
 {
 
-	string separator = string(1, boost::filesystem::path::preferred_separator);
-
 	this->is_sequence = sequence;
 	this->is_from_webcam = from_webcam;
 	this->fx = fx;
@@ -138,3 +136,35 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 
 }
 
+RecorderOpenFaceParameters::RecorderOpenFaceParameters(bool sequence, bool is_from_webcam, bool output_2D_landmarks, bool output_3D_landmarks,
+	bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze, bool output_hog, bool output_tracked,
+	bool output_aligned_faces, float fx = -1, float fy = -1, float cx = -1, float cy = -1, double fps_vid_out = 30)
+{
+	this->is_sequence = sequence;
+	this->is_from_webcam = is_from_webcam;
+	this->fx = fx;
+	this->fy = fy;
+	this->cx = cx;
+	this->cy = cy;
+
+	if (fps_vid_out > 0)
+	{
+		this->fps_vid_out = fps_vid_out;
+	}
+	else
+	{
+		this->fps_vid_out = 30; // If an illegal value for fps provided, default to 30
+	}
+	// Default output code
+	this->output_codec = "DIVX";
+
+	this->output2DLandmarks = output_2D_landmarks;
+	this->output3DLandmarks = output_3D_landmarks;
+	this->outputPDMParams = output_model_params;
+	this->outputPose = output_pose;
+	this->outputAUs = output_AUs;
+	this->outputGaze = output_gaze;
+	this->outputHOG = output_hog;
+	this->outputTracked = output_tracked;
+	this->outputAlignedFaces = output_aligned_faces;
+}

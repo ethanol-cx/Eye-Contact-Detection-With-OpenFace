@@ -58,6 +58,7 @@ namespace Utilities
 
 		// The constructor for the recorder, need to specify if we are recording a sequence or not, in_filename should be just the name and not contain extensions
 		RecorderOpenFace(const std::string in_filename, RecorderOpenFaceParameters parameters, std::vector<std::string>& arguments);
+		RecorderOpenFace(const std::string in_filename, RecorderOpenFaceParameters parameters, std::string output_directory, std::string output_name);
 
 		~RecorderOpenFace();
 
@@ -103,6 +104,8 @@ namespace Utilities
 		RecorderOpenFace & operator= (const RecorderOpenFace&& other);
 		RecorderOpenFace(const RecorderOpenFace&& other);
 		RecorderOpenFace(const RecorderOpenFace& other);
+
+		void PrepareRecording(std::string in_filename);
 
 		// Keeping track of what to output and how to output it
 		const RecorderOpenFaceParameters params;
