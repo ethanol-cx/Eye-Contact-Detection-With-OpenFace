@@ -534,6 +534,7 @@ namespace OpenFaceOffline
                             video.OverlayLines = lines;
                             video.OverlayPoints = landmark_points;
                             video.OverlayEyePoints = eye_landmark_points;
+                            video.GazeLines = gaze_lines;
                         }
                         else
                         {
@@ -541,8 +542,8 @@ namespace OpenFaceOffline
                             video.OverlayLines.AddRange(lines.GetRange(0, lines.Count));
                             video.OverlayPoints.AddRange(landmark_points.GetRange(0, landmark_points.Count));
                             video.OverlayEyePoints.AddRange(eye_landmark_points.GetRange(0, eye_landmark_points.Count));
+                            video.GazeLines.AddRange(gaze_lines.GetRange(0, gaze_lines.Count));
                         }
-                        video.GazeLines = gaze_lines;
                     }
                 }
 
