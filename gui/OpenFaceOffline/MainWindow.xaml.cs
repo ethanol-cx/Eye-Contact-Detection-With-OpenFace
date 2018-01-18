@@ -318,6 +318,7 @@ namespace OpenFaceOffline
                 // Do not cary state accross images
                 clnf_model.Reset();
                 face_analyser.Reset();
+                recorder.Close();
 
                 // TODO how to report errors from the reader here? exceptions? logging? Problem for future versions?
             }

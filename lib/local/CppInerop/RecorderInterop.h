@@ -108,6 +108,11 @@ namespace UtilitiesOF {
 			m_recorder = new Utilities::RecorderOpenFace(in_filename_std, *parameters->GetParams(), output_directory_std);
 		}
 
+		void Close()
+		{
+			m_recorder->Close();
+		}
+
 		void WriteObservation()
 		{
 			m_recorder->WriteObservation();
