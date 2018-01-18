@@ -116,23 +116,20 @@ namespace UtilitiesOF {
 			cv::Vec2d gaze_angle_cv(gaze_angle->Item1, gaze_angle->Item2);
 
 			// Construct an OpenCV matrix from the landmarks
-			cv::Mat_<double> landmarks_2D_mat(landmarks_2D->Count * 2, 1, 0.0);
+			std::vector<cv::Point2d> landmarks_2D_cv;
 			for (int i = 0; i < landmarks_2D->Count; ++i)
 			{
-				landmarks_2D_mat.at<double>(i, 0) = landmarks_2D[i]->Item1;
-				landmarks_2D_mat.at<double>(i + landmarks_2D->Count, 0) = landmarks_2D[i]->Item2;
+				landmarks_2D_cv.push_back(cv::Point2d(landmarks_2D[i]->Item1, landmarks_2D[i]->Item2));
 			}
 
 			// Construct an OpenCV matrix from the landmarks
-			cv::Mat_<double> landmarks_3D_mat(landmarks_3D->Count * 3, 1, 0.0);
+			std::vector<cv::Point3d> landmarks_3D_cv;
 			for (int i = 0; i < landmarks_3D->Count; ++i)
 			{
-				landmarks_3D_mat.at<double>(i, 0) = landmarks_3D[i]->Item1;
-				landmarks_3D_mat.at<double>(i + landmarks_3D->Count, 0) = landmarks_3D[i]->Item2;
-				landmarks_3D_mat.at<double>(i + 2 * landmarks_3D->Count, 0) = landmarks_3D[i]->Item3;
+				landmarks_3D_cv.push_back(cv::Point3d(landmarks_3D[i]->Item1, landmarks_3D[i]->Item2, landmarks_3D[i]->Item3));
 			}
 
-			m_recorder->SetObservationGaze(gaze_direction0_cv, gaze_direction1_cv, gaze_angle_cv, landmarks_2D_mat, landmarks_3D_mat);
+			m_recorder->SetObservationGaze(gaze_direction0_cv, gaze_direction1_cv, gaze_angle_cv, landmarks_2D_cv, landmarks_3D_cv);
 		}
 
 		// Setting the observations
@@ -140,6 +137,28 @@ namespace UtilitiesOF {
 		{
 			cv::Vec6d pose_vec(pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
 			m_recorder->SetObservationPose(pose_vec);
+		}
+
+		void SetObservationActionUnits(Dictionary<System::String^, double>^ au_regs, Dictionary<System::String^, double>^ au_class)
+		{
+			std::vector<std::pair<std::string, double> > au_regs_std;
+			auto enum_reg = au_regs->GetEnumerator();
+			while (enum_reg.MoveNext())
+			{
+				std::string au_name = msclr::interop::marshal_as<std::string>(enum_reg.Current.Key);
+				double value = (double)enum_reg.Current.Value;
+				au_regs_std.push_back(std::pair<std::string, double>(au_name, value));
+			}
+
+			std::vector<std::pair<std::string, double> > au_class_std;
+			auto enum_class = au_class->GetEnumerator();
+			while (enum_class.MoveNext())
+			{
+				std::string au_name = msclr::interop::marshal_as<std::string>(enum_class.Current.Key);
+				double value = (double)enum_class.Current.Value;
+				au_class_std.push_back(std::pair<std::string, double>(au_name, value));
+			} 
+			m_recorder->SetObservationActionUnits(au_regs_std, au_class_std);
 		}
 
 		void SetObservationLandmarks(List<System::Tuple<double, double>^>^ landmarks_2D, List<System::Tuple<double, double, double>^>^ landmarks_3D, List<double>^ params_global, List<double>^ params_local, double confidence, bool success)

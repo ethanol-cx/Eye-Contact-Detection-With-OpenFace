@@ -451,7 +451,9 @@ namespace OpenFaceOffline
             var landmarks_3d_eyes = clnf_model.CalculateAllEyeLandmarks3D(fx, fy, cx, cy);
             recorder.SetObservationGaze(gaze.Item1, gaze.Item2, gaze_angle, landmarks_2d_eyes, landmarks_3d_eyes);
 
-            //open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
+            var au_regs = face_analyser.GetCurrentAUsReg();
+            var au_classes = face_analyser.GetCurrentAUsClass();
+            recorder.SetObservationActionUnits(au_regs, au_classes);
 
             //open_face_rec.SetObservationFaceAlign(sim_warped_img);
             //open_face_rec.WriteObservation();
