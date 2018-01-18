@@ -108,6 +108,11 @@ namespace UtilitiesOF {
 			m_recorder = new Utilities::RecorderOpenFace(in_filename_std, *parameters->GetParams(), output_directory_std);
 		}
 
+		void WriteObservation()
+		{
+			m_recorder->WriteObservation();
+		}
+
 		void SetObservationGaze(System::Tuple<double, double, double>^ gaze_direction0, System::Tuple<double, double, double>^ gaze_direction1, System::Tuple<double, double>^ gaze_angle,
 			List<System::Tuple<double, double>^>^ landmarks_2D, List<System::Tuple<double,double,double>^>^ landmarks_3D)
 		{
@@ -159,6 +164,11 @@ namespace UtilitiesOF {
 				au_class_std.push_back(std::pair<std::string, double>(au_name, value));
 			} 
 			m_recorder->SetObservationActionUnits(au_regs_std, au_class_std);
+		}
+
+		void SetObservationFaceAlign(OpenCVWrappers::RawImage^ aligned_face_image)
+		{
+			m_recorder->SetObservationFaceAlign(aligned_face_image->Mat);
 		}
 
 		void SetObservationLandmarks(List<System::Tuple<double, double>^>^ landmarks_2D, List<System::Tuple<double, double, double>^>^ landmarks_3D, List<double>^ params_global, List<double>^ params_local, double confidence, bool success)

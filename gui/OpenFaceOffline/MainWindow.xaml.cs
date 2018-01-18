@@ -455,8 +455,9 @@ namespace OpenFaceOffline
             var au_classes = face_analyser.GetCurrentAUsClass();
             recorder.SetObservationActionUnits(au_regs, au_classes);
 
-            //open_face_rec.SetObservationFaceAlign(sim_warped_img);
-            //open_face_rec.WriteObservation();
+            recorder.SetObservationFaceAlign(face_analyser.GetLatestAlignedFace());
+
+            recorder.WriteObservation();
 
             // TODO
             //open_face_rec.SetObservationHOG(face_model.detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
