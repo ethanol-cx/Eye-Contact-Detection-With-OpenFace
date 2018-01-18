@@ -58,7 +58,7 @@
 #include <msclr\marshal.h>
 #include <msclr\marshal_cppstd.h>
 
-namespace MediaReader {
+namespace UtilitiesOF {
 
 	public ref class ReadingFailedException : System::Exception
 	{
@@ -139,27 +139,33 @@ namespace MediaReader {
 			return m_rgb_frame;
 		}
 
+		System::String^ GetName()
+		{
+			std::string filename = m_image_capture->name;
+			return gcnew System::String(filename.c_str());
+		}
+
 		double GetProgress()
 		{
 			return m_image_capture->GetProgress();
 		}
 
-		double GetFx()
+		float GetFx()
 		{
 			return m_image_capture->fx;
 		}
 
-		double GetFy()
+		float GetFy()
 		{
 			return m_image_capture->fy;
 		}
 
-		double GetCx()
+		float GetCx()
 		{
 			return m_image_capture->cx;
 		}
 
-		double GetCy()
+		float GetCy()
 		{
 			return m_image_capture->cy;
 		}

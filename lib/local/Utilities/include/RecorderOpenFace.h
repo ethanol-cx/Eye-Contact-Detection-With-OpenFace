@@ -57,8 +57,8 @@ namespace Utilities
 	public:
 
 		// The constructor for the recorder, need to specify if we are recording a sequence or not, in_filename should be just the name and not contain extensions
-		RecorderOpenFace(const std::string in_filename, RecorderOpenFaceParameters parameters, std::vector<std::string>& arguments);
-		RecorderOpenFace(const std::string in_filename, RecorderOpenFaceParameters parameters, std::string output_directory, std::string output_name);
+		RecorderOpenFace(const std::string in_filename, const RecorderOpenFaceParameters& parameters, std::vector<std::string>& arguments);
+		RecorderOpenFace(const std::string in_filename, const RecorderOpenFaceParameters& parameters, std::string output_directory);
 
 		~RecorderOpenFace();
 
@@ -105,7 +105,7 @@ namespace Utilities
 		RecorderOpenFace(const RecorderOpenFace&& other);
 		RecorderOpenFace(const RecorderOpenFace& other);
 
-		void PrepareRecording(std::string in_filename);
+		void PrepareRecording(const std::string& in_filename);
 
 		// Keeping track of what to output and how to output it
 		const RecorderOpenFaceParameters params;
@@ -113,8 +113,7 @@ namespace Utilities
 		// Keep track of the file and output root location
 		std::string record_root;
 		std::string default_record_directory = "processed"; // By default we are writing in the processed directory in the working directory, if no output parameters provided
-		std::string of_filename;
-		std::string filename;
+		std::string out_name; // Short name, based on which other names are constructed
 		std::string csv_filename;
 		std::string aligned_output_directory;
 		std::ofstream metadata_file;

@@ -41,6 +41,7 @@
                 <MenuItem IsCheckable="True" Header="Record HOG" IsChecked="{Binding RecordHOG}"/>
                 <MenuItem IsCheckable="True" Header="Record model parameters" IsChecked="{Binding RecordModelParameters}" />
                 <MenuItem IsCheckable="True" Header="Record aligned faces" IsChecked="{Binding RecordAligned}"/>
+                <MenuItem IsCheckable="True" Header="Record tracked images/videos" IsChecked="{Binding RecordTracked}"/>
             </MenuItem>
             <MenuItem Name="SettingsMenu"  Header="Recording settings">
                 <MenuItem Name="OutputLocationItem" Header="Set output location..." Click="OutputLocationItem_Click" ></MenuItem>

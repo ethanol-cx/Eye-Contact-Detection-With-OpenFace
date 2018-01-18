@@ -40,3 +40,4 @@
 #include "CameraInterop.h"
 #include "ImageReader.h"
 #include "FaceDetectorInterop.h"
+#include "RecorderInterop.h"

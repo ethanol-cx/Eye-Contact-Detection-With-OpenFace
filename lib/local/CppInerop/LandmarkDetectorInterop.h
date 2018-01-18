@@ -307,6 +307,17 @@ namespace CppInterop {
 				return landmarks;
 			}
 
+			List<System::Tuple<double, double, double>^>^ CalculateAllEyeLandmarks3D(double fx, double fy, double cx, double cy) {
+				vector<cv::Point3d> vecLandmarks = ::LandmarkDetector::Calculate3DEyeLandmarks(*clnf, fx, fy, cx, cy);
+
+				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double, double, double>^>();
+				for (cv::Point3d p : vecLandmarks) {
+					landmarks->Add(gcnew System::Tuple<double, double, double>(p.x, p.y, p.z));
+				}
+
+				return landmarks;
+			}
+
 			List<System::Tuple<double, double>^>^ CalculateVisibleEyeLandmarks() {
 				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateVisibleEyeLandmarks(*clnf);
 
@@ -318,15 +329,15 @@ namespace CppInterop {
 				return landmarks;
 			}
 
-			List<System::Windows::Media::Media3D::Point3D>^ Calculate3DLandmarks(double fx, double fy, double cx, double cy) {
+			List<System::Tuple<double, double, double>^>^ Calculate3DLandmarks(double fx, double fy, double cx, double cy) {
 				
 				cv::Mat_<double> shape3D = clnf->GetShape(fx, fy, cx, cy);
 				
-				auto landmarks_3D = gcnew List<System::Windows::Media::Media3D::Point3D>();
+				auto landmarks_3D = gcnew List<System::Tuple<double, double, double>^>();
 				
 				for(int i = 0; i < shape3D.cols; ++i) 
 				{
-					landmarks_3D->Add(System::Windows::Media::Media3D::Point3D(shape3D.at<double>(0, i), shape3D.at<double>(1, i), shape3D.at<double>(2, i)));
+					landmarks_3D->Add(gcnew System::Tuple<double, double, double>(shape3D.at<double>(0, i), shape3D.at<double>(1, i), shape3D.at<double>(2, i)));
 				}
 
 				return landmarks_3D;

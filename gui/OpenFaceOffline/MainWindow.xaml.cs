@@ -49,7 +49,7 @@ using CameraInterop;
 using FaceAnalyser_Interop;
 using GazeAnalyser_Interop;
 using FaceDetectorInterop;
-using MediaReader;
+using UtilitiesOF;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Windows.Forms;
 
@@ -121,6 +121,7 @@ namespace OpenFaceOffline
         public bool RecordPose { get; set; } = true; // Head pose (position and orientation)
         public bool RecordAUs { get; set; } = true; // Facial action units
         public bool RecordGaze { get; set; } = true; // Eye gaze
+        public bool RecordTracked { get; set; } = false; // Recording tracked videos or images
 
         // Visualisation options
         public bool ShowTrackedVideo { get; set; } = true; // Showing the actual tracking
@@ -131,7 +132,7 @@ namespace OpenFaceOffline
         int image_output_size = 112;
         
         // Where the recording is done (by default in a record directory, from where the application executed)
-        String record_root = "./record";
+        String record_root = "./processed";
 
         // For AU prediction, if videos are long dynamic models should be used
         public bool DynamicAUModels { get; set; } = true;
@@ -241,8 +242,7 @@ namespace OpenFaceOffline
 
         }
 
-        // TODO here
-        private void ProcessIndividualImages(ImageReader reader) // TODO need interface for recording settings
+        private void ProcessIndividualImages(ImageReader reader)
         {
             // Make sure the GUI is setup appropriately
             SetupFeatureExtractionMode();
@@ -264,7 +264,7 @@ namespace OpenFaceOffline
 
             // Loading an image file
             var frame = new RawImage(reader.GetNextImage());
-            var grayFrame = new RawImage(reader.GetCurrentFrameGray());
+            var gray_frame = new RawImage(reader.GetCurrentFrameGray());
 
             // This will be false when the image is not available
             while (reader.isOpened())
@@ -274,18 +274,25 @@ namespace OpenFaceOffline
                     continue;
                 }
 
-                clnf_model.Reset();
+                // Setup recording
+                RecorderOpenFaceParameters rec_params = new RecorderOpenFaceParameters(false, false,
+                    Record2DLandmarks, Record3DLandmarks, RecordModelParameters, RecordPose, RecordAUs,
+                    RecordGaze, RecordHOG, RecordTracked, RecordAligned,
+                    reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), 0);
 
-                double progress = reader.GetProgress();
+                RecorderOpenFace recorder = new RecorderOpenFace(reader.GetName(), rec_params, record_root);
 
                 // Detect faces here and return bounding boxes
                 List<Rect> face_detections = new List<Rect>();
                 List<double> confidences = new List<double>();
-                face_detector.DetectFacesHOG(face_detections, grayFrame, confidences);
+                face_detector.DetectFacesHOG(face_detections, gray_frame, confidences);
+
+                // For visualization
+                double progress = reader.GetProgress();
 
                 for (int i = 0; i < face_detections.Count; ++i)
                 {
-                    detectionSucceeding = clnf_model.DetectFaceLandmarksInImage(grayFrame, face_detections[i], face_model_params);
+                    detectionSucceeding = clnf_model.DetectFaceLandmarksInImage(gray_frame, face_detections[i], face_model_params);
 
                     var landmarks = clnf_model.CalculateAllLandmarks();
                     
@@ -293,7 +300,10 @@ namespace OpenFaceOffline
                     var au_preds = face_analyser.PredictStaticAUsAndComputeFeatures(frame, landmarks, ShowAppearance);
 
                     // Predic eye gaze
-                    gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy()); 
+                    gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+
+                    // Record an observation
+                    RecordObservation(recorder, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                     // Only the final face will contain the details
                     VisualizeFeatures(frame, landmarks, i==0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
@@ -303,7 +313,12 @@ namespace OpenFaceOffline
                 latest_img = null;
 
                 frame = new RawImage(reader.GetNextImage());
-                grayFrame = new RawImage(reader.GetCurrentFrameGray());
+                gray_frame = new RawImage(reader.GetCurrentFrameGray());
+
+                // Do not cary state accross images
+                clnf_model.Reset();
+                face_analyser.Reset();
+
                 // TODO how to report errors from the reader here? exceptions? logging? Problem for future versions?
             }
 
@@ -410,6 +425,40 @@ namespace OpenFaceOffline
             }
 
             recorder.FinishRecording(clnf_model, face_analyser);
+
+        }
+
+        private void RecordObservation(RecorderOpenFace recorder, bool success, float fx, float fy, float cx, float cy)
+        {
+
+            double confidence = clnf_model.GetConfidence();
+
+            List<double> pose = new List<double>();
+            clnf_model.GetPose(pose, fx, fy, cx, cy);
+            recorder.SetObservationPose(pose);
+
+            List<Tuple<double, double>> landmarks_2D = clnf_model.CalculateAllLandmarks();
+            List<Tuple<double, double, double>> landmarks_3D = clnf_model.Calculate3DLandmarks(fx, fy, cx, cy);
+            List<double> global_params = clnf_model.GetRigidParams();
+            List<double> local_params = clnf_model.GetParams();
+
+            recorder.SetObservationLandmarks(landmarks_2D, landmarks_3D, global_params, local_params, confidence, success);
+
+            var gaze = gaze_analyser.GetGazeCamera();
+            var gaze_angle = gaze_analyser.GetGazeAngle();
+
+            var landmarks_2d_eyes = clnf_model.CalculateAllEyeLandmarks();
+            var landmarks_3d_eyes = clnf_model.CalculateAllEyeLandmarks3D(fx, fy, cx, cy);
+            recorder.SetObservationGaze(gaze.Item1, gaze.Item2, gaze_angle, landmarks_2d_eyes, landmarks_3d_eyes);
+
+            //open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
+
+            //open_face_rec.SetObservationFaceAlign(sim_warped_img);
+            //open_face_rec.WriteObservation();
+
+            // TODO
+            //open_face_rec.SetObservationHOG(face_model.detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
+            //open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
 
         }
 

@@ -237,16 +237,16 @@ namespace OpenFaceOffline
 
             if (output_3D_landmarks)
             {
-                List<System.Windows.Media.Media3D.Point3D> landmarks_3d = clnf_model.Calculate3DLandmarks(fx, fy, cx, cy);
+                List<Tuple<double, double, double>> landmarks_3d = clnf_model.Calculate3DLandmarks(fx, fy, cx, cy);
 
                 for (int i = 0; i < landmarks_3d.Count; ++i)
-                    output_features_file.Write(", {0:F3}", landmarks_3d[i].X);
+                    output_features_file.Write(", {0:F3}", landmarks_3d[i].Item1);
 
                 for (int i = 0; i < landmarks_3d.Count; ++i)
-                    output_features_file.Write(", {0:F3}", landmarks_3d[i].Y);
+                    output_features_file.Write(", {0:F3}", landmarks_3d[i].Item2);
 
                 for (int i = 0; i < landmarks_3d.Count; ++i)
-                    output_features_file.Write(", {0:F3}", landmarks_3d[i].Z);
+                    output_features_file.Write(", {0:F3}", landmarks_3d[i].Item3);
             }
 
             if (output_model_params)

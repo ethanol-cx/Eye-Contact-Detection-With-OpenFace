@@ -43,6 +43,9 @@
 
 #pragma managed
 
+#include <msclr\marshal.h>
+#include <msclr\marshal_cppstd.h>
+
 namespace UtilitiesOF {
 
 	public ref class RecorderOpenFaceParameters
@@ -97,11 +100,77 @@ namespace UtilitiesOF {
 	public:
 
 		// Can provide a directory, or a list of files
-		RecorderOpenFace(const std::string in_filename, UtilitiesOF::RecorderOpenFaceParameters^ parameters, std::string output_directory, std::string output_name)
+		RecorderOpenFace(System::String^ in_filename, UtilitiesOF::RecorderOpenFaceParameters^ parameters, System::String^ output_directory)
 		{
-			m_recorder = new Utilities::RecorderOpenFace(in_filename, parameters->GetParams(), output_directory, output_name);
+			std::string in_filename_std = msclr::interop::marshal_as<std::string>(in_filename);
+			std::string output_directory_std = msclr::interop::marshal_as<std::string>(output_directory);
+
+			m_recorder = new Utilities::RecorderOpenFace(in_filename_std, *parameters->GetParams(), output_directory_std);
 		}
 
+		void SetObservationGaze(System::Tuple<double, double, double>^ gaze_direction0, System::Tuple<double, double, double>^ gaze_direction1, System::Tuple<double, double>^ gaze_angle,
+			List<System::Tuple<double, double>^>^ landmarks_2D, List<System::Tuple<double,double,double>^>^ landmarks_3D)
+		{
+			cv::Point3f gaze_direction0_cv(gaze_direction0->Item1, gaze_direction0->Item2, gaze_direction0->Item3);
+			cv::Point3f gaze_direction1_cv(gaze_direction1->Item1, gaze_direction1->Item2, gaze_direction1->Item3);
+			cv::Vec2d gaze_angle_cv(gaze_angle->Item1, gaze_angle->Item2);
+
+			// Construct an OpenCV matrix from the landmarks
+			cv::Mat_<double> landmarks_2D_mat(landmarks_2D->Count * 2, 1, 0.0);
+			for (int i = 0; i < landmarks_2D->Count; ++i)
+			{
+				landmarks_2D_mat.at<double>(i, 0) = landmarks_2D[i]->Item1;
+				landmarks_2D_mat.at<double>(i + landmarks_2D->Count, 0) = landmarks_2D[i]->Item2;
+			}
+
+			// Construct an OpenCV matrix from the landmarks
+			cv::Mat_<double> landmarks_3D_mat(landmarks_3D->Count * 3, 1, 0.0);
+			for (int i = 0; i < landmarks_3D->Count; ++i)
+			{
+				landmarks_3D_mat.at<double>(i, 0) = landmarks_3D[i]->Item1;
+				landmarks_3D_mat.at<double>(i + landmarks_3D->Count, 0) = landmarks_3D[i]->Item2;
+				landmarks_3D_mat.at<double>(i + 2 * landmarks_3D->Count, 0) = landmarks_3D[i]->Item3;
+			}
+
+			m_recorder->SetObservationGaze(gaze_direction0_cv, gaze_direction1_cv, gaze_angle_cv, landmarks_2D_mat, landmarks_3D_mat);
+		}
+
+		// Setting the observations
+		void SetObservationPose(List<double>^ pose)
+		{
+			cv::Vec6d pose_vec(pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
+			m_recorder->SetObservationPose(pose_vec);
+		}
+
+		void SetObservationLandmarks(List<System::Tuple<double, double>^>^ landmarks_2D, List<System::Tuple<double, double, double>^>^ landmarks_3D, List<double>^ params_global, List<double>^ params_local, double confidence, bool success)
+		{
+			// Construct an OpenCV matrix from the landmarks
+			cv::Mat_<double> landmarks_2D_mat(landmarks_2D->Count * 2, 1, 0.0);
+			for (int i = 0; i < landmarks_2D->Count; ++i)
+			{
+				landmarks_2D_mat.at<double>(i, 0) = landmarks_2D[i]->Item1;
+				landmarks_2D_mat.at<double>(i + landmarks_2D->Count, 0) = landmarks_2D[i]->Item2;
+			}
+
+			// Construct an OpenCV matrix from the landmarks
+			cv::Mat_<double> landmarks_3D_mat(landmarks_3D->Count * 3, 1, 0.0);
+			for (int i = 0; i < landmarks_3D->Count; ++i)
+			{
+				landmarks_3D_mat.at<double>(i, 0) = landmarks_3D[i]->Item1;
+				landmarks_3D_mat.at<double>(i + landmarks_3D->Count, 0) = landmarks_3D[i]->Item2;
+				landmarks_3D_mat.at<double>(i + 2 * landmarks_3D->Count, 0) = landmarks_3D[i]->Item3;
+			}
+
+			cv::Vec6d params_global_vec(params_global[0], params_global[1], params_global[2], params_global[3], params_global[4], params_global[5]);
+
+			cv::Mat_<double> params_local_vec(params_local->Count, 1, 0.0);
+			for (int i = 0; i < params_local->Count; ++i)
+			{
+				params_local_vec.at<double>(i, 0) = params_local[i];
+			}
+
+			m_recorder->SetObservationLandmarks(landmarks_2D_mat, landmarks_3D_mat, params_global_vec, params_local_vec, confidence, success);
+		}
 
 		// Finalizer. Definitely called before Garbage Collection,
 		// but not automatically called on explicit Dispose().

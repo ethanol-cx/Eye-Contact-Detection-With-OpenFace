@@ -138,7 +138,7 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 
 RecorderOpenFaceParameters::RecorderOpenFaceParameters(bool sequence, bool is_from_webcam, bool output_2D_landmarks, bool output_3D_landmarks,
 	bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze, bool output_hog, bool output_tracked,
-	bool output_aligned_faces, float fx = -1, float fy = -1, float cx = -1, float cy = -1, double fps_vid_out = 30)
+	bool output_aligned_faces, float fx, float fy, float cx, float cy, double fps_vid_out)
 {
 	this->is_sequence = sequence;
 	this->is_from_webcam = is_from_webcam;
@@ -158,13 +158,13 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(bool sequence, bool is_fr
 	// Default output code
 	this->output_codec = "DIVX";
 
-	this->output2DLandmarks = output_2D_landmarks;
-	this->output3DLandmarks = output_3D_landmarks;
-	this->outputPDMParams = output_model_params;
-	this->outputPose = output_pose;
-	this->outputAUs = output_AUs;
-	this->outputGaze = output_gaze;
-	this->outputHOG = output_hog;
-	this->outputTracked = output_tracked;
-	this->outputAlignedFaces = output_aligned_faces;
+	this->output_2D_landmarks = output_2D_landmarks;
+	this->output_3D_landmarks = output_3D_landmarks;
+	this->output_model_params = output_model_params;
+	this->output_pose = output_pose;
+	this->output_AUs = output_AUs;
+	this->output_gaze = output_gaze;
+	this->output_hog = output_hog;
+	this->output_tracked = output_tracked;
+	this->output_aligned_faces = output_aligned_faces;
 }
