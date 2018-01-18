@@ -85,7 +85,7 @@ private:
 	FaceAnalysis::FaceAnalyser* face_analyser;
 
 	// The actual descriptors (for visualisation and output)
-	cv::Mat_<double>* hog_features;
+	cv::Mat_<float>* hog_features;
 	cv::Mat* aligned_face;
 	cv::Mat* visualisation;
 
@@ -111,7 +111,7 @@ public:
 		params.setAlignedOutput(output_width);
 		face_analyser = new FaceAnalysis::FaceAnalyser(params);
 
-		hog_features = new cv::Mat_<double>();
+		hog_features = new cv::Mat_<float>();
 
 		aligned_face = new cv::Mat();
 		visualisation = new cv::Mat();
@@ -172,7 +172,7 @@ public:
 
 		hog_output_file->write((char*)(&good_frame_float), 4);
 
-		cv::MatConstIterator_<double> descriptor_it = hog_features->begin();
+		cv::MatConstIterator_<float> descriptor_it = hog_features->begin();
 
 		for(int y = 0; y < *num_cols; ++y)
 		{
@@ -181,7 +181,7 @@ public:
 				for(unsigned int o = 0; o < 31; ++o)
 				{
 
-					float hog_data = (float)(*descriptor_it++);
+					float hog_data = (*descriptor_it++);
 					hog_output_file->write((char*)&hog_data, 4);
 				}
 			}
@@ -208,7 +208,9 @@ public:
 
 		face_analyser->AddNextFrame(frame->Mat, landmarks_mat, success, 0, online);
 
-		face_analyser->GetLatestHOG(*hog_features, *num_rows, *num_cols);
+		cv::Mat_<double> hog_d;
+		face_analyser->GetLatestHOG(hog_d, *num_rows, *num_cols);
+		hog_d.convertTo(*hog_features, CV_64F);
 		
 		face_analyser->GetLatestAlignedFace(*aligned_face);
 		
@@ -237,7 +239,10 @@ public:
 		face_analyser->PredictStaticAUsAndComputeFeatures(frame->Mat, landmarks_mat);
 
 		// Set the computed appearance features
-		face_analyser->GetLatestHOG(*hog_features, *num_rows, *num_cols);
+		cv::Mat_<double> hog_tmp;
+		face_analyser->GetLatestHOG(hog_tmp, *num_rows, *num_cols);
+		hog_tmp.convertTo(*hog_features, CV_32F);
+
 		face_analyser->GetLatestAlignedFace(*aligned_face);
 
 		if (vis_hog)
@@ -328,6 +333,11 @@ public:
 	OpenCVWrappers::RawImage^ GetLatestHOGDescriptorVisualisation() {
 		OpenCVWrappers::RawImage^ HOG_vis_image = gcnew OpenCVWrappers::RawImage(*visualisation);
 		return HOG_vis_image;
+	}
+	
+	OpenCVWrappers::RawImage^ GetLatestHOGFeature() {
+		OpenCVWrappers::RawImage^ HOG_feature = gcnew OpenCVWrappers::RawImage(*hog_features);
+		return HOG_feature;
 	}
 
 	void Reset()

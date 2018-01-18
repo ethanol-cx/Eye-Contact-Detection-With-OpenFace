@@ -458,10 +458,12 @@ namespace OpenFaceOffline
 
             recorder.SetObservationFaceAlign(face_analyser.GetLatestAlignedFace());
 
+            var hog_feature = face_analyser.GetLatestHOGFeature();
+            //open_face_rec.SetObservationHOG(face_model.detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
+
             recorder.WriteObservation();
 
             // TODO
-            //open_face_rec.SetObservationHOG(face_model.detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
             //open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
 
         }

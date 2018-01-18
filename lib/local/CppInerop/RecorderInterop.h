@@ -176,6 +176,11 @@ namespace UtilitiesOF {
 			m_recorder->SetObservationFaceAlign(aligned_face_image->Mat);
 		}
 
+		void SetObservationHOG(bool success, OpenCVWrappers::RawImage^ aligned_face_image, int num_cols, int num_rows, int num_channels)
+		{
+			m_recorder->SetObservationHOG(success, aligned_face_image->Mat, num_cols, num_rows, num_channels);
+		}
+
 		void SetObservationLandmarks(List<System::Tuple<double, double>^>^ landmarks_2D, List<System::Tuple<double, double, double>^>^ landmarks_3D, List<double>^ params_global, List<double>^ params_local, double confidence, bool success)
 		{
 			// Construct an OpenCV matrix from the landmarks
