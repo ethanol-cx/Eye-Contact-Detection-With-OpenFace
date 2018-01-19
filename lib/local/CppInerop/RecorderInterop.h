@@ -176,6 +176,12 @@ namespace UtilitiesOF {
 			m_recorder->SetObservationFaceAlign(aligned_face_image->Mat);
 		}
 
+		void SetObservationVisualization(OpenCVWrappers::RawImage^ vis_image)
+		{
+			m_recorder->SetObservationVisualization(vis_image->Mat);
+		}
+
+
 		void SetObservationHOG(bool success, OpenCVWrappers::RawImage^ aligned_face_image, int num_cols, int num_rows, int num_channels)
 		{
 			m_recorder->SetObservationHOG(success, aligned_face_image->Mat, num_cols, num_rows, num_channels);

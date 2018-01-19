@@ -433,7 +433,7 @@ namespace OpenFaceOffline
 
         }
 
-        private void RecordObservation(RecorderOpenFace recorder, bool success, float fx, float fy, float cx, float cy)
+        private void RecordObservation(RecorderOpenFace recorder, RawImage vis_image, bool success, float fx, float fy, float cx, float cy)
         {
 
             double confidence = clnf_model.GetConfidence();
@@ -464,11 +464,11 @@ namespace OpenFaceOffline
             
             var hog_feature = face_analyser.GetLatestHOGFeature();
             recorder.SetObservationHOG(success, hog_feature, face_analyser.GetHOGRows(), face_analyser.GetHOGCols(), face_analyser.GetHOGChannels());
-            
+
+            recorder.SetObservationVisualization(vis_image);
+
             recorder.WriteObservation();
 
-            // TODO
-            //open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
 
         }
 
@@ -494,7 +494,6 @@ namespace OpenFaceOffline
             double scale = 0;
 
             // Helps with recording and showing the visualizations
-            visualizer.SetObservationFaceAlign(face_analyser.GetLatestAlignedFace());
             visualizer.SetObservationHOG(face_analyser.GetLatestHOGFeature(), face_analyser.GetHOGRows(), face_analyser.GetHOGCols());
             visualizer.SetObservationLandmarks(landmarks, confidence); // Set confidence to high to make sure we always visualize
             visualizer.SetObservationPose(pose, confidence);
