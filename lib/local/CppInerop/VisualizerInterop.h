@@ -95,12 +95,12 @@ namespace UtilitiesOF {
 			m_visualizer->SetObservationFaceAlign(aligned_face_image->Mat);
 		}
 
-		void SetObservationHOG(bool success, OpenCVWrappers::RawImage^ observation_HOG, int num_cols, int num_rows)
+		void SetObservationHOG(OpenCVWrappers::RawImage^ observation_HOG, int num_cols, int num_rows)
 		{
 			m_visualizer->SetObservationHOG(observation_HOG->Mat, num_cols, num_rows);
 		}
 
-		void SetObservationLandmarks(List<System::Tuple<double, double>^>^ landmarks_2D, double confidence, bool success)
+		void SetObservationLandmarks(List<System::Tuple<double, double>^>^ landmarks_2D, double confidence)
 		{
 			// Construct an OpenCV matrix from the landmarks
 			cv::Mat_<double> landmarks_2D_mat(landmarks_2D->Count * 2, 1, 0.0);
@@ -110,7 +110,7 @@ namespace UtilitiesOF {
 				landmarks_2D_mat.at<double>(i + landmarks_2D->Count, 0) = landmarks_2D[i]->Item2;
 			}
 			// TODO add visibilities
-			m_visualizer->SetObservationLandmarks(landmarks_2D_mat, confidence, success);
+			m_visualizer->SetObservationLandmarks(landmarks_2D_mat, confidence);
 		}
 
 		// Finalizer. Definitely called before Garbage Collection,

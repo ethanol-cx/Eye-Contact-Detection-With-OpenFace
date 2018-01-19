@@ -108,9 +108,6 @@ namespace OpenFaceOffline
         FaceAnalyserManaged face_analyser;
         GazeAnalyserManaged gaze_analyser;
 
-        // For visualization of results
-        Visualizer visualizer_of;
-
         // For output recording
         Recorder recorder;
 
@@ -254,8 +251,11 @@ namespace OpenFaceOffline
             // Setup the parameters optimized for working on individual images rather than sequences
             face_model_params.optimiseForImages();
 
+            // Setup the visualization
+            Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance);
+
             // Initialize the face detector if it has not been initialized yet
-            if(face_detector == null)
+            if (face_detector == null)
             {
                 face_detector = new FaceDetector();
             }
@@ -304,7 +304,7 @@ namespace OpenFaceOffline
                     gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                     // Only the final face will contain the details
-                    VisualizeFeatures(frame, landmarks, i == 0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
+                    VisualizeFeatures(frame, visualizer_of, landmarks, i == 0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                     // Record an observation
                     RecordObservation(recorder, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
@@ -357,6 +357,9 @@ namespace OpenFaceOffline
             recorder = new Recorder(record_root, output_file_name, capture.width, capture.height, Record2DLandmarks, Record3DLandmarks, RecordModelParameters, RecordPose,
                 RecordAUs, RecordGaze, RecordAligned, RecordHOG, clnf_model, face_analyser, fx, fy, cx, cy, DynamicAUModels);
 
+            // Setup the c++ visualizer
+            Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance);
+
             int frame_id = 0;
 
             double fps = capture.GetFPS();
@@ -400,7 +403,7 @@ namespace OpenFaceOffline
 
                 List<Tuple<double, double>> landmarks = clnf_model.CalculateVisibleLandmarks();
 
-                VisualizeFeatures(frame, landmarks, true, fx, fy, cx, cy, progress);
+                VisualizeFeatures(frame, visualizer_of, landmarks, true, fx, fy, cx, cy, progress);
 
                 while (thread_running & thread_paused && skip_frames == 0)
                 {
@@ -469,7 +472,7 @@ namespace OpenFaceOffline
 
         }
 
-        private void VisualizeFeatures(RawImage frame, List<Tuple<double, double>> landmarks, bool new_image, double fx, double fy, double cx, double cy, double progress)
+        private void VisualizeFeatures(RawImage frame, Visualizer visualizer, List<Tuple<double, double>> landmarks, bool new_image, double fx, double fy, double cx, double cy, double progress)
         {
 
             List<Tuple<Point, Point>> lines = null;
@@ -491,10 +494,10 @@ namespace OpenFaceOffline
             double scale = 0;
 
             // Helps with recording and showing the visualizations
-            ///visualizer.SetObservationFaceAlign(sim_warped_img);
-            //visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
-            //visualizer.SetObservationLandmarks(face_model.detected_landmarks, 1.0, face_model.detection_success); // Set confidence to high to make sure we always visualize
-            //visualizer.SetObservationPose(pose_estimate, 1.0);
+            visualizer.SetObservationFaceAlign(face_analyser.GetLatestAlignedFace());
+            visualizer.SetObservationHOG(face_analyser.GetLatestHOGFeature(), face_analyser.GetHOGRows(), face_analyser.GetHOGCols());
+            visualizer.SetObservationLandmarks(landmarks, confidence); // Set confidence to high to make sure we always visualize
+            visualizer.SetObservationPose(pose, confidence);
             //visualizer.SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy), face_model.detection_certainty);
 
 

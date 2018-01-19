@@ -290,7 +290,7 @@ int main (int argc, char **argv)
 				// Visualising the results
 				if(active_models[model])
 				{
-					visualizer.SetObservationLandmarks(face_models[model].detected_landmarks, face_models[model].detection_certainty, face_models[model].detection_success);
+					visualizer.SetObservationLandmarks(face_models[model].detected_landmarks, face_models[model].detection_certainty);
 					visualizer.SetObservationPose(LandmarkDetector::GetPose(face_models[model], sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_models[model].detection_certainty);
 				}
 			}

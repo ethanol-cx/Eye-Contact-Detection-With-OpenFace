@@ -134,7 +134,7 @@ void Visualizer::SetObservationHOG(const cv::Mat_<double>& hog_descriptor, int n
 }
 
 
-void Visualizer::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, double confidence, bool success, const cv::Mat_<int>& visibilities)
+void Visualizer::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, double confidence, const cv::Mat_<int>& visibilities)
 {
 
 	if(confidence > visualisation_boundary)
