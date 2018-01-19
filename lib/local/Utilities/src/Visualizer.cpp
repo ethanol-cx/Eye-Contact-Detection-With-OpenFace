@@ -292,3 +292,8 @@ cv::Mat Visualizer::GetVisImage()
 {
 	return captured_image;
 }
+
+cv::Mat Visualizer::GetHOGVis()
+{
+	return hog_image;
+}

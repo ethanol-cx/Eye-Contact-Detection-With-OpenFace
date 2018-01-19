@@ -498,8 +498,7 @@ namespace OpenFaceOffline
             visualizer.SetObservationHOG(face_analyser.GetLatestHOGFeature(), face_analyser.GetHOGRows(), face_analyser.GetHOGCols());
             visualizer.SetObservationLandmarks(landmarks, confidence); // Set confidence to high to make sure we always visualize
             visualizer.SetObservationPose(pose, confidence);
-            //visualizer.SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy), face_model.detection_certainty);
-
+            visualizer.SetObservationGaze(gaze_analyser.GetGazeCamera().Item1, gaze_analyser.GetGazeCamera().Item2, clnf_model.CalculateAllEyeLandmarks(), clnf_model.CalculateAllEyeLandmarks3D(fx, fy, cx, cy), confidence);
 
             if (detectionSucceeding)
             {
@@ -618,7 +617,7 @@ namespace OpenFaceOffline
                 if (ShowAppearance)
                 {
                     RawImage aligned_face = face_analyser.GetLatestAlignedFace();
-                    RawImage hog_face = face_analyser.GetLatestHOGDescriptorVisualisation();
+                    RawImage hog_face = visualizer.GetHOGVis();
 
                     if (latest_aligned_face == null)
                     {

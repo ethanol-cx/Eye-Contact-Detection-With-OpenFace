@@ -329,11 +329,6 @@ public:
 		OpenCVWrappers::RawImage^ face_aligned_image = gcnew OpenCVWrappers::RawImage(*aligned_face);
 		return face_aligned_image;
 	}
-
-	OpenCVWrappers::RawImage^ GetLatestHOGDescriptorVisualisation() {
-		OpenCVWrappers::RawImage^ HOG_vis_image = gcnew OpenCVWrappers::RawImage(*visualisation);
-		return HOG_vis_image;
-	}
 	
 	OpenCVWrappers::RawImage^ GetLatestHOGFeature() {
 		OpenCVWrappers::RawImage^ HOG_feature = gcnew OpenCVWrappers::RawImage(*hog_features);

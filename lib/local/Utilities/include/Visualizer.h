@@ -82,6 +82,7 @@ namespace Utilities
 		char ShowObservation();
 
 		cv::Mat GetVisImage();
+		cv::Mat GetHOGVis();
 
 		// Keeping track of what we're visualizing
 		bool vis_track;

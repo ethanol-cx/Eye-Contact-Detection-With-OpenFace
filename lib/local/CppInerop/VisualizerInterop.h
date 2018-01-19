@@ -113,6 +113,18 @@ namespace UtilitiesOF {
 			m_visualizer->SetObservationLandmarks(landmarks_2D_mat, confidence);
 		}
 
+		OpenCVWrappers::RawImage^ GetHOGVis()
+		{
+			OpenCVWrappers::RawImage^ hog_image = gcnew OpenCVWrappers::RawImage(m_visualizer->GetHOGVis());
+			return hog_image;
+		}
+
+		OpenCVWrappers::RawImage^  GetVisImage()
+		{
+			OpenCVWrappers::RawImage^ vis_image = gcnew OpenCVWrappers::RawImage(m_visualizer->GetVisImage());
+			return vis_image;
+		}
+
 		// Finalizer. Definitely called before Garbage Collection,
 		// but not automatically called on explicit Dispose().
 		// May be called multiple times.
