@@ -186,6 +186,7 @@
     <ClInclude Include="FaceDetectorInterop.h" />
     <ClInclude Include="OpenCVWrappers.h" />
     <ClInclude Include="RecorderInterop.h" />
+    <ClInclude Include="VisualizerInterop.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\3rdParty\dlib\dlib.vcxproj">

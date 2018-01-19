@@ -41,3 +41,4 @@
 #include "ImageReader.h"
 #include "FaceDetectorInterop.h"
 #include "RecorderInterop.h"
+#include "VisualizerInterop.h"

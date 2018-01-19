@@ -108,7 +108,10 @@ namespace OpenFaceOffline
         FaceAnalyserManaged face_analyser;
         GazeAnalyserManaged gaze_analyser;
 
-        // Recording parameters (default values)
+        // For visualization of results
+        Visualizer visualizer_of;
+
+        // For output recording
         Recorder recorder;
 
         public bool RecordAligned { get; set; } = false; // Aligned face images
@@ -300,11 +303,11 @@ namespace OpenFaceOffline
                     // Predic eye gaze
                     gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
+                    // Only the final face will contain the details
+                    VisualizeFeatures(frame, landmarks, i == 0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
+
                     // Record an observation
                     RecordObservation(recorder, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
-
-                    // Only the final face will contain the details
-                    VisualizeFeatures(frame, landmarks, i==0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                 }
 
@@ -468,6 +471,7 @@ namespace OpenFaceOffline
 
         private void VisualizeFeatures(RawImage frame, List<Tuple<double, double>> landmarks, bool new_image, double fx, double fy, double cx, double cy, double progress)
         {
+
             List<Tuple<Point, Point>> lines = null;
             List<Tuple<double, double>> eye_landmarks = null;
             List<Tuple<Point, Point>> gaze_lines = null;
@@ -485,6 +489,14 @@ namespace OpenFaceOffline
                 confidence = 1;
 
             double scale = 0;
+
+            // Helps with recording and showing the visualizations
+            ///visualizer.SetObservationFaceAlign(sim_warped_img);
+            //visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
+            //visualizer.SetObservationLandmarks(face_model.detected_landmarks, 1.0, face_model.detection_success); // Set confidence to high to make sure we always visualize
+            //visualizer.SetObservationPose(pose_estimate, 1.0);
+            //visualizer.SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy), face_model.detection_certainty);
+
 
             if (detectionSucceeding)
             {

@@ -335,12 +335,26 @@ public:
 		return HOG_vis_image;
 	}
 	
-	OpenCVWrappers::RawImage^ GetLatestHOGFeature(System::Int32^ num_rows, System::Int32^ num_cols, System::Int32^ num_channels) {
-		num_rows = gcnew System::Int32(*this->num_rows);
-		num_cols = gcnew System::Int32(*this->num_cols);
-		num_channels = gcnew System::Int32(31);
+	OpenCVWrappers::RawImage^ GetLatestHOGFeature() {
 		OpenCVWrappers::RawImage^ HOG_feature = gcnew OpenCVWrappers::RawImage(*hog_features);
 		return HOG_feature;
+	}
+
+	// As the number of HOG rows and columns might not be known in advance, have methods for querying them
+	int GetHOGRows()
+	{
+		return *num_rows;
+	}
+
+	int GetHOGCols()
+	{
+		return *num_cols;
+	}
+
+	// The number of channels is always the same
+	int GetHOGChannels()
+	{
+		return 31;
 	}
 
 	void Reset()

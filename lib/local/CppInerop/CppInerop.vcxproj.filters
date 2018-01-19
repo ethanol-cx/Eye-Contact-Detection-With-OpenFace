@@ -47,5 +47,8 @@
     <ClInclude Include="RecorderInterop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="VisualizerInterop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
