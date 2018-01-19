@@ -335,7 +335,10 @@ public:
 		return HOG_vis_image;
 	}
 	
-	OpenCVWrappers::RawImage^ GetLatestHOGFeature() {
+	OpenCVWrappers::RawImage^ GetLatestHOGFeature(System::Int32^ num_rows, System::Int32^ num_cols, System::Int32^ num_channels) {
+		num_rows = gcnew System::Int32(*this->num_rows);
+		num_cols = gcnew System::Int32(*this->num_cols);
+		num_channels = gcnew System::Int32(31);
 		OpenCVWrappers::RawImage^ HOG_feature = gcnew OpenCVWrappers::RawImage(*hog_features);
 		return HOG_feature;
 	}

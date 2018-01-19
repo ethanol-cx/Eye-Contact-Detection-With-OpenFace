@@ -39,8 +39,6 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Media.Imaging;
-using System.IO;
-using Microsoft.Win32;
 
 // Internal libraries
 using OpenCVWrappers;
@@ -457,10 +455,10 @@ namespace OpenFaceOffline
             recorder.SetObservationActionUnits(au_regs, au_classes);
 
             recorder.SetObservationFaceAlign(face_analyser.GetLatestAlignedFace());
-
+            
             var hog_feature = face_analyser.GetLatestHOGFeature();
-            //open_face_rec.SetObservationHOG(face_model.detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
-
+            recorder.SetObservationHOG(success, hog_feature, face_analyser.GetHOGRows(), face_analyser.GetHOGCols(), face_analyser.GetHOGChannels());
+            
             recorder.WriteObservation();
 
             // TODO
