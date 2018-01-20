@@ -87,7 +87,6 @@ private:
 	// The actual descriptors (for visualisation and output)
 	cv::Mat_<float>* hog_features;
 	cv::Mat* aligned_face;
-	cv::Mat* visualisation;
 
 	// Variables used for recording things
 	std::ofstream* hog_output_file;
@@ -114,7 +113,6 @@ public:
 		hog_features = new cv::Mat_<float>();
 
 		aligned_face = new cv::Mat();
-		visualisation = new cv::Mat();
 
 		num_rows = new int;
 		num_cols = new int;
@@ -194,7 +192,7 @@ public:
 		face_analyser->PostprocessOutputFile(msclr::interop::marshal_as<std::string>(file));
 	}
 
-	void AddNextFrame(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks, bool success, bool online, bool vis_hog) {
+	void AddNextFrame(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks, bool success, bool online) {
 			
 		// Construct an OpenCV matric from the landmarks
 		cv::Mat_<double> landmarks_mat(landmarks->Count * 2, 1, 0.0);
@@ -215,17 +213,12 @@ public:
 		face_analyser->GetLatestAlignedFace(*aligned_face);
 		
 		*good_frame = success;
-
-		if(vis_hog)
-		{
-			Utilities::Visualise_FHOG(*hog_features, *num_rows, *num_cols, *visualisation);
-		}
-
+		
 	}
 	
 	// Predicting AUs from a single image
     System::Tuple<Dictionary<System::String^, double>^, Dictionary<System::String^, double>^>^
-		PredictStaticAUsAndComputeFeatures(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks, bool vis_hog)
+		PredictStaticAUsAndComputeFeatures(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks)
 	{
 		
 		// Construct an OpenCV matric from the landmarks
@@ -244,11 +237,6 @@ public:
 		hog_tmp.convertTo(*hog_features, CV_32F);
 
 		face_analyser->GetLatestAlignedFace(*aligned_face);
-
-		if (vis_hog)
-		{
-			Utilities::Visualise_FHOG(*hog_features, *num_rows, *num_cols, *visualisation);
-		}
 
 		// Set the computed AUs
 		auto AU_predictions_intensity = face_analyser->GetCurrentAUsReg();
@@ -364,7 +352,6 @@ public:
 	{
 		delete hog_features;
 		delete aligned_face;
-		delete visualisation;
 		delete num_cols;
 		delete num_rows;
 		delete hog_output_file;

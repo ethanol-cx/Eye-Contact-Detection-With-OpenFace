@@ -298,7 +298,7 @@ namespace OpenFaceOffline
                     var landmarks = clnf_model.CalculateAllLandmarks();
                     
                     // Predict action units
-                    var au_preds = face_analyser.PredictStaticAUsAndComputeFeatures(frame, landmarks, ShowAppearance);
+                    var au_preds = face_analyser.PredictStaticAUsAndComputeFeatures(frame, landmarks);
 
                     // Predic eye gaze
                     gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
@@ -307,7 +307,7 @@ namespace OpenFaceOffline
                     VisualizeFeatures(frame, visualizer_of, landmarks, i == 0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                     // Record an observation
-                    RecordObservation(recorder, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                    RecordObservation(recorder, visualizer_of.GetVisImage(), detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                 }
 
@@ -396,7 +396,7 @@ namespace OpenFaceOffline
                 detectionSucceeding = ProcessFrame(clnf_model, face_model_params, frame, grayFrame, fx, fy, cx, cy);
 
                 // The face analysis step (for AUs and eye gaze)
-                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, false, ShowAppearance); // TODO change
+                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, false);
                 gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, fx, fy, cx, cy);
 
                 recorder.RecordFrame(clnf_model, face_analyser, gaze_analyser, detectionSucceeding, frame_id + 1, ((double)frame_id) / fps);
