@@ -136,7 +136,7 @@ namespace OpenFaceOffline
         public bool DynamicAUModels { get; set; } = true;
 
         // Camera calibration parameters
-        public double fx = -1, fy = -1, cx = -1, cy = -1;
+        public float fx = -1, fy = -1, cx = -1, cy = -1;
         bool estimate_camera_parameters = true;
 
         public MainWindow()
@@ -343,10 +343,10 @@ namespace OpenFaceOffline
             // If the camera calibration parameters are not set (indicated by -1), guesstimate them
             if(estimate_camera_parameters || fx == -1 || fy == -1 || cx == -1 || cy == -1)
             { 
-                fx = 500.0 * (capture.width / 640.0);
-                fy = 500.0 * (capture.height / 480.0);
+                fx = 500.0f * (capture.width / 640.0f);
+                fy = 500.0f * (capture.height / 480.0f);
 
-                fx = (fx + fy) / 2.0;
+                fx = (fx + fy) / 2.0f;
                 fy = fx;
 
                 cx = capture.width / 2f;
@@ -472,7 +472,7 @@ namespace OpenFaceOffline
 
         }
 
-        private void VisualizeFeatures(RawImage frame, Visualizer visualizer, List<Tuple<double, double>> landmarks, bool new_image, double fx, double fy, double cx, double cy, double progress)
+        private void VisualizeFeatures(RawImage frame, Visualizer visualizer, List<Tuple<double, double>> landmarks, bool new_image, float fx, float fy, float cx, float cy, double progress)
         {
 
             List<Tuple<Point, Point>> lines = null;
@@ -494,6 +494,10 @@ namespace OpenFaceOffline
             double scale = 0;
 
             // Helps with recording and showing the visualizations
+            if(new_image)
+            {
+                visualizer.SetImage(frame, fx, fy, cx, cy);
+            }
             visualizer.SetObservationHOG(face_analyser.GetLatestHOGFeature(), face_analyser.GetHOGRows(), face_analyser.GetHOGCols());
             visualizer.SetObservationLandmarks(landmarks, confidence); // Set confidence to high to make sure we always visualize
             visualizer.SetObservationPose(pose, confidence);
@@ -503,11 +507,11 @@ namespace OpenFaceOffline
             {
                 
                 eye_landmarks = clnf_model.CalculateVisibleEyeLandmarks();
-                lines = clnf_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
+                lines = clnf_model.CalculateBox(fx, fy, cx, cy);
 
                 scale = clnf_model.GetRigidParams()[0];
 
-                gaze_lines = gaze_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
+                gaze_lines = gaze_analyser.CalculateGazeLines(scale, fx, fy, cx, cy);
                 gaze_angle = gaze_analyser.GetGazeAngle();
             }
 

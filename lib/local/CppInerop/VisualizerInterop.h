@@ -113,6 +113,11 @@ namespace UtilitiesOF {
 			m_visualizer->SetObservationLandmarks(landmarks_2D_mat, confidence);
 		}
 
+		void SetImage(OpenCVWrappers::RawImage^ canvas, float fx, float fy, float cx, float cy)
+		{
+			m_visualizer->SetImage(canvas->Mat, fx, fy, cx, cy);
+		}
+
 		OpenCVWrappers::RawImage^ GetHOGVis()
 		{
 			OpenCVWrappers::RawImage^ hog_image = gcnew OpenCVWrappers::RawImage(m_visualizer->GetHOGVis());

@@ -78,7 +78,7 @@ namespace OpenFaceOffline
     /// </summary>
     public partial class CameraParametersEntry : Window
     {
-        public CameraParametersEntry(double fx, double fy, double cx, double cy)
+        public CameraParametersEntry(float fx, float fy, float cx, float cy)
         {
             InitializeComponent();
             this.KeyDown += new KeyEventHandler(TextEntry_KeyDown);
@@ -122,26 +122,26 @@ namespace OpenFaceOffline
             }
         }
 
-        private double fx = -1, fy = -1, cx = -1, cy = -1;
+        private float fx = -1, fy = -1, cx = -1, cy = -1;
 
         public bool IsAutomatic
         {
             get { return automaticCheckBox.IsChecked == true; }
         }
-        public double Fx
+        public float Fx
         {
             get { return automaticCheckBox.IsChecked == true ? -1 : fx; }
         }
 
-        public double Fy
+        public float Fy
         {
             get { return automaticCheckBox.IsChecked == true ? -1 : fy; }
         }
-        public double Cx
+        public float Cx
         {
             get { return automaticCheckBox.IsChecked == true ? -1 : cx; }
         }
-        public double Cy
+        public float Cy
         {
             get { return automaticCheckBox.IsChecked == true ? -1 : cy; }
         }
@@ -169,10 +169,10 @@ namespace OpenFaceOffline
         {
             try
             {
-                double fx_n = Double.Parse(fxTextBox.Text);
-                double fy_n = Double.Parse(fyTextBox.Text);
-                double cx_n = Double.Parse(cxTextBox.Text);
-                double cy_n = Double.Parse(cyTextBox.Text);
+                float fx_n = (float)Double.Parse(fxTextBox.Text);
+                float fy_n = (float)Double.Parse(fyTextBox.Text);
+                float cx_n = (float)Double.Parse(cxTextBox.Text);
+                float cy_n = (float)Double.Parse(cyTextBox.Text);
 
                 if (fx_n > 0 && fy_n > 0 && cx_n > 0 && cy_n > 0)
                 {
