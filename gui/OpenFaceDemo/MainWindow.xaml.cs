@@ -304,7 +304,7 @@ namespace OpenFaceDemo
                 double time_stamp = (DateTime.Now - (DateTime)startTime).TotalMilliseconds;
 
                 // The face analysis step (only done if recording AUs, HOGs or video)
-                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, true, false);
+                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, true);
                 gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, fx, fy, cx, cy);
 
                 List<Tuple<Point, Point>> lines = null;
