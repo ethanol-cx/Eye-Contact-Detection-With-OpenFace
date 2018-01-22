@@ -186,6 +186,7 @@
     <ClInclude Include="FaceDetectorInterop.h" />
     <ClInclude Include="OpenCVWrappers.h" />
     <ClInclude Include="RecorderInterop.h" />
+    <ClInclude Include="SequenceReader.h" />
     <ClInclude Include="VisualizerInterop.h" />
   </ItemGroup>
   <ItemGroup>

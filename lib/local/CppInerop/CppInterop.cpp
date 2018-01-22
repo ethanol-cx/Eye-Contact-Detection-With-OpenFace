@@ -42,3 +42,4 @@
 #include "FaceDetectorInterop.h"
 #include "RecorderInterop.h"
 #include "VisualizerInterop.h"
+#include "SequenceReader.h"

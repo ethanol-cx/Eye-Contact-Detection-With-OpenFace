@@ -47,8 +47,9 @@
 #include <set>
 
 #include <OpenCVWrappers.h>
+#include <ImageReader.h>
 
-#include "ImageCapture.h"
+#include "SequenceCapture.h"
 
 #pragma managed
 
@@ -57,69 +58,59 @@
 
 namespace UtilitiesOF {
 
-	public ref class ReadingFailedException : System::Exception
-	{
-	public:
 
-		ReadingFailedException(System::String^ message) : Exception(message) {}
-	};
-
-	public ref class ImageReader
+	public ref class SequenceReader
 	{
 	private:
 
 		// OpenCV based video capture for reading from files
-		Utilities::ImageCapture* m_image_capture;
+		Utilities::SequenceCapture* m_sequence_capture;
 
 		OpenCVWrappers::RawImage^ m_rgb_frame;
 		OpenCVWrappers::RawImage^ m_gray_frame;
 
-		bool* m_is_opened;
-
 	public:
 
-		// Can provide a directory, or a list of files
-		ImageReader(System::String^ image_directory)
+		// Can provide a directory or a video filename, need to specify which
+		SequenceReader(System::String^ filename, bool directory)
 		{
-			m_image_capture = new Utilities::ImageCapture();
-			m_is_opened = new bool;
+			m_sequence_capture = new Utilities::SequenceCapture();
 
-			std::string image_dir_std = msclr::interop::marshal_as<std::string>(image_directory);
+			std::string name_std = msclr::interop::marshal_as<std::string>(filename);
 
-			*m_is_opened = m_image_capture->OpenDirectory(image_dir_std);
+			bool success;
 
-			if (!*m_is_opened)
+			if(directory)
 			{
-				throw gcnew ReadingFailedException("Failed to open a directory or an image");
+				success = m_sequence_capture->OpenImageSequence(name_std);
+			}
+			else
+			{
+				success = m_sequence_capture->OpenVideoFile(name_std);
+			}
+
+			if (!success)
+			{
+				throw gcnew ReadingFailedException("Failed to open an image sequence");
 			}
 		}
-		// Can provide a directory, or a list of files
-		ImageReader(System::Collections::Generic::List<System::String^>^ image_files)
+
+		// Can provide a webcam id
+		SequenceReader(int webcam_id)
 		{
-			m_image_capture = new Utilities::ImageCapture();
-			m_is_opened = new bool;
+			m_sequence_capture = new Utilities::SequenceCapture();
+			
+			bool success = m_sequence_capture->OpenWebcam(webcam_id);
 
-			std::vector<std::string> image_files_std;
-
-			for (size_t i = 0; i < image_files->Count; ++i)
+			if (!success)
 			{
-				std::string image_file = msclr::interop::marshal_as<std::string>(image_files[i]);
-				image_files_std.push_back(image_file);
-
+				throw gcnew ReadingFailedException("Failed to open an image sequence");
 			}
-
-			*m_is_opened = m_image_capture->OpenImageFiles(image_files_std);
-
-			if (!*m_is_opened)
-			{
-				throw gcnew ReadingFailedException("Failed to open a directory or an image");
-			}
-
 		}
 
 		OpenCVWrappers::RawImage^ GetNextImage()
 		{
-			cv::Mat next_image = m_image_capture->GetNextImage();
+			cv::Mat next_image = m_sequence_capture->GetNextFrame();
 
 			if (m_rgb_frame == nullptr)
 			{
@@ -128,53 +119,58 @@ namespace UtilitiesOF {
 
 			next_image.copyTo(m_rgb_frame->Mat);
 
-			if (next_image.empty())
-			{
-				*m_is_opened = false;
-			}
-
 			return m_rgb_frame;
 		}
 
 		System::String^ GetName()
 		{
-			std::string filename = m_image_capture->name;
+			std::string filename = m_sequence_capture->name;
 			return gcnew System::String(filename.c_str());
 		}
 
 		double GetProgress()
 		{
-			return m_image_capture->GetProgress();
+			return m_sequence_capture->GetProgress();
 		}
 
 		float GetFx()
 		{
-			return m_image_capture->fx;
+			return m_sequence_capture->fx;
 		}
 
 		float GetFy()
 		{
-			return m_image_capture->fy;
+			return m_sequence_capture->fy;
 		}
 
 		float GetCx()
 		{
-			return m_image_capture->cx;
+			return m_sequence_capture->cx;
 		}
 
 		float GetCy()
 		{
-			return m_image_capture->cy;
+			return m_sequence_capture->cy;
 		}
 
-		bool isOpened()
+		bool IsOpened()
 		{
-			return *m_is_opened;
+			return m_sequence_capture->IsOpened();
+		}
+
+		bool IsWebcam()
+		{
+			return m_sequence_capture->IsWebcam();
+		}
+
+		double GetFPS()
+		{
+			return m_sequence_capture->fps;
 		}
 
 		OpenCVWrappers::RawImage^ GetCurrentFrameGray() {
 
-			cv::Mat next_gray_image = m_image_capture->GetGrayFrame();
+			cv::Mat next_gray_image = m_sequence_capture->GetGrayFrame();
 
 			if (m_gray_frame == nullptr)
 			{
@@ -189,12 +185,12 @@ namespace UtilitiesOF {
 		// Finalizer. Definitely called before Garbage Collection,
 		// but not automatically called on explicit Dispose().
 		// May be called multiple times.
-		!ImageReader()
+		!SequenceReader()
 		{
 			// Automatically closes capture object before freeing memory.	
-			if (m_image_capture != nullptr)
+			if (m_sequence_capture != nullptr)
 			{
-				delete m_image_capture;
+				delete m_sequence_capture;
 			}
 
 			if (m_rgb_frame != nullptr)
@@ -205,17 +201,13 @@ namespace UtilitiesOF {
 			{
 				delete m_gray_frame;
 			}
-			if (m_is_opened != nullptr)
-			{
-				delete m_is_opened;
-			}
 
 		}
 
 		// Destructor. Called on explicit Dispose() only.
-		~ImageReader()
+		~SequenceReader()
 		{
-			this->!ImageReader();
+			this->!SequenceReader();
 		}
 	};
 

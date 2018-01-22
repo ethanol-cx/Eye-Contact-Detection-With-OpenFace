@@ -83,7 +83,6 @@ namespace OpenFaceOffline
         Thread processing_thread;
 
         // Some members for displaying the results
-        private Capture capture;
         private WriteableBitmap latest_img;
         private WriteableBitmap latest_aligned_face;
         private WriteableBitmap latest_HOG_descriptor;
@@ -107,9 +106,6 @@ namespace OpenFaceOffline
         // For face analysis
         FaceAnalyserManaged face_analyser;
         GazeAnalyserManaged gaze_analyser;
-
-        // For output recording
-        Recorder recorder;
 
         public bool RecordAligned { get; set; } = false; // Aligned face images
         public bool RecordHOG { get; set; } = false; // HOG features extracted from face images
@@ -160,81 +156,89 @@ namespace OpenFaceOffline
         // ----------------------------------------------------------
         // Actual work gets done here
 
-        // The main function call for processing images or video files, TODO rename this as it is not a loop
-        private void ProcessingLoop(String[] filenames, int cam_id = -1, int width = -1, int height = -1, bool multi_face = false)
+        // Wrapper for processing multiple sequences
+        private void ProcessSequences(List<String> filenames)
+        {
+            for (int i = 0; i < filenames.Count; ++i)
+            {
+                SequenceReader reader = new SequenceReader(filenames[i], false);
+                ProcessSequence(reader);
+            }
+
+        }
+
+        // The main function call for processing sequences
+        private void ProcessSequence(SequenceReader reader)
         {
             SetupFeatureExtractionMode();
 
             thread_running = true;
 
-            // Create the video capture and call the VideoLoop
-            if (filenames != null)
+            face_model_params.optimiseForVideo();
+
+            // Setup the visualization
+            Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance);
+
+            // Initialize the face analyser
+            face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, DynamicAUModels, image_output_size);
+
+            // Reset the tracker
+            clnf_model.Reset();
+
+            // Loading an image file
+            var frame = new RawImage(reader.GetNextImage());
+            var gray_frame = new RawImage(reader.GetCurrentFrameGray());
+
+            // Setup recording
+            RecorderOpenFaceParameters rec_params = new RecorderOpenFaceParameters(true, reader.IsWebcam(),
+                Record2DLandmarks, Record3DLandmarks, RecordModelParameters, RecordPose, RecordAUs,
+                RecordGaze, RecordHOG, RecordTracked, RecordAligned,
+                reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), reader.GetFPS());
+
+            RecorderOpenFace recorder = new RecorderOpenFace(reader.GetName(), rec_params, record_root);
+
+            // For FPS tracking
+            DateTime? startTime = CurrentTime;
+            var lastFrameTime = CurrentTime;
+
+            // This will be false when the image is not available
+            while (reader.IsOpened())
             {
-                face_model_params.optimiseForVideo();
-                if (cam_id == -2)
+                if(!thread_running)
                 {
-                    List<String> image_files_all = new List<string>();
-                    foreach (string image_name in filenames)
-                        image_files_all.Add(image_name);
-
-                    // Loading an image sequence that represents a video                   
-                    capture = new Capture(image_files_all);
-
-                    if (capture.isOpened())
-                    {
-                        // Prepare recording if any based on the directory
-                        String file_no_ext = System.IO.Path.GetDirectoryName(filenames[0]);
-                        file_no_ext = System.IO.Path.GetFileName(file_no_ext);
-
-                        // Start the actual processing and recording
-                        FeatureExtractionLoop(file_no_ext);                        
-
-                    }
-                    else
-                    {
-                        string messageBoxText = "Failed to open an image";
-                        string caption = "Not valid file";
-                        MessageBoxButton button = MessageBoxButton.OK;
-                        MessageBoxImage icon = MessageBoxImage.Warning;
-
-                        // Display message box
-                        System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
-                    }
+                    continue;
                 }
-                else
+
+                lastFrameTime = CurrentTime;
+                processing_fps.AddFrame();
+                double progress = reader.GetProgress();
+
+                bool detectionSucceeding = clnf_model.DetectLandmarksInVideo(gray_frame, face_model_params);
+
+                // The face analysis step (for AUs and eye gaze)
+                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, false);
+                gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, fx, fy, cx, cy);
+
+                // Only the final face will contain the details
+                VisualizeFeatures(frame, visualizer_of, clnf_model.CalculateAllLandmarks(), true, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
+
+                // Record an observation
+                RecordObservation(recorder, visualizer_of.GetVisImage(), detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+
+                while (thread_running & thread_paused && skip_frames == 0)
                 {
-                    face_model_params.optimiseForVideo();
-                    // Loading a video file (or a number of them)
-                    foreach (string filename in filenames)
-                    {
-                        if (!thread_running)
-                        {
-                            continue;
-                        }
-
-                        capture = new Capture(filename);
-
-                        if (capture.isOpened())
-                        {
-                            String file_no_ext = System.IO.Path.GetFileNameWithoutExtension(filename);
-                            
-                            // Start the actual processing                        
-                            FeatureExtractionLoop(file_no_ext);
-
-                        }
-                        else
-                        {
-                            string messageBoxText = "File is not a video or the codec is not supported.";
-                            string caption = "Not valid file";
-                            MessageBoxButton button = MessageBoxButton.OK;
-                            MessageBoxImage icon = MessageBoxImage.Warning;
-
-                            // Display message box
-                            System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
-                        }
-                    }
+                    Thread.Sleep(10);
                 }
+
+                if (skip_frames > 0)
+                    skip_frames--;
+
+                frame = new RawImage(reader.GetNextImage());
+                gray_frame = new RawImage(reader.GetCurrentFrameGray());
             }
+
+            // Post-process the AU recordings, TODO
+            //recorder.FinishRecording(clnf_model, face_analyser);
 
             EndMode();
 
@@ -326,110 +330,6 @@ namespace OpenFaceOffline
 
             // TODO is this still needed?
             EndMode();
-
-        }
-
-        // Capturing and processing the video frame by frame
-        private void FeatureExtractionLoop(string output_file_name)
-        {
-
-            DateTime? startTime = CurrentTime;
-
-            var lastFrameTime = CurrentTime;
-
-            clnf_model.Reset();
-            face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, DynamicAUModels, image_output_size);
-
-            // If the camera calibration parameters are not set (indicated by -1), guesstimate them
-            if(estimate_camera_parameters || fx == -1 || fy == -1 || cx == -1 || cy == -1)
-            { 
-                fx = 500.0f * (capture.width / 640.0f);
-                fy = 500.0f * (capture.height / 480.0f);
-
-                fx = (fx + fy) / 2.0f;
-                fy = fx;
-
-                cx = capture.width / 2f;
-                cy = capture.height / 2f;
-            }
-
-            // Setup the recorder first
-            recorder = new Recorder(record_root, output_file_name, capture.width, capture.height, Record2DLandmarks, Record3DLandmarks, RecordModelParameters, RecordPose,
-                RecordAUs, RecordGaze, RecordAligned, RecordHOG, clnf_model, face_analyser, fx, fy, cx, cy, DynamicAUModels);
-
-            // Setup the c++ visualizer
-            Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance);
-
-            int frame_id = 0;
-
-            double fps = capture.GetFPS();
-            if (fps <= 0) fps = 30;
-
-            while (thread_running)
-            {
-                //////////////////////////////////////////////
-                // CAPTURE FRAME AND DETECT LANDMARKS FOLLOWED BY THE REQUIRED IMAGE PROCESSING
-                //////////////////////////////////////////////
-                RawImage frame = null;
-                double progress = -1;
-
-                frame = new RawImage(capture.GetNextFrame(false));
-                progress = capture.GetProgress();
-
-                if (frame.Width == 0)
-                {
-                    // This indicates that we reached the end of the video file
-                    break;
-                }
-
-                lastFrameTime = CurrentTime;
-                processing_fps.AddFrame();
-
-                var grayFrame = new RawImage(capture.GetCurrentFrameGray());
-
-                if (grayFrame == null)
-                {
-                    Console.WriteLine("Gray is empty");
-                    continue;
-                }
-
-                detectionSucceeding = ProcessFrame(clnf_model, face_model_params, frame, grayFrame, fx, fy, cx, cy);
-
-                // The face analysis step (for AUs and eye gaze)
-                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, false);
-                gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, fx, fy, cx, cy);
-
-                recorder.RecordFrame(clnf_model, face_analyser, gaze_analyser, detectionSucceeding, frame_id + 1, ((double)frame_id) / fps);
-
-                List<Tuple<double, double>> landmarks = clnf_model.CalculateVisibleLandmarks();
-
-                VisualizeFeatures(frame, visualizer_of, landmarks, true, fx, fy, cx, cy, progress);
-
-                while (thread_running & thread_paused && skip_frames == 0)
-                {
-                    Thread.Sleep(10);
-                }
-
-                frame_id++;
-
-                if (skip_frames > 0)
-                    skip_frames--;
-
-            }
-
-            latest_img = null;
-            skip_frames = 0;
-
-            // Unpause if it's paused
-            if (thread_paused)
-            {
-                Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
-                {
-                    PauseButton_Click(null, null);
-                }));
-            }
-
-            recorder.FinishRecording(clnf_model, face_analyser);
 
         }
 
@@ -651,17 +551,6 @@ namespace OpenFaceOffline
         }
 
 
-
-        // ----------------------------------------------------------
-        // Interacting with landmark detection and face analysis
-
-        private bool ProcessFrame(CLNF clnf_model, FaceModelParameters clnf_params, RawImage frame, RawImage grayscale_frame, double fx, double fy, double cx, double cy)
-        {
-            detectionSucceeding = clnf_model.DetectLandmarksInVideo(grayscale_frame, clnf_params);
-            return detectionSucceeding;
-
-        }
-
         // ----------------------------------------------------------
         // Mode handling (image, video)
         // ----------------------------------------------------------
@@ -685,6 +574,18 @@ namespace OpenFaceOffline
         // When the processing is done re-enable the components
         private void EndMode()
         {
+            latest_img = null;
+            skip_frames = 0;
+
+            // Unpause if it's paused
+            if (thread_paused)
+            {
+                Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
+                {
+                    PauseButton_Click(null, null);
+                }));
+            }
+
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 1, 0), (Action)(() =>
             {
 
@@ -725,43 +626,16 @@ namespace OpenFaceOffline
         // Opening Videos/Images
         // ----------------------------------------------------------
 
-        private void videoFileOpenClick(object sender, RoutedEventArgs e)
-        {
-            new Thread(() => openVideoFile()).Start();
-        }
-
-        private void openVideoFile()
-        {
-            StopTracking();
-
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
-            {
-                var d = new Microsoft.Win32.OpenFileDialog();
-                d.Multiselect = true;
-                d.Filter = "Video files|*.avi;*.wmv;*.mov;*.mpg;*.mpeg;*.mp4";
-
-                if (d.ShowDialog(this) == true)
-                {
-
-                    string[] video_files = d.FileNames;
-
-                    processing_thread = new Thread(() => ProcessingLoop(video_files));
-                    processing_thread.Start();
-
-                }
-            }));
-        }
-
         // Some utilities for opening images/videos and directories
-        private ImageReader openMediaDialog(bool images)
+        private List<string> openMediaDialog(bool images)
         {
             string[] image_files = new string[0];
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
             {
                 var d = new Microsoft.Win32.OpenFileDialog();
                 d.Multiselect = true;
-                if(images)
-                { 
+                if (images)
+                {
                     d.Filter = "Image files|*.jpg;*.jpeg;*.bmp;*.png;*.gif";
                 }
                 else
@@ -776,9 +650,9 @@ namespace OpenFaceOffline
                 }
             }));
             List<string> img_files_list = new List<string>(image_files);
-            return new ImageReader(img_files_list);
+            return img_files_list;
         }
-        
+
         private string openDirectory()
         {
             string to_return = "";
@@ -805,13 +679,41 @@ namespace OpenFaceOffline
             return to_return;
         }
 
+        private void imageSequenceFileOpenClick(object sender, RoutedEventArgs e)
+        {
+            // First clean up existing tracking
+            StopTracking();
+
+            string directory = openDirectory();
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                SequenceReader reader = new SequenceReader(directory, true);
+
+                processing_thread = new Thread(() => ProcessSequence(reader));
+                processing_thread.Start();
+            }
+
+        }
+
+        private void videoFileOpenClick(object sender, RoutedEventArgs e)
+        {
+            // First clean up existing tracking
+            StopTracking();
+
+            var video_files = openMediaDialog(false);
+            processing_thread = new Thread(() => ProcessSequences(video_files));
+            processing_thread.Start();
+
+        }
+
         // Selecting one or more images in a directory
         private void individualImageFilesOpenClick(object sender, RoutedEventArgs e)
         {
             // First clean up existing tracking
             StopTracking();
 
-            ImageReader reader = openMediaDialog(true);
+            var image_files = openMediaDialog(true);
+            ImageReader reader = new ImageReader(image_files);
 
             processing_thread = new Thread(() => ProcessIndividualImages(reader));
             processing_thread.Start();
@@ -835,35 +737,6 @@ namespace OpenFaceOffline
             }
         }
 
-
-        private void imageSequenceFileOpenClick(object sender, RoutedEventArgs e)
-        {
-            new Thread(() => imageSequenceOpen()).Start();
-        }
-
-        // TODO this should be removed and replace with directory open
-        private void imageSequenceOpen()
-        {
-            StopTracking();
-
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
-            {
-                var d = new Microsoft.Win32.OpenFileDialog();
-                d.Multiselect = true;
-                d.Filter = "Image files|*.jpg;*.jpeg;*.bmp;*.png;*.gif";
-
-                if (d.ShowDialog(this) == true)
-                {
-
-                    string[] image_files = d.FileNames;
-
-                    processing_thread = new Thread(() => ProcessingLoop(image_files, -2));
-                    processing_thread.Start();
-
-                }
-            }));
-        }
-
         // --------------------------------------------------------
         // Button handling
         // --------------------------------------------------------
@@ -876,8 +749,6 @@ namespace OpenFaceOffline
                 // Stop capture and tracking
                 thread_running = false;
                 processing_thread.Join();
-
-                capture.Dispose();
             }
             face_analyser.Dispose();
         }

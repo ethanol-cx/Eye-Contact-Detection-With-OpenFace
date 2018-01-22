@@ -50,5 +50,8 @@
     <ClInclude Include="VisualizerInterop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SequenceReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
