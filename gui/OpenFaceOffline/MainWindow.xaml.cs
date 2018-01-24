@@ -96,10 +96,8 @@ namespace OpenFaceOffline
 
         FpsTracker processing_fps = new FpsTracker();
 
-        volatile bool detectionSucceeding = false;
-
         // For tracking
-        private FaceDetector face_detector;
+        FaceDetector face_detector;
         FaceModelParameters face_model_params;
         CLNF clnf_model;
 
@@ -170,6 +168,8 @@ namespace OpenFaceOffline
         // The main function call for processing sequences
         private void ProcessSequence(SequenceReader reader)
         {
+            Thread.CurrentThread.Priority = ThreadPriority.Highest;
+
             SetupFeatureExtractionMode();
 
             thread_running = true;
@@ -201,29 +201,27 @@ namespace OpenFaceOffline
             DateTime? startTime = CurrentTime;
             var lastFrameTime = CurrentTime;
 
-            // This will be false when the image is not available
-            while (reader.IsOpened())
+            // Empty image would indicate that the stream is over
+            while (gray_frame.Width != 0)
             {
                 if(!thread_running)
                 {
                     continue;
                 }
 
-                lastFrameTime = CurrentTime;
-                processing_fps.AddFrame();
                 double progress = reader.GetProgress();
 
-                bool detectionSucceeding = clnf_model.DetectLandmarksInVideo(gray_frame, face_model_params);
+                bool detection_succeeding = clnf_model.DetectLandmarksInVideo(gray_frame, face_model_params);
 
                 // The face analysis step (for AUs and eye gaze)
-                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, false);
-                gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, fx, fy, cx, cy);
+                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detection_succeeding, false);
+                gaze_analyser.AddNextFrame(clnf_model, detection_succeeding, fx, fy, cx, cy);
 
                 // Only the final face will contain the details
-                VisualizeFeatures(frame, visualizer_of, clnf_model.CalculateAllLandmarks(), true, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
+                VisualizeFeatures(frame, visualizer_of, clnf_model.CalculateAllLandmarks(), detection_succeeding, true, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                 // Record an observation
-                RecordObservation(recorder, visualizer_of.GetVisImage(), detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                RecordObservation(recorder, visualizer_of.GetVisImage(), detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                 while (thread_running & thread_paused && skip_frames == 0)
                 {
@@ -233,8 +231,13 @@ namespace OpenFaceOffline
                 if (skip_frames > 0)
                     skip_frames--;
 
+                latest_img = null;
+
                 frame = new RawImage(reader.GetNextImage());
                 gray_frame = new RawImage(reader.GetCurrentFrameGray());
+
+                lastFrameTime = CurrentTime;
+                processing_fps.AddFrame();
             }
 
             // Post-process the AU recordings, TODO
@@ -271,6 +274,10 @@ namespace OpenFaceOffline
             var frame = new RawImage(reader.GetNextImage());
             var gray_frame = new RawImage(reader.GetCurrentFrameGray());
 
+            // For FPS tracking
+            DateTime? startTime = CurrentTime;
+            var lastFrameTime = CurrentTime;
+
             // This will be false when the image is not available
             while (reader.isOpened())
             {
@@ -297,7 +304,7 @@ namespace OpenFaceOffline
 
                 for (int i = 0; i < face_detections.Count; ++i)
                 {
-                    detectionSucceeding = clnf_model.DetectFaceLandmarksInImage(gray_frame, face_detections[i], face_model_params);
+                    bool detection_succeeding = clnf_model.DetectFaceLandmarksInImage(gray_frame, face_detections[i], face_model_params);
 
                     var landmarks = clnf_model.CalculateAllLandmarks();
                     
@@ -305,13 +312,13 @@ namespace OpenFaceOffline
                     var au_preds = face_analyser.PredictStaticAUsAndComputeFeatures(frame, landmarks);
 
                     // Predic eye gaze
-                    gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                    gaze_analyser.AddNextFrame(clnf_model, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                     // Only the final face will contain the details
-                    VisualizeFeatures(frame, visualizer_of, landmarks, i == 0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
+                    VisualizeFeatures(frame, visualizer_of, landmarks, detection_succeeding, i == 0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                     // Record an observation
-                    RecordObservation(recorder, visualizer_of.GetVisImage(), detectionSucceeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                    RecordObservation(recorder, visualizer_of.GetVisImage(), detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                 }
 
@@ -325,6 +332,8 @@ namespace OpenFaceOffline
                 face_analyser.Reset();
                 recorder.Close();
 
+                lastFrameTime = CurrentTime;
+                processing_fps.AddFrame();
                 // TODO how to report errors from the reader here? exceptions? logging? Problem for future versions?
             }
 
@@ -372,7 +381,8 @@ namespace OpenFaceOffline
 
         }
 
-        private void VisualizeFeatures(RawImage frame, Visualizer visualizer, List<Tuple<double, double>> landmarks, bool new_image, float fx, float fy, float cx, float cy, double progress)
+        private void VisualizeFeatures(RawImage frame, Visualizer visualizer, List<Tuple<double, double>> landmarks, bool detection_succeeding, 
+            bool new_image, float fx, float fy, float cx, float cy, double progress)
         {
 
             List<Tuple<Point, Point>> lines = null;
@@ -403,7 +413,7 @@ namespace OpenFaceOffline
             visualizer.SetObservationPose(pose, confidence);
             visualizer.SetObservationGaze(gaze_analyser.GetGazeCamera().Item1, gaze_analyser.GetGazeCamera().Item2, clnf_model.CalculateAllEyeLandmarks(), clnf_model.CalculateAllEyeLandmarks3D(fx, fy, cx, cy), confidence);
 
-            if (detectionSucceeding)
+            if (detection_succeeding)
             {
                 
                 eye_landmarks = clnf_model.CalculateVisibleEyeLandmarks();
@@ -476,7 +486,7 @@ namespace OpenFaceOffline
                     video.Progress = progress;
                     video.FaceScale = scale;
 
-                    if (!detectionSucceeding)
+                    if (!detection_succeeding)
                     {
                         video.OverlayLines.Clear();
                         video.OverlayPoints.Clear();
