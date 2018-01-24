@@ -73,8 +73,6 @@ bool SequenceCapture::Open(std::vector<std::string>& arguments)
 	// Some default values
 	std::string input_root = "";
 	fx = -1; fy = -1; cx = -1; cy = -1;
-	frame_num = 0;
-	time_stamp = 0;
 
 	std::string separator = std::string(1, boost::filesystem::path::preferred_separator);
 
@@ -204,6 +202,8 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 	INFO_STREAM("Attempting to read from webcam: " << device);
 
 	no_input_specified = false;
+	frame_num = 0;
+	time_stamp = 0;
 
 	if (device < 0)
 	{
@@ -268,6 +268,8 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 	INFO_STREAM("Attempting to read from file: " << video_file);
 
 	no_input_specified = false;
+	frame_num = 0;
+	time_stamp = 0;
 
 	latest_frame = cv::Mat();
 	latest_gray_frame = cv::Mat();
@@ -310,6 +312,8 @@ bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 	INFO_STREAM("Attempting to read from directory: " << directory);
 
 	no_input_specified = false;
+	frame_num = 0;
+	time_stamp = 0;
 
 	image_files.clear();
 
@@ -443,6 +447,8 @@ double SequenceCapture::GetProgress()
 	}
 	else
 	{
+		//TODO test here
+		std::cout << frame_num << " " << vid_length << std::endl;
 		return (double)frame_num / (double)vid_length;
 	}
 }

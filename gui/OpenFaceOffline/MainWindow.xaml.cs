@@ -161,6 +161,12 @@ namespace OpenFaceOffline
             {
                 SequenceReader reader = new SequenceReader(filenames[i], false);
                 ProcessSequence(reader);
+
+                // Before continuing to next video make sure the user did not stop the processing
+                if(!thread_running)
+                {
+                    break;
+                }
             }
 
         }
@@ -206,11 +212,10 @@ namespace OpenFaceOffline
             {
                 if(!thread_running)
                 {
-                    continue;
+                    break;
                 }
 
                 double progress = reader.GetProgress();
-
                 bool detection_succeeding = clnf_model.DetectLandmarksInVideo(gray_frame, face_model_params);
 
                 // The face analysis step (for AUs and eye gaze)
@@ -240,8 +245,8 @@ namespace OpenFaceOffline
                 processing_fps.AddFrame();
             }
 
-            // Post-process the AU recordings, TODO
-            //recorder.FinishRecording(clnf_model, face_analyser);
+            // Post-process the AU recordings
+            face_analyser.PostProcessOutputFile(recorder.GetCSVFile());
 
             EndMode();
 
@@ -283,7 +288,7 @@ namespace OpenFaceOffline
             {
                 if (!thread_running)
                 {
-                    continue;
+                    break;
                 }
 
                 // Setup recording
@@ -337,7 +342,6 @@ namespace OpenFaceOffline
                 // TODO how to report errors from the reader here? exceptions? logging? Problem for future versions?
             }
 
-            // TODO is this still needed?
             EndMode();
 
         }
@@ -700,6 +704,7 @@ namespace OpenFaceOffline
                 SequenceReader reader = new SequenceReader(directory, true);
 
                 processing_thread = new Thread(() => ProcessSequence(reader));
+                processing_thread.Name = "Image sequence processing";
                 processing_thread.Start();
             }
 
@@ -712,6 +717,7 @@ namespace OpenFaceOffline
 
             var video_files = openMediaDialog(false);
             processing_thread = new Thread(() => ProcessSequences(video_files));
+            processing_thread.Name = "Video processing";
             processing_thread.Start();
 
         }

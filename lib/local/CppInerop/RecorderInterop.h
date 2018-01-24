@@ -142,6 +142,11 @@ namespace UtilitiesOF {
 			m_recorder->SetObservationGaze(gaze_direction0_cv, gaze_direction1_cv, gaze_angle_cv, landmarks_2D_cv, landmarks_3D_cv);
 		}
 
+		System::String^ GetCSVFile()
+		{
+			return gcnew System::String(m_recorder->GetCSVFile().c_str());
+		}
+
 		// Setting the observations
 		void SetObservationPose(List<double>^ pose)
 		{
