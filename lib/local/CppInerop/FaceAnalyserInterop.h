@@ -87,13 +87,8 @@ private:
 	// The actual descriptors (for visualisation and output)
 	cv::Mat_<float>* hog_features;
 	cv::Mat* aligned_face;
-
-	// Variables used for recording things
-	std::ofstream* hog_output_file;
-	std::string* align_output_dir;
 	int* num_rows;
 	int* num_cols;
-	bool* good_frame;
 
 public:
 
@@ -117,74 +112,6 @@ public:
 		num_rows = new int;
 		num_cols = new int;
 
-		good_frame = new bool;
-			
-		align_output_dir = new string();
-
-		hog_output_file = new std::ofstream();
-
-	}
-
-	void SetupAlignedImageRecording(System::String^ directory)
-	{
-		*align_output_dir = msclr::interop::marshal_as<std::string>(directory);
-	}
-
-	void SetupHOGRecording(System::String^ file)
-	{
-		// Create the file for recording			
-		hog_output_file->open(msclr::interop::marshal_as<std::string>(file), ios_base::out | ios_base::binary);
-	}
-
-	void StopHOGRecording()
-	{
-		hog_output_file->close();
-	}
-
-	void RecordAlignedFrame(int frame_num)
-	{
-		char name[100];
-					
-		// output the frame number
-		sprintf(name, "frame_det_%06d.bmp", frame_num);
-				
-		string out_file = (boost::filesystem::path(*align_output_dir) / boost::filesystem::path(name)).string();
-		imwrite(out_file, *aligned_face);
-	}
-
-	void RecordHOGFrame()
-	{
-		// Using FHOGs, hence 31 channels
-		int num_channels = 31;
-
-		hog_output_file->write((char*)(num_cols), 4);
-		hog_output_file->write((char*)(num_rows), 4);
-		hog_output_file->write((char*)(&num_channels), 4);
-
-		// Not the best way to store a bool, but will be much easier to read it
-		float good_frame_float;
-		if(good_frame)
-			good_frame_float = 1;
-		else
-			good_frame_float = -1;
-
-		hog_output_file->write((char*)(&good_frame_float), 4);
-
-		cv::MatConstIterator_<float> descriptor_it = hog_features->begin();
-
-		for(int y = 0; y < *num_cols; ++y)
-		{
-			for(int x = 0; x < *num_rows; ++x)
-			{
-				for(unsigned int o = 0; o < 31; ++o)
-				{
-
-					float hog_data = (*descriptor_it++);
-					hog_output_file->write((char*)&hog_data, 4);
-				}
-			}
-		}
-		
 	}
 	
 	void PostProcessOutputFile(System::String^ file)
@@ -211,9 +138,7 @@ public:
 		hog_d.convertTo(*hog_features, CV_64F);
 		
 		face_analyser->GetLatestAlignedFace(*aligned_face);
-		
-		*good_frame = success;
-		
+				
 	}
 	
 	// Predicting AUs from a single image
@@ -354,9 +279,6 @@ public:
 		delete aligned_face;
 		delete num_cols;
 		delete num_rows;
-		delete hog_output_file;
-		delete good_frame;
-		delete align_output_dir;
 		delete face_analyser;
 	}
 

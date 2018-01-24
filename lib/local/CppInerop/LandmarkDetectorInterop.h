@@ -209,53 +209,6 @@ namespace CppInterop {
 				return ::LandmarkDetector::DetectLandmarksInImage(image->Mat, bbox, *clnf, *modelParams->getParams());
 			}
 
-			// TODO rem old
-			List<List<System::Tuple<double,double>^>^>^ DetectMultiFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {
-
-				auto all_landmarks = gcnew List<List<System::Tuple<double,double>^>^>();
-
-				// Detect faces in an image
-				vector<cv::Rect_<double> > face_detections;
-				
-				vector<double> confidences;
-		
-				// TODO this should be pre-allocated as now it might be a bit too slow
-				dlib::frontal_face_detector face_detector_hog = dlib::get_frontal_face_detector();
-
-				::LandmarkDetector::DetectFacesHOG(face_detections, image->Mat, face_detector_hog, confidences);
-
-				// Detect landmarks around detected faces
-				int face_det = 0;
-				// perform landmark detection for every face detected
-				for(size_t face=0; face < face_detections.size(); ++face)
-				{
-					// if there are multiple detections go through them
-					bool success = ::LandmarkDetector::DetectLandmarksInImage(image->Mat, face_detections[face], *clnf, *modelParams->getParams());
-
-					auto landmarks_curr = gcnew List<System::Tuple<double,double>^>();
-					if(clnf->detected_landmarks.cols == 1)
-					{
-						int n = clnf->detected_landmarks.rows / 2;
-						for(int i = 0; i < n; ++i)
-						{
-							landmarks_curr->Add(gcnew System::Tuple<double,double>(clnf->detected_landmarks.at<double>(i,0), clnf->detected_landmarks.at<double>(i+n,0)));
-						}
-					}
-					else
-					{
-						int n = clnf->detected_landmarks.cols / 2;
-						for(int i = 0; i < clnf->detected_landmarks.cols; ++i)
-						{
-							landmarks_curr->Add(gcnew System::Tuple<double,double>(clnf->detected_landmarks.at<double>(0,i), clnf->detected_landmarks.at<double>(0,i+1)));
-						}
-					}
-					all_landmarks->Add(landmarks_curr);
-
-				}
-
-				return all_landmarks;
-			}
-
 			void GetPoseWRTCamera(List<double>^ pose, double fx, double fy, double cx, double cy) {
 				auto pose_vec = ::LandmarkDetector::GetPoseWRTCamera(*clnf, fx, fy, cx, cy);
 				pose->Clear();
