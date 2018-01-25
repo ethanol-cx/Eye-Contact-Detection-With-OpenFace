@@ -211,4 +211,71 @@ namespace UtilitiesOF {
 		}
 	};
 
+	// A utility for listing the currently connected cameras together with their ID, subset of supported resolutions and a thumbnail
+	static List<System::Tuple<int, List<System::Tuple<int, int>^>^, OpenCVWrappers::RawImage^>^>^ GetCameras()
+	{
+		auto managed_camera_list = gcnew List<System::Tuple<int, List<System::Tuple<int, int>^>^, OpenCVWrappers::RawImage^>^>();
+
+		// Go through camera id's untill no new cameras are found
+		int num_cameras = 0;
+		while (true)
+		{
+			cv::VideoCapture cap(num_cameras);
+			if (cap.isOpened())
+				num_cameras++;
+			else
+				break;
+		}
+
+		for (size_t i = 0; i < num_cameras; ++i)
+		{
+			//std::string name = cameras[i].name();
+			//System::String^ name_managed = gcnew System::String(name.c_str());
+
+			auto resolutions = gcnew List<System::Tuple<int, int>^>();
+
+			// A common set of resolutions for webcams
+			std::vector<std::pair<int, int>> common_resolutions;
+			common_resolutions.push_back(std::pair<int, int>(320, 240));
+			common_resolutions.push_back(std::pair<int, int>(640, 480));
+			common_resolutions.push_back(std::pair<int, int>(1280, 960));
+
+			// Grab some sample images and confirm the resolutions
+			cv::VideoCapture cap1(i);
+
+			cv::Mat sample_img;
+			OpenCVWrappers::RawImage^ sample_img_managed = gcnew OpenCVWrappers::RawImage();
+
+			// Go through resolutions if they have not been identified
+			for (auto beg = common_resolutions.begin(); beg != common_resolutions.end(); ++beg)
+			{
+				auto resolution = gcnew System::Tuple<int, int>(beg->first, beg->first);
+
+				cap1.set(CV_CAP_PROP_FRAME_WIDTH, resolution->Item1);
+				cap1.set(CV_CAP_PROP_FRAME_HEIGHT, resolution->Item2);
+
+				// Add only valid resolutions as API sometimes provides wrong ones
+				int set_width = cap1.get(CV_CAP_PROP_FRAME_WIDTH);
+				int set_height = cap1.get(CV_CAP_PROP_FRAME_HEIGHT);
+
+				// Read several frames, as the first one often is over-exposed
+				for (int k = 0; k < 2; ++k)
+					cap1.read(sample_img);
+
+				resolution = gcnew System::Tuple<int, int>(set_width, set_height);
+				if (!resolutions->Contains(resolution))
+				{
+					resolutions->Add(resolution);
+				}
+			}
+			sample_img.copyTo(sample_img_managed->Mat);
+
+			cap1.~VideoCapture();
+
+			managed_camera_list->Add(gcnew System::Tuple<int, List<System::Tuple<int, int>^>^, OpenCVWrappers::RawImage^>(i, resolutions, sample_img_managed));
+		}
+
+		return managed_camera_list;
+	}
+
 }
