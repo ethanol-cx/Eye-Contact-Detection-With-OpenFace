@@ -303,10 +303,10 @@ namespace HeadPoseLive
 
         }
 
-        private bool ProcessFrame(CLNF clnf_model, GazeAnalyserManaged gaze_analyser, FaceModelParameters model_params, RawImage frame, RawImage grayscale_frame, double fx, double fy, double cx, double cy)
+        private bool ProcessFrame(CLNF landmark_detector, GazeAnalyserManaged gaze_analyser, FaceModelParameters model_params, RawImage frame, RawImage grayscale_frame, double fx, double fy, double cx, double cy)
         {
-            bool detection_succeeding = clnf_model.DetectLandmarksInVideo(grayscale_frame, model_params);
-            gaze_analyser.AddNextFrame(clnf_model, detection_succeeding, fx, fy, cx, cy);
+            bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(grayscale_frame, model_params);
+            gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, fx, fy, cx, cy);
             return detection_succeeding;
 
         }

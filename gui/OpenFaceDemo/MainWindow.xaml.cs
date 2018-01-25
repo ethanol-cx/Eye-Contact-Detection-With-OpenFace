@@ -107,7 +107,7 @@ namespace OpenFaceDemo
 
         // For tracking
         FaceModelParameters clnf_params;
-        CLNF clnf_model;
+        CLNF landmark_detector;
         FaceAnalyserManaged face_analyser;
         GazeAnalyserManaged gaze_analyser;
 
@@ -122,7 +122,7 @@ namespace OpenFaceDemo
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
             clnf_params = new FaceModelParameters(root, false); // TODO check this
-            clnf_model = new CLNF(clnf_params);
+            landmark_detector = new CLNF(clnf_params);
             face_analyser = new FaceAnalyserManaged(root, true, 112);
             gaze_analyser = new GazeAnalyserManaged();
 
@@ -224,7 +224,7 @@ namespace OpenFaceDemo
 
             var lastFrameTime = CurrentTime;
 
-            clnf_model.Reset();
+            landmark_detector.Reset();
             face_analyser.Reset();
 
             double fx, fy, cx, cy;
@@ -285,9 +285,9 @@ namespace OpenFaceDemo
                     cy = grayFrame.Height / 2f;
                 }
                 
-                bool detectionSucceeding = ProcessFrame(clnf_model, clnf_params, frame, grayFrame, fx, fy, cx, cy);
+                bool detectionSucceeding = ProcessFrame(landmark_detector, clnf_params, frame, grayFrame, fx, fy, cx, cy);
 
-                double confidence = (-clnf_model.GetConfidence()) / 2.0 + 0.5;
+                double confidence = landmark_detector.GetConfidence();
 
                 if (confidence < 0)
                     confidence = 0;
@@ -296,16 +296,16 @@ namespace OpenFaceDemo
 
                 List<double> pose = new List<double>();
 
-                clnf_model.GetPose(pose, fx, fy, cx, cy);
+                landmark_detector.GetPose(pose, fx, fy, cx, cy);
 
-                List<double> non_rigid_params = clnf_model.GetNonRigidParams();
-                double scale = clnf_model.GetRigidParams()[0];
+                List<double> non_rigid_params = landmark_detector.GetNonRigidParams();
+                double scale = landmark_detector.GetRigidParams()[0];
 
                 double time_stamp = (DateTime.Now - (DateTime)startTime).TotalMilliseconds;
 
                 // The face analysis step (only done if recording AUs, HOGs or video)
-                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detectionSucceeding, true);
-                gaze_analyser.AddNextFrame(clnf_model, detectionSucceeding, fx, fy, cx, cy);
+                face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detectionSucceeding, true);
+                gaze_analyser.AddNextFrame(landmark_detector, detectionSucceeding, fx, fy, cx, cy);
 
                 List<Tuple<Point, Point>> lines = null;
                 List<Tuple<double, double>> landmarks = null;
@@ -315,9 +315,9 @@ namespace OpenFaceDemo
 
                 if (detectionSucceeding)
                 {
-                    landmarks = clnf_model.CalculateVisibleLandmarks();
-                    eye_landmarks = clnf_model.CalculateVisibleEyeLandmarks();
-                    lines = clnf_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
+                    landmarks = landmark_detector.CalculateVisibleLandmarks();
+                    eye_landmarks = landmark_detector.CalculateVisibleEyeLandmarks();
+                    lines = landmark_detector.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
                     gaze_lines = gaze_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
                 }
 
@@ -421,12 +421,12 @@ namespace OpenFaceDemo
                 {
                     if (resetPoint.HasValue)
                     {
-                        clnf_model.Reset(resetPoint.Value.X, resetPoint.Value.Y);
+                        landmark_detector.Reset(resetPoint.Value.X, resetPoint.Value.Y);
                         resetPoint = null;
                     }
                     else
                     {
-                        clnf_model.Reset();
+                        landmark_detector.Reset();
                     }
 
                     face_analyser.Reset();
@@ -527,8 +527,8 @@ namespace OpenFaceDemo
             }
             if (face_analyser != null)
                 face_analyser.Dispose();
-            if(clnf_model != null)
-                clnf_model.Dispose();
+            if(landmark_detector != null)
+                landmark_detector.Dispose();
 
         }
 

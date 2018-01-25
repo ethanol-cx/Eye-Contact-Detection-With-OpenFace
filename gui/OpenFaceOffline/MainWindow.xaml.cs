@@ -99,7 +99,7 @@ namespace OpenFaceOffline
         // For tracking
         FaceDetector face_detector;
         FaceModelParameters face_model_params;
-        CLNF clnf_model;
+        CLNF landmark_detector;
 
         // For face analysis
         FaceAnalyserManaged face_analyser;
@@ -145,7 +145,7 @@ namespace OpenFaceOffline
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
             face_model_params = new FaceModelParameters(root, false);
-            clnf_model = new CLNF(face_model_params);
+            landmark_detector = new CLNF(face_model_params);
 
             gaze_analyser = new GazeAnalyserManaged();
 
@@ -189,7 +189,7 @@ namespace OpenFaceOffline
             face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, DynamicAUModels, image_output_size);
 
             // Reset the tracker
-            clnf_model.Reset();
+            landmark_detector.Reset();
 
             // Loading an image file
             var frame = new RawImage(reader.GetNextImage());
@@ -216,14 +216,14 @@ namespace OpenFaceOffline
                 }
 
                 double progress = reader.GetProgress();
-                bool detection_succeeding = clnf_model.DetectLandmarksInVideo(gray_frame, face_model_params);
+                bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(gray_frame, face_model_params);
 
                 // The face analysis step (for AUs and eye gaze)
-                face_analyser.AddNextFrame(frame, clnf_model.CalculateAllLandmarks(), detection_succeeding, false);
-                gaze_analyser.AddNextFrame(clnf_model, detection_succeeding, fx, fy, cx, cy);
+                face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detection_succeeding, false);
+                gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, fx, fy, cx, cy);
 
                 // Only the final face will contain the details
-                VisualizeFeatures(frame, visualizer_of, clnf_model.CalculateAllLandmarks(), detection_succeeding, true, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
+                VisualizeFeatures(frame, visualizer_of, landmark_detector.CalculateAllLandmarks(), detection_succeeding, true, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                 // Record an observation
                 RecordObservation(recorder, visualizer_of.GetVisImage(), detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
@@ -309,15 +309,15 @@ namespace OpenFaceOffline
 
                 for (int i = 0; i < face_detections.Count; ++i)
                 {
-                    bool detection_succeeding = clnf_model.DetectFaceLandmarksInImage(gray_frame, face_detections[i], face_model_params);
+                    bool detection_succeeding = landmark_detector.DetectFaceLandmarksInImage(gray_frame, face_detections[i], face_model_params);
 
-                    var landmarks = clnf_model.CalculateAllLandmarks();
+                    var landmarks = landmark_detector.CalculateAllLandmarks();
                     
                     // Predict action units
                     var au_preds = face_analyser.PredictStaticAUsAndComputeFeatures(frame, landmarks);
 
                     // Predic eye gaze
-                    gaze_analyser.AddNextFrame(clnf_model, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                    gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                     // Only the final face will contain the details
                     VisualizeFeatures(frame, visualizer_of, landmarks, detection_succeeding, i == 0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
@@ -333,7 +333,7 @@ namespace OpenFaceOffline
                 gray_frame = new RawImage(reader.GetCurrentFrameGray());
 
                 // Do not cary state accross images
-                clnf_model.Reset();
+                landmark_detector.Reset();
                 face_analyser.Reset();
                 recorder.Close();
 
@@ -349,24 +349,24 @@ namespace OpenFaceOffline
         private void RecordObservation(RecorderOpenFace recorder, RawImage vis_image, bool success, float fx, float fy, float cx, float cy)
         {
 
-            double confidence = clnf_model.GetConfidence();
+            double confidence = landmark_detector.GetConfidence();
 
             List<double> pose = new List<double>();
-            clnf_model.GetPose(pose, fx, fy, cx, cy);
+            landmark_detector.GetPose(pose, fx, fy, cx, cy);
             recorder.SetObservationPose(pose);
 
-            List<Tuple<double, double>> landmarks_2D = clnf_model.CalculateAllLandmarks();
-            List<Tuple<double, double, double>> landmarks_3D = clnf_model.Calculate3DLandmarks(fx, fy, cx, cy);
-            List<double> global_params = clnf_model.GetRigidParams();
-            List<double> local_params = clnf_model.GetParams();
+            List<Tuple<double, double>> landmarks_2D = landmark_detector.CalculateAllLandmarks();
+            List<Tuple<double, double, double>> landmarks_3D = landmark_detector.Calculate3DLandmarks(fx, fy, cx, cy);
+            List<double> global_params = landmark_detector.GetRigidParams();
+            List<double> local_params = landmark_detector.GetParams();
 
             recorder.SetObservationLandmarks(landmarks_2D, landmarks_3D, global_params, local_params, confidence, success);
 
             var gaze = gaze_analyser.GetGazeCamera();
             var gaze_angle = gaze_analyser.GetGazeAngle();
 
-            var landmarks_2d_eyes = clnf_model.CalculateAllEyeLandmarks();
-            var landmarks_3d_eyes = clnf_model.CalculateAllEyeLandmarks3D(fx, fy, cx, cy);
+            var landmarks_2d_eyes = landmark_detector.CalculateAllEyeLandmarks();
+            var landmarks_3d_eyes = landmark_detector.CalculateAllEyeLandmarks3D(fx, fy, cx, cy);
             recorder.SetObservationGaze(gaze.Item1, gaze.Item2, gaze_angle, landmarks_2d_eyes, landmarks_3d_eyes);
 
             var au_regs = face_analyser.GetCurrentAUsReg();
@@ -395,10 +395,10 @@ namespace OpenFaceOffline
             Tuple<double, double> gaze_angle = new Tuple<double, double>(0, 0);
 
             List<double> pose = new List<double>();
-            clnf_model.GetPose(pose, fx, fy, cx, cy);
-            List<double> non_rigid_params = clnf_model.GetNonRigidParams();
+            landmark_detector.GetPose(pose, fx, fy, cx, cy);
+            List<double> non_rigid_params = landmark_detector.GetNonRigidParams();
 
-            double confidence = clnf_model.GetConfidence();
+            double confidence = landmark_detector.GetConfidence();
 
             if (confidence < 0)
                 confidence = 0;
@@ -415,15 +415,15 @@ namespace OpenFaceOffline
             visualizer.SetObservationHOG(face_analyser.GetLatestHOGFeature(), face_analyser.GetHOGRows(), face_analyser.GetHOGCols());
             visualizer.SetObservationLandmarks(landmarks, confidence); // Set confidence to high to make sure we always visualize
             visualizer.SetObservationPose(pose, confidence);
-            visualizer.SetObservationGaze(gaze_analyser.GetGazeCamera().Item1, gaze_analyser.GetGazeCamera().Item2, clnf_model.CalculateAllEyeLandmarks(), clnf_model.CalculateAllEyeLandmarks3D(fx, fy, cx, cy), confidence);
+            visualizer.SetObservationGaze(gaze_analyser.GetGazeCamera().Item1, gaze_analyser.GetGazeCamera().Item2, landmark_detector.CalculateAllEyeLandmarks(), landmark_detector.CalculateAllEyeLandmarks3D(fx, fy, cx, cy), confidence);
 
             if (detection_succeeding)
             {
                 
-                eye_landmarks = clnf_model.CalculateVisibleEyeLandmarks();
-                lines = clnf_model.CalculateBox(fx, fy, cx, cy);
+                eye_landmarks = landmark_detector.CalculateVisibleEyeLandmarks();
+                lines = landmark_detector.CalculateBox(fx, fy, cx, cy);
 
-                scale = clnf_model.GetRigidParams()[0];
+                scale = landmark_detector.GetRigidParams()[0];
 
                 gaze_lines = gaze_analyser.CalculateGazeLines(scale, fx, fy, cx, cy);
                 gaze_angle = gaze_analyser.GetGazeAngle();
