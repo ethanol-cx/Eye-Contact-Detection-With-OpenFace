@@ -49,6 +49,8 @@
 #include <OpenCVWrappers.h>
 #include <ImageReader.h>
 
+#include "DeviceEnumerator.h"
+
 #include "SequenceCapture.h"
 
 #pragma managed
@@ -211,68 +213,176 @@ namespace UtilitiesOF {
 		}
 	};
 
-	// A utility for listing the currently connected cameras together with their ID, subset of supported resolutions and a thumbnail
-	static List<System::Tuple<int, List<System::Tuple<int, int>^>^, OpenCVWrappers::RawImage^>^>^ GetCameras()
-	{
-		auto managed_camera_list = gcnew List<System::Tuple<int, List<System::Tuple<int, int>^>^, OpenCVWrappers::RawImage^>^>();
-
-		// Go through camera id's untill no new cameras are found
-		int num_cameras = 0;
-		while (true)
-		{
-			cv::VideoCapture cap(num_cameras);
-			if (cap.isOpened())
-				num_cameras++;
-			else
-				break;
+	static void split(const std::string &s, char delim, std::vector<string> &elems) {
+		std::stringstream ss;
+		ss.str(s);
+		std::string item;
+		while (std::getline(ss, item, delim)) {
+			elems.push_back(item);
 		}
+	}
+
+	// Camera listing is camera name and supported resolutions
+	static Dictionary<System::String^, List<System::Tuple<int, int>^>^>^ GetListingFromFile(std::string filename)
+	{
+		// Check what cameras have been written (using OpenCVs XML packages)
+		cv::FileStorage fs_read(filename, cv::FileStorage::READ);
+
+		auto managed_camera_list_initial = gcnew Dictionary<System::String^, List<System::Tuple<int, int>^>^>();
+
+		cv::FileNode camera_node_list = fs_read["cameras"];
+
+		// iterate through a sequence using FileNodeIterator
+		for (size_t idx = 0; idx < camera_node_list.size(); idx++)
+		{
+			std::string camera_name = (std::string)camera_node_list[idx]["name"];
+
+			cv::FileNode resolution_list = camera_node_list[idx]["resolutions"];
+			auto resolutions = gcnew System::Collections::Generic::List<System::Tuple<int, int>^>();
+			for (size_t r_idx = 0; r_idx < resolution_list.size(); r_idx++)
+			{
+				string res = resolution_list[r_idx]["res"];
+
+				std::vector<std::string> elems;
+				split(res, 'x', elems);
+
+				int x = stoi(elems[0]);
+				int y = stoi(elems[1]);
+				resolutions->Add(gcnew System::Tuple<int, int>(x, y));
+			}
+			managed_camera_list_initial[gcnew System::String(camera_name.c_str())] = resolutions;
+		}
+		fs_read.release();
+		return managed_camera_list_initial;
+	}
+
+	static void WriteCameraListingToFile(System::Collections::Generic::Dictionary<System::String^, System::Collections::Generic::List<System::Tuple<int, int>^>^>^ camera_list, std::string filename)
+	{
+		cv::FileStorage fs("camera_list.xml", cv::FileStorage::WRITE);
+
+		fs << "cameras" << "[";
+		for each(System::String^ name_m in camera_list->Keys)
+		{
+
+			std::string name = msclr::interop::marshal_as<std::string>(name_m);
+
+			fs << "{:" << "name" << name;
+			fs << "resolutions" << "[";
+			auto resolutions = camera_list[name_m];
+			for (int j = 0; j < resolutions->Count; j++)
+			{
+				stringstream ss;
+				ss << resolutions[j]->Item1 << "x" << resolutions[j]->Item2;
+
+				fs << "{:" << "res" << ss.str();
+				fs << "}";
+			}
+			fs << "]";
+			fs << "}";
+		}
+		fs << "]";
+		fs.release();
+	}
+
+	// A utility for listing the currently connected cameras together with their ID, name, subset of supported resolutions and a thumbnail
+	static List<System::Tuple<int, System::String^, List<System::Tuple<int, int>^>^, OpenCVWrappers::RawImage^>^>^ GetCameras(System::String^ root_directory_m)
+	{
+		auto managed_camera_list = gcnew List<System::Tuple<int, System::String^, List<System::Tuple<int, int>^>^, OpenCVWrappers::RawImage^>^>();
+
+		DeviceEnumerator de;
+
+		// Get a listing of all connected video devices
+		std::map<int, Device> cameras = de.getVideoDevicesMap();
+		
+		// Print information about the devices
+		for (auto const &device : cameras) {
+			std::cout << "== VIDEO DEVICE (id:" << device.first << ") ==" << std::endl;
+			std::cout << "Name: " << device.second.deviceName << std::endl;
+			std::cout << "Path: " << device.second.devicePath << std::endl;
+		}
+
+		size_t num_cameras = cameras.size();
+
+		// Pre-load supported camera resolutions if already computed
+		std::string root_directory = msclr::interop::marshal_as<std::string>(root_directory_m);
+		auto camera_resolution_list = GetListingFromFile(root_directory + "camera_list.xml");
 
 		for (size_t i = 0; i < num_cameras; ++i)
 		{
-			//std::string name = cameras[i].name();
-			//System::String^ name_managed = gcnew System::String(name.c_str());
-
-			auto resolutions = gcnew List<System::Tuple<int, int>^>();
-
-			// A common set of resolutions for webcams
-			std::vector<std::pair<int, int>> common_resolutions;
-			common_resolutions.push_back(std::pair<int, int>(320, 240));
-			common_resolutions.push_back(std::pair<int, int>(640, 480));
-			common_resolutions.push_back(std::pair<int, int>(1280, 960));
-
-			// Grab some sample images and confirm the resolutions
-			cv::VideoCapture cap1(i);
-
+			// Thumbnail to help with camera selection
 			cv::Mat sample_img;
 			OpenCVWrappers::RawImage^ sample_img_managed = gcnew OpenCVWrappers::RawImage();
 
-			// Go through resolutions if they have not been identified
-			for (auto beg = common_resolutions.begin(); beg != common_resolutions.end(); ++beg)
-			{
-				auto resolution = gcnew System::Tuple<int, int>(beg->first, beg->first);
+			auto resolutions = gcnew List<System::Tuple<int, int>^>();
 
+			// Before trying the resolutions, check if the resolutions have already been computed for the camera of interest
+			std::string device_name = cameras[i].deviceName;
+			System::String^ device_name_m = gcnew System::String(device_name.c_str());
+			if (camera_resolution_list->ContainsKey(device_name_m))
+			{
+				resolutions = camera_resolution_list[device_name_m];
+
+				// Grab a thumbnail from mid resolution
+				cv::VideoCapture cap1(i);
+
+				auto resolution = resolutions[(int)(resolutions->Count / 2)];
 				cap1.set(CV_CAP_PROP_FRAME_WIDTH, resolution->Item1);
 				cap1.set(CV_CAP_PROP_FRAME_HEIGHT, resolution->Item2);
-
-				// Add only valid resolutions as API sometimes provides wrong ones
-				int set_width = cap1.get(CV_CAP_PROP_FRAME_WIDTH);
-				int set_height = cap1.get(CV_CAP_PROP_FRAME_HEIGHT);
 
 				// Read several frames, as the first one often is over-exposed
 				for (int k = 0; k < 2; ++k)
 					cap1.read(sample_img);
+			}
+			else
+			{
 
-				resolution = gcnew System::Tuple<int, int>(set_width, set_height);
-				if (!resolutions->Contains(resolution))
+				// A common set of resolutions for webcams
+				std::vector<std::pair<int, int>> common_resolutions;
+				common_resolutions.push_back(std::pair<int, int>(320, 240));
+				common_resolutions.push_back(std::pair<int, int>(640, 480));
+				common_resolutions.push_back(std::pair<int, int>(960, 720));
+				common_resolutions.push_back(std::pair<int, int>(1280, 720));
+				common_resolutions.push_back(std::pair<int, int>(1280, 960));
+				common_resolutions.push_back(std::pair<int, int>(1920, 1080));
+
+				// Grab some sample images and confirm the resolutions
+				cv::VideoCapture cap1(i);
+
+				// Go through resolutions if they have not been identified
+				for (size_t i = 0; i < common_resolutions.size(); ++i)
 				{
-					resolutions->Add(resolution);
+					auto resolution = gcnew System::Tuple<int, int>(common_resolutions[i].first, common_resolutions[i].second);
+
+					cap1.set(CV_CAP_PROP_FRAME_WIDTH, resolution->Item1);
+					cap1.set(CV_CAP_PROP_FRAME_HEIGHT, resolution->Item2);
+
+					// Add only valid resolutions as API sometimes provides wrong ones
+					int set_width = cap1.get(CV_CAP_PROP_FRAME_WIDTH);
+					int set_height = cap1.get(CV_CAP_PROP_FRAME_HEIGHT);
+
+					// Grab a thumbnail from mid resolution
+					if(i == (int)common_resolutions.size()/2)
+					{
+						// Read several frames, as the first one often is over-exposed
+						for (int k = 0; k < 2; ++k)
+							cap1.read(sample_img);
+					}
+
+					resolution = gcnew System::Tuple<int, int>(set_width, set_height);
+					if (!resolutions->Contains(resolution))
+					{
+						resolutions->Add(resolution);
+					}
 				}
+				cap1.~VideoCapture();
+
+				// Ass the resolutions were not on the list, add them now
+				camera_resolution_list[device_name_m] = resolutions;
+				WriteCameraListingToFile(camera_resolution_list, root_directory + "camera_list.xml");
 			}
 			sample_img.copyTo(sample_img_managed->Mat);
 
-			cap1.~VideoCapture();
-
-			managed_camera_list->Add(gcnew System::Tuple<int, List<System::Tuple<int, int>^>^, OpenCVWrappers::RawImage^>(i, resolutions, sample_img_managed));
+			managed_camera_list->Add(gcnew System::Tuple<int, System::String^, List<System::Tuple<int, int>^>^, OpenCVWrappers::RawImage^>(i, device_name_m, resolutions, sample_img_managed));
 		}
 
 		return managed_camera_list;
