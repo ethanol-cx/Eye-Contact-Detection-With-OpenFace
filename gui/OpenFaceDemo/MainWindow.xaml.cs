@@ -34,9 +34,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -44,20 +41,18 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Threading;
+using System.Windows.Threading;
+using System.Diagnostics;
 
 // Internal libraries
 using OpenFaceOffline;
 using OpenCVWrappers;
-using CppInterop;
 using CppInterop.LandmarkDetector;
-using CameraInterop;
 using FaceAnalyser_Interop;
 using GazeAnalyser_Interop;
-using System.Windows.Threading;
-using System.Diagnostics;
+using UtilitiesOF;
+
 
 namespace OpenFaceDemo
 {
@@ -90,7 +85,6 @@ namespace OpenFaceDemo
         Thread processing_thread;
 
         // Some members for displaying the results
-        private Capture capture;
         private WriteableBitmap latest_img;
 
         private volatile bool thread_running;
@@ -98,7 +92,6 @@ namespace OpenFaceDemo
         FpsTracker processing_fps = new FpsTracker();
 
         // Controlling the model reset
-        volatile bool detectionSucceeding = false;
         volatile bool reset = false;
         Point? resetPoint = null;
 
@@ -106,7 +99,7 @@ namespace OpenFaceDemo
         CameraSelection cam_sec;
 
         // For tracking
-        FaceModelParameters clnf_params;
+        FaceModelParameters face_model_params;
         CLNF landmark_detector;
         FaceAnalyserManaged face_analyser;
         GazeAnalyserManaged gaze_analyser;
@@ -121,8 +114,9 @@ namespace OpenFaceDemo
 
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
-            clnf_params = new FaceModelParameters(root, false); // TODO check this
-            landmark_detector = new CLNF(clnf_params);
+            // TODO, create a demo version of parameters
+            face_model_params = new FaceModelParameters(root, false); 
+            landmark_detector = new CLNF(face_model_params);
             face_analyser = new FaceAnalyserManaged(root, true, 112);
             gaze_analyser = new GazeAnalyserManaged();
 
@@ -186,37 +180,11 @@ namespace OpenFaceDemo
             }
         }
 
-        // The main function call for processing images, video files or webcam feed
-        private void ProcessingLoop(int cam_id = -1, int width = -1, int height = -1, bool multi_face = false)
+        // The main function call for processing the webcam feed
+        private void ProcessingLoop(SequenceReader reader)
         {
 
             thread_running = true;
-            
-            // Create the video capture from a webcam and call the VideoLoop           
-            capture = new Capture(cam_id, width, height);
-
-            if (capture.isOpened())
-            {
-                // Start the actual processing
-                VideoLoop();
-            }
-            else
-            {
-
-                string messageBoxText = "Failed to open a webcam";
-                string caption = "Webcam failure";
-                MessageBoxButton button = MessageBoxButton.OK;
-                MessageBoxImage icon = MessageBoxImage.Warning;
-
-                // Display message box
-                MessageBox.Show(messageBoxText, caption, button, icon);
-            }
-
-        }
-
-        // Capturing and processing the video frame by frame
-        private void VideoLoop()
-        {
 
             Thread.CurrentThread.IsBackground = true;
 
@@ -226,12 +194,7 @@ namespace OpenFaceDemo
 
             landmark_detector.Reset();
             face_analyser.Reset();
-
-            double fx, fy, cx, cy;
-            fx = 500.0;
-            fy = 500.0;
-            cx = cy = -1;
-
+            
             int frame_id = 0;
 
             double old_gaze_x = 0;
@@ -246,46 +209,19 @@ namespace OpenFaceDemo
 
             while (thread_running)
             {
-                //////////////////////////////////////////////
-                // CAPTURE FRAME AND DETECT LANDMARKS FOLLOWED BY THE REQUIRED IMAGE PROCESSING
-                //////////////////////////////////////////////
-                RawImage frame = null;
-                double progress = -1;
 
-                frame = new RawImage(capture.GetNextFrame(true));
-                progress = capture.GetProgress();
-
-                if (frame.Width == 0)
-                {
-                    // This indicates that we reached the end of the video file
-                    break;
-                }
+                // Loading an image file
+                RawImage frame = new RawImage(reader.GetNextImage());
+                RawImage gray_frame = new RawImage(reader.GetCurrentFrameGray());
                 
                 lastFrameTime = CurrentTime;
                 processing_fps.AddFrame();
 
-                var grayFrame = new RawImage(capture.GetCurrentFrameGray());
+                bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(gray_frame, face_model_params);
 
-                if (grayFrame == null)
-                {
-                    Console.WriteLine("Gray is empty");
-                    continue;
-                }
-
-                // This is more ore less guess work, but seems to work well enough
-                if (cx == -1)
-                {
-                    fx = fx * (grayFrame.Width / 640.0);
-                    fy = fy * (grayFrame.Height / 480.0);
-
-                    fx = (fx + fy) / 2.0;
-                    fy = fx;
-
-                    cx = grayFrame.Width / 2f;
-                    cy = grayFrame.Height / 2f;
-                }
-                
-                bool detectionSucceeding = ProcessFrame(landmark_detector, clnf_params, frame, grayFrame, fx, fy, cx, cy);
+                // The face analysis step (only done if recording AUs, HOGs or video)
+                face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detection_succeeding, true);
+                gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                 double confidence = landmark_detector.GetConfidence();
 
@@ -296,29 +232,26 @@ namespace OpenFaceDemo
 
                 List<double> pose = new List<double>();
 
-                landmark_detector.GetPose(pose, fx, fy, cx, cy);
+                landmark_detector.GetPose(pose, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                 List<double> non_rigid_params = landmark_detector.GetNonRigidParams();
                 double scale = landmark_detector.GetRigidParams()[0];
 
                 double time_stamp = (DateTime.Now - (DateTime)startTime).TotalMilliseconds;
 
-                // The face analysis step (only done if recording AUs, HOGs or video)
-                face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detectionSucceeding, true);
-                gaze_analyser.AddNextFrame(landmark_detector, detectionSucceeding, fx, fy, cx, cy);
-
+                
                 List<Tuple<Point, Point>> lines = null;
                 List<Tuple<double, double>> landmarks = null;
                 List<Tuple<double, double>> eye_landmarks = null;
                 List<Tuple<Point, Point>> gaze_lines = null;
                 Tuple<double, double> gaze_angle = gaze_analyser.GetGazeAngle();
 
-                if (detectionSucceeding)
+                if (detection_succeeding)
                 {
                     landmarks = landmark_detector.CalculateVisibleLandmarks();
                     eye_landmarks = landmark_detector.CalculateVisibleEyeLandmarks();
-                    lines = landmark_detector.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
-                    gaze_lines = gaze_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
+                    lines = landmark_detector.CalculateBox(reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                    gaze_lines = gaze_analyser.CalculateGazeLines(scale, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
                 }
 
                 // Visualisation
@@ -373,7 +306,7 @@ namespace OpenFaceDemo
 
                     old_gaze_x = gazeDict[0];
                     old_gaze_y = gazeDict[1];
-                    
+
                     if (latest_img == null)
                     {
                         latest_img = frame.CreateWriteableBitmap();
@@ -384,9 +317,8 @@ namespace OpenFaceDemo
                     video.Source = latest_img;
                     video.Confidence = confidence;
                     video.FPS = processing_fps.GetFPS();
-                    video.Progress = progress;
 
-                    if (!detectionSucceeding)
+                    if (!detection_succeeding)
                     {
                         video.OverlayLines.Clear();
                         video.OverlayPoints.Clear();
@@ -447,71 +379,53 @@ namespace OpenFaceDemo
 
 
             }
-
+            reader.Close();
             latest_img = null;
-        }
-
-        private bool ProcessFrame(CLNF clnf_model, FaceModelParameters clnf_params, RawImage frame, RawImage grayscale_frame, double fx, double fy, double cx, double cy)
-        {
-            detectionSucceeding = clnf_model.DetectLandmarksInVideo(grayscale_frame, clnf_params);
-            return detectionSucceeding;
 
         }
-
-
+        
         // --------------------------------------------------------
         // Button handling
         // --------------------------------------------------------
 
         private void openWebcamClick(object sender, RoutedEventArgs e)
         {
-            new Thread(() => openWebcam()).Start();
-        }
-
-        private void openWebcam()
-        {
             StopTracking();
-
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
+            
+            if (cam_sec == null)
             {
-                // First close the cameras that might be open to avoid clashing with webcam opening
-                if (capture != null)
-                {
-                    capture.Dispose();
-                }
+                cam_sec = new CameraSelection();
+            }
+            else
+            {
+                cam_sec = new CameraSelection(cam_sec.cams);
+                cam_sec.Visibility = System.Windows.Visibility.Visible;
+            }
 
-                if (cam_sec == null)
-                {
-                    cam_sec = new CameraSelection(); 
-                }
-                else
-                {
-                    cam_sec = new CameraSelection(cam_sec.cams);
-                    cam_sec.Visibility = System.Windows.Visibility.Visible;
-                }
+            // Set the icon
+            Uri iconUri = new Uri("logo1.ico", UriKind.RelativeOrAbsolute);
+            cam_sec.Icon = BitmapFrame.Create(iconUri);
 
-                // Set the icon
-                Uri iconUri = new Uri("logo1.ico", UriKind.RelativeOrAbsolute);
-                cam_sec.Icon = BitmapFrame.Create(iconUri);
+            if (!cam_sec.no_cameras_found)
+                cam_sec.ShowDialog();
 
-                if (!cam_sec.no_cameras_found)
-                    cam_sec.ShowDialog();
+            if (cam_sec.camera_selected)
+            {
 
-                if (cam_sec.camera_selected)
-                {
-                    int cam_id = cam_sec.selected_camera.Item1;
-                    int width = cam_sec.selected_camera.Item2;
-                    int height = cam_sec.selected_camera.Item3;
-                    
-                    processing_thread = new Thread(() => ProcessingLoop(cam_id, width, height));
-                    processing_thread.Start();
+                int cam_id = cam_sec.selected_camera.Item1;
+                int width = cam_sec.selected_camera.Item2;
+                int height = cam_sec.selected_camera.Item3;
 
-                }
-            }));
+                SequenceReader reader = new SequenceReader(cam_id, width, height);
+
+                processing_thread = new Thread(() => ProcessingLoop(reader));
+                processing_thread.Name = "Webcam processing";
+                processing_thread.Start();
+
+            }
+
         }
-
-
-
+        
         // Cleanup stuff when closing the window
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -520,10 +434,7 @@ namespace OpenFaceDemo
                 // Stop capture and tracking
                 thread_running = false;
                 processing_thread.Join();
-
-                if (capture != null)
-                    capture.Dispose();
-                
+                                
             }
             if (face_analyser != null)
                 face_analyser.Dispose();

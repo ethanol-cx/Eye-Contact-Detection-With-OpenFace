@@ -43,7 +43,6 @@ using System.Windows.Media.Imaging;
 // Internal libraries
 using OpenCVWrappers;
 using CppInterop.LandmarkDetector;
-using CameraInterop;
 using FaceAnalyser_Interop;
 using GazeAnalyser_Interop;
 using FaceDetectorInterop;
@@ -223,7 +222,7 @@ namespace OpenFaceOffline
 
                 // The face analysis step (for AUs and eye gaze)
                 face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detection_succeeding, false);
-                gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, fx, fy, cx, cy);
+                gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                 // Only the final face will contain the details
                 VisualizeFeatures(frame, visualizer_of, landmark_detector.CalculateAllLandmarks(), detection_succeeding, true, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
