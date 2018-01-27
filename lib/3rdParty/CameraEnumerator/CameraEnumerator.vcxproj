@@ -127,7 +127,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
+    <ClInclude Include="DeviceEnumerator.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DeviceEnumerator.cpp" />
+    <ClCompile Include="OpenCVDeviceEnumerator.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

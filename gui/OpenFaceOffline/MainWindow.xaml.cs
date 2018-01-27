@@ -96,6 +96,9 @@ namespace OpenFaceOffline
 
         FpsTracker processing_fps = new FpsTracker();
 
+        // For selecting webcams
+        CameraSelection cam_sec;
+
         // For tracking
         FaceDetector face_detector;
         FaceModelParameters face_model_params;
@@ -752,6 +755,44 @@ namespace OpenFaceOffline
                 processing_thread.Start();
             }
         }
+
+        private void openWebcamClick(object sender, RoutedEventArgs e)
+        {
+            StopTracking();
+
+            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
+            {
+
+                if (cam_sec == null)
+                {
+                    cam_sec = new CameraSelection();
+                }
+                else
+                {
+                    cam_sec = new CameraSelection(cam_sec.cams);
+                    cam_sec.Visibility = System.Windows.Visibility.Visible;
+                }
+
+                // Set the icon
+                Uri iconUri = new Uri("logo1.ico", UriKind.RelativeOrAbsolute);
+                cam_sec.Icon = BitmapFrame.Create(iconUri);
+
+                if (!cam_sec.no_cameras_found)
+                    cam_sec.ShowDialog();
+
+                if (cam_sec.camera_selected)
+                {
+                    int cam_id = cam_sec.selected_camera.Item1;
+                    int width = cam_sec.selected_camera.Item2;
+                    int height = cam_sec.selected_camera.Item3;
+
+//                    processing_thread = new Thread(() => ProcessingLoop(cam_id, width, height));
+//                    processing_thread.Start();
+
+                }
+            }));
+        }
+
 
         // --------------------------------------------------------
         // Button handling

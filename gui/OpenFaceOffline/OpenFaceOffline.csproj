@@ -97,6 +97,9 @@
     <Compile Include="UI_items\CameraParametersEntry.xaml.cs">
       <DependentUpon>CameraParametersEntry.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI_items\CameraSelection.xaml.cs">
+      <DependentUpon>CameraSelection.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI_items\MultiBarGraph.xaml.cs">
       <DependentUpon>MultiBarGraph.xaml</DependentUpon>
     </Compile>
@@ -133,6 +136,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UI_items\CameraParametersEntry.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI_items\CameraSelection.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

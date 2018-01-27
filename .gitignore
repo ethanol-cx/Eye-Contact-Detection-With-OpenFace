@@ -86,3 +86,4 @@ matlab_runners/Demos/processed_features/
 *.db
 exe/releases/OpenFace_0.3.0_win_x64/
 exe/releases/OpenFace_0.3.0_win_x86/
+lib/3rdParty/CameraEnumerator/x64/

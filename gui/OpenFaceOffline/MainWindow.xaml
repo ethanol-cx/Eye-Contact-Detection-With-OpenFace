@@ -31,6 +31,8 @@
                 </MenuItem>
                 <MenuItem Header="Open image directory" Click="individualImageDirectoryOpenClick">
                 </MenuItem>
+                <MenuItem Header="Open webcam" Click="openWebcamClick">
+                </MenuItem>
             </MenuItem>
             <MenuItem Name="RecordingMenu" Header="Record" >
                 <MenuItem IsCheckable="True" Header="Record AUs" IsChecked="{Binding RecordAUs}"/>

@@ -1,4 +1,5 @@
 #include "DeviceEnumerator.h"
+#include <iostream>
 
 std::map<int, Device> DeviceEnumerator::getVideoDevicesMap() {
 	return getDevicesMap(CLSID_VideoInputDeviceCategory);
@@ -13,14 +14,15 @@ std::map<int, Device> DeviceEnumerator::getDevicesMap(const GUID deviceClass)
 {
 	std::map<int, Device> deviceMap;
 
-	HRESULT hr = CoInitialize(nullptr);
-	if (FAILED(hr)) {
-		return deviceMap; // Empty deviceMap as an error
-	}
+	// TODO add back? Calling from C# seems to not need this
+	//HRESULT hr = CoInitialize(nullptr);
+	//if (FAILED(hr)) {
+	//	return deviceMap; // Empty deviceMap as an error
+	//}
 
 	// Create the System Device Enumerator
 	ICreateDevEnum *pDevEnum;
-	hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pDevEnum));
+	HRESULT hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pDevEnum));
 
 	// If succeeded, create an enumerator for the category
 	IEnumMoniker *pEnum = NULL;
