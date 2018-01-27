@@ -37,7 +37,6 @@
 #include "FaceAnalyserInterop.h"
 #include "GazeAnalyserInterop.h"
 #include "OpenCVWrappers.h"
-#include "CameraInterop.h"
 #include "ImageReader.h"
 #include "FaceDetectorInterop.h"
 #include "RecorderInterop.h"

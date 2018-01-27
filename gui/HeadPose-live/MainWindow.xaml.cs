@@ -46,7 +46,6 @@ using System.Windows.Media.Imaging;
 using OpenCVWrappers;
 using CppInterop;
 using CppInterop.LandmarkDetector;
-using CameraInterop;
 using System.Windows.Threading;
 using GazeAnalyser_Interop;
 

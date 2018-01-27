@@ -29,9 +29,6 @@
     <ClInclude Include="OpenCVWrappers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CameraInterop.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FaceAnalyserInterop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
