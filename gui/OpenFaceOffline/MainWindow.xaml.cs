@@ -133,7 +133,6 @@ namespace OpenFaceOffline
 
         // Camera calibration parameters
         public float fx = -1, fy = -1, cx = -1, cy = -1;
-        bool estimate_camera_parameters = true;
 
         public MainWindow()
         {
@@ -161,7 +160,7 @@ namespace OpenFaceOffline
         {
             for (int i = 0; i < filenames.Count; ++i)
             {
-                SequenceReader reader = new SequenceReader(filenames[i], false);
+                SequenceReader reader = new SequenceReader(filenames[i], false, fx, fy, cx, cy);
                 ProcessSequence(reader);
 
                 // Before continuing to next video make sure the user did not stop the processing
@@ -709,7 +708,7 @@ namespace OpenFaceOffline
             string directory = openDirectory();
             if (!string.IsNullOrWhiteSpace(directory))
             {
-                SequenceReader reader = new SequenceReader(directory, true);
+                SequenceReader reader = new SequenceReader(directory, true, fx, fy, cx, cy);
 
                 processing_thread = new Thread(() => ProcessSequence(reader));
                 processing_thread.Name = "Image sequence processing";
@@ -789,7 +788,7 @@ namespace OpenFaceOffline
                 int width = cam_sec.selected_camera.Item2;
                 int height = cam_sec.selected_camera.Item3;
 
-                SequenceReader reader = new SequenceReader(cam_id, width, height);
+                SequenceReader reader = new SequenceReader(cam_id, width, height, fx, fy, cx, cy);
 
                 processing_thread = new Thread(() => ProcessSequence(reader));
                 processing_thread.Name = "Webcam processing";
@@ -942,14 +941,6 @@ namespace OpenFaceOffline
                 fy = camera_params_entry_window.Fy;
                 cx = camera_params_entry_window.Cx;
                 cy = camera_params_entry_window.Cy;
-                if(fx == -1 || fy == -1 || cx == -1 || cy == -1)
-                {
-                    estimate_camera_parameters = true;
-                }
-                else
-                {
-                    estimate_camera_parameters = false;
-                }
             }
         }
 

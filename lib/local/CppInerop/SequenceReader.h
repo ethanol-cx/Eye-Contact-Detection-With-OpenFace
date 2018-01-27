@@ -97,12 +97,47 @@ namespace UtilitiesOF {
 			}
 		}
 
+		SequenceReader(System::String^ filename, bool directory, float fx, float fy, float cx, float cy)
+		{
+			m_sequence_capture = new Utilities::SequenceCapture();
+
+			std::string name_std = msclr::interop::marshal_as<std::string>(filename);
+
+			bool success;
+
+			if (directory)
+			{
+				success = m_sequence_capture->OpenImageSequence(name_std, fx, fy, cx, cy);
+			}
+			else
+			{
+				success = m_sequence_capture->OpenVideoFile(name_std, fx, fy, cx, cy);
+			}
+
+			if (!success)
+			{
+				throw gcnew ReadingFailedException("Failed to open an image sequence");
+			}
+		}
+
 		// Can provide a webcam id
 		SequenceReader(int webcam_id, int width, int height)
 		{
 			m_sequence_capture = new Utilities::SequenceCapture();
 			
 			bool success = m_sequence_capture->OpenWebcam(webcam_id, width, height);
+
+			if (!success)
+			{
+				throw gcnew ReadingFailedException("Failed to open an image sequence");
+			}
+		}
+
+		SequenceReader(int webcam_id, int width, int height, float fx, float fy, float cx, float cy)
+		{
+			m_sequence_capture = new Utilities::SequenceCapture();
+
+			bool success = m_sequence_capture->OpenWebcam(webcam_id, width, height, fx, fy, cx, cy);
 
 			if (!success)
 			{
