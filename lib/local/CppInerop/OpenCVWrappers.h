@@ -75,11 +75,11 @@ namespace OpenCVWrappers {
 		{
 			if (fmt == PixelFormats::Gray8)
 				return CV_8UC1;
-			else if(fmt == PixelFormats::Bgr24)
+			else if (fmt == PixelFormats::Bgr24)
 				return CV_8UC3;
-			else if(fmt == PixelFormats::Bgra32)
+			else if (fmt == PixelFormats::Bgra32)
 				return CV_8UC4;
-			else if(fmt == PixelFormats::Gray32Float)
+			else if (fmt == PixelFormats::Gray32Float)
 				return CV_32FC1;
 			else
 				throw gcnew System::Exception("Unsupported pixel format");
@@ -105,7 +105,7 @@ namespace OpenCVWrappers {
 			int get() { return refCount; }
 		}
 
-		RawImage() 
+		RawImage()
 		{
 			mat = new cv::Mat();
 			refCount++;
@@ -226,5 +226,56 @@ namespace OpenCVWrappers {
 		}
 
 	};
-	
+
+	public ref class VideoWriter
+	{
+	private:
+		// OpenCV based video capture for reading from files
+		cv::VideoWriter* vc;
+
+	public:
+
+		VideoWriter(System::String^ location, int width, int height, double fps, bool colour)
+		{
+
+			msclr::interop::marshal_context context;
+			std::string location_std_string = context.marshal_as<std::string>(location);
+
+			vc = new cv::VideoWriter(location_std_string, CV_FOURCC('D', 'I', 'V', 'X'), fps, cv::Size(width, height), colour);
+
+		}
+
+		// Return success
+		bool Write(RawImage^ img)
+		{
+			if (vc != nullptr && vc->isOpened())
+			{
+				vc->write(img->Mat);
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		// Finalizer. Definitely called before Garbage Collection,
+		// but not automatically called on explicit Dispose().
+		// May be called multiple times.
+		!VideoWriter()
+		{
+			if (vc != nullptr)
+			{
+				vc->~VideoWriter();
+			}
+		}
+
+		// Destructor. Called on explicit Dispose() only.
+		~VideoWriter()
+		{
+			this->!VideoWriter();
+		}
+
+	};
+
 }

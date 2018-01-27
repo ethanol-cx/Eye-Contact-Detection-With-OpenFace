@@ -36,20 +36,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing.Imaging;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Microsoft.Win32;
 
 using OpenCVWrappers;
 using CppInterop;
@@ -103,11 +95,9 @@ namespace HeadPoseLive
         OpenFaceOffline.OverlayImage webcam_img;
 
         // Some members for displaying the results
-        private CameraInterop.Capture capture;
         private WriteableBitmap latest_img;
 
         // For tracking
-        double fx = 500, fy = 500, cx = 0, cy = 0;
         bool reset = false;
 
         // For recording
@@ -230,7 +220,7 @@ namespace HeadPoseLive
             logoLabel.Source = src;
 
             // First make the user chooose a webcam
-            OpenFaceDemo.CameraSelection cam_select = new OpenFaceDemo.CameraSelection();
+            OpenFaceOffline.CameraSelection cam_select = new OpenFaceOffline.CameraSelection();
             cam_select.Icon = BitmapFrame.Create(iconUri);
 
             if (!cam_select.no_cameras_found)
@@ -246,19 +236,9 @@ namespace HeadPoseLive
                 img_width = cam_select.selected_camera.Item2;
                 img_height = cam_select.selected_camera.Item3;
 
-                capture = new CameraInterop.Capture(cam_id, img_width, img_height);
-
-                // Set appropriate fx and cx values
-                fx = fx * (img_width / 640.0);
-                fy = fy * (img_height / 480.0);
-
-                fx = (fx + fy) / 2.0;
-                fy = fx;
-
-                cx = img_width / 2.0;
-                cy = img_height / 2.0;
-
-                if (capture.isOpened())
+                UtilitiesOF.SequenceReader reader = new UtilitiesOF.SequenceReader(cam_id, img_width, img_height);
+                
+                if (reader.IsOpened())
                 {
 
                     // Create the ZeroMQ context for broadcasting the results
@@ -268,8 +248,8 @@ namespace HeadPoseLive
                     // Bind on localhost port 5000
                     zero_mq_socket.Bind("tcp://127.0.0.1:5000");
 
-                    // Start the tracking now
-                    processing_thread = new Thread(VideoLoop);
+                    processing_thread = new Thread(() => VideoLoop(reader));
+                    processing_thread.Name = "Webcam processing";
                     processing_thread.Start();
                 }
                 else
@@ -385,7 +365,7 @@ namespace HeadPoseLive
         }
 
         // Capturing and processing the video frame by frame
-        private void VideoLoop()
+        private void VideoLoop(UtilitiesOF.SequenceReader reader)
         {
             Thread.CurrentThread.IsBackground = true;
 
@@ -406,24 +386,17 @@ namespace HeadPoseLive
                 //////////////////////////////////////////////
 
                 RawImage frame = null;
-                try
-                {
-                    frame = capture.GetNextFrame(mirror_image);
-                }
-                catch (CameraInterop.CaptureFailedException)
-                {
-                    break;
-                }
+                frame = reader.GetNextImage();
 
                 lastFrameTime = CurrentTime;
                 processing_fps.AddFrame();
 
-                var grayFrame = capture.GetCurrentFrameGray();
+                var grayFrame = reader.GetCurrentFrameGray();
 
                 if (grayFrame == null)
                     continue;
 
-                bool detectionSucceeding = ProcessFrame(face_model, gaze_analyser, model_params, frame, grayFrame, fx, fy, cx, cy);
+                bool detectionSucceeding = ProcessFrame(face_model, gaze_analyser, model_params, frame, grayFrame, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                 lock (recording_lock)
                 {
@@ -432,7 +405,7 @@ namespace HeadPoseLive
                     {
                         // Add objects to recording queues
                         List<double> pose = new List<double>();
-                        face_model.GetPose(pose, fx, fy, cx, cy);
+                        face_model.GetPose(pose, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
                         RawImage image = new RawImage(frame);
                         recording_objects.Enqueue(new Tuple<RawImage, bool, List<double>>(image, detectionSucceeding, pose));
 
@@ -457,10 +430,10 @@ namespace HeadPoseLive
 
                     scale = face_model.GetRigidParams()[0];
 
-                    gaze_lines = gaze_analyser.CalculateGazeLines(scale, (float)fx, (float)fy, (float)cx, (float)cy);
+                    gaze_lines = gaze_analyser.CalculateGazeLines(scale, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
                     gaze_angle = gaze_analyser.GetGazeAngle();
 
-                    lines = face_model.CalculateBox((float)fx, (float)fy, (float)cx, (float)cy);
+                    lines = face_model.CalculateBox(reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
                 }
 
                 if (reset)
@@ -478,7 +451,7 @@ namespace HeadPoseLive
                             latest_img = frame.CreateWriteableBitmap();
 
                         List<double> pose = new List<double>();
-                        face_model.GetPose(pose, fx, fy, cx, cy);
+                        face_model.GetPose(pose, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                         int yaw = (int)(pose[4] * 180 / Math.PI + 0.5);
                         int yaw_abs = Math.Abs(yaw);
@@ -537,7 +510,7 @@ namespace HeadPoseLive
                         else
                             PitchLabelGazeDir.Content = "Straight";
 
-                        double confidence = (-face_model.GetConfidence() + 1) / 2.0;
+                        double confidence = face_model.GetConfidence();
 
                         if (confidence < 0)
                             confidence = 0;
@@ -597,6 +570,7 @@ namespace HeadPoseLive
                     break;
                 }
             }
+            reader.Close();
             System.Console.Out.WriteLine("Thread finished");
         }
 
@@ -723,10 +697,7 @@ namespace HeadPoseLive
             {
                 processing_thread.Join();
             }
-
-            if (capture != null)
-                capture.Dispose();
-
+            
         }
 
         private void MorrorButton_Click(object sender, RoutedEventArgs e)
