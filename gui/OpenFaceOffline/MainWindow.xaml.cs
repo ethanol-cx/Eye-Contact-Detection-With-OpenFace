@@ -812,7 +812,6 @@ namespace OpenFaceOffline
                 thread_running = false;
                 processing_thread.Join();
             }
-            face_analyser.Dispose();
         }
 
         // Stopping the tracking
