@@ -116,7 +116,7 @@ namespace OpenFaceOffline
         public bool RecordPose { get; set; } = true; // Head pose (position and orientation)
         public bool RecordAUs { get; set; } = true; // Facial action units
         public bool RecordGaze { get; set; } = true; // Eye gaze
-        public bool RecordTracked { get; set; } = false; // Recording tracked videos or images
+        public bool RecordTracked { get; set; } = true; // Recording tracked videos or images
 
         // Visualisation options
         public bool ShowTrackedVideo { get; set; } = true; // Showing the actual tracking
@@ -166,7 +166,7 @@ namespace OpenFaceOffline
                 ProcessSequence(reader);
 
                 // Before continuing to next video make sure the user did not stop the processing
-                if(!thread_running)
+                if (!thread_running)
                 {
                     break;
                 }
@@ -248,8 +248,14 @@ namespace OpenFaceOffline
                 processing_fps.AddFrame();
             }
 
+            // Finalize the recording and flush to disk
+            recorder.Close();
+
             // Post-process the AU recordings
             face_analyser.PostProcessOutputFile(recorder.GetCSVFile());
+
+            // Close the open video/webcam
+            reader.Close();
 
             EndMode();
 
@@ -342,6 +348,7 @@ namespace OpenFaceOffline
 
                 lastFrameTime = CurrentTime;
                 processing_fps.AddFrame();
+                
                 // TODO how to report errors from the reader here? exceptions? logging? Problem for future versions?
             }
 
@@ -676,13 +683,12 @@ namespace OpenFaceOffline
             using (var fbd = new FolderBrowserDialog())
             {
                 DialogResult result = fbd.ShowDialog();
-                if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     to_return = fbd.SelectedPath;
                 }
-                else
+                else if(!string.IsNullOrWhiteSpace(fbd.SelectedPath))
                 {
-                    // TODO warning message here
                     string messageBoxText = "Could not open the directory.";
                     string caption = "Invalid directory";
                     MessageBoxButton button = MessageBoxButton.OK;
@@ -760,37 +766,37 @@ namespace OpenFaceOffline
         {
             StopTracking();
 
-            Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 2, 0), (Action)(() =>
+            // If camera selection has already been done, no need to re-populate the list as it is quite slow
+            if (cam_sec == null)
             {
+                cam_sec = new CameraSelection();
+            }
+            else
+            {
+                cam_sec = new CameraSelection(cam_sec.cams);
+                cam_sec.Visibility = System.Windows.Visibility.Visible;
+            }
 
-                if (cam_sec == null)
-                {
-                    cam_sec = new CameraSelection();
-                }
-                else
-                {
-                    cam_sec = new CameraSelection(cam_sec.cams);
-                    cam_sec.Visibility = System.Windows.Visibility.Visible;
-                }
+            // Set the icon
+            Uri iconUri = new Uri("logo1.ico", UriKind.RelativeOrAbsolute);
+            cam_sec.Icon = BitmapFrame.Create(iconUri);
 
-                // Set the icon
-                Uri iconUri = new Uri("logo1.ico", UriKind.RelativeOrAbsolute);
-                cam_sec.Icon = BitmapFrame.Create(iconUri);
+            if (!cam_sec.no_cameras_found)
+                cam_sec.ShowDialog();
 
-                if (!cam_sec.no_cameras_found)
-                    cam_sec.ShowDialog();
+            if (cam_sec.camera_selected)
+            {
+                int cam_id = cam_sec.selected_camera.Item1;
+                int width = cam_sec.selected_camera.Item2;
+                int height = cam_sec.selected_camera.Item3;
 
-                if (cam_sec.camera_selected)
-                {
-                    int cam_id = cam_sec.selected_camera.Item1;
-                    int width = cam_sec.selected_camera.Item2;
-                    int height = cam_sec.selected_camera.Item3;
+                SequenceReader reader = new SequenceReader(cam_id, width, height);
 
-//                    processing_thread = new Thread(() => ProcessingLoop(cam_id, width, height));
-//                    processing_thread.Start();
+                processing_thread = new Thread(() => ProcessSequence(reader));
+                processing_thread.Name = "Webcam processing";
+                processing_thread.Start();
 
-                }
-            }));
+            }
         }
 
 

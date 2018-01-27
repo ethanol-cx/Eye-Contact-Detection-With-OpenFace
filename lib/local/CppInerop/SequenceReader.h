@@ -98,11 +98,11 @@ namespace UtilitiesOF {
 		}
 
 		// Can provide a webcam id
-		SequenceReader(int webcam_id)
+		SequenceReader(int webcam_id, int width, int height)
 		{
 			m_sequence_capture = new Utilities::SequenceCapture();
 			
-			bool success = m_sequence_capture->OpenWebcam(webcam_id);
+			bool success = m_sequence_capture->OpenWebcam(webcam_id, width, height);
 
 			if (!success)
 			{
@@ -182,6 +182,10 @@ namespace UtilitiesOF {
 			next_gray_image.copyTo(m_gray_frame->Mat);
 
 			return m_gray_frame;
+		}
+
+		void Close() {
+			m_sequence_capture->Close();
 		}
 
 		// Finalizer. Definitely called before Garbage Collection,
@@ -343,6 +347,7 @@ namespace UtilitiesOF {
 					std::vector<std::pair<int, int>> common_resolutions;
 					common_resolutions.push_back(std::pair<int, int>(320, 240));
 					common_resolutions.push_back(std::pair<int, int>(640, 480));
+					common_resolutions.push_back(std::pair<int, int>(800, 600));
 					common_resolutions.push_back(std::pair<int, int>(960, 720));
 					common_resolutions.push_back(std::pair<int, int>(1280, 720));
 					common_resolutions.push_back(std::pair<int, int>(1280, 960));

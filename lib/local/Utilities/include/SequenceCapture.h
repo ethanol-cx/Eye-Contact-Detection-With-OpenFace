@@ -87,6 +87,8 @@ namespace Utilities
 
 		bool IsOpened();
 
+		void Close();
+
 		int frame_width;
 		int frame_height;
 

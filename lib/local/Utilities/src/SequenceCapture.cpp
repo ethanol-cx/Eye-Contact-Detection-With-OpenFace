@@ -256,6 +256,12 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 
 }
 
+void SequenceCapture::Close()
+{
+	if (capture.isOpened())
+		capture.release();
+}
+
 // Destructor that releases the capture
 SequenceCapture::~SequenceCapture()
 {
