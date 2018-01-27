@@ -384,22 +384,23 @@ namespace HeadPoseLive
                 // CAPTURE FRAME AND DETECT LANDMARKS FOLLOWED BY THE REQUIRED IMAGE PROCESSING
                 //////////////////////////////////////////////
 
-                RawImage frame = null;
-                frame = reader.GetNextImage();
+                RawImage frame = reader.GetNextImage();
 
                 lastFrameTime = CurrentTime;
                 processing_fps.AddFrame();
 
                 var grayFrame = reader.GetCurrentFrameGray();
 
-                if (grayFrame == null)
-                    continue;
+                if (mirror_image)
+                { 
+                    frame.Mirror();
+                    grayFrame.Mirror();
+                }
 
                 bool detectionSucceeding = ProcessFrame(face_model, gaze_analyser, model_params, frame, grayFrame, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                 lock (recording_lock)
                 {
-
                     if (recording)
                     {
                         // Add objects to recording queues

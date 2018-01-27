@@ -136,6 +136,11 @@ namespace OpenCVWrappers {
 			refCount++;
 		}
 
+		void Mirror()
+		{
+			cv::flip(*mat, *mat, 1);
+		}
+
 		// Finalizer. Definitely called before Garbage Collection,
 		// but not automatically called on explicit Dispose().
 		// May be called multiple times.
