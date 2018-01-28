@@ -227,7 +227,7 @@ namespace OpenFaceOffline
                 VisualizeFeatures(frame, visualizer_of, landmark_detector.CalculateAllLandmarks(), detection_succeeding, true, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                 // Record an observation
-                RecordObservation(recorder, visualizer_of.GetVisImage(), detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                RecordObservation(recorder, visualizer_of.GetVisImage(), detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), reader.GetTimestamp());
 
                 while (thread_running & thread_paused && skip_frames == 0)
                 {
@@ -330,7 +330,7 @@ namespace OpenFaceOffline
                     VisualizeFeatures(frame, visualizer_of, landmarks, detection_succeeding, i == 0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                     // Record an observation
-                    RecordObservation(recorder, visualizer_of.GetVisImage(), detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                    RecordObservation(recorder, visualizer_of.GetVisImage(), detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), 0);
 
                 }
 
@@ -354,8 +354,10 @@ namespace OpenFaceOffline
 
         }
 
-        private void RecordObservation(RecorderOpenFace recorder, RawImage vis_image, bool success, float fx, float fy, float cx, float cy)
+        private void RecordObservation(RecorderOpenFace recorder, RawImage vis_image, bool success, float fx, float fy, float cx, float cy, double timestamp)
         {
+
+            recorder.SetObservationTimestamp(timestamp);
 
             double confidence = landmark_detector.GetConfidence();
 
@@ -366,7 +368,7 @@ namespace OpenFaceOffline
             List<Tuple<double, double>> landmarks_2D = landmark_detector.CalculateAllLandmarks();
             List<Tuple<double, double, double>> landmarks_3D = landmark_detector.Calculate3DLandmarks(fx, fy, cx, cy);
             List<double> global_params = landmark_detector.GetRigidParams();
-            List<double> local_params = landmark_detector.GetParams();
+            List<double> local_params = landmark_detector.GetNonRigidParams();
 
             recorder.SetObservationLandmarks(landmarks_2D, landmarks_3D, global_params, local_params, confidence, success);
 

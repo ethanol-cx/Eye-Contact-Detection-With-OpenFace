@@ -148,6 +148,11 @@ namespace UtilitiesOF {
 		}
 
 		// Setting the observations
+		void SetObservationTimestamp(double timestamp)
+		{
+			m_recorder->SetObservationTimestamp(timestamp);
+		}
+
 		void SetObservationPose(List<double>^ pose)
 		{
 			cv::Vec6d pose_vec(pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
