@@ -453,8 +453,6 @@ double SequenceCapture::GetProgress()
 	}
 	else
 	{
-		//TODO test here
-		std::cout << frame_num << " " << vid_length << std::endl;
 		return (double)frame_num / (double)vid_length;
 	}
 }

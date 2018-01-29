@@ -250,7 +250,10 @@ namespace OpenFaceOffline
             recorder.Close();
 
             // Post-process the AU recordings
-            face_analyser.PostProcessOutputFile(recorder.GetCSVFile());
+            if(RecordAUs)
+            { 
+                face_analyser.PostProcessOutputFile(recorder.GetCSVFile());
+            }
 
             // Close the open video/webcam
             reader.Close();
