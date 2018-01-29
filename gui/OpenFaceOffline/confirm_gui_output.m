@@ -1,12 +1,14 @@
-root1 = "C:\Users\Tadas Baltrusaitis\Documents\OpenFace-GUI\x64\Release\record";
-root2 = "C:\Users\Tadas Baltrusaitis\Documents\OpenFace\exe\FeatureExtraction";
+addpath('../../matlab_runners/Demos');
+
+root1 = "C:\Users\Tadas\Documents\OpenFace-GUI\x64\Release\record";
+root2 = "C:\Users\Tadas\Documents\OpenFace-master\exe\FeatureExtraction";
 
 gui_files = dir(sprintf('%s/*.csv', root1));
 
 for i = 1:numel(gui_files)
 
-    table_gui = readtable(sprintf('%s/%s', root1, gui_files(1).name));
-    table_console = readtable(sprintf('%s/%s', root2, gui_files(1).name));
+    table_gui = readtable(sprintf('%s/%s', root1, gui_files(i).name));
+    table_console = readtable(sprintf('%s/%s', root2, gui_files(i).name));
 
     var_names = table_console.Properties.VariableNames;
 
@@ -20,4 +22,33 @@ for i = 1:numel(gui_files)
         end    
     end
 
+    % Compare the HOG file
+    [~,name,~] = fileparts(gui_files(i).name);
+    [hog_gui, valid_gui] = Read_HOG_file(sprintf('%s/%s.hog', root1, name));
+    [hog_console, valid_console] = Read_HOG_file(sprintf('%s/%s.hog', root2, name));
+
+    feat_diff = norm(abs(hog_gui(:) - hog_console(:)));
+    if(feat_diff > 0.1)
+        fprintf('%s error - %.3f\n', var_names{v}, feat_diff);
+    end
+    
+    feat_diff = norm(abs(valid_gui - valid_console));
+    if(feat_diff > 0.1)
+        fprintf('%s error - %.3f\n', var_names{v}, feat_diff);
+    end   
+    
+    % Compare the simalign ones
+    gui_aligns = dir(sprintf('%s/%s_aligned/*.bmp', root1, name));
+    console_aligns = dir(sprintf('%s/%s/*.bmp', root2, name));
+    
+    for j=1:numel(gui_aligns)
+        gui_align = imread(sprintf('%s/%s_aligned/%s', root1, name, gui_aligns(j).name));
+        console_align = imread(sprintf('%s/%s/%s', root2, name, console_aligns(j).name));
+        feat_diff = norm(abs(double(gui_align(:)) - double(console_align(:))));
+        if(feat_diff > 0.1)
+            fprintf('%s error - %.3f\n', var_names{v}, feat_diff);
+        end   
+    
+    end
+    
 end
