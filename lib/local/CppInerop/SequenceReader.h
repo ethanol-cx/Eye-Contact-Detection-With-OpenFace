@@ -159,6 +159,11 @@ namespace UtilitiesOF {
 			return m_rgb_frame;
 		}
 
+		double GetTimestamp()
+		{
+			return m_sequence_capture->time_stamp;
+		}
+
 		System::String^ GetName()
 		{
 			std::string filename = m_sequence_capture->name;
