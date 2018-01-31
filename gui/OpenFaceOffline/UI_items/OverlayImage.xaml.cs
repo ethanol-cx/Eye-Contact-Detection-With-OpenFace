@@ -128,7 +128,7 @@ namespace OpenFaceOffline
 
                 var dir = p2 - p1;
                 p2 = p1 + dir * scaling_p * 2;
-                dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(200, (byte)(240), (byte)(30), (byte)100)), 6.0 * scaling_p), p1, p2);
+                dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(200, (byte)(240), (byte)(30), (byte)100)), 5.0 * scaling_p), p1, p2);
 
             }
 
