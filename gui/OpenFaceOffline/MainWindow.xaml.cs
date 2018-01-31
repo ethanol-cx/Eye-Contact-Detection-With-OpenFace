@@ -281,7 +281,7 @@ namespace OpenFaceOffline
             }
 
             // Initialize the face analyser
-            face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, DynamicAUModels, image_output_size);
+            face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, false, image_output_size);
 
             // Loading an image file
             var frame = new RawImage(reader.GetNextImage());
