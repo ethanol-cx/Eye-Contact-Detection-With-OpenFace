@@ -79,14 +79,14 @@ namespace UtilitiesOF {
 	public:
 
 		// Can provide a directory, or a list of files
-		ImageReader(System::String^ image_directory)
+		ImageReader(System::String^ image_directory, float fx, float fy, float cx, float cy)
 		{
 			m_image_capture = new Utilities::ImageCapture();
 			m_is_opened = new bool;
 
 			std::string image_dir_std = msclr::interop::marshal_as<std::string>(image_directory);
 
-			*m_is_opened = m_image_capture->OpenDirectory(image_dir_std);
+			*m_is_opened = m_image_capture->OpenDirectory(image_dir_std, "", fx, fy, cx, cy);
 
 			if (!*m_is_opened)
 			{
@@ -94,7 +94,7 @@ namespace UtilitiesOF {
 			}
 		}
 		// Can provide a directory, or a list of files
-		ImageReader(System::Collections::Generic::List<System::String^>^ image_files)
+		ImageReader(System::Collections::Generic::List<System::String^>^ image_files, float fx, float fy, float cx, float cy)
 		{
 			m_image_capture = new Utilities::ImageCapture();
 			m_is_opened = new bool;
@@ -108,7 +108,7 @@ namespace UtilitiesOF {
 
 			}
 
-			*m_is_opened = m_image_capture->OpenImageFiles(image_files_std);
+			*m_is_opened = m_image_capture->OpenImageFiles(image_files_std, fx, fy, cx, cy);
 
 			if (!*m_is_opened)
 			{

@@ -737,7 +737,7 @@ namespace OpenFaceOffline
             StopTracking();
 
             var image_files = openMediaDialog(true);
-            ImageReader reader = new ImageReader(image_files);
+            ImageReader reader = new ImageReader(image_files, fx, fy, cx, cy);
 
             processing_thread = new Thread(() => ProcessIndividualImages(reader));
             processing_thread.Start();
@@ -754,7 +754,7 @@ namespace OpenFaceOffline
             string directory = openDirectory();
             if(!string.IsNullOrWhiteSpace(directory))
             { 
-                ImageReader reader = new ImageReader(directory);
+                ImageReader reader = new ImageReader(directory, fx, fy, cx, cy);
 
                 processing_thread = new Thread(() => ProcessIndividualImages(reader));
                 processing_thread.Start();
