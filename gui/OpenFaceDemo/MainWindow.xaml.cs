@@ -251,7 +251,7 @@ namespace OpenFaceDemo
                     landmarks = landmark_detector.CalculateVisibleLandmarks();
                     eye_landmarks = landmark_detector.CalculateVisibleEyeLandmarks();
                     lines = landmark_detector.CalculateBox(reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
-                    gaze_lines = gaze_analyser.CalculateGazeLines(scale, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                    gaze_lines = gaze_analyser.CalculateGazeLines(reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
                 }
 
                 // Visualisation

@@ -64,7 +64,7 @@
             <Label></Label>
         </Border>
         <Border Name="VideoBorder" Grid.Row="1" Grid.Column="0" BorderBrush="Black" BorderThickness="1" Background="LightGray" Margin="5,5,0,0">
-            <OpenFaceOffline:OverlayImage x:Name="video" />
+            <OpenFaceOffline:OverlayImage x:Name="overlay_image" />
         </Border>
 
         <GroupBox Name="AppearanceBorder" Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1" MinHeight="100">

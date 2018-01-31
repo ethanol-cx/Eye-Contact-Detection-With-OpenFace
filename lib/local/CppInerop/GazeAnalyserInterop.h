@@ -152,18 +152,18 @@ namespace GazeAnalyser_Interop {
 			return gaze_angle;
 
 		}
-		System::Collections::Generic::List<System::Tuple<System::Windows::Point, System::Windows::Point>^>^ CalculateGazeLines(double scale, float fx, float fy, float cx, float cy)
+		System::Collections::Generic::List<System::Tuple<System::Windows::Point, System::Windows::Point>^>^ CalculateGazeLines(float fx, float fy, float cx, float cy)
 		{
 
 			cv::Mat_<double> cameraMat = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
 
 			vector<cv::Point3f> points_left;
 			points_left.push_back(cv::Point3f(*pupil_left));
-			points_left.push_back(cv::Point3f(*pupil_left + *gazeDirection0 * 40.0 * scale));
+			points_left.push_back(cv::Point3f(*pupil_left + *gazeDirection0 * 40.0));
 
 			vector<cv::Point3f> points_right;
 			points_right.push_back(cv::Point3f(*pupil_right));
-			points_right.push_back(cv::Point3f(*pupil_right + *gazeDirection1 * 40.0 * scale));
+			points_right.push_back(cv::Point3f(*pupil_right + *gazeDirection1 * 40.0));
 
 			// Perform manual projection of points
 			vector<cv::Point2d> imagePoints_left;

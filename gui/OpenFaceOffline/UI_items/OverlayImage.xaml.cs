@@ -75,6 +75,7 @@ namespace OpenFaceOffline
             InitializeComponent();
             OverlayLines = new List<Tuple<Point, Point>>();
             OverlayPoints = new List<Point>();
+            OverlayPointsVisibility = new List<bool>();
             OverlayEyePoints = new List<Point>();
             GazeLines = new List<Tuple<Point, Point>>();
 
@@ -90,6 +91,9 @@ namespace OpenFaceOffline
 
             if (OverlayPoints == null)
                 OverlayPoints = new List<Point>();
+
+            if (OverlayPointsVisibility == null)
+                OverlayPointsVisibility = new List<bool>();
 
             if (OverlayEyePoints == null)
                 OverlayEyePoints = new List<Point>();
@@ -122,17 +126,29 @@ namespace OpenFaceOffline
                 var p1 = new Point(ActualWidth * line.Item1.X / width, ActualHeight * line.Item1.Y / height);
                 var p2 = new Point(ActualWidth * line.Item2.X / width, ActualHeight * line.Item2.Y / height);
 
-                dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(200, (byte)(240), (byte)(30), (byte)100)), 3.0 * scaling_p), p1, p2);
+                var dir = p2 - p1;
+                p2 = p1 + dir * scaling_p * 2;
+                dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(200, (byte)(240), (byte)(30), (byte)100)), 6.0 * scaling_p), p1, p2);
 
             }
 
-            foreach (var p in OverlayPoints)
+            for (int i = 0; i < OverlayPoints.Count; ++i)
             {
+                var p = OverlayPoints[i];
 
                 var q = new Point(ActualWidth * p.X / width, ActualHeight * p.Y / height);
 
-                dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(230 * Confidence), 255, 50, 50)), null, q, 2.75 * scaling_p, 2.75 * scaling_p);
-                dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(230 * Confidence), 255, 255, 100)), null, q, 1.75 * scaling_p, 1.75 * scaling_p);
+                if(OverlayPointsVisibility.Count == 0 || OverlayPointsVisibility[i])
+                { 
+                    dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(230 * Confidence), 255, 50, 50)), null, q, 2.75 * scaling_p, 3.0 * scaling_p);
+                    dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(230 * Confidence), 255, 255, 100)), null, q, 1.75 * scaling_p, 2.0 * scaling_p);
+                }
+                else
+                {
+                    // Draw fainter if landmark not visible
+                    dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(125 * Confidence), 255, 50, 50)), null, q, 2.75 * scaling_p, 3.0 * scaling_p);
+                    dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(125 * Confidence), 255, 255, 100)), null, q, 1.75 * scaling_p, 2.0 * scaling_p);
+                }
             }
 
             for (int id = 0; id < OverlayEyePoints.Count; id++)
@@ -199,6 +215,7 @@ namespace OpenFaceOffline
         public List<Tuple<Point, Point>> OverlayLines { get; set; }
         public List<Tuple<Point, Point>> GazeLines { get; set; }
         public List<Point> OverlayPoints { get; set; }
+        public List<bool> OverlayPointsVisibility { get; set; }
         public List<Point> OverlayEyePoints { get; set; }
         public double Confidence { get; set; }
         public double FPS { get; set; }

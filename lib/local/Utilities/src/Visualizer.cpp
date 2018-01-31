@@ -157,6 +157,19 @@ void Visualizer::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, d
 				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
 
 			}
+			else
+			{
+				// Draw a fainter point if the landmark is self occluded
+				cv::Point featurePoint(cvRound(landmarks_2D.at<double>(i) * (double)draw_multiplier), cvRound(landmarks_2D.at<double>(i + n) * (double)draw_multiplier));
+
+				// A rough heuristic for drawn point size
+				int thickness = (int)std::ceil(2.5* ((double)captured_image.cols) / 640.0);
+				int thickness_2 = (int)std::ceil(1.0* ((double)captured_image.cols) / 640.0);
+
+				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(0, 0, 155), thickness, CV_AA, draw_shiftbits);
+				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(155, 0, 0), thickness_2, CV_AA, draw_shiftbits);
+
+			}
 		}
 	}
 }

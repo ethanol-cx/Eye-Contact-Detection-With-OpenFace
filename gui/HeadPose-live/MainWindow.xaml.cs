@@ -417,7 +417,7 @@ namespace HeadPoseLive
                 List<System.Windows.Point> landmarks = new List<System.Windows.Point>();
                 List<Tuple<System.Windows.Point, System.Windows.Point>> gaze_lines = null;
                 Tuple<double, double> gaze_angle = new Tuple<double, double>(0, 0);
-                double scale = 0;
+                double scale = face_model.GetRigidParams()[0];
 
                 if (detectionSucceeding)
                 {
@@ -428,9 +428,7 @@ namespace HeadPoseLive
 
                     eye_landmarks = face_model.CalculateVisibleEyeLandmarks();
 
-                    scale = face_model.GetRigidParams()[0];
-
-                    gaze_lines = gaze_analyser.CalculateGazeLines(scale, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                    gaze_lines = gaze_analyser.CalculateGazeLines(reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
                     gaze_angle = gaze_analyser.GetGazeAngle();
 
                     lines = face_model.CalculateBox(reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());

@@ -100,7 +100,7 @@ namespace UtilitiesOF {
 			m_visualizer->SetObservationHOG(observation_HOG->Mat, num_cols, num_rows);
 		}
 
-		void SetObservationLandmarks(List<System::Tuple<double, double>^>^ landmarks_2D, double confidence)
+		void SetObservationLandmarks(List<System::Tuple<double, double>^>^ landmarks_2D, double confidence, List<bool>^ visibilities)
 		{
 			// Construct an OpenCV matrix from the landmarks
 			cv::Mat_<double> landmarks_2D_mat(landmarks_2D->Count * 2, 1, 0.0);
@@ -109,8 +109,27 @@ namespace UtilitiesOF {
 				landmarks_2D_mat.at<double>(i, 0) = landmarks_2D[i]->Item1;
 				landmarks_2D_mat.at<double>(i + landmarks_2D->Count, 0) = landmarks_2D[i]->Item2;
 			}
-			// TODO add visibilities
-			m_visualizer->SetObservationLandmarks(landmarks_2D_mat, confidence);
+
+			// Construct an OpenCV matrix from the landmarks
+			cv::Mat_<int> visibilities_cv(visibilities->Count, 1, 0);
+			for (int i = 0; i < visibilities->Count; ++i)
+			{
+				if (visibilities[i])
+				{
+					visibilities_cv.at<int>(i, 0) = 1;
+				}
+				else
+				{
+					visibilities_cv.at<int>(i, 0) = 0;
+				}
+			}
+
+			m_visualizer->SetObservationLandmarks(landmarks_2D_mat, confidence, visibilities_cv);
+		}
+
+		void SetObservationLandmarks(List<System::Tuple<double, double>^>^ landmarks_2D, double confidence)
+		{
+			SetObservationLandmarks(landmarks_2D, confidence, gcnew List<bool>());
 		}
 
 		void SetImage(OpenCVWrappers::RawImage^ canvas, float fx, float fy, float cx, float cy)

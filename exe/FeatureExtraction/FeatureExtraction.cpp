@@ -194,7 +194,7 @@ int main (int argc, char **argv)
 			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 			visualizer.SetObservationFaceAlign(sim_warped_img);
 			visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
-			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty);
+			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.GetVisibilities());
 			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
 			visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_model.detection_certainty);
 			visualizer.SetFps(fps_tracker.GetFPS());

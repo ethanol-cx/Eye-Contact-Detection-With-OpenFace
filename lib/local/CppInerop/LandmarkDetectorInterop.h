@@ -227,6 +227,19 @@ namespace CppInterop {
 				}
 			}
 	
+			// Get the mask of which landmarks are currently visible (not self-occluded)
+			List<bool>^ GetVisibilities()
+			{
+				cv::Mat_<int> vis = clnf->GetVisibilities();
+				List<bool>^ visibilities = gcnew List<bool>();
+
+				for (auto vis_it = vis.begin(); vis_it != vis.end(); vis_it++)
+				{
+					visibilities->Add(*vis_it != 0);
+				}
+				return visibilities;
+			}
+
 			List<System::Tuple<double,double>^>^ CalculateVisibleLandmarks() {
 				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateVisibleLandmarks(*clnf);
 				

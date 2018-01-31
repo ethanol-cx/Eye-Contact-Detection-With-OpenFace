@@ -224,7 +224,7 @@ namespace OpenFaceOffline
                 gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                 // Only the final face will contain the details
-                VisualizeFeatures(frame, visualizer_of, landmark_detector.CalculateAllLandmarks(), detection_succeeding, true, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
+                VisualizeFeatures(frame, visualizer_of, landmark_detector.CalculateAllLandmarks(), landmark_detector.GetVisibilities(), detection_succeeding, true, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                 // Record an observation
                 RecordObservation(recorder, visualizer_of.GetVisImage(), detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), reader.GetTimestamp());
@@ -236,8 +236,6 @@ namespace OpenFaceOffline
 
                 if (skip_frames > 0)
                     skip_frames--;
-
-                latest_img = null;
 
                 frame = new RawImage(reader.GetNextImage());
                 gray_frame = new RawImage(reader.GetCurrentFrameGray());
@@ -330,14 +328,12 @@ namespace OpenFaceOffline
                     gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                     // Only the final face will contain the details
-                    VisualizeFeatures(frame, visualizer_of, landmarks, detection_succeeding, i == 0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
+                    VisualizeFeatures(frame, visualizer_of, landmarks, landmark_detector.GetVisibilities(), detection_succeeding, i == 0, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                     // Record an observation
                     RecordObservation(recorder, visualizer_of.GetVisImage(), detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), 0);
 
                 }
-
-                latest_img = null;
 
                 frame = new RawImage(reader.GetNextImage());
                 gray_frame = new RawImage(reader.GetCurrentFrameGray());
@@ -398,7 +394,7 @@ namespace OpenFaceOffline
 
         }
 
-        private void VisualizeFeatures(RawImage frame, Visualizer visualizer, List<Tuple<double, double>> landmarks, bool detection_succeeding, 
+        private void VisualizeFeatures(RawImage frame, Visualizer visualizer, List<Tuple<double, double>> landmarks, List<bool> visibilities, bool detection_succeeding, 
             bool new_image, float fx, float fy, float cx, float cy, double progress)
         {
 
@@ -418,27 +414,24 @@ namespace OpenFaceOffline
             else if (confidence > 1)
                 confidence = 1;
 
-            double scale = 0;
+            double scale = landmark_detector.GetRigidParams()[0];
 
             // Helps with recording and showing the visualizations
-            if(new_image)
+            if (new_image)
             {
                 visualizer.SetImage(frame, fx, fy, cx, cy);
             }
             visualizer.SetObservationHOG(face_analyser.GetLatestHOGFeature(), face_analyser.GetHOGRows(), face_analyser.GetHOGCols());
-            visualizer.SetObservationLandmarks(landmarks, confidence); // Set confidence to high to make sure we always visualize
+            visualizer.SetObservationLandmarks(landmarks, confidence, visibilities);
             visualizer.SetObservationPose(pose, confidence);
             visualizer.SetObservationGaze(gaze_analyser.GetGazeCamera().Item1, gaze_analyser.GetGazeCamera().Item2, landmark_detector.CalculateAllEyeLandmarks(), landmark_detector.CalculateAllEyeLandmarks3D(fx, fy, cx, cy), confidence);
 
             if (detection_succeeding)
-            {
-                
+            {                
                 eye_landmarks = landmark_detector.CalculateVisibleEyeLandmarks();
                 lines = landmark_detector.CalculateBox(fx, fy, cx, cy);
 
-                scale = landmark_detector.GetRigidParams()[0];
-
-                gaze_lines = gaze_analyser.CalculateGazeLines(scale, fx, fy, cx, cy);
+                gaze_lines = gaze_analyser.CalculateGazeLines(fx, fy, cx, cy);
                 gaze_angle = gaze_analyser.GetGazeAngle();
             }
 
@@ -490,25 +483,26 @@ namespace OpenFaceOffline
 
                 if (ShowTrackedVideo)
                 {
-                    if (latest_img == null)
+                    if (new_image)
                     {
                         latest_img = frame.CreateWriteableBitmap();
                     }
                     
                     frame.UpdateWriteableBitmap(latest_img);
-                    
-                    video.Source = latest_img;
-                    video.Confidence = confidence;
-                    video.FPS = processing_fps.GetFPS();
-                    video.Progress = progress;
-                    video.FaceScale = scale;
+
+                    overlay_image.Source = latest_img;
+                    overlay_image.Confidence = confidence;
+                    overlay_image.FPS = processing_fps.GetFPS();
+                    overlay_image.Progress = progress;
+                    overlay_image.FaceScale = scale;
 
                     if (!detection_succeeding)
                     {
-                        video.OverlayLines.Clear();
-                        video.OverlayPoints.Clear();
-                        video.OverlayEyePoints.Clear();
-                        video.GazeLines.Clear();
+                        overlay_image.OverlayLines.Clear();
+                        overlay_image.OverlayPoints.Clear();
+                        overlay_image.OverlayPointsVisibility.Clear();
+                        overlay_image.OverlayEyePoints.Clear();
+                        overlay_image.GazeLines.Clear();
                     }
                     else
                     {
@@ -528,18 +522,20 @@ namespace OpenFaceOffline
 
                         if (new_image)
                         {
-                            video.OverlayLines = lines;
-                            video.OverlayPoints = landmark_points;
-                            video.OverlayEyePoints = eye_landmark_points;
-                            video.GazeLines = gaze_lines;
+                            overlay_image.OverlayLines = lines;
+                            overlay_image.OverlayPoints = landmark_points;
+                            overlay_image.OverlayPointsVisibility = visibilities;
+                            overlay_image.OverlayEyePoints = eye_landmark_points;
+                            overlay_image.GazeLines = gaze_lines;
                         }
                         else
                         {
                             // In case of multiple faces just add them to the existing drawing list
-                            video.OverlayLines.AddRange(lines.GetRange(0, lines.Count));
-                            video.OverlayPoints.AddRange(landmark_points.GetRange(0, landmark_points.Count));
-                            video.OverlayEyePoints.AddRange(eye_landmark_points.GetRange(0, eye_landmark_points.Count));
-                            video.GazeLines.AddRange(gaze_lines.GetRange(0, gaze_lines.Count));
+                            overlay_image.OverlayLines.AddRange(lines.GetRange(0, lines.Count));
+                            overlay_image.OverlayPoints.AddRange(landmark_points.GetRange(0, landmark_points.Count));
+                            overlay_image.OverlayPointsVisibility.AddRange(visibilities.GetRange(0, visibilities.Count));
+                            overlay_image.OverlayEyePoints.AddRange(eye_landmark_points.GetRange(0, eye_landmark_points.Count));
+                            overlay_image.GazeLines.AddRange(gaze_lines.GetRange(0, gaze_lines.Count));
                         }
                     }
                 }
@@ -626,7 +622,7 @@ namespace OpenFaceOffline
                 NextFrameButton.IsEnabled = false;
 
                 // Clean up the interface itself
-                video.Source = null;
+                overlay_image.Source = null;
                 
                 auClassGraph.Update(new Dictionary<string, double>());
                 auRegGraph.Update(new Dictionary<string, double>());

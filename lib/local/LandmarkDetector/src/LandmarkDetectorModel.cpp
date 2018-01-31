@@ -1146,6 +1146,17 @@ cv::Mat_<double> CLNF::GetShape(double fx, double fy, double cx, double cy) cons
 
 }
 
+cv::Mat_<int> CLNF::GetVisibilities() const
+{
+	// Get the view of the largest scale
+	int scale = patch_experts.visibilities.size() - 1;
+	int view_id = patch_experts.GetViewIdx(params_global, scale);
+
+	cv::Mat_<int> visibilities_to_ret = this->patch_experts.visibilities[scale][view_id].clone();
+	return visibilities_to_ret;
+}
+
+
 // A utility bounding box function
 cv::Rect_<double> CLNF::GetBoundingBox() const
 {
