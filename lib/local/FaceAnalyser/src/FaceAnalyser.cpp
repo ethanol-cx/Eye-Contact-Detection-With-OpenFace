@@ -720,20 +720,20 @@ void FaceAnalyser::Reset()
 
 	for( size_t i = 0; i < hog_desc_hist.size(); ++i)
 	{
-		this->hog_desc_hist[i] = cv::Mat_<unsigned int>(hog_desc_hist[i].rows, hog_desc_hist[i].cols, (unsigned int)0);
+		this->hog_desc_hist[i] = cv::Mat_<int>(hog_desc_hist[i].rows, hog_desc_hist[i].cols, (int)0);
 		this->hog_hist_sum[i] = 0;
 
 
-		this->face_image_hist[i] = cv::Mat_<unsigned int>(face_image_hist[i].rows, face_image_hist[i].cols, (unsigned int)0);
+		this->face_image_hist[i] = cv::Mat_<int>(face_image_hist[i].rows, face_image_hist[i].cols, (int)0);
 		this->face_image_hist_sum[i] = 0;
 
 		// 0 callibration predictions
 		this->au_prediction_correction_count[i] = 0;
-		this->au_prediction_correction_histogram[i] = cv::Mat_<unsigned int>(au_prediction_correction_histogram[i].rows, au_prediction_correction_histogram[i].cols, (unsigned int)0);
+		this->au_prediction_correction_histogram[i] = cv::Mat_<int>(au_prediction_correction_histogram[i].rows, au_prediction_correction_histogram[i].cols, (int)0);
 	}
 
 	this->geom_descriptor_median.setTo(cv::Scalar(0));
-	this->geom_desc_hist = cv::Mat_<unsigned int>(geom_desc_hist.rows, geom_desc_hist.cols, (unsigned int)0);
+	this->geom_desc_hist = cv::Mat_<int>(geom_desc_hist.rows, geom_desc_hist.cols, (int)0);
 	geom_hist_sum = 0;
 
 	// Reset the predictions
@@ -758,7 +758,7 @@ void FaceAnalyser::Reset()
 	frames_tracking_succ = 0;
 }
 
-void FaceAnalyser::UpdateRunningMedian(cv::Mat_<unsigned int>& histogram, int& hist_count, cv::Mat_<double>& median, const cv::Mat_<double>& descriptor, bool update, int num_bins, double min_val, double max_val)
+void FaceAnalyser::UpdateRunningMedian(cv::Mat_<int>& histogram, int& hist_count, cv::Mat_<double>& median, const cv::Mat_<double>& descriptor, bool update, int num_bins, double min_val, double max_val)
 {
 
 	double length = max_val - min_val;
@@ -768,7 +768,7 @@ void FaceAnalyser::UpdateRunningMedian(cv::Mat_<unsigned int>& histogram, int& h
 	// The median update
 	if(histogram.empty())
 	{
-		histogram = cv::Mat_<unsigned int>(descriptor.cols, num_bins, (unsigned int)0);
+		histogram = cv::Mat_<int>(descriptor.cols, num_bins, (int)0);
 		median = descriptor.clone();
 	}
 
@@ -784,7 +784,7 @@ void FaceAnalyser::UpdateRunningMedian(cv::Mat_<unsigned int>& histogram, int& h
 		for(int i = 0; i < histogram.rows; ++i)
 		{
 			int index = (int)converted_descriptor.at<double>(i);
-			histogram.at<unsigned int>(i, index)++;
+			histogram.at<int>(i, index)++;
 		}
 
 		// Update the histogram count
@@ -806,7 +806,7 @@ void FaceAnalyser::UpdateRunningMedian(cv::Mat_<unsigned int>& histogram, int& h
 			int cummulative_sum = 0;
 			for(int j = 0; j < histogram.cols; ++j)
 			{
-				cummulative_sum += histogram.at<unsigned int>(i, j);
+				cummulative_sum += histogram.at<int>(i, j);
 				if(cummulative_sum >= cutoff_point)
 				{
 					median.at<double>(i) = min_val + ((double)j) * (length/((double)num_bins)) + (0.5*(length)/ ((double)num_bins));
@@ -818,7 +818,7 @@ void FaceAnalyser::UpdateRunningMedian(cv::Mat_<unsigned int>& histogram, int& h
 }
 
 
-void FaceAnalyser::ExtractMedian(cv::Mat_<unsigned int>& histogram, int hist_count, cv::Mat_<double>& median, int num_bins, double min_val, double max_val)
+void FaceAnalyser::ExtractMedian(cv::Mat_<int>& histogram, int hist_count, cv::Mat_<double>& median, int num_bins, double min_val, double max_val)
 {
 
 	double length = max_val - min_val;
@@ -846,7 +846,7 @@ void FaceAnalyser::ExtractMedian(cv::Mat_<unsigned int>& histogram, int hist_cou
 			int cummulative_sum = 0;
 			for(int j = 0; j < histogram.cols; ++j)
 			{
-				cummulative_sum += histogram.at<unsigned int>(i, j);
+				cummulative_sum += histogram.at<int>(i, j);
 				if(cummulative_sum > cutoff_point)
 				{
 					median.at<double>(i) = min_val + j * (max_val/num_bins) + (0.5*(length)/num_bins);
@@ -1125,7 +1125,7 @@ void FaceAnalyser::ReadAU(std::string au_model_location)
   
 }
 
-void FaceAnalyser::UpdatePredictionTrack(cv::Mat_<unsigned int>& prediction_corr_histogram, int& prediction_correction_count, vector<double>& correction, const vector<pair<string, double>>& predictions, double ratio, int num_bins, double min_val, double max_val, int min_frames)
+void FaceAnalyser::UpdatePredictionTrack(cv::Mat_<int>& prediction_corr_histogram, int& prediction_correction_count, vector<double>& correction, const vector<pair<string, double>>& predictions, double ratio, int num_bins, double min_val, double max_val, int min_frames)
 {
 	double length = max_val - min_val;
 	if(length < 0)
@@ -1136,7 +1136,7 @@ void FaceAnalyser::UpdatePredictionTrack(cv::Mat_<unsigned int>& prediction_corr
 	// The median update
 	if(prediction_corr_histogram.empty())
 	{
-		prediction_corr_histogram = cv::Mat_<unsigned int>((int)predictions.size(), num_bins, (unsigned int)0);
+		prediction_corr_histogram = cv::Mat_<int>((int)predictions.size(), num_bins, (int)0);
 	}
 	
 	for(int i = 0; i < prediction_corr_histogram.rows; ++i)
@@ -1151,7 +1151,7 @@ void FaceAnalyser::UpdatePredictionTrack(cv::Mat_<unsigned int>& prediction_corr
 		{
 			index = num_bins - 1;
 		}
-		prediction_corr_histogram.at<unsigned int>(i, index)++;
+		prediction_corr_histogram.at<int>(i, index)++;
 	}
 
 	// Update the histogram count
@@ -1168,7 +1168,7 @@ void FaceAnalyser::UpdatePredictionTrack(cv::Mat_<unsigned int>& prediction_corr
 			int cummulative_sum = 0;
 			for(int j = 0; j < prediction_corr_histogram.cols; ++j)
 			{
-				cummulative_sum += prediction_corr_histogram.at<unsigned int>(i, j);
+				cummulative_sum += prediction_corr_histogram.at<int>(i, j);
 				if(cummulative_sum > cutoff_point)
 				{
 					double corr = min_val + j * (length/num_bins);
@@ -1180,7 +1180,7 @@ void FaceAnalyser::UpdatePredictionTrack(cv::Mat_<unsigned int>& prediction_corr
 	}
 }
 
-void FaceAnalyser::GetSampleHist(cv::Mat_<unsigned int>& prediction_corr_histogram, int prediction_correction_count, vector<double>& sample, double ratio, int num_bins, double min_val, double max_val)
+void FaceAnalyser::GetSampleHist(cv::Mat_<int>& prediction_corr_histogram, int prediction_correction_count, vector<double>& sample, double ratio, int num_bins, double min_val, double max_val)
 {
 
 	double length = max_val - min_val;
@@ -1198,7 +1198,7 @@ void FaceAnalyser::GetSampleHist(cv::Mat_<unsigned int>& prediction_corr_histogr
 		int cummulative_sum = 0;
 		for(int j = 0; j < prediction_corr_histogram.cols; ++j)
 		{
-			cummulative_sum += prediction_corr_histogram.at<unsigned int>(i, j);
+			cummulative_sum += prediction_corr_histogram.at<int>(i, j);
 			if(cummulative_sum > cutoff_point)
 			{
 				double corr = min_val + j * (length/num_bins);
