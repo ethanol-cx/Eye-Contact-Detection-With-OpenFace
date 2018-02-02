@@ -37,6 +37,9 @@ before_install:
       if [ ${TRAVIS_OS_NAME} = linux ]; then
         $CXX --version;
         sudo cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF ..;
+        sudo make -j4;
+        sudo make install;
+        cd ../..;
       fi 
     fi
 
@@ -45,6 +48,9 @@ before_install:
       if [ ${TRAVIS_OS_NAME} = linux ]; then  
         $CXX --version;
         sudo cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_V4L=ON -D WITH_OPENCL=OFF -D INSTALL_C_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF -D WITH_TBB=ON ..;
+        sudo make -j4;
+        sudo make install;
+        cd ../..;
       fi
     fi
 
@@ -55,11 +61,6 @@ before_install:
       brew install opencv3;
       brew upgrade boost;
     fi
-
-before_script:
-  - sudo make -j4
-  - sudo make install
-  - cd ../.. 
   
 script:
   - $CXX --version
