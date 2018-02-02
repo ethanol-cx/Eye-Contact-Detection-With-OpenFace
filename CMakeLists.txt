@@ -13,7 +13,7 @@ find_package( BLAS REQUIRED )
 include_directories( ${BLAS_INCLUDE_DIRS} )
 LINK_DIRECTORIES(${BLAS_LIBRARY_DIRS})	
 
-find_package( OpenCV 3.1 REQUIRED )
+find_package( OpenCV 3.3 REQUIRED )
 
 MESSAGE("OpenCV information:") 
 MESSAGE("  OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}") 
