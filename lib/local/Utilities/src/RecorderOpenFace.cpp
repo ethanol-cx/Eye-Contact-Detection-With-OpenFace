@@ -55,12 +55,14 @@ std::cout << "Warning: " << stream << std::endl
 
 void CreateDirectory(std::string output_path)
 {
+	// Removing trailing separators, as that causes issues with directory creation in unix
+	while (output_path[output_path.size() - 1] == '/' || output_path[output_path.size() - 1] == '\\')
+	{
+		output_path = output_path.substr(0, output_path.size() - 1);
+	}
 
 	// Creating the right directory structure
 	auto p = path(output_path);
-
-	// Deal with a case where directory ends with a \\ or / 
-	p = p.remove_trailing_separator();
 
 	if (!boost::filesystem::exists(p))
 	{
