@@ -59,8 +59,8 @@ void CreateDirectory(std::string output_path)
 	// Creating the right directory structure
 	auto p = path(output_path);
 
-	// Deal with a case where directory ends with a / or \\
-	p.remove_trailing_separator();
+	// Deal with a case where directory ends with a \\ or / 
+	p = p.remove_trailing_separator();
 
 	if (!boost::filesystem::exists(p))
 	{
