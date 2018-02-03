@@ -1069,8 +1069,6 @@ void FaceAnalyser::Read(std::string model_loc)
 void FaceAnalyser::ReadAU(std::string au_model_location)
 {
 
-
-
 	// Open the list of the regressors in the file
 	ifstream locations(au_model_location.c_str(), ios::in);
 
@@ -1107,12 +1105,8 @@ void FaceAnalyser::ReadAU(std::string au_model_location)
 		if(index >= 0)
 		{
 			name = name.substr(index+1);
-			
 			// remove carriage return at the end for compatibility with unix systems
-			if(name.size() > 0 && name.at(name.size()-1) == '\r')
-			{
-				name = name.substr(0, location.size()-1);
-			}
+			name.erase(name.find_last_not_of(" \n\r\t") + 1);
 		}
 		vector<string> au_names;
 		boost::split(au_names, name, boost::is_any_of(","));
