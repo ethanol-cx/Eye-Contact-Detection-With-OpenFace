@@ -20,7 +20,7 @@ end
 
 %% Demonstrating reading the output files
 [~, out_filename,~] = fileparts(in_file);
-out_filename = sprintf("%s/%s.csv", output, out_filename);
+out_filename = sprintf('%s/%s.csv', output, out_filename);
 
 % First read in the column names
 tab = readtable(out_filename);
