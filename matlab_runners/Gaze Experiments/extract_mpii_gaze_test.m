@@ -11,6 +11,8 @@ elseif(exist('F:\Dropbox/AAM/eye_clm/mpii_data/', 'file'))
     database_root = 'F:\Dropbox/AAM/eye_clm/mpii_data/';    
 elseif(exist('/multicomp/datasets/mpii_gaze/mpii_data/', 'file'))
     database_root = '/multicomp/datasets/mpii_gaze/mpii_data/';    
+elseif(exist('/media/tadas/5E08AE0D08ADE3ED/Dropbox/AAM/eye_clm/mpii_data/', 'file'))
+    database_root = '/media/tadas/5E08AE0D08ADE3ED/Dropbox/AAM/eye_clm/mpii_data/';
 else
     fprintf('MPII gaze dataset not found\n');
 end
