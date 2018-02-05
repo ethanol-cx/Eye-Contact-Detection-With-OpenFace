@@ -173,7 +173,6 @@ int main (int argc, char **argv)
 			}
 			else
 			{
-				ERROR_STREAM("Failed to open a sequence");
 				break;
 			}
 		}

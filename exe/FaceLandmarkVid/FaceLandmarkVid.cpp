@@ -127,7 +127,7 @@ int main (int argc, char **argv)
 			}
 			else
 			{
-				ERROR_STREAM("Failed to open a sequence");
+				// Either reached the end of sequences provided or failed to open them
 				break;
 			}
 		}

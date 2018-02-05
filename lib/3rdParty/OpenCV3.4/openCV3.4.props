@@ -12,8 +12,7 @@
       <AdditionalDependencies>opencv_world340.lib;opencv_world340d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /I /E /Y /D /C "$(SolutionDir)lib\3rdParty\OpenCV3.4\$(PlatformTarget)\$(PlatformToolset)\bin\opencv_world340.dll" "$(OutDir)"
-xcopy /I /E /Y /D /C "$(SolutionDir)lib\3rdParty\OpenCV3.4\$(PlatformTarget)\$(PlatformToolset)\bin\opencv_world340d.dll" "$(OutDir)"
+      <Command>xcopy /I /E /Y /D /C "$(SolutionDir)lib\3rdParty\OpenCV3.4\$(PlatformTarget)\$(PlatformToolset)\bin\$(Configuration)" "$(OutDir)"
 xcopy /I /E /Y /D /C "$(SolutionDir)lib\3rdParty\OpenCV3.4\bin\opencv_ffmpeg340.dll" "$(OutDir)"
 xcopy /I /E /Y /D /C "$(SolutionDir)lib\3rdParty\OpenCV3.4\bin\opencv_ffmpeg340_64.dll" "$(OutDir)"
 xcopy /I /E /Y /D /C "$(SolutionDir)lib\3rdParty\OpenCV3.4\classifiers" "$(OutDir)classifiers"</Command>

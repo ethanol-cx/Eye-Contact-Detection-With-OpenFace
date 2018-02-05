@@ -1,5 +1,5 @@
 clear;
-version = '0.3.0';
+version = '0.4.0';
 
 out_x86 = sprintf('OpenFace_%s_win_x86', version);
 out_x64 = sprintf('OpenFace_%s_win_x64', version);
@@ -53,6 +53,17 @@ for dll = dlls_x64
     
 end
 
+% Copy zmq dll's
+mkdir([out_x64, '/amd64']);
+copyfile([in_x64, '/amd64'], [out_x64, '/amd64']);
+mkdir([out_x64, '/i386']);
+copyfile([in_x64, '/i386'], [out_x64, '/i386']);
+
+mkdir([out_x86, '/amd64']);
+copyfile([in_x86, '/amd64'], [out_x86, '/amd64']);
+mkdir([out_x86, '/i386']);
+copyfile([in_x86, '/i386'], [out_x86, '/i386']);
+
 %% Copy exe's
 exes_x86 = dir([in_x86, '*.exe'])';
 
@@ -76,3 +87,65 @@ copyfile('../../OpenFace-license.txt', [out_x86, '/OpenFace-license.txt']);
 
 copyfile('../../Copyright.txt', [out_x64, '/Copyright.txt']);
 copyfile('../../OpenFace-license.txt', [out_x64, '/OpenFace-license.txt']);
+
+%% Copy icons etc. needed for GUI
+img_x86 = dir([in_x86, '*.ico'])';
+
+for img = img_x86
+   
+    copyfile([in_x86, '/', img.name], [out_x86, '/', img.name])
+    
+end
+
+img_x64 = dir([in_x64, '*.ico'])';
+
+for img = img_x64
+   
+    copyfile([in_x64, '/', img.name], [out_x64, '/', img.name])
+    
+end
+
+img_x86 = dir([in_x86, '*.png'])';
+
+for img = img_x86
+   
+    copyfile([in_x86, '/', img.name], [out_x86, '/', img.name])
+    
+end
+
+img_x64 = dir([in_x86, '*.png'])';
+
+for img = img_x64
+   
+    copyfile([in_x64, '/', img.name], [out_x64, '/', img.name])
+    
+end
+
+%% Copy sample images for testing
+copyfile('../../samples', [out_x86, '/samples']);
+copyfile('../../samples', [out_x64 '/samples']);
+
+%% Test if everything worked by running examples
+cd(out_x64);
+vid_test = sprintf('FaceLandmarkVid.exe -f samples/default.wmv');
+dos(vid_test);
+feat_test = sprintf('FeatureExtraction.exe -f samples/default.wmv -verbose');
+dos(feat_test);
+img_test = sprintf('FaceLandmarkImg.exe -fdir samples -verbose');
+dos(img_test);
+vid_test = sprintf('FaceLandmarkVidMulti.exe -f samples/multi_face.avi');
+dos(vid_test);
+delete('processed');
+
+cd('..');
+cd(out_x86);
+vid_test = sprintf('FaceLandmarkVid.exe -f samples/default.wmv');
+dos(vid_test);
+feat_test = sprintf('FeatureExtraction.exe -f samples/default.wmv -verbose');
+dos(feat_test);
+img_test = sprintf('FaceLandmarkImg.exe -fdir samples -verbose');
+dos(img_test);
+vid_test = sprintf('FaceLandmarkVidMulti.exe -f samples/multi_face.avi');
+dos(vid_test);
+delete('processed');
+cv('..');
