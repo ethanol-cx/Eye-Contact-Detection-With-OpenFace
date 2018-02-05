@@ -135,7 +135,7 @@ img_test = sprintf('FaceLandmarkImg.exe -fdir samples -verbose');
 dos(img_test);
 vid_test = sprintf('FaceLandmarkVidMulti.exe -f samples/multi_face.avi');
 dos(vid_test);
-delete('processed');
+rmdir('processed', 's');
 
 cd('..');
 cd(out_x86);
@@ -147,5 +147,5 @@ img_test = sprintf('FaceLandmarkImg.exe -fdir samples -verbose');
 dos(img_test);
 vid_test = sprintf('FaceLandmarkVidMulti.exe -f samples/multi_face.avi');
 dos(vid_test);
-delete('processed');
-cv('..');
+rmdir('processed', 's');
+cd('..');
