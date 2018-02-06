@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __PAW_h_
-#define __PAW_h_
+#ifndef __PAWA_h_
+#define __PAWA_h_
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
