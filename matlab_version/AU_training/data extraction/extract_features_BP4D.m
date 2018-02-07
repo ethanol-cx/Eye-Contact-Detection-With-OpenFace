@@ -1,12 +1,15 @@
 clear
-
-features_exe = '"..\..\..\x64\Release\FeatureExtraction.exe"';
+if(isunix)
+    features_exe = '"../../../build/bin/FeatureExtraction"';
+else
+    features_exe = '"../../../x64/Release/FeatureExtraction.exe"';
+end
 
 find_BP4D;
 BP4D_dir = [BP4D_dir '\..\BP4D-training\'];
 
 bp4d_dirs = train_recs;
-out_loc = [BP4D_dir '\..\processed_data\train\'];
+out_loc = 'E:\datasets\face_datasets_processed\bp4d\train';
 
 parfor f1=1:numel(bp4d_dirs)
 
@@ -20,19 +23,12 @@ parfor f1=1:numel(bp4d_dirs)
         for f2=1:numel(bp4d_2_dirs)
             f2_dir = bp4d_2_dirs(f2).name;
             if(isdir([BP4D_dir, bp4d_dirs{f1}]))
-                command = features_exe;
-
+                
                 curr_vid = [BP4D_dir, f1_dir, '/', f2_dir, '/'];
 
                 name = [f1_dir '_' f2_dir];
-                output_file = [out_loc name '/'];
-
-                output_hog = [out_loc name '.hog'];
-                output_params = [out_loc name '.params.txt'];
-                
-                command = cat(2, command, [' -fx 2000 -fy 2000 -rigid -q -asvid -fdir "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
-                command = cat(2, command, [' -hogalign "' output_hog '"']);
-                command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze']);
+               
+                command = sprintf('%s -fx 2000 -fy 2000 -fdir "%s" -out_dir "%s" -of %s -hogalign -pdmparams', features_exe, curr_vid, out_loc, name);
                 dos(command);
             end
         end
@@ -40,7 +36,7 @@ parfor f1=1:numel(bp4d_dirs)
 end
 
 bp4d_dirs = devel_recs;
-out_loc = [BP4D_dir '\..\processed_data\devel\'];
+out_loc = 'E:\datasets\face_datasets_processed\bp4d\devel';
 parfor f1=1:numel(bp4d_dirs)
 
     if(isdir([BP4D_dir, bp4d_dirs{f1}]))
@@ -53,20 +49,13 @@ parfor f1=1:numel(bp4d_dirs)
         for f2=1:numel(bp4d_2_dirs)
             f2_dir = bp4d_2_dirs(f2).name;
             if(isdir([BP4D_dir, bp4d_dirs{f1}]))
-                command = features_exe;
-
                 curr_vid = [BP4D_dir, f1_dir, '/', f2_dir, '/'];
 
                 name = [f1_dir '_' f2_dir];
-                output_file = [out_loc name '/'];
-
-                output_hog = [out_loc name '.hog'];
-                output_params = [out_loc name '.params.txt'];
-
-                command = cat(2, command, [' -fx 2000 -fy 2000 -rigid -q -asvid -fdir "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
-                command = cat(2, command, [' -hogalign "' output_hog '"']);
-                command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze']);
+               
+                command = sprintf('%s -fx 2000 -fy 2000 -fdir "%s" -out_dir "%s" -of %s -hogalign -pdmparams', features_exe, curr_vid, out_loc, name);
                 dos(command);
+
             end
         end
     end
