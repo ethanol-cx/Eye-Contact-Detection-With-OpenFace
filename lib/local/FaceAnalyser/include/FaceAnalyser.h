@@ -226,6 +226,7 @@ private:
 	int align_width_au;
 	int align_height_au;
 
+	bool align_mask;
 	double align_scale_out;
 	int align_width_out;
 	int align_height_out;

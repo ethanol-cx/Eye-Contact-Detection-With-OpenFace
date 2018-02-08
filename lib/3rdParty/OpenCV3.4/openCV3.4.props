@@ -8,8 +8,8 @@
       <AdditionalIncludeDirectories>$(SolutionDir)lib\3rdParty\OpenCV3.4\include\opencv;$(SolutionDir)lib\3rdParty\OpenCV3.4\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)lib\3rdParty\OpenCV3.4\$(PlatformTarget)\$(PlatformToolset)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_world340.lib;opencv_world340d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\3rdParty\OpenCV3.4\$(PlatformTarget)\$(PlatformToolset)\lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /I /E /Y /D /C "$(SolutionDir)lib\3rdParty\OpenCV3.4\$(PlatformTarget)\$(PlatformToolset)\bin\$(Configuration)" "$(OutDir)"

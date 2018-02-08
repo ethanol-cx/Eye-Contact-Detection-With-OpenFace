@@ -114,7 +114,7 @@ namespace FaceAnalysis
 	}
 
 	// Aligning a face to a common reference frame
-	void AlignFace(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6d params_global, const PDM& pdm, bool rigid, float sim_scale, int out_width, int out_height)
+	void AlignFace(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const PDM& pdm, bool rigid, float sim_scale, int out_width, int out_height)
 	{
 		// Will warp to scaled mean shape
 		cv::Mat_<float> similarity_normalised_shape = pdm.mean_shape * sim_scale;
@@ -131,19 +131,18 @@ namespace FaceAnalysis
 			extract_rigid_points(source_landmarks, destination_landmarks);
 		}
 
-		// TODO rem the doubles here
-		cv::Matx22d scale_rot_matrix = AlignShapesWithScale(source_landmarks, destination_landmarks);
-		cv::Matx23d warp_matrix;
+		cv::Matx22f scale_rot_matrix = AlignShapesWithScale(source_landmarks, destination_landmarks);
+		cv::Matx23f warp_matrix;
 
 		warp_matrix(0,0) = scale_rot_matrix(0,0);
 		warp_matrix(0,1) = scale_rot_matrix(0,1);
 		warp_matrix(1,0) = scale_rot_matrix(1,0);
 		warp_matrix(1,1) = scale_rot_matrix(1,1);
 
-		double tx = params_global[4];
-		double ty = params_global[5];
+		float tx = params_global[4];
+		float ty = params_global[5];
 
-		cv::Vec2d T(tx, ty);
+		cv::Vec2f T(tx, ty);
 		T = scale_rot_matrix * T;
 
 		// Make sure centering is correct

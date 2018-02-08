@@ -63,6 +63,7 @@ FaceAnalyser::FaceAnalyser(const FaceAnalysis::FaceAnalyserParameters& face_anal
 {
 	this->Read(face_analyser_params.getModelLoc());
 		
+	align_mask = face_analyser_params.getAlignMask();
 	align_scale_out = face_analyser_params.getSimScaleOut();
 	align_width_out = face_analyser_params.getSimSizeOut();
 	align_height_out = face_analyser_params.getSimSizeOut();
@@ -256,17 +257,24 @@ void FaceAnalyser::PredictStaticAUsAndComputeFeatures(const cv::Mat& frame, cons
 	cv::Mat_<float> params_local;
 	pdm.CalcParams(params_global, params_local, detected_landmarks);
 
-	// First align the face
-	AlignFaceMask(aligned_face_for_au, frame, detected_landmarks, params_global, pdm, triangulation, true, 0.7, 112, 112);
-	
-	// If the output requirement matches use the already computed one, else compute it again
-	if (align_scale_out == align_scale_au && align_width_out == align_width_au && align_height_out == align_height_au)
+	// The aligned face requirement for AUs
+	AlignFaceMask(aligned_face_for_au, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_au, align_width_au, align_height_au);
+
+	// If the aligned face for AU matches the output requested one, just reuse it, else compute it
+	if (align_scale_out == align_scale_au && align_width_out == align_width_au && align_height_out == align_height_au && align_mask)
 	{
 		aligned_face_for_output = aligned_face_for_au.clone();
 	}
 	else
 	{
-		AlignFaceMask(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_out, align_width_out, align_height_out);
+		if (align_mask)
+		{
+			AlignFaceMask(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_out, align_width_out, align_height_out);
+		}
+		else
+		{
+			AlignFace(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, true, align_scale_out, align_width_out, align_height_out);
+		}
 	}
 
 	// Extract HOG descriptor from the frame and convert it to a useable format
@@ -315,6 +323,7 @@ void FaceAnalyser::PredictStaticAUsAndComputeFeatures(const cv::Mat& frame, cons
 
 }
 
+
 void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool success, double timestamp_seconds, bool online)
 {
 
@@ -333,14 +342,21 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& det
 		// The aligned face requirement for AUs
 		AlignFaceMask(aligned_face_for_au, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_au, align_width_au, align_height_au);
 
-		// If the output requirement matches use the already computed one, else compute it again
-		if(align_scale_out == align_scale_au && align_width_out == align_width_au && align_height_out == align_height_au)
+		// If the aligned face for AU matches the output requested one, just reuse it, else compute it
+		if (align_scale_out == align_scale_au && align_width_out == align_width_au && align_height_out == align_height_au && align_mask)
 		{
 			aligned_face_for_output = aligned_face_for_au.clone();
 		}
 		else
 		{
-			AlignFaceMask(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_out, align_width_out, align_height_out);
+			if (align_mask)
+			{
+				AlignFaceMask(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_out, align_width_out, align_height_out);
+			}
+			else
+			{
+				AlignFace(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, true, align_scale_out, align_width_out, align_height_out);
+			}
 		}
 	}
 	else

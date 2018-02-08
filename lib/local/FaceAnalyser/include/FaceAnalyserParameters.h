@@ -64,11 +64,12 @@ public:
 	bool grayscale;
 
 	// Use getters and setters for these as they might need to reload models and make sure the scale and size ratio makes sense
-	void setAlignedOutput(int output_size, double scale=-1);
+	void setAlignedOutput(int output_size, double scale=-1, bool masked = true);
 	// This will also change the model location
 	void OptimizeForVideos();
 	void OptimizeForImages();
 
+	double getAlignMask() const { return sim_align_face_mask; }
 	double getSimScaleOut() const { return sim_scale_out; }
 	int getSimSizeOut() const { return sim_size_out; }
 	bool getDynamic() const { return dynamic; }
@@ -82,6 +83,9 @@ private:
 	// Aligned face output size
 	double sim_scale_out;
 	int sim_size_out;
+
+	// Should aligned face be masked out from background
+	bool sim_align_face_mask;
 
 	// Should a video stream be assumed
 	bool dynamic;
