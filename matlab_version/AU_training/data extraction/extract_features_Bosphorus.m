@@ -14,7 +14,7 @@ Bosphorus_dir = [Bosphorus_dir, 'BosphorusDB/BosphorusDB/'];
 bosph_dirs = dir([Bosphorus_dir, 'bs*']);
 
 parfor f1=1:numel(bosph_dirs)
-        
+    
     command = executable;
 
     input_dir = [Bosphorus_dir, bosph_dirs(f1).name];

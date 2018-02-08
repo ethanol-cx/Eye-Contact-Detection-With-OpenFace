@@ -1,6 +1,7 @@
 if(exist('D:\Datasets\UNBC/', 'file'))
-    UNBC_dir = 'D:\Datasets\UNBC/';   
-    hog_data_dir = 'D:\Datasets\face_datasets\hog_aligned_rigid';
+    UNBC_dir = 'E:\Datasets\UNBC/';   
+elseif(exist('E:\Datasets\UNBC/', 'file'))
+    UNBC_dir = 'E:\Datasets\UNBC/';   
 else
     fprintf('UNBC location not found (or not defined)\n'); 
 end

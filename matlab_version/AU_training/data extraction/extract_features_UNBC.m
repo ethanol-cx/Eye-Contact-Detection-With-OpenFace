@@ -1,41 +1,35 @@
 clear
-features_exe = '"..\..\..\x64\Release\FeatureExtraction.exe"';
+if(isunix)
+    features_exe = '"../../../build/bin/FeatureExtraction"';
+else
+    features_exe = '"../../../x64/Release/FeatureExtraction.exe"';
+end
 
-unbc_loc = 'D:\Datasets\UNBC\Images/';
-
-out_loc = 'D:\Datasets\face_datasets/';
+find_UNBC;
+UNBC_dir = [UNBC_dir, '/images/'];
+output_dir = 'E:\datasets\face_datasets_processed\unbc';
 
 % Go two levels deep
-unbc_dirs = dir(unbc_loc);
+unbc_dirs = dir(UNBC_dir);
 unbc_dirs = unbc_dirs(3:end);
 
 parfor f1=1:numel(unbc_dirs)
 
-    unbc_dirs_level_2 = dir([unbc_loc, unbc_dirs(f1).name]);
+    unbc_dirs_level_2 = dir([UNBC_dir, unbc_dirs(f1).name]);
     unbc_dirs_level_2 = unbc_dirs_level_2(3:end);
    
     for f2=1:numel(unbc_dirs_level_2)
 
-        if(~isdir([unbc_loc, unbc_dirs(f1).name, '/', unbc_dirs_level_2(f2).name]))
+        if(~isdir([UNBC_dir, unbc_dirs(f1).name, '/', unbc_dirs_level_2(f2).name]))
            continue; 
         end       
         
-        command = features_exe;
-
-        curr_vid = [unbc_loc, unbc_dirs(f1).name, '/', unbc_dirs_level_2(f2).name];
+        input_dir = [UNBC_dir, unbc_dirs(f1).name, '/', unbc_dirs_level_2(f2).name];
         
         name = [unbc_dirs(f1).name, '_',  unbc_dirs_level_2(f2).name];
 
-        output_file = [out_loc, '/hog_aligned_rigid/', name '/'];
+        command = sprintf('%s -fdir "%s" -out_dir "%s" -of %s -hogalign -pdmparams -verbose', features_exe, input_dir, output_dir, name );
 
-        output_hog = [out_loc, '/hog_aligned_rigid/', name '.hog'];
-        output_params = [out_loc, '/model_params/', name '.txt'];
-        
-        command = cat(2, command, [' -rigid -asvid -fdir "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112 -g']);
-        command = cat(2, command, [' -hogalign "' output_hog '"']);
-            
-        command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze -q']);
-    
         dos(command);
             
     end    
