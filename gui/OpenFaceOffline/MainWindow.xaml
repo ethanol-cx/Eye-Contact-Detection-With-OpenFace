@@ -48,6 +48,7 @@
             <MenuItem Name="SettingsMenu"  Header="Recording settings">
                 <MenuItem Name="OutputLocationItem" Header="Set output location..." Click="OutputLocationItem_Click" ></MenuItem>
                 <MenuItem Header="Set output image size..." Click="setOutputImageSize_Click"></MenuItem>
+                <MenuItem IsCheckable="True" Header="Mask aligned image" IsChecked="{Binding MaskAligned}"/>
             </MenuItem>
             <MenuItem Name="AUSetting" Header="OpenFace settings" >
                 <MenuItem IsCheckable="True" Header="Use dynamic AU models" IsChecked="{Binding DynamicAUModels}"/>

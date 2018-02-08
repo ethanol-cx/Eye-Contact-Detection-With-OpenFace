@@ -118,8 +118,8 @@ int main (int argc, char **argv)
 			if (sequence_reader.no_input_specified && sequence_number == 0)
 			{
 				// If that fails, revert to webcam
-				INFO_STREAM("No input specified, attempting to open a webcam 0");
-				if (!sequence_reader.OpenWebcam(0))
+				INFO_STREAM("No input specified, attempting to open a webcam 0 at 640 x 480px");
+				if (!sequence_reader.OpenWebcam(0, 640, 480))
 				{
 					ERROR_STREAM("Failed to open the webcam");
 					break;

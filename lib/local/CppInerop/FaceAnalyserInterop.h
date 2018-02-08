@@ -92,7 +92,7 @@ private:
 
 public:
 
-	FaceAnalyserManaged(System::String^ root, bool dynamic, int output_width) 
+	FaceAnalyserManaged(System::String^ root, bool dynamic, int output_width, bool mask_aligned) 
 	{
 		string root_std = msclr::interop::marshal_as<std::string>(root);
 		FaceAnalysis::FaceAnalyserParameters params(root_std);
@@ -102,7 +102,7 @@ public:
 			params.OptimizeForImages();
 		}
 
-		params.setAlignedOutput(output_width);
+		params.setAlignedOutput(output_width, -1.0, mask_aligned);
 		face_analyser = new FaceAnalysis::FaceAnalyser(params);
 
 		hog_features = new cv::Mat_<float>();

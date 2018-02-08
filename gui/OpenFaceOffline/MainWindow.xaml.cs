@@ -124,7 +124,8 @@ namespace OpenFaceOffline
         public bool ShowAUs { get; set; } = true; // Showing Facial Action Units
 
         int image_output_size = 112;
-        
+        public bool MaskAligned { get; set; } = true; // Should the aligned images be masked
+
         // Where the recording is done (by default in a record directory, from where the application executed)
         String record_root = "./processed";
 
@@ -187,7 +188,7 @@ namespace OpenFaceOffline
             Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance);
 
             // Initialize the face analyser
-            face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, DynamicAUModels, image_output_size);
+            face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, DynamicAUModels, image_output_size, MaskAligned);
 
             // Reset the tracker
             landmark_detector.Reset();
@@ -281,7 +282,7 @@ namespace OpenFaceOffline
             }
 
             // Initialize the face analyser
-            face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, false, image_output_size);
+            face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, false, image_output_size, MaskAligned);
 
             // Loading an image file
             var frame = new RawImage(reader.GetNextImage());

@@ -117,7 +117,7 @@ namespace OpenFaceDemo
             // TODO, create a demo version of parameters
             face_model_params = new FaceModelParameters(root, false); 
             landmark_detector = new CLNF(face_model_params);
-            face_analyser = new FaceAnalyserManaged(root, true, 112);
+            face_analyser = new FaceAnalyserManaged(root, true, 112, true);
             gaze_analyser = new GazeAnalyserManaged();
 
             Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
