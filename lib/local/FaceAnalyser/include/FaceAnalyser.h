@@ -64,9 +64,7 @@ public:
 	// Constructor for FaceAnalyser using the parameters structure
 	FaceAnalyser(const FaceAnalysis::FaceAnalyserParameters& face_analyser_params);
 
-	void AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool success, double timestamp_seconds, bool online = false, bool visualise = true);
-
-	cv::Mat GetLatestHOGDescriptorVisualisation();
+	void AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool success, double timestamp_seconds, bool online = false);
 
 	double GetCurrentTimeSeconds();
 	
@@ -75,9 +73,8 @@ public:
 	std::vector<std::pair<std::string, double>> GetCurrentAUsReg() const;   // AU intensity
 	std::vector<std::pair<std::string, double>> GetCurrentAUsCombined() const; // Both presense and intensity
 
-	// A standalone call for predicting AUs from a static image, the first element in the pair represents occurence the second intensity
-	// This call is useful for detecting action units in images
-	std::pair<std::vector<std::pair<std::string, double>>, std::vector<std::pair<std::string, double>>> PredictStaticAUs(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, bool visualise = true);
+	// A standalone call for predicting AUs and computing face texture features from a static image
+	void PredictStaticAUsAndComputeFeatures(const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks);
 
 	void Reset();
 
@@ -132,7 +129,6 @@ private:
 	// Cache of intermediate images
 	cv::Mat aligned_face_for_au;
 	cv::Mat aligned_face_for_output;
-	cv::Mat hog_descriptor_visualisation;
 	bool out_grayscale;
 
 	// Private members to be used for predictions
@@ -147,10 +143,10 @@ private:
 
 	// Use histograms for quick (but approximate) median computation
 	// Use the same for
-	std::vector<cv::Mat_<unsigned int> > hog_desc_hist;
+	std::vector<cv::Mat_<int> > hog_desc_hist;
 
 	// This is not being used at the moment as it is a bit slow
-	std::vector<cv::Mat_<unsigned int> > face_image_hist;
+	std::vector<cv::Mat_<int> > face_image_hist;
 	std::vector<int> face_image_hist_sum;
 
 	std::vector<cv::Vec3d> head_orientations;
@@ -166,7 +162,7 @@ private:
 	cv::Mat_<double> geom_descriptor_median;
 	
 	int geom_hist_sum;
-	cv::Mat_<unsigned int> geom_desc_hist;
+	cv::Mat_<int> geom_desc_hist;
 	int num_bins_geom;
 	double min_val_geom;
 	double max_val_geom;
@@ -190,8 +186,8 @@ private:
 	// A utility function for keeping track of approximate running medians used for AU and emotion inference using a set of histograms (the histograms are evenly spaced from min_val to max_val)
 	// Descriptor has to be a row vector
 	// TODO this duplicates some other code
-	void UpdateRunningMedian(cv::Mat_<unsigned int>& histogram, int& hist_sum, cv::Mat_<double>& median, const cv::Mat_<double>& descriptor, bool update, int num_bins, double min_val, double max_val);
-	void ExtractMedian(cv::Mat_<unsigned int>& histogram, int hist_count, cv::Mat_<double>& median, int num_bins, double min_val, double max_val);
+	void UpdateRunningMedian(cv::Mat_<int>& histogram, int& hist_sum, cv::Mat_<double>& median, const cv::Mat_<double>& descriptor, bool update, int num_bins, double min_val, double max_val);
+	void ExtractMedian(cv::Mat_<int>& histogram, int hist_count, cv::Mat_<double>& median, int num_bins, double min_val, double max_val);
 	
 	// The linear SVR regressors
 	SVR_static_lin_regressors AU_SVR_static_appearance_lin_regressors;
@@ -203,14 +199,14 @@ private:
 
 	// The AUs predicted by the model are not always 0 calibrated to a person. That is they don't always predict 0 for a neutral expression
 	// Keeping track of the predictions we can correct for this, by assuming that at least "ratio" of frames are neutral and subtract that value of prediction, only perform the correction after min_frames
-	void UpdatePredictionTrack(cv::Mat_<unsigned int>& prediction_corr_histogram, int& prediction_correction_count, 
+	void UpdatePredictionTrack(cv::Mat_<int>& prediction_corr_histogram, int& prediction_correction_count, 
 		std::vector<double>& correction, const std::vector<std::pair<std::string, double>>& predictions, double ratio=0.25, int num_bins = 200, double min_val = -3, double max_val = 5, int min_frames = 10);
-	void GetSampleHist(cv::Mat_<unsigned int>& prediction_corr_histogram, int prediction_correction_count, 
+	void GetSampleHist(cv::Mat_<int>& prediction_corr_histogram, int prediction_correction_count, 
 		std::vector<double>& sample, double ratio, int num_bins = 200, double min_val = 0, double max_val = 5);
 
 	void PostprocessPredictions();
 
-	std::vector<cv::Mat_<unsigned int>> au_prediction_correction_histogram;
+	std::vector<cv::Mat_<int>> au_prediction_correction_histogram;
 	std::vector<int> au_prediction_correction_count;
 
 	// Some dynamic scaling (the logic is that before the extreme versions of expression or emotion are shown,
@@ -230,6 +226,7 @@ private:
 	int align_width_au;
 	int align_height_au;
 
+	bool align_mask;
 	double align_scale_out;
 	int align_width_out;
 	int align_height_out;

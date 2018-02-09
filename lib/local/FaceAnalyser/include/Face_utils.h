@@ -39,6 +39,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "PDM.h"
+#include "PAW.h"
 
 namespace FaceAnalysis
 {
@@ -50,8 +51,6 @@ namespace FaceAnalysis
 	void AlignFaceMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid = true, float scale = 0.6, int width = 96, int height = 96);
 
 	void Extract_FHOG_descriptor(cv::Mat_<double>& descriptor, const cv::Mat& image, int& num_rows, int& num_cols, int cell_size = 8);
-
-	void Visualise_FHOG(const cv::Mat_<double>& descriptor, int num_rows, int num_cols, cv::Mat& visualisation);
 
 	// The following two methods go hand in hand
 	void ExtractSummaryStatistics(const cv::Mat_<double>& descriptors, cv::Mat_<double>& sum_stats, bool mean, bool stdev, bool max_min);
@@ -69,25 +68,9 @@ namespace FaceAnalysis
 	cv::Matx22f AlignShapesWithScale(cv::Mat_<float>& src, cv::Mat_<float> dst);
 
 	//===========================================================================
-	// Visualisation functions
+	// Visualisation functions, TODO move
 	//===========================================================================
 	void Project(cv::Mat_<float>& dest, const cv::Mat_<float>& mesh, float fx, float fy, float cx, float cy);
-
-	//===========================================================================
-	// Angle representation conversion helpers
-	//===========================================================================
-	cv::Matx33f Euler2RotationMatrix(const cv::Vec3f& eulerAngles);
-	
-	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	cv::Vec3f RotationMatrix2Euler(const cv::Matx33f& rotation_matrix);
-
-	cv::Vec3f Euler2AxisAngle(const cv::Vec3f& euler);
-
-	cv::Vec3f AxisAngle2Euler(const cv::Vec3f& axis_angle);
-
-	cv::Matx33f AxisAngle2RotationMatrix(const cv::Vec3f& axis_angle);
-
-	cv::Vec3f RotationMatrix2AxisAngle(const cv::Matx33f& rotation_matrix);
 
 	//============================================================================
 	// Matrix reading functionality
