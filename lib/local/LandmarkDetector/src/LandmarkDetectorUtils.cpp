@@ -1195,6 +1195,32 @@ namespace LandmarkDetector
 		}
 		return to_return;
 	}
+	// Computing the 3D eye landmarks
+	vector<cv::Point3d> Calculate3DEyeLandmarks(const CLNF& clnf_model, float fx, float fy, float cx, float cy)
+	{
+
+		vector<cv::Point3d> to_return;
+
+		for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
+		{
+
+			if (clnf_model.hierarchical_model_names[i].compare("left_eye_28") == 0 ||
+				clnf_model.hierarchical_model_names[i].compare("right_eye_28") == 0)
+			{
+
+				auto lmks = clnf_model.hierarchical_models[i].GetShape(fx, fy, cx, cy);
+
+				int num_landmarks = lmks.cols;
+
+				for (int lmk = 0; lmk < num_landmarks; ++lmk)
+				{
+					cv::Point3d curr_lmk(lmks.at<float>(0, lmk), lmks.at<float>(1, lmk), lmks.at<float>(2, lmk));
+					to_return.push_back(curr_lmk);
+				}
+			}
+		}
+		return to_return;
+	}
 
 	// Computing eye landmarks (to be drawn later or in different interfaces)
 	vector<cv::Point2d> CalculateAllEyeLandmarks(const CLNF& clnf_model)

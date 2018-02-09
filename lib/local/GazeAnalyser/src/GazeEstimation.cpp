@@ -42,14 +42,11 @@
 
 #include "LandmarkDetectorUtils.h"
 #include "LandmarkDetectorFunc.h"
+#include "RotationHelpers.h"
 
 using namespace std;
 
 using namespace GazeAnalysis;
-
-// For subpixel accuracy drawing
-const int gaze_draw_shiftbits = 4;
-const int gaze_draw_multiplier = 1 << 4;
 
 cv::Point3f RaySphereIntersect(cv::Point3f rayOrigin, cv::Point3f rayDir, cv::Point3f sphereOrigin, float sphereRadius){
 
@@ -91,9 +88,9 @@ cv::Point3f GazeAnalysis::GetPupilPosition(cv::Mat_<float> eyeLdmks3d){
 
 void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Point3f& gaze_absolute, float fx, float fy, float cx, float cy, bool left_eye)
 {
-	cv::Vec6f headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
-	cv::Vec3f eulerAngles(headPose(3), headPose(4), headPose(5));
-	cv::Matx33f rotMat = LandmarkDetector::Euler2RotationMatrix(eulerAngles);
+	cv::Vec6d headPose = LandmarkDetector::GetPose(clnf_model, fx, fy, cx, cy);
+	cv::Vec3d eulerAngles(headPose(3), headPose(4), headPose(5));
+	cv::Matx33d rotMat = Utilities::Euler2RotationMatrix(eulerAngles);
 
 	int part = -1;
 	for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
@@ -120,7 +117,9 @@ void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 
 	cv::Mat faceLdmks3d = clnf_model.GetShape(fx, fy, cx, cy);
 	faceLdmks3d = faceLdmks3d.t();
-	cv::Mat offset = (cv::Mat_<float>(3, 1) << 0, -3.5, 7.0);
+
+	cv::Mat offset = (cv::Mat_<double>(3, 1) << 0, -3.5, 7.0);
+
 	int eyeIdx = 1;
 	if (left_eye)
 	{
@@ -136,63 +135,14 @@ void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 	gaze_absolute = gazeVecAxis / norm(gazeVecAxis);
 }
 
-cv::Vec2f GazeAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2, cv::Vec6f head_pose)
+cv::Vec2d GazeAnalysis::GetGazeAngle(cv::Point3f& gaze_vector_1, cv::Point3f& gaze_vector_2)
 {
 
-	cv::Vec3f eulerAngles(head_pose(3), head_pose(4), head_pose(5));
-	cv::Matx33f rotMat = LandmarkDetector::Euler2RotationMatrix(eulerAngles);
-	cv::Point3f gaze_point = (gaze_vector_1 + gaze_vector_2) / 2;
-	cv::Vec3f gaze(gaze_point.x, gaze_point.y, gaze_point.z);
+	cv::Point3f gaze_vector = (gaze_vector_1 + gaze_vector_2) / 2;
 
-	gaze = rotMat * gaze;
+	double x_angle = atan2(gaze_vector.x, -gaze_vector.z);
+	double y_angle = atan2(gaze_vector.y, -gaze_vector.z);
 
-	float x_angle = atan2(gaze[0], -gaze[2]);
-	float y_angle = atan2(gaze[1], -gaze[2]);
+	return cv::Vec2d(x_angle, y_angle);
 
-	return cv::Vec2f(x_angle, y_angle);
-
-}
-void GazeAnalysis::DrawGaze(cv::Mat img, const LandmarkDetector::CLNF& clnf_model, cv::Point3f gazeVecAxisLeft, cv::Point3f gazeVecAxisRight, float fx, float fy, float cx, float cy)
-{
-
-	cv::Mat cameraMat = (cv::Mat_<float>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
-
-	int part_left = -1;
-	int part_right = -1;
-	for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
-	{
-		if (clnf_model.hierarchical_model_names[i].compare("left_eye_28") == 0)
-		{
-			part_left = i;
-		}
-		if (clnf_model.hierarchical_model_names[i].compare("right_eye_28") == 0)
-		{
-			part_right = i;
-		}
-	}
-
-	cv::Mat eyeLdmks3d_left = clnf_model.hierarchical_models[part_left].GetShape(fx, fy, cx, cy);
-	cv::Point3f pupil_left = GetPupilPosition(eyeLdmks3d_left);
-
-	cv::Mat eyeLdmks3d_right = clnf_model.hierarchical_models[part_right].GetShape(fx, fy, cx, cy);
-	cv::Point3f pupil_right = GetPupilPosition(eyeLdmks3d_right);
-
-	vector<cv::Point3f> points_left;
-	points_left.push_back(cv::Point3f(pupil_left));
-	points_left.push_back(cv::Point3f(pupil_left + gazeVecAxisLeft*50.0f));
-
-	vector<cv::Point3f> points_right;
-	points_right.push_back(cv::Point3f(pupil_right));
-	points_right.push_back(cv::Point3f(pupil_right + gazeVecAxisRight*50.0f));
-
-	cv::Mat_<float> proj_points;
-	cv::Mat_<float> mesh_0 = (cv::Mat_<float>(2, 3) << points_left[0].x, points_left[0].y, points_left[0].z, points_left[1].x, points_left[1].y, points_left[1].z);
-	LandmarkDetector::Project(proj_points, mesh_0, fx, fy, cx, cy);
-	cv::line(img, cv::Point(cvRound(proj_points.at<float>(0,0) * (float)gaze_draw_multiplier), cvRound(proj_points.at<float>(0, 1) * (float)gaze_draw_multiplier)),
-		cv::Point(cvRound(proj_points.at<float>(1, 0) * (float)gaze_draw_multiplier), cvRound(proj_points.at<float>(1, 1) * (float)gaze_draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, gaze_draw_shiftbits);
-
-	cv::Mat_<float> mesh_1 = (cv::Mat_<float>(2, 3) << points_right[0].x, points_right[0].y, points_right[0].z, points_right[1].x, points_right[1].y, points_right[1].z);
-	LandmarkDetector::Project(proj_points, mesh_1, fx, fy, cx, cy);
-	cv::line(img, cv::Point(cvRound(proj_points.at<float>(0, 0) * (float)gaze_draw_multiplier), cvRound(proj_points.at<float>(0, 1) * (float)gaze_draw_multiplier)),
-		cv::Point(cvRound(proj_points.at<float>(1, 0) * (float)gaze_draw_multiplier), cvRound(proj_points.at<float>(1, 1) * (float)gaze_draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, gaze_draw_shiftbits);
 }

@@ -170,6 +170,9 @@ public:
 	// A utility bounding box function
 	cv::Rect_<float> GetBoundingBox() const;
 
+	// Get the currently non-self occluded landmarks
+	cv::Mat_<int> GetVisibilities() const;
+
 	// Reset the model (useful if we want to completelly reinitialise, or we want to track another video)
 	void Reset();
 
