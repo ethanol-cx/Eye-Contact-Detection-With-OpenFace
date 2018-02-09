@@ -64,3 +64,4 @@ matlab_runners/Action Unit Experiments/out_SEMAINE/
 matlab_runners/Gaze Experiments/mpii_out/
 *.vspx
 matlab_version/AU_training/experiments/full_model_training/mat_models_o/
+lib/local/Utilities/x64/Release/
