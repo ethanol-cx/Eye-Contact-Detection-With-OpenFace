@@ -77,7 +77,7 @@ namespace Utilities
 			frame_times.pop();
 	}
 
-	void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy)
+	void DrawBox(cv::Mat image, cv::Vec6f pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy)
 	{
 		auto edge_lines = CalculateBox(pose, fx, fy, cx, cy);
 		DrawBox(edge_lines, image, color, thickness);
@@ -109,7 +109,7 @@ namespace Utilities
 		edges.push_back(std::pair<int, int>(7, 6));
 
 		// The size of the head is roughly 200mm x 200mm x 200mm
-		cv::Mat_<float> box = cv::Mat(8, 3, CV_64F, boxVerts).clone() * 100.0f;
+		cv::Mat_<float> box = cv::Mat(8, 3, CV_32F, boxVerts).clone() * 100.0f;
 
 		cv::Matx33f rot = Euler2RotationMatrix(cv::Vec3f(pose[3], pose[4], pose[5]));
 		cv::Mat_<float> rotBox;

@@ -100,8 +100,8 @@ namespace LandmarkDetector
 	vector<cv::Point2d> CalculateVisibleLandmarks(const CLNF& clnf_model);
 	vector<cv::Point2d> CalculateVisibleEyeLandmarks(const CLNF& clnf_model);
 
-	vector<cv::Point2d> CalculateAllLandmarks(const cv::Mat_<float>& shape2D);
-	vector<cv::Point2d> CalculateAllLandmarks(const CLNF& clnf_model);
+	vector<cv::Point2f> CalculateAllLandmarks(const cv::Mat_<float>& shape2D);
+	vector<cv::Point2f> CalculateAllLandmarks(const CLNF& clnf_model);
 	vector<cv::Point2f> CalculateAllEyeLandmarks(const CLNF& clnf_model);
 	vector<cv::Point3f> Calculate3DEyeLandmarks(const CLNF& clnf_model, float fx, float fy, float cx, float cy);
 

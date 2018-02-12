@@ -1118,11 +1118,11 @@ namespace LandmarkDetector
 	}
 
 	// Computing landmarks (to be drawn later possibly)
-	vector<cv::Point2d> CalculateAllLandmarks(const cv::Mat_<float>& shape2D)
+	vector<cv::Point2f> CalculateAllLandmarks(const cv::Mat_<float>& shape2D)
 	{
 
 		int n;
-		vector<cv::Point2d> landmarks;
+		vector<cv::Point2f> landmarks;
 
 		if (shape2D.cols == 2)
 		{
@@ -1135,14 +1135,14 @@ namespace LandmarkDetector
 
 		for (int i = 0; i < n; ++i)
 		{
-			cv::Point2d featurePoint;
+			cv::Point2f featurePoint;
 			if (shape2D.cols == 1)
 			{
-				featurePoint = cv::Point2d(shape2D.at<float>(i), shape2D.at<float>(i + n));
+				featurePoint = cv::Point2f(shape2D.at<float>(i), shape2D.at<float>(i + n));
 			}
 			else
 			{
-				featurePoint = cv::Point2d(shape2D.at<float>(i, 0), shape2D.at<float>(i, 1));
+				featurePoint = cv::Point2f(shape2D.at<float>(i, 0), shape2D.at<float>(i, 1));
 			}
 
 			landmarks.push_back(featurePoint);
@@ -1152,7 +1152,7 @@ namespace LandmarkDetector
 	}
 
 	// Computing landmarks (to be drawn later possibly)
-	vector<cv::Point2d> CalculateAllLandmarks(const CLNF& clnf_model)
+	vector<cv::Point2f> CalculateAllLandmarks(const CLNF& clnf_model)
 	{
 		return CalculateAllLandmarks(clnf_model.detected_landmarks);
 	}

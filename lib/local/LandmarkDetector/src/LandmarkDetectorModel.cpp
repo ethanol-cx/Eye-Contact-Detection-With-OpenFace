@@ -588,42 +588,37 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 		// Do the hierarchical models in parallel
 		tbb::parallel_for(0, (int)hierarchical_models.size(), [&](int part_model){
 		{
-			// Only do the synthetic eye models if we're doing gaze
-			if (!((hierarchical_model_names[part_model].compare("right_eye_28") == 0 ||
-			hierarchical_model_names[part_model].compare("left_eye_28") == 0)))
+
+			int n_part_points = hierarchical_models[part_model].pdm.NumberOfPoints();
+
+			vector<pair<int, int>> mappings = this->hierarchical_mapping[part_model];
+
+			cv::Mat_<float> part_model_locs(n_part_points * 2, 1, 0.0f);
+
+			// Extract the corresponding landmarks
+			for (size_t mapping_ind = 0; mapping_ind < mappings.size(); ++mapping_ind)
 			{
+				part_model_locs.at<float>(mappings[mapping_ind].second) = detected_landmarks.at<float>(mappings[mapping_ind].first);
+				part_model_locs.at<float>(mappings[mapping_ind].second + n_part_points) = detected_landmarks.at<float>(mappings[mapping_ind].first + this->pdm.NumberOfPoints());
+			}
 
-				int n_part_points = hierarchical_models[part_model].pdm.NumberOfPoints();
+			// Fit the part based model PDM
+			hierarchical_models[part_model].pdm.CalcParams(hierarchical_models[part_model].params_global, hierarchical_models[part_model].params_local, part_model_locs);
 
-				vector<pair<int, int>> mappings = this->hierarchical_mapping[part_model];
+			// Only do this if we don't need to upsample
+			if (params_global[0] > 0.9 * hierarchical_models[part_model].patch_experts.patch_scaling[0])
+			{
+				parts_used = true;
 
-				cv::Mat_<float> part_model_locs(n_part_points * 2, 1, 0.0f);
+				this->hierarchical_params[part_model].window_sizes_current = this->hierarchical_params[part_model].window_sizes_init;
 
-				// Extract the corresponding landmarks
-				for (size_t mapping_ind = 0; mapping_ind < mappings.size(); ++mapping_ind)
-				{
-					part_model_locs.at<float>(mappings[mapping_ind].second) = detected_landmarks.at<float>(mappings[mapping_ind].first);
-					part_model_locs.at<float>(mappings[mapping_ind].second + n_part_points) = detected_landmarks.at<float>(mappings[mapping_ind].first + this->pdm.NumberOfPoints());
-				}
+				// Do the actual landmark detection
+				hierarchical_models[part_model].DetectLandmarks(image, hierarchical_params[part_model]);
 
-				// Fit the part based model PDM
-				hierarchical_models[part_model].pdm.CalcParams(hierarchical_models[part_model].params_global, hierarchical_models[part_model].params_local, part_model_locs);
-
-				// Only do this if we don't need to upsample
-				if (params_global[0] > 0.9 * hierarchical_models[part_model].patch_experts.patch_scaling[0])
-				{
-					parts_used = true;
-
-					this->hierarchical_params[part_model].window_sizes_current = this->hierarchical_params[part_model].window_sizes_init;
-
-					// Do the actual landmark detection
-					hierarchical_models[part_model].DetectLandmarks(image, hierarchical_params[part_model]);
-
-				}
-				else
-				{
-					hierarchical_models[part_model].pdm.CalcShape2D(hierarchical_models[part_model].detected_landmarks, hierarchical_models[part_model].params_local, hierarchical_models[part_model].params_global);
-				}
+			}
+			else
+			{
+				hierarchical_models[part_model].pdm.CalcShape2D(hierarchical_models[part_model].detected_landmarks, hierarchical_models[part_model].params_local, hierarchical_models[part_model].params_global);
 			}
 		}
 		});
@@ -636,15 +631,11 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 			{
 				vector<pair<int, int>> mappings = this->hierarchical_mapping[part_model];
 
-				if (!((hierarchical_model_names[part_model].compare("right_eye_28") == 0 ||
-					hierarchical_model_names[part_model].compare("left_eye_28") == 0)))
+				// Reincorporate the models into main tracker
+				for (size_t mapping_ind = 0; mapping_ind < mappings.size(); ++mapping_ind)
 				{
-					// Reincorporate the models into main tracker
-					for (size_t mapping_ind = 0; mapping_ind < mappings.size(); ++mapping_ind)
-					{
-						detected_landmarks.at<float>(mappings[mapping_ind].first) = hierarchical_models[part_model].detected_landmarks.at<float>(mappings[mapping_ind].second);
-						detected_landmarks.at<float>(mappings[mapping_ind].first + pdm.NumberOfPoints()) = hierarchical_models[part_model].detected_landmarks.at<float>(mappings[mapping_ind].second + hierarchical_models[part_model].pdm.NumberOfPoints());
-					}
+					detected_landmarks.at<float>(mappings[mapping_ind].first) = hierarchical_models[part_model].detected_landmarks.at<float>(mappings[mapping_ind].second);
+					detected_landmarks.at<float>(mappings[mapping_ind].first + pdm.NumberOfPoints()) = hierarchical_models[part_model].detected_landmarks.at<float>(mappings[mapping_ind].second + hierarchical_models[part_model].pdm.NumberOfPoints());
 				}
 			}
 

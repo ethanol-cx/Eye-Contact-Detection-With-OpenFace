@@ -45,7 +45,7 @@ namespace Utilities
 	// TODO draw AU results
 
 	// Drawing a bounding box around the face in an image
-	void DrawBox(cv::Mat image, cv::Vec6d pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy);
+	void DrawBox(cv::Mat image, cv::Vec6f pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy);
 	void DrawBox(const std::vector<std::pair<cv::Point2d, cv::Point2d>>& lines, cv::Mat image, cv::Scalar color, int thickness);
 
 	// Computing a bounding box to be drawn
