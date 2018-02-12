@@ -1,60 +1,93 @@
 clear;
+face_processed_dir = 'E:\datasets\face_datasets_processed';
 
-%% CK+, FERA2011, and UNBC datasets
-hog_dir = 'D:\Datasets/face_datasets/hog_aligned_rigid/';
-hog_files = dir([hog_dir, '*.hog']);
-
+%% CK+
+hog_dir = [face_processed_dir, '/ck+/'];
+hog_files = dir([hog_dir '*.hog']);
 [appearance_data, valid_inds, vid_ids_train] = Read_HOG_files_small(hog_files, hog_dir);
 appearance_data = appearance_data(valid_inds,:);
 vid_ids_train = vid_ids_train(valid_inds,:);
 
-%% Bosphorus dataset
-hog_dir = 'D:\Datasets/face_datasets/hog_aligned_rigid_b/';
-hog_files = dir([hog_dir, '*.hog']);
+%% Bosphorus
+hog_dir = [face_processed_dir, '/bosph/'];
+hog_files = dir([hog_dir '*.hog']);
 
-[appearance_data_bosph, valid_inds, vid_ids_train_bosph] = Read_HOG_files_small(hog_files, hog_dir);
+% Remove non-frontal
+frontal = true(size(hog_files));
+for i = 1:numel(frontal)
+    if(~isempty(strfind(hog_files(i).name, 'YR')) || ~isempty(strfind(hog_files(i).name, 'PR'))|| ~isempty(strfind(hog_files(i).name, 'CR')))
+        frontal(i) = false;
+    end   
+end
 
-appearance_data_bosph = appearance_data_bosph(valid_inds,:);
-vid_ids_train_bosph = vid_ids_train_bosph(valid_inds,:);
+hog_files = hog_files(frontal);
 
-appearance_data = cat(1,appearance_data, appearance_data_bosph);
-vid_ids_train = cat(1,vid_ids_train, vid_ids_train_bosph);
+[appearance_data_tmp, valid_inds_tmp, vid_ids_train_tmp] = Read_HOG_files_small(hog_files, hog_dir);
+
+appearance_data_tmp = appearance_data_tmp(valid_inds_tmp,:);
+vid_ids_train_tmp = vid_ids_train_tmp(valid_inds_tmp,:);
+
+appearance_data = cat(1,appearance_data, appearance_data_tmp);
+vid_ids_train = cat(1,vid_ids_train, vid_ids_train_tmp);
+
+%% FERA2011
+hog_dir = [face_processed_dir, '/fera2011/'];
+hog_files = dir([hog_dir '*.hog']);
+[appearance_data_tmp, valid_inds_tmp, vid_ids_train_tmp] = Read_HOG_files_small(hog_files, hog_dir);
+
+ appearance_data_tmp = appearance_data_tmp(valid_inds_tmp,:);
+vid_ids_train_tmp = vid_ids_train_tmp(valid_inds_tmp,:);
+
+appearance_data = cat(1,appearance_data, appearance_data_tmp);
+vid_ids_train = cat(1,vid_ids_train, vid_ids_train_tmp);
+
+%% UNBC
+hog_dir = [face_processed_dir, '/unbc/'];
+hog_files = dir([hog_dir '*.hog']);
+[appearance_data_tmp, valid_inds_tmp, vid_ids_train_tmp] = Read_HOG_files_small(hog_files, hog_dir);
+
+appearance_data_tmp = appearance_data_tmp(valid_inds_tmp,:);
+vid_ids_train_tmp = vid_ids_train_tmp(valid_inds_tmp,:);
+
+appearance_data = cat(1,appearance_data, appearance_data_tmp);
+vid_ids_train = cat(1,vid_ids_train, vid_ids_train_tmp);
+
+
 
 %% DISFA
-hog_dir = 'D:\Datasets\DISFA\hog_aligned_rigid/';
-hog_files = dir([hog_dir, '*.hog']);
+hog_dir = [face_processed_dir, '/disfa/'];
+hog_files = dir([hog_dir '*.hog']);
 
-[appearance_data_disfa, valid_inds, vid_ids_train_disfa] = Read_HOG_files_small(hog_files, hog_dir, 100);
+[appearance_data_tmp, valid_inds_tmp, vid_ids_train_tmp] = Read_HOG_files_small(hog_files, hog_dir);
 
-appearance_data_disfa = appearance_data_disfa(valid_inds,:);
-vid_ids_train_disfa = vid_ids_train_disfa(valid_inds,:);
+appearance_data_tmp = appearance_data_tmp(valid_inds_tmp,:);
+vid_ids_train_tmp = vid_ids_train_tmp(valid_inds_tmp,:);
 
-appearance_data = cat(1,appearance_data, appearance_data_disfa);
-vid_ids_train = cat(1,vid_ids_train, vid_ids_train_disfa);
+appearance_data = cat(1,appearance_data, appearance_data_tmp);
+vid_ids_train = cat(1,vid_ids_train, vid_ids_train_tmp);
 
-%% BP4D
-hog_dir = 'D:\Datasets\FERA_2015\bp4d\processed_data/train/';
-hog_files = dir([hog_dir, '*.hog']);
+%% BP4D train
+hog_dir = [face_processed_dir, '/bp4d/train/'];
+hog_files = dir([hog_dir '*.hog']);
+[appearance_data_tmp, valid_inds_tmp, vid_ids_train_tmp] = Read_HOG_files_small(hog_files, hog_dir);
 
-[appearance_data_bp, valid_inds, vid_ids_train_bp] = Read_HOG_files_small(hog_files, hog_dir, 50);
+appearance_data_tmp = appearance_data_tmp(valid_inds_tmp,:);
+vid_ids_train_tmp = vid_ids_train_tmp(valid_inds_tmp,:);
 
-appearance_data_bp = appearance_data_bp(valid_inds,:);
-vid_ids_train_bp = vid_ids_train_bp(valid_inds,:);
+appearance_data = cat(1,appearance_data, appearance_data_tmp);
+vid_ids_train = cat(1,vid_ids_train, vid_ids_train_tmp);
 
-appearance_data = cat(1,appearance_data, appearance_data_bp);
-vid_ids_train = cat(1,vid_ids_train, vid_ids_train_bp);
+%% SEMAINE train
+hog_dir = [face_processed_dir, '/semaine/train/'];
+hog_files = dir([hog_dir '*.hog']);
 
-%% SEMAINE
-hog_dir = 'D:\Datasets\FERA_2015\semaine\processed_data\train\';
-hog_files = dir([hog_dir, '*.hog']);
+[appearance_data_tmp, valid_inds_tmp, vid_ids_train_tmp] = Read_HOG_files_small(hog_files, hog_dir);
 
-[appearance_data_semaine, valid_inds, vid_ids_train_semaine] = Read_HOG_files_small(hog_files, hog_dir, 300);
+appearance_data_tmp = appearance_data_tmp(valid_inds_tmp,:);
+vid_ids_train_tmp = vid_ids_train_tmp(valid_inds_tmp,:);
 
-appearance_data_semaine = appearance_data_semaine(valid_inds,:);
-vid_ids_train_semaine = vid_ids_train_semaine(valid_inds,:);
-
-appearance_data = cat(1,appearance_data, appearance_data_semaine);
-vid_ids_train = cat(1,vid_ids_train, vid_ids_train_semaine);
+appearance_data = cat(1,appearance_data, appearance_data_tmp);
+vid_ids_train = cat(1,vid_ids_train, vid_ids_train_tmp);
 
 %%
 means_norm = mean(appearance_data);

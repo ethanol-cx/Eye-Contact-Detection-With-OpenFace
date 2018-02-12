@@ -10,7 +10,7 @@ find_SEMAINE;
 
 % Go two levels deep
 semaine_dirs = train_recs;
-output_dir = 'E:\datasets\face_datasets_processed\semaine';
+output_dir = 'E:\datasets\face_datasets_processed\semaine\train';
 
 parfor f1=1:numel(semaine_dirs)
 
@@ -33,7 +33,7 @@ end
 
 %%
 semaine_dirs = devel_recs;
-out_loc = [SEMAINE_dir, '../processed_data/devel/'];
+output_dir = 'E:\datasets\face_datasets_processed\semaine\devel';
 
 parfor f1=1:numel(semaine_dirs)
 

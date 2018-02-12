@@ -6,7 +6,7 @@ else
     fprintf('Bosphorus dataset location not found (or not defined)\n'); 
 end
 
-hog_data_dir = ['D:\Datasets\face_datasets'];
+hog_data_dir = ['E:\Datasets\face_datasets_processed\bosph'];
 
 all_recs = dir([Bosphorus_dir, '/BosphorusDB/BosphorusDB/bs*']);
 all_recs_mat = cat(1, all_recs.name);

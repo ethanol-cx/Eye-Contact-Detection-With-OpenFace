@@ -9,10 +9,11 @@ end
 find_FERA2011;
 
 output_dir = 'E:\datasets\face_datasets_processed\fera2011';
+FERA2011_dir = [FERA2011_dir, '/../'];
 
 % Go two levels deep
-fera_dirs = dir([FERA2011_dir, '/train*']);
-
+fera_dirs = dir([FERA2011_dir, '*']);
+fera_dirs = fera_dirs(3:end);
 parfor f1=1:numel(fera_dirs)
 
     fera_dirs_level_2 = dir([FERA2011_dir, fera_dirs(f1).name]);
