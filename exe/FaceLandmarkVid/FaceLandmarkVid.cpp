@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
 			// The actual facial landmark detection / tracking
-			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
+			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_model, det_parameters);
 
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, -1);

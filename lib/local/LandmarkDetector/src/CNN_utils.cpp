@@ -85,7 +85,13 @@ namespace LandmarkDetector
 				{
 					float in_val = *iter;
 					// Apply the PReLU
-					*iter++ = in_val >= 0 ? in_val : in_val * neg_mult;
+					*iter = in_val >= 0 ? in_val : in_val * neg_mult;					
+
+					// To deal with OpenCV 3.4s debug mode not allowing to go over iteration boundaries
+					if(i + 1 < w)
+					{
+						iter++;
+					}
 				}
 			}
 

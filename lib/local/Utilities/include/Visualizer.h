@@ -62,13 +62,13 @@ namespace Utilities
 		void SetImage(const cv::Mat& canvas, float fx, float fy, float cx, float cy);
 
 		// All observations relevant to facial landmarks (optional visibilities parameter to not display all landmarks)
-		void SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, double confidence, const cv::Mat_<int>& visibilities = cv::Mat_<int>());
+		void SetObservationLandmarks(const cv::Mat_<float>& landmarks_2D, double confidence, const cv::Mat_<int>& visibilities = cv::Mat_<int>());
 
 		// Pose related observations
-		void SetObservationPose(const cv::Vec6d& pose, double confidence);
+		void SetObservationPose(const cv::Vec6f& pose, double confidence);
 		
 		// Gaze related observations
-		void SetObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const std::vector<cv::Point2d>& eye_landmarks, const std::vector<cv::Point3d>& eye_landmarks3d, double confidence);
+		void SetObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const std::vector<cv::Point2f>& eye_landmarks, const std::vector<cv::Point3f>& eye_landmarks3d, double confidence);
 
 		// Face alignment related observations
 		void SetObservationFaceAlign(const cv::Mat& aligned_face);

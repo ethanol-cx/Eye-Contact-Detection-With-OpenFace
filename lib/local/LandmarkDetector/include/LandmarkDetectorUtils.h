@@ -95,14 +95,15 @@ namespace LandmarkDetector
 	vector<std::pair<cv::Point2f, cv::Point2f>> CalculateBox(cv::Vec6f pose, float fx, float fy, float cx, float cy);
 	void DrawBox(vector<pair<cv::Point, cv::Point>> lines, cv::Mat image, cv::Scalar color, int thickness);
 
+	// TODO all these should return floats rather than doubles
 	vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities);
 	vector<cv::Point2d> CalculateVisibleLandmarks(const CLNF& clnf_model);
 	vector<cv::Point2d> CalculateVisibleEyeLandmarks(const CLNF& clnf_model);
 
 	vector<cv::Point2d> CalculateAllLandmarks(const cv::Mat_<float>& shape2D);
 	vector<cv::Point2d> CalculateAllLandmarks(const CLNF& clnf_model);
-	vector<cv::Point2d> CalculateAllEyeLandmarks(const CLNF& clnf_model);
-	vector<cv::Point3d> Calculate3DEyeLandmarks(const CLNF& clnf_model, float fx, float fy, float cx, float cy);
+	vector<cv::Point2f> CalculateAllEyeLandmarks(const CLNF& clnf_model);
+	vector<cv::Point3f> Calculate3DEyeLandmarks(const CLNF& clnf_model, float fx, float fy, float cx, float cy);
 
 	void DrawLandmarks(cv::Mat img, vector<cv::Point> landmarks);
 

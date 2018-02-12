@@ -1196,10 +1196,10 @@ namespace LandmarkDetector
 		return to_return;
 	}
 	// Computing the 3D eye landmarks
-	vector<cv::Point3d> Calculate3DEyeLandmarks(const CLNF& clnf_model, float fx, float fy, float cx, float cy)
+	vector<cv::Point3f> Calculate3DEyeLandmarks(const CLNF& clnf_model, float fx, float fy, float cx, float cy)
 	{
 
-		vector<cv::Point3d> to_return;
+		vector<cv::Point3f> to_return;
 
 		for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
 		{
@@ -1214,7 +1214,7 @@ namespace LandmarkDetector
 
 				for (int lmk = 0; lmk < num_landmarks; ++lmk)
 				{
-					cv::Point3d curr_lmk(lmks.at<float>(0, lmk), lmks.at<float>(1, lmk), lmks.at<float>(2, lmk));
+					cv::Point3f curr_lmk(lmks.at<float>(0, lmk), lmks.at<float>(1, lmk), lmks.at<float>(2, lmk));
 					to_return.push_back(curr_lmk);
 				}
 			}
@@ -1223,10 +1223,10 @@ namespace LandmarkDetector
 	}
 
 	// Computing eye landmarks (to be drawn later or in different interfaces)
-	vector<cv::Point2d> CalculateAllEyeLandmarks(const CLNF& clnf_model)
+	vector<cv::Point2f> CalculateAllEyeLandmarks(const CLNF& clnf_model)
 	{
 
-		vector<cv::Point2d> to_return;
+		vector<cv::Point2f> to_return;
 		// If the model has hierarchical updates draw those too
 		for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
 		{

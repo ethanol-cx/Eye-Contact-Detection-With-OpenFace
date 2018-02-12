@@ -83,9 +83,9 @@ namespace Utilities
 		DrawBox(edge_lines, image, color, thickness);
 	}
 
-	std::vector<std::pair<cv::Point2d, cv::Point2d>> CalculateBox(cv::Vec6d pose, float fx, float fy, float cx, float cy)
+	std::vector<std::pair<cv::Point2d, cv::Point2d>> CalculateBox(cv::Vec6f pose, float fx, float fy, float cx, float cy)
 	{
-		double boxVerts[] = { -1, 1, -1,
+		float boxVerts[] = { -1, 1, -1,
 			1, 1, -1,
 			1, 1, 1,
 			-1, 1, 1,
@@ -109,10 +109,10 @@ namespace Utilities
 		edges.push_back(std::pair<int, int>(7, 6));
 
 		// The size of the head is roughly 200mm x 200mm x 200mm
-		cv::Mat_<double> box = cv::Mat(8, 3, CV_64F, boxVerts).clone() * 100;
+		cv::Mat_<float> box = cv::Mat(8, 3, CV_64F, boxVerts).clone() * 100.0f;
 
-		cv::Matx33d rot = Euler2RotationMatrix(cv::Vec3d(pose[3], pose[4], pose[5]));
-		cv::Mat_<double> rotBox;
+		cv::Matx33f rot = Euler2RotationMatrix(cv::Vec3f(pose[3], pose[4], pose[5]));
+		cv::Mat_<float> rotBox;
 
 		// Rotate the box
 		rotBox = cv::Mat(rot) * box.t();
@@ -124,21 +124,21 @@ namespace Utilities
 		rotBox.col(2) = rotBox.col(2) + pose[2];
 
 		// draw the lines
-		cv::Mat_<double> rotBoxProj;
+		cv::Mat_<float> rotBoxProj;
 		Project(rotBoxProj, rotBox, fx, fy, cx, cy);
 
 		std::vector<std::pair<cv::Point2d, cv::Point2d>> lines;
 
 		for (size_t i = 0; i < edges.size(); ++i)
 		{
-			cv::Mat_<double> begin;
-			cv::Mat_<double> end;
+			cv::Mat_<float> begin;
+			cv::Mat_<float> end;
 
 			rotBoxProj.row(edges[i].first).copyTo(begin);
 			rotBoxProj.row(edges[i].second).copyTo(end);
 
-			cv::Point2d p1(begin.at<double>(0), begin.at<double>(1));
-			cv::Point2d p2(end.at<double>(0), end.at<double>(1));
+			cv::Point2d p1(begin.at<float>(0), begin.at<float>(1));
+			cv::Point2d p2(end.at<float>(0), end.at<float>(1));
 
 			lines.push_back(std::pair<cv::Point2d, cv::Point2d>(p1, p2));
 
