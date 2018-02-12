@@ -55,7 +55,7 @@ struct FaceModelParameters
 	// Should face validation be done
 	bool validate_detections;
 
-	// Landmark detection validator boundary for correct detection, the regressor output -1 (perfect alignment) 1 (bad alignment), 
+	// Landmark detection validator boundary for correct detection, the regressor output 1 (perfect alignment) 0 (bad alignment), 
 	float validation_boundary;
 
 	// Used when tracking is going well
@@ -103,9 +103,6 @@ struct FaceModelParameters
 
 	// Should the parameters be refined for different scales
 	bool refine_parameters;
-
-	// Using the brand new and experimental gaze tracker
-	bool track_gaze;
 
 	FaceModelParameters();
 

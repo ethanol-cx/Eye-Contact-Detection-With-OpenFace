@@ -590,8 +590,7 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 		{
 			// Only do the synthetic eye models if we're doing gaze
 			if (!((hierarchical_model_names[part_model].compare("right_eye_28") == 0 ||
-			hierarchical_model_names[part_model].compare("left_eye_28") == 0)
-			&& !params.track_gaze))
+			hierarchical_model_names[part_model].compare("left_eye_28") == 0)))
 			{
 
 				int n_part_points = hierarchical_models[part_model].pdm.NumberOfPoints();
@@ -638,8 +637,7 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 				vector<pair<int, int>> mappings = this->hierarchical_mapping[part_model];
 
 				if (!((hierarchical_model_names[part_model].compare("right_eye_28") == 0 ||
-					hierarchical_model_names[part_model].compare("left_eye_28") == 0)
-					&& !params.track_gaze))
+					hierarchical_model_names[part_model].compare("left_eye_28") == 0)))
 				{
 					// Reincorporate the models into main tracker
 					for (size_t mapping_ind = 0; mapping_ind < mappings.size(); ++mapping_ind)
@@ -663,7 +661,7 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 
 		detection_certainty = landmark_validator.Check(orientation, image, detected_landmarks);
 
-		detection_success = detection_certainty < params.validation_boundary;
+		detection_success = detection_certainty > params.validation_boundary;
 	}
 	else
 	{

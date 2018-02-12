@@ -377,6 +377,9 @@ float DetectionValidator::Check(const cv::Vec3d& orientation, const cv::Mat_<uch
 	// The actual validation step
 	double dec = CheckCNN(warped, id);
 
+	// Convert it to a more interpretable signal (0 low confidence, 1 high confidence)
+	dec = 0.5 * (1.0 - dec);
+
 	return (float)dec;
 }
 

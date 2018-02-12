@@ -74,9 +74,9 @@ namespace LandmarkDetector
 {
 //===========================================================================
 //
-// Checking if landmark detection was successful using an SVR regressor
+// Checking if landmark detection was successful using a CNN
 // Using multiple validators trained add different views
-// The regressor outputs -1 for ideal alignment and 1 for worst alignment
+// The regressor outputs 1 for ideal alignment and 0 for worst alignment
 //===========================================================================
 class DetectionValidator
 {
