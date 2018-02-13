@@ -8,9 +8,11 @@ end
 in_dir  = '../../samples/';
 out_dir = './demo_img/';
 
-model = 'model/main_clnf_general.txt'; % Trained on in the wild and multi-pie data (a CLNF model)
+model = 'model/main_ceclm_general.txt'; % Trained on in the wild, menpo and multi-pie data (a CE-CLM model)
 
 % Uncomment the below models if you want to try them
+%model = 'model/main_clnf_general.txt'; % Trained on in the wild and multi-pie data (a CLNF model)
+
 %model = 'model/main_clnf_wild.txt'; % Trained on in-the-wild data only
 
 %model = 'model/main_clm_general.txt'; % Trained on in the wild and multi-pie data (less accurate SVR/CLM model)
