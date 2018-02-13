@@ -387,8 +387,8 @@ void RecorderOpenFace::SetObservationTimestamp(double timestamp)
 	this->timestamp = timestamp;
 }
 
-void RecorderOpenFace::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D,
-	const cv::Vec6d& pdm_params_global, const cv::Mat_<double>& pdm_params_local, double confidence, bool success)
+void RecorderOpenFace::SetObservationLandmarks(const cv::Mat_<float>& landmarks_2D, const cv::Mat_<float>& landmarks_3D,
+	const cv::Vec6f& pdm_params_global, const cv::Mat_<float>& pdm_params_local, float confidence, bool success)
 {
 	this->landmarks_2D = landmarks_2D;
 	this->landmarks_3D = landmarks_3D;
@@ -399,7 +399,7 @@ void RecorderOpenFace::SetObservationLandmarks(const cv::Mat_<double>& landmarks
 
 }
 
-void RecorderOpenFace::SetObservationPose(const cv::Vec6d& pose)
+void RecorderOpenFace::SetObservationPose(const cv::Vec6f& pose)
 {
 	this->head_pose = pose;
 }
@@ -412,7 +412,7 @@ void RecorderOpenFace::SetObservationActionUnits(const std::vector<std::pair<std
 }
 
 void RecorderOpenFace::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv::Point3f& gaze_direction1,
-	const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks2D, const std::vector<cv::Point3d>& eye_landmarks3D)
+	const cv::Vec2f& gaze_angle, const std::vector<cv::Point2f>& eye_landmarks2D, const std::vector<cv::Point3f>& eye_landmarks3D)
 {
 	this->gaze_direction0 = gaze_direction0;
 	this->gaze_direction1 = gaze_direction1;

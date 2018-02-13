@@ -71,11 +71,11 @@ namespace Utilities
 		void SetObservationTimestamp(double timestamp);
 
 		// All observations relevant to facial landmarks
-		void SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D, 
-			const cv::Vec6d& params_global, const cv::Mat_<double>& params_local, double confidence, bool success);
+		void SetObservationLandmarks(const cv::Mat_<float>& landmarks_2D, const cv::Mat_<float>& landmarks_3D,
+			const cv::Vec6f& params_global, const cv::Mat_<float>& params_local, float confidence, bool success);
 
 		// Pose related observations
-		void SetObservationPose(const cv::Vec6d& pose);
+		void SetObservationPose(const cv::Vec6f& pose);
 
 		// AU related observations
 		void SetObservationActionUnits(const std::vector<std::pair<std::string, double> >& au_intensities, 
@@ -83,7 +83,7 @@ namespace Utilities
 
 		// Gaze related observations
 		void SetObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1,
-			const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks2D, const std::vector<cv::Point3d>& eye_landmarks3D);
+			const cv::Vec2f& gaze_angle, const std::vector<cv::Point2f>& eye_landmarks2D, const std::vector<cv::Point3f>& eye_landmarks3D);
 
 		// Face alignment related observations
 		void SetObservationFaceAlign(const cv::Mat& aligned_face);
@@ -126,15 +126,15 @@ namespace Utilities
 		double timestamp;
 
 		// Facial landmark related observations
-		cv::Mat_<double> landmarks_2D;
-		cv::Mat_<double> landmarks_3D;
-		cv::Vec6d pdm_params_global;
-		cv::Mat_<double> pdm_params_local;
+		cv::Mat_<float> landmarks_2D;
+		cv::Mat_<float> landmarks_3D;
+		cv::Vec6f pdm_params_global;
+		cv::Mat_<float> pdm_params_local;
 		double landmark_detection_confidence;
 		bool landmark_detection_success;
 
 		// Head pose related observations
-		cv::Vec6d head_pose;
+		cv::Vec6f head_pose;
 
 		// Action Unit related observations
 		std::vector<std::pair<std::string, double> > au_intensities;
@@ -143,9 +143,9 @@ namespace Utilities
 		// Gaze related observations
 		cv::Point3f gaze_direction0;
 		cv::Point3f gaze_direction1;
-		cv::Vec2d gaze_angle;
-		std::vector<cv::Point2d> eye_landmarks2D;
-		std::vector<cv::Point3d> eye_landmarks3D;
+		cv::Vec2f gaze_angle;
+		std::vector<cv::Point2f> eye_landmarks2D;
+		std::vector<cv::Point3f> eye_landmarks3D;
 
 		int observation_count;
 
