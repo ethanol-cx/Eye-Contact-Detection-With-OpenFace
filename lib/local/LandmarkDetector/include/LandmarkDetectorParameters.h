@@ -55,7 +55,7 @@ struct FaceModelParameters
 	// Should face validation be done
 	bool validate_detections;
 
-	// Landmark detection validator boundary for correct detection, the regressor output -1 (perfect alignment) 1 (bad alignment), 
+	// Landmark detection validator boundary for correct detection, the regressor output 1 (perfect alignment) 0 (bad alignment), 
 	double validation_boundary;
 
 	// Used when tracking is going well
