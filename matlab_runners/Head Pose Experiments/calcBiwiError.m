@@ -16,14 +16,15 @@ for i=1:numel(seqNames)
         
     posesGround =  load ([gtDir '/' seqNames{i} '/groundTruthPose.txt']);
    
-    [frame t, rels, sc tx ty tz rx ry rz] = textread([resDir '/' seqNames{i} '.txt'], '%f, %f, %f, %f, %f, %f, %f, %f, %f, %f', 'headerlines', 1);
+    [frame t, rels, sc tx ty tz rx ry rz] = textread([resDir '/' seqNames{i} '.csv'], '%f, %f, %f, %f, %f, %f, %f, %f, %f, %f', 'headerlines', 1);
    
     % the reliabilities of head pose
     rels_all = cat(1, rels_all, rels);    
     
     rotg{i} = posesGround(:,[5 6 7]);
     rot{i} = [rx ry rz];  
-
+    T = [tx ty tx];
+    
     % Correct the first frame so it corresponds to (0,0,0), as slightly
     % different pose might be assumed frontal and this corrects for
     % that
@@ -36,7 +37,21 @@ for i=1:numel(seqNames)
         rotg{i}(r_e,:) = Rot2Euler(rot_new_gt);
     end
     
-    % Work out the correction matrix for estimates
+    % First move the orientation to camera space
+    zx = sqrt(tx.^2 + tz.^2);
+    eul_x = atan2(ty, zx);
+    
+    zy = sqrt(ty.^2 + tz.^2);
+    eul_y = -atan2(tx, zy);
+    for r_e = 1:size(rot{i},1)
+        cam_rot = Euler2Rot([eul_x(r_e), eul_y(r_e), 0]);
+        h_rot = Euler2Rot(rot{i}(r_e,:));
+
+        c_rot = cam_rot * h_rot;
+        rot{i}(r_e,:) = Rot2Euler(c_rot);
+    end
+    
+    % Work out the correction matrix for estimates        
     rot_corr_est = Euler2Rot(rot{i}(1,:));
     for r_e = 1:size(rot{i},1)
         rot_curr_est = Euler2Rot(rot{i}(r_e,:));

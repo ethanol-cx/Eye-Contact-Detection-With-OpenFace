@@ -26,16 +26,11 @@ else
 end
       
 if(isunix)
-    command = '../../build/bin/FaceLandmarkImg';
+    executable = '"../../build/bin/FaceLandmarkImg"';
 else
-    command = '../../x64/Release/FaceLandmarkImg.exe';
+    executable = '"../../x64/Release/FaceLandmarkImg.exe"';
 end
-
-if(~exist(command))
-   fprintf('OpenFace executable not found, please compile the code (see https://github.com/TadasBaltrusaitis/OpenFace/wiki) or specify the location to executable\n');
-   return;
-end
-
+    
 if(any(strcmp(varargin, 'model')))
     model = varargin{find(strcmp(varargin, 'model')) + 1};
 else
@@ -49,31 +44,20 @@ else
     multi_view = 0;
 end
 
-command = cat(2, ['"' command '"'], [' -mloc ' model ' ']);
-command = cat(2, command, [' -multi_view ' num2str(multi_view) ' ']);
-   
-tic
-parfor i=1:numel(dataset_dirs)
+command = sprintf('%s -mloc %s -multi_view %s -2Dfp ', executable, model, num2str(multi_view));
 
-    input_loc = ['-fdir "', dataset_dirs{i}, '" '];
-    command_c = cat(2, command, input_loc);
-        
-    out_loc = ['-ofdir "', output_loc, '" '];
-    command_c = cat(2, command_c, out_loc);
- 
-    if(verbose)
-        out_im_loc = ['-oidir "', output_loc, '" '];
-        command_c = cat(2, command_c, out_im_loc);
-    end
+tic
+for i=1:numel(dataset_dirs)
     
-    command_c = cat(2, command_c, ' -wild ');
+    command_c = sprintf('%s -fdir "%s" -bboxdir "%s" -out_dir "%s" -wild ',...
+        command, dataset_dirs{i},  dataset_dirs{i}, output_loc);
     
     if(isunix)
         unix(command_c, '-echo');
     else
         dos(command_c);
     end
-
+    
 end
 toc
 
@@ -81,12 +65,11 @@ toc
 
 % Extract the error sizes
 dirs = {[database_root '/AFW/'];
-    [database_root 'lfpw/testset/'];
     [database_root '/ibug/'];
     [database_root '/helen/testset/'];
-    };
+    [database_root 'lfpw/testset/'];};
 
-landmark_dets = dir([output_loc '/*.pts']);
+landmark_dets = dir([output_loc '/*.csv']);
 
 landmark_det_dir = [output_loc '/'];
 
@@ -98,18 +81,26 @@ shapes = zeros(68,2,num_imgs);
 
 curr = 0;
 
+% work out which columns in the csv file are relevant
+tab = readtable([landmark_det_dir, landmark_dets(1).name]);
+column_names = tab.Properties.VariableNames;
+landmark_inds_x = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'x_'));
+landmark_inds_y = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'y_'));
+
 for i=1:numel(dirs)
     
     
-    gt_labels = dir([dirs{i}, '*.pts']);
+    gt_labels = dir([dirs{i}, '*.pts']); 
     
     for g=1:numel(gt_labels)
         curr = curr+1;
         
         gt_landmarks = dlmread([dirs{i}, gt_labels(g).name], ' ', 'A4..B71');
-       
+        [~, name, ~] = fileparts(gt_labels(g).name);
         % find the corresponding detection       
-        landmark_det = dlmread([landmark_det_dir, gt_labels(g).name], ' ', 'A4..B71');
+        all_params  = dlmread([landmark_det_dir, name, '.csv'], ',', 1, 0);
+
+        landmark_det = [all_params(landmark_inds_x); all_params(landmark_inds_y)]';
         
         labels(:,:,curr) = gt_landmarks;
             
@@ -132,12 +123,15 @@ if(size(shapes,2) == 66 && size(labels,2) == 68)
     shapes = shapes(inds_66,:,:);
 end
 
-labels = labels - 1.0;
+% Center the pixel, and convert to OCV format
+labels = labels - 1.5;
+
 err_outline = compute_error(labels, shapes);
+
 labels_no_out = labels(18:end,:,:);
 shapes_no_out = shapes(18:end,:,:);
-err_no_outline = compute_error(labels_no_out, shapes_no_out);
 
+err_no_outline = compute_error(labels_no_out, shapes_no_out);
 
 %%
 

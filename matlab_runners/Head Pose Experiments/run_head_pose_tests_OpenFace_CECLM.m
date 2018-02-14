@@ -6,12 +6,14 @@ if exist('D:/Datasets/HeadPose', 'file')
     database_root = 'D:/Datasets/HeadPose/';    
 elseif(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
     database_root = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
-elseif(exist(['F:/Dropbox/Dropbox/AAM/test data/'], 'file'))
+elseif(exist([getenv('USERPROFILE') 'F:/Dropbox/Dropbox/AAM/test data/'], 'file'))
     database_root = 'F:/Dropbox/Dropbox/AAM/test data/';
-elseif(exist(['F:/Dropbox/AAM/test data/'], 'file'))
-    database_root = 'F:/Dropbox/AAM/test data/';
-else    
+elseif(exist('F:/Dropbox/AAM/test data/', 'file'))
+    database_root = 'F:/Dropbox/AAM/test data/';    
+elseif(exist('/multicomp/datasets/head_pose_dbs', 'file'))
     database_root = '/multicomp/datasets/head_pose_dbs/';
+elseif(exist('/media/tadas/5E08AE0D08ADE3ED/Dropbox/AAM/test data', 'file'))
+    database_root = '/media/tadas/5E08AE0D08ADE3ED/Dropbox/AAM/test data';
 end
 
 buDir = [database_root, '/bu/uniform-light/'];

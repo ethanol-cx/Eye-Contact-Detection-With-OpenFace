@@ -68,21 +68,21 @@ axes1 = axes('Parent',figure1,'FontSize',40,'FontName','Helvetica');
 % load ce-clm errors
 load('out_ceclm/res.mat');
 
-ceclm_error_cpp = compute_error( labels - 1,  shapes);
+ceclm_error_cpp = compute_error( labels,  shapes);
 [error_x, error_y] = cummErrorCurve(ceclm_error_cpp);
 plot(error_x, error_y, 'r','DisplayName', 'CE-CLM', 'LineWidth',line_width);
 hold on;
 
 % load clnf errors
 load('out_clnf/res.mat');
-clnf_error_cpp = compute_error( labels - 1.0,  shapes);
+clnf_error_cpp = compute_error( labels,  shapes);
 [error_x, error_y] = cummErrorCurve(clnf_error_cpp);
 plot(error_x, error_y,  'DisplayName', 'CLM+CLNF', 'LineWidth',line_width);
 hold on;
 
 % load svr errors
 load('out_svr/res.mat');
-svr_error_cpp = compute_error( labels - 1.0,  shapes);
+svr_error_cpp = compute_error( labels,  shapes);
 [error_x, error_y] = cummErrorCurve(svr_error_cpp);
 plot(error_x, error_y, 'b-.','DisplayName', 'CLM+SVR', 'LineWidth',line_width);
 
