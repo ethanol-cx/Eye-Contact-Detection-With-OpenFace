@@ -1,13 +1,11 @@
 function [data_train, labels_train, data_test, labels_test, raw_test, PC, means_norm, stds_norm, vid_ids_test, success_test] = ...
-    Prepare_HOG_AU_data_generic(train_users, test_users, au_train, rest_aus, hog_data_dir)
+    Prepare_HOG_AU_data_generic(train_users, test_users, au_train, rest_aus,  root, features_dir)
 
 %% This should be a separate function?
 
 input_train_label_files = cell(numel(train_users),1);
 input_test_label_files = cell(numel(test_users),1);
 
-root = [hog_data_dir, '/../'];
-    
 % This is for loading the labels
 for i=1:numel(train_users)   
     input_train_label_files{i} = [root, '/ActionUnit_Labels/', train_users{i}, '/', train_users{i}];
@@ -19,12 +17,12 @@ for i=1:numel(test_users)
 end
 
 % First extracting the labels
-[train_geom_data] = Read_geom_files(train_users, hog_data_dir);
-[test_geom_data] = Read_geom_files(test_users, hog_data_dir);
+[train_geom_data] = Read_geom_files(train_users, features_dir);
+[test_geom_data] = Read_geom_files(test_users, features_dir);
 
 % Reading in the HOG data
-[train_data, tracked_inds_hog, vid_ids_train] = Read_HOG_files(train_users, hog_data_dir);
-[test_data, success_test, vid_ids_test] = Read_HOG_files(test_users, hog_data_dir);
+[train_data, tracked_inds_hog, vid_ids_train] = Read_HOG_files(train_users, features_dir);
+[test_data, success_test, vid_ids_test] = Read_HOG_files(test_users, features_dir);
 
 train_data = cat(2, train_data, train_geom_data);
 raw_test = cat(2, test_data, test_geom_data);

@@ -24,7 +24,7 @@ else
     fprintf('DISFA location not found (or not defined)\n'); 
 end
 
-hog_data_dir = [DISFA_dir, '/hog_aligned_rigid/'];
+hog_data_dir = 'E:\datasets\face_datasets_processed\disfa/';
 
 users = {'SN001';
          'SN002';

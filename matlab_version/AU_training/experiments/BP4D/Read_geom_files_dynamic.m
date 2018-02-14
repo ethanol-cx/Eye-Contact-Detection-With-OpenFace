@@ -25,7 +25,7 @@ function [geom_data, valid_ids] = Read_geom_files_dynamic(users, hog_data_dir)
                 if(i == 1)
                     tab = readtable(geom_file);
                     column_names = tab.Properties.VariableNames; 
-                    valid_ind = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'valid'));
+                    valid_ind = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'success'));
                     shape_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'p_'));
                 end
         
