@@ -66,12 +66,7 @@ namespace FaceAnalysis
 	//=============================================================================
 	// Basically Kabsch's algorithm but also allows the collection of points to be different in scale from each other
 	cv::Matx22f AlignShapesWithScale(cv::Mat_<float>& src, cv::Mat_<float> dst);
-
-	//===========================================================================
-	// Visualisation functions, TODO move
-	//===========================================================================
-	void Project(cv::Mat_<float>& dest, const cv::Mat_<float>& mesh, float fx, float fy, float cx, float cy);
-
+	
 	//============================================================================
 	// Matrix reading functionality
 	//============================================================================

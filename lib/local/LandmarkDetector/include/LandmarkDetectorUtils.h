@@ -50,17 +50,6 @@ namespace LandmarkDetector
 	//===========================================================================	
 	// Defining a set of useful utility functions to be used within CLNF
 
-
-	//=============================================================================================
-	// Helper functions for parsing the inputs, TODO rem
-	//=============================================================================================
-	void get_video_input_output_params(vector<string> &input_video_file, vector<string> &output_files, vector<string> &output_video_files, string &output_codec, vector<string> &arguments);
-
-	void get_camera_params(int &device, float &fx, float &fy, float &cx, float &cy, vector<string> &arguments);
-
-	void get_image_input_output_params(vector<string> &input_image_files, vector<string> &output_feature_files, vector<string> &output_pose_files, vector<string> &output_image_files,
-		vector<cv::Rect_<double>> &input_bounding_boxes, vector<string> &arguments);
-
 	//===========================================================================
 	// Fast patch expert response computation (linear model across a ROI) using normalised cross-correlation
 	//===========================================================================
@@ -85,16 +74,6 @@ namespace LandmarkDetector
 	// Useful utility for grabing a bounding box around a set of 2D landmarks (as a 1D 2n x 1 vector of xs followed by doubles or as an n x 2 vector)
 	void ExtractBoundingBox(const cv::Mat_<float>& landmarks, float &min_x, float &max_x, float &min_y, float &max_y);
 
-	//===========================================================================
-	// Visualisation functions, TODO rem
-	//===========================================================================
-	void Project(cv::Mat_<float>& dest, const cv::Mat_<float>& mesh, float fx, float fy, float cx, float cy);
-	void DrawBox(cv::Mat image, cv::Vec6f pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy);
-
-	// Drawing face bounding box
-	vector<std::pair<cv::Point2f, cv::Point2f>> CalculateBox(cv::Vec6f pose, float fx, float fy, float cx, float cy);
-	void DrawBox(vector<pair<cv::Point, cv::Point>> lines, cv::Mat image, cv::Scalar color, int thickness);
-
 	// TODO all these should return floats rather than doubles
 	vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities);
 	vector<cv::Point2d> CalculateVisibleLandmarks(const CLNF& clnf_model);
@@ -104,12 +83,6 @@ namespace LandmarkDetector
 	vector<cv::Point2f> CalculateAllLandmarks(const CLNF& clnf_model);
 	vector<cv::Point2f> CalculateAllEyeLandmarks(const CLNF& clnf_model);
 	vector<cv::Point3f> Calculate3DEyeLandmarks(const CLNF& clnf_model, float fx, float fy, float cx, float cy);
-
-	void DrawLandmarks(cv::Mat img, vector<cv::Point> landmarks);
-
-	void Draw(cv::Mat img, const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities);
-	void Draw(cv::Mat img, const cv::Mat_<float>& shape2D);
-	void Draw(cv::Mat img, const CLNF& clnf_model);
 
 	//============================================================================
 	// Face detection helpers

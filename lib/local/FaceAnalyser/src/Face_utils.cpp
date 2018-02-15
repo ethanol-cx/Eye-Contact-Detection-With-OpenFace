@@ -415,52 +415,6 @@ namespace FaceAnalysis
 
 	}
 
-
-	//===========================================================================
-	// Visualisation functions, TODO rem
-	//===========================================================================
-	void Project(cv::Mat_<float>& dest, const cv::Mat_<float>& mesh, float fx, float fy, float cx, float cy)
-	{
-		dest = cv::Mat_<float>(mesh.rows, 2, 0.0);
-
-		int num_points = mesh.rows;
-
-		float X, Y, Z;
-
-
-		cv::Mat_<float>::const_iterator mData = mesh.begin();
-		cv::Mat_<float>::iterator projected = dest.begin();
-
-		for (int i = 0; i < num_points; i++)
-		{
-			// Get the points
-			X = *(mData++);
-			Y = *(mData++);
-			Z = *(mData++);
-
-			float x;
-			float y;
-
-			// if depth is 0 the projection is different
-			if (Z != 0)
-			{
-				x = ((X * fx / Z) + cx);
-				y = ((Y * fy / Z) + cy);
-			}
-			else
-			{
-				x = X;
-				y = Y;
-			}
-
-			// Project and store in dest matrix
-			(*projected++) = x;
-			(*projected++) = y;
-		}
-
-	}
-
-
 	//============================================================================
 	// Matrix reading functionality
 	//============================================================================
