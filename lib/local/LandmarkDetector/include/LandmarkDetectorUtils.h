@@ -52,7 +52,7 @@ namespace LandmarkDetector
 
 
 	//=============================================================================================
-	// Helper functions for parsing the inputs
+	// Helper functions for parsing the inputs, TODO rem
 	//=============================================================================================
 	void get_video_input_output_params(vector<string> &input_video_file, vector<string> &output_files, vector<string> &output_video_files, string &output_codec, vector<string> &arguments);
 
@@ -86,7 +86,7 @@ namespace LandmarkDetector
 	void ExtractBoundingBox(const cv::Mat_<float>& landmarks, float &min_x, float &max_x, float &min_y, float &max_y);
 
 	//===========================================================================
-	// Visualisation functions
+	// Visualisation functions, TODO rem
 	//===========================================================================
 	void Project(cv::Mat_<float>& dest, const cv::Mat_<float>& mesh, float fx, float fy, float cx, float cy);
 	void DrawBox(cv::Mat image, cv::Vec6f pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy);
@@ -110,23 +110,6 @@ namespace LandmarkDetector
 	void Draw(cv::Mat img, const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities);
 	void Draw(cv::Mat img, const cv::Mat_<float>& shape2D);
 	void Draw(cv::Mat img, const CLNF& clnf_model);
-
-
-	//===========================================================================
-	// Angle representation conversion helpers
-	//===========================================================================
-	cv::Matx33f Euler2RotationMatrix(const cv::Vec3f& eulerAngles);
-
-	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	cv::Vec3f RotationMatrix2Euler(const cv::Matx33f& rotation_matrix);
-
-	cv::Vec3f Euler2AxisAngle(const cv::Vec3f& euler);
-
-	cv::Vec3f AxisAngle2Euler(const cv::Vec3f& axis_angle);
-
-	cv::Matx33f AxisAngle2RotationMatrix(const cv::Vec3f& axis_angle);
-
-	cv::Vec3f RotationMatrix2AxisAngle(const cv::Matx33f& rotation_matrix);
 
 	//============================================================================
 	// Face detection helpers
@@ -162,15 +145,6 @@ namespace LandmarkDetector
 	// Skipping comments (lines starting with # symbol)
 	void SkipComments(std::ifstream& stream);
 
-	//============================================================================
-	// General utilty functions
-	//============================================================================
-
-	// Convert an image to grayscale
-	void convert_to_grayscale(const cv::Mat& in, cv::Mat& out);
-
-	// Convert an image to an 8bit one with one channel (Grayscale) or three channels (BGR), depending on number of original channels
-	void convert_to_8bit_bgr_or_grayscale(cv::Mat& in_out);
 
 }
 #endif

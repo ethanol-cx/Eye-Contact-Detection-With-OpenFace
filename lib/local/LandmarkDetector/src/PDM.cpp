@@ -35,6 +35,7 @@
 #include "stdafx.h"
 
 #include <PDM.h>
+#include <RotationHelpers.h>
 
 // OpenCV include
 #include <opencv2/core/core.hpp>
@@ -158,7 +159,7 @@ void PDM::CalcShape2D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& params_
 
 	// get the rotation matrix from the euler angles
 	cv::Vec3f euler(params_global[1], params_global[2], params_global[3]);
-	cv::Matx33f currRot = Euler2RotationMatrix(euler);
+	cv::Matx33f currRot = Utilities::Euler2RotationMatrix(euler);
 	
 	// get the 3D shape of the object
 	cv::Mat_<float> Shape_3D = mean_shape + princ_comp * params_local;
@@ -189,7 +190,7 @@ void PDM::CalcParams(cv::Vec6f& out_params_global, const cv::Rect_<float>& bound
 	CalcShape3D(current_shape, params_local);
 
 	// rotate the shape
-	cv::Matx33f rotation_matrix = Euler2RotationMatrix(rotation);
+	cv::Matx33f rotation_matrix = Utilities::Euler2RotationMatrix(rotation);
 
 	cv::Mat_<float> reshaped = current_shape.reshape(1, 3);
 
@@ -259,7 +260,7 @@ void PDM::ComputeRigidJacobian(const cv::Mat_<float>& p_local, const cv::Vec6f& 
 		
 	 // Get the rotation matrix
 	cv::Vec3f euler(params_global[1], params_global[2], params_global[3]);
-	cv::Matx33f currRot = Euler2RotationMatrix(euler);
+	cv::Matx33f currRot = Utilities::Euler2RotationMatrix(euler);
 	
 	float r11 = currRot(0,0);
 	float r12 = currRot(0,1);
@@ -352,7 +353,7 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6f& 
 	this->CalcShape3D(shape_3D, params_local);
 	
 	cv::Vec3f euler(params_global[1], params_global[2], params_global[3]);
-	cv::Matx33f currRot = Euler2RotationMatrix(euler);
+	cv::Matx33f currRot = Utilities::Euler2RotationMatrix(euler);
 	
 	float r11 = currRot(0,0);
 	float r12 = currRot(0,1);
@@ -449,7 +450,7 @@ void PDM::UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>&
 
 	// get the original rotation matrix	
 	cv::Vec3f eulerGlobal(params_global[1], params_global[2], params_global[3]);
-	cv::Matx33f R1 = Euler2RotationMatrix(eulerGlobal);
+	cv::Matx33f R1 = Utilities::Euler2RotationMatrix(eulerGlobal);
 
 	// construct R' = [1, -wz, wy
 	//               wz, 1, -wx
@@ -467,8 +468,8 @@ void PDM::UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>&
 	cv::Matx33f R3 = R1 *R2;
 
 	// Extract euler angle (through axis angle first to make sure it's legal)
-	cv::Vec3f axis_angle = RotationMatrix2AxisAngle(R3);
-	cv::Vec3f euler = AxisAngle2Euler(axis_angle);
+	cv::Vec3f axis_angle = Utilities::RotationMatrix2AxisAngle(R3);
+	cv::Vec3f euler = Utilities::AxisAngle2Euler(axis_angle);
 
 	params_global[1] = euler[0];
 	params_global[2] = euler[1];
@@ -558,7 +559,7 @@ void PDM::CalcParams(cv::Vec6f& out_params_global, cv::Mat_<float>& out_params_l
 	float scaling = ((width / model_bbox.width) + (height / model_bbox.height)) / 2.0f;
         
 	cv::Vec3f rotation_init = rotation;
-	cv::Matx33f R = Euler2RotationMatrix(rotation_init);
+	cv::Matx33f R = Utilities::Euler2RotationMatrix(rotation_init);
 	cv::Vec2f translation((min_x + max_x) / 2.0f, (min_y + max_y) / 2.0f);
     
 	cv::Mat_<float> loc_params(this->NumberOfModes(),1, 0.0);
@@ -645,7 +646,7 @@ void PDM::CalcParams(cv::Vec6f& out_params_global, cv::Mat_<float>& out_params_l
 		translation[0] = glob_params[4];
 		translation[1] = glob_params[5];
         
-		R = Euler2RotationMatrix(rotation_init);
+		R = Utilities::Euler2RotationMatrix(rotation_init);
 
 		R_2D(0,0) = R(0,0);R_2D(0,1) = R(0,1); R_2D(0,2) = R(0,2);
 		R_2D(1,0) = R(1,0);R_2D(1,1) = R(1,1); R_2D(1,2) = R(1,2); 

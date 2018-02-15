@@ -182,27 +182,16 @@ int main(int argc, char **argv)
 		}
 		INFO_STREAM("Device or file opened");
 
-		cv::Mat captured_image = sequence_reader.GetNextFrame();
+		cv::Mat rgb_image = sequence_reader.GetNextFrame();
 
 		int frame_count = 0;
 
 		INFO_STREAM("Starting tracking");
-		while (!captured_image.empty())
+		while (!rgb_image.empty())
 		{
 
 			// Reading the images
-			cv::Mat_<uchar> grayscale_image;
-
-			cv::Mat disp_image = captured_image.clone();
-
-			if (captured_image.channels() == 3)
-			{
-				cv::cvtColor(captured_image, grayscale_image, CV_BGR2GRAY);
-			}
-			else
-			{
-				grayscale_image = captured_image.clone();
-			}
+			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
 			vector<cv::Rect_<float> > face_detections;
 
@@ -230,7 +219,7 @@ int main(int argc, char **argv)
 				else
 				{
 					vector<float> confidences;
-					LandmarkDetector::DetectFacesMTCNN(face_detections, captured_image, face_models[0].face_detector_MTCNN, confidences);
+					LandmarkDetector::DetectFacesMTCNN(face_detections, rgb_image, face_models[0].face_detector_MTCNN, confidences);
 				}
 
 			}
@@ -269,7 +258,7 @@ int main(int argc, char **argv)
 
 							// This ensures that a wider window is used for the initial landmark localisation
 							face_models[model].detection_success = false;
-							detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_detections[detection_ind], face_models[model], det_parameters[model]);
+							detection_success = LandmarkDetector::DetectLandmarksInVideo(rgb_image, face_detections[detection_ind], face_models[model], det_parameters[model], grayscale_image);
 
 							// This activates the model
 							active_models[model] = true;
@@ -291,7 +280,7 @@ int main(int argc, char **argv)
 			// Keeping track of FPS
 			fps_tracker.AddFrame();
 
-			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+			visualizer.SetImage(rgb_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 
 			// Go through every model and visualise the results
 			for (size_t model = 0; model < face_models.size(); ++model)
@@ -327,7 +316,7 @@ int main(int argc, char **argv)
 			frame_count++;
 
 			// Grabbing the next frame in the sequence
-			captured_image = sequence_reader.GetNextFrame();
+			rgb_image = sequence_reader.GetNextFrame();
 
 		}
 

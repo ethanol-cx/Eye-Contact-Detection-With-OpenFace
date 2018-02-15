@@ -34,7 +34,9 @@
 
 #include "stdafx.h"
 
-#include <LandmarkDetectorFunc.h>
+#include "LandmarkDetectorFunc.h"
+#include "RotationHelpers.h"
+#include "ImageManipulationHelpers.h"
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -84,7 +86,7 @@ cv::Vec6f LandmarkDetector::GetPose(const CLNF& clnf_model, float fx, float fy, 
 
 		cv::solvePnP(landmarks_3D, landmarks_2D, camera_matrix, cv::Mat(), vec_rot, vec_trans, true);
 
-		cv::Vec3f euler = LandmarkDetector::AxisAngle2Euler(vec_rot);
+		cv::Vec3f euler = Utilities::AxisAngle2Euler(vec_rot);
 
 		return cv::Vec6f(vec_trans[0], vec_trans[1], vec_trans[2], euler[0], euler[1], euler[2]);
 	}
@@ -137,12 +139,12 @@ cv::Vec6f LandmarkDetector::GetPoseWRTCamera(const CLNF& clnf_model, float fx, f
 		float z_y = cv::sqrt(vec_trans[1] * vec_trans[1] + vec_trans[2] * vec_trans[2]);
 		float eul_y = -atan2(vec_trans[0], z_y);
 
-		cv::Matx33f camera_rotation = LandmarkDetector::Euler2RotationMatrix(cv::Vec3f(eul_x, eul_y, 0));
-		cv::Matx33f head_rotation = LandmarkDetector::AxisAngle2RotationMatrix(vec_rot);
+		cv::Matx33f camera_rotation = Utilities::Euler2RotationMatrix(cv::Vec3f(eul_x, eul_y, 0));
+		cv::Matx33f head_rotation = Utilities::AxisAngle2RotationMatrix(vec_rot);
 
 		cv::Matx33f corrected_rotation = camera_rotation * head_rotation;
 
-		cv::Vec3f euler_corrected = LandmarkDetector::RotationMatrix2Euler(corrected_rotation);
+		cv::Vec3f euler_corrected = Utilities::RotationMatrix2Euler(corrected_rotation);
 
 		return cv::Vec6f(vec_trans[0], vec_trans[1], vec_trans[2], euler_corrected[0], euler_corrected[1], euler_corrected[2]);
 	}
@@ -210,14 +212,16 @@ void CorrectGlobalParametersVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& 
 	
 }
 
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, CLNF& clnf_model, FaceModelParameters& params, cv::Mat_<uchar>& grayscale_image)
 {
 	// First need to decide if the landmarks should be "detected" or "tracked"
 	// Detected means running face detection and a larger search area, tracked means initialising from previous step
 	// and using a smaller search area
 
-	cv::Mat grayscale_image;
-	convert_to_grayscale(image, grayscale_image);
+	if(grayscale_image.empty())
+	{
+		Utilities::ConvertToGrayscale_8bit(rgb_image, grayscale_image);
+	}
 
 	// Indicating that this is a first detection in video sequence or after restart
 	bool initial_detection = !clnf_model.tracking_initialised;
@@ -298,7 +302,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_m
 		else if (params.curr_face_detector == FaceModelParameters::MTCNN_DETECTOR)
 		{
 			float confidence;
-			face_detection_success = LandmarkDetector::DetectSingleFaceMTCNN(bounding_box, image, clnf_model.face_detector_MTCNN, confidence, preference_det);
+			face_detection_success = LandmarkDetector::DetectSingleFaceMTCNN(bounding_box, rgb_image, clnf_model.face_detector_MTCNN, confidence, preference_det);
 		}
 
 		// Attempt to detect landmarks using the detected face (if unseccessful the detection will be ignored)
@@ -372,7 +376,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, CLNF& clnf_m
 	
 }
 
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params, cv::Mat_<uchar> &grayscale_image)
 {
 	if(bounding_box.width > 0)
 	{
@@ -384,7 +388,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &image, const cv::Re
 		clnf_model.tracking_initialised = true;
 	}
 
-	return DetectLandmarksInVideo(image, clnf_model, params);
+	return DetectLandmarksInVideo(rgb_image, clnf_model, params, grayscale_image);
 
 }
 
@@ -638,11 +642,13 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 
 
 // This is the one where the actual work gets done, other DetectLandmarksInImage calls lead to this one
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &rgb_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params, cv::Mat_<uchar> &grayscale_image)
 {
 
-	cv::Mat grayscale_image;
-	convert_to_grayscale(image, grayscale_image);
+	if (grayscale_image.empty())
+	{
+		Utilities::ConvertToGrayscale_8bit(rgb_image, grayscale_image);
+	}
 
 	// Can have multiple hypotheses
 	vector<cv::Vec3d> rotation_hypotheses;
@@ -674,19 +680,21 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, const cv::Re
 	// Either use basic multi-hypothesis testing or clever testing if early termination parameters are present
 	if(clnf_model.patch_experts.early_term_biases.size() == 0)
 	{
-		success = DetectLandmarksInImageMultiHypBasic(image, rotation_hypotheses, bounding_box, clnf_model, params);
+		success = DetectLandmarksInImageMultiHypBasic(grayscale_image, rotation_hypotheses, bounding_box, clnf_model, params);
 	}
 	else
 	{
-		success = DetectLandmarksInImageMultiHypEarlyTerm(image, rotation_hypotheses, bounding_box, clnf_model, params);
+		success = DetectLandmarksInImageMultiHypEarlyTerm(grayscale_image, rotation_hypotheses, bounding_box, clnf_model, params);
 	}
 	return success;
 }
 
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, CLNF& clnf_model, FaceModelParameters& params)
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &rgb_image, CLNF& clnf_model, FaceModelParameters& params, cv::Mat_<uchar> &grayscale_image)
 {
-	cv::Mat grayscale_image;
-	convert_to_grayscale(image, grayscale_image);
+	if (grayscale_image.empty())
+	{
+		Utilities::ConvertToGrayscale_8bit(rgb_image, grayscale_image);
+	}
 
 	cv::Rect_<float> bounding_box;
 
@@ -710,12 +718,12 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, CLNF& clnf_m
 	}
 	else if(params.curr_face_detector == FaceModelParameters::HAAR_DETECTOR)
 	{
-		LandmarkDetector::DetectSingleFace(bounding_box, image, clnf_model.face_detector_HAAR);
+		LandmarkDetector::DetectSingleFace(bounding_box, rgb_image, clnf_model.face_detector_HAAR);
 	}
 	else if (params.curr_face_detector == FaceModelParameters::MTCNN_DETECTOR)
 	{
 		float confidence;
-		LandmarkDetector::DetectSingleFaceMTCNN(bounding_box, image, clnf_model.face_detector_MTCNN, confidence);
+		LandmarkDetector::DetectSingleFaceMTCNN(bounding_box, rgb_image, clnf_model.face_detector_MTCNN, confidence);
 	}
 
 	if(bounding_box.width == 0)
@@ -724,6 +732,6 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &image, CLNF& clnf_m
 	}
 	else
 	{
-		return DetectLandmarksInImage(image, bounding_box, clnf_model, params);
+		return DetectLandmarksInImage(rgb_image, bounding_box, clnf_model, params, grayscale_image);
 	}
 }

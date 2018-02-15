@@ -38,11 +38,11 @@ ict_dir = ['/ict/'];
 [ict_error_OF, pred_hp_ict, gt_hp_ict, ~, all_errors_ict_OF, rel_ict] = calcIctError(res_folder_ict_OF, [database_root ict_dir]);
 
 %% Save the results
-filename = 'results/Pose_OF';
+filename = 'results/Pose_OF_CLNF';
 save(filename);
 
 % Also save them in a reasonable .txt format for easy comparison
-f = fopen('results/Pose_OF.txt', 'w');
+f = fopen('results/Pose_OF_CLNF.txt', 'w');
 fprintf(f, 'Dataset and model,        pitch,  yaw,  roll,  mean,  median\n');
 fprintf(f, 'biwi error:  %.3f,   %.3f, %.3f,  %.3f,  %.3f\n', biwi_error_OF, mean(all_errors_biwi_OF(:)), median(all_errors_biwi_OF(:)));
 fprintf(f, 'bu error:    %.3f,   %.3f, %.3f,  %.3f,  %.3f\n', bu_error_OF, mean(all_errors_bu_OF(:)), median(all_errors_bu_OF(:)));

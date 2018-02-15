@@ -116,24 +116,24 @@ int main(int argc, char **argv)
 	// A utility for visualizing the results
 	Utilities::Visualizer visualizer(arguments);
 
-	cv::Mat captured_image;
+	cv::Mat rgb_image;
 
-	captured_image = image_reader.GetNextImage();
+	rgb_image = image_reader.GetNextImage();
 
 	cout << "Starting tracking" << endl;
-	while (!captured_image.empty())
+	while (!rgb_image.empty())
 	{
 
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, false, false,
 			image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
 		Utilities::RecorderOpenFace open_face_rec(image_reader.name, recording_params, arguments);
 
-		visualizer.SetImage(captured_image, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
+		visualizer.SetImage(rgb_image, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
 
 		if (recording_params.outputGaze() && !face_model.eye_model)
 			cout << "WARNING: no eye model defined, but outputting gaze" << endl;
 
-		// Making sure the image is in uchar grayscale
+		// Making sure the image is in uchar grayscale (some face detectors use RGB, landmark detector uses grayscale)
 		cv::Mat_<uchar> grayscale_image = image_reader.GetGrayFrame();
 
 		// Detect faces in an image
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
 			else
 			{
 				vector<float> confidences;
-				LandmarkDetector::DetectFacesMTCNN(face_detections, captured_image, face_detector_mtcnn, confidences);
+				LandmarkDetector::DetectFacesMTCNN(face_detections, rgb_image, face_detector_mtcnn, confidences);
 			}
 		}
 
@@ -167,7 +167,7 @@ int main(int argc, char **argv)
 		for (size_t face = 0; face < face_detections.size(); ++face)
 		{
 			// if there are multiple detections go through them
-			bool success = LandmarkDetector::DetectLandmarksInImage(grayscale_image, face_detections[face], face_model, det_parameters);
+			bool success = LandmarkDetector::DetectLandmarksInImage(rgb_image, face_detections[face], face_model, det_parameters, grayscale_image);
 
 			// Estimate head pose and eye gaze				
 			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
@@ -190,7 +190,7 @@ int main(int argc, char **argv)
 			// Perform AU detection and HOG feature extraction, as this can be expensive only compute it if needed by output or visualization
 			if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualizer.vis_align || visualizer.vis_hog)
 			{
-				face_analyser.PredictStaticAUsAndComputeFeatures(captured_image, face_model.detected_landmarks);
+				face_analyser.PredictStaticAUsAndComputeFeatures(rgb_image, face_model.detected_landmarks);
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 				face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			}
@@ -220,7 +220,7 @@ int main(int argc, char **argv)
 		}
 
 		// Grabbing the next frame in the sequence
-		captured_image = image_reader.GetNextImage();
+		rgb_image = image_reader.GetNextImage();
 
 	}
 

@@ -35,6 +35,7 @@
 #include "stdafx.h"
 
 #include <LandmarkDetectorUtils.h>
+#include <RotationHelpers.h>
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -976,7 +977,7 @@ namespace LandmarkDetector
 		// The size of the head is roughly 200mm x 200mm x 200mm
 		cv::Mat_<float> box = cv::Mat(8, 3, CV_32F, boxVerts).clone() * 100;
 
-		cv::Matx33f rot = LandmarkDetector::Euler2RotationMatrix(cv::Vec3f((float)pose[3], (float)pose[4], (float)pose[5]));
+		cv::Matx33f rot = Utilities::Euler2RotationMatrix(cv::Vec3f((float)pose[3], (float)pose[4], (float)pose[5]));
 		cv::Mat_<float> rotBox;
 
 		// Rotate the box
@@ -1044,7 +1045,7 @@ namespace LandmarkDetector
 		// The size of the head is roughly 200mm x 200mm x 200mm
 		cv::Mat_<float> box = cv::Mat(8, 3, CV_32F, boxVerts).clone() * 100;
 
-		cv::Matx33f rot = LandmarkDetector::Euler2RotationMatrix(cv::Vec3d((float) pose[3], (float)pose[4], (float)pose[5]));
+		cv::Matx33f rot = Utilities::Euler2RotationMatrix(cv::Vec3d((float) pose[3], (float)pose[4], (float)pose[5]));
 		cv::Mat_<float> rotBox;
 
 		// Rotate the box
@@ -1890,89 +1891,6 @@ void SkipComments(std::ifstream& stream)
 	{
 		std::string skipped;
 		std::getline(stream, skipped);
-	}
-}
-
-// Some other utility functions
-void convert_to_grayscale(const cv::Mat& in, cv::Mat& out)
-{
-	if (in.channels() == 3)
-	{
-		// Make sure it's in a correct format
-		if (in.depth() != CV_8U)
-		{
-			if (in.depth() == CV_16U)
-			{
-				cv::Mat tmp = in / 256;
-				tmp.convertTo(tmp, CV_8U);
-				cv::cvtColor(tmp, out, CV_BGR2GRAY);
-			}
-		}
-		else
-		{
-			cv::cvtColor(in, out, CV_BGR2GRAY);
-		}
-	}
-	else if (in.channels() == 4)
-	{
-		cv::cvtColor(in, out, CV_BGRA2GRAY);
-	}
-	else
-	{
-		if (in.depth() == CV_16U)
-		{
-			cv::Mat tmp = in / 256;
-			out = tmp.clone();
-		}
-		else if (in.depth() != CV_8U)
-		{
-			in.convertTo(out, CV_8U);
-		}
-		else
-		{
-			out = in.clone();
-		}
-	}
-}
-
-void convert_to_8bit_bgr_or_grayscale(cv::Mat& in_out)
-{
-	if (in_out.channels() == 3)
-	{
-		// Make sure it's in a correct format
-		if (in_out.depth() != CV_8U)
-		{
-			if (in_out.depth() == CV_16U)
-			{
-				in_out = in_out / 256;
-				in_out.convertTo(in_out, CV_8UC3);
-			}
-			else if (in_out.depth() != CV_8U)
-			{
-				in_out.convertTo(in_out, CV_8U);
-			}
-		}
-	}
-	else if (in_out.channels() == 4)
-	{
-		cv::cvtColor(in_out, in_out, CV_BGRA2BGR);
-
-		if (in_out.depth() == CV_16U)
-		{
-			in_out = in_out / 256;
-			in_out.convertTo(in_out, CV_8UC3);
-		}
-	}
-	else
-	{
-		if (in_out.depth() == CV_16U)
-		{
-			in_out = in_out / 256;
-		}
-		else if (in_out.depth() != CV_8U)
-		{
-			in_out.convertTo(in_out, CV_8U);
-		}
 	}
 }
 

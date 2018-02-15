@@ -138,8 +138,6 @@ int main(int argc, char **argv)
 			visualizer.vis_track = true;
 		}
 
-		cv::Mat captured_image;
-
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.IsWebcam(),
 			sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, sequence_reader.fps);
 		Utilities::RecorderOpenFace open_face_rec(sequence_reader.name, recording_params, arguments);
@@ -147,20 +145,20 @@ int main(int argc, char **argv)
 		if (recording_params.outputGaze() && !face_model.eye_model)
 			cout << "WARNING: no eye model defined, but outputting gaze" << endl;
 
-		captured_image = sequence_reader.GetNextFrame();
+		cv::Mat rgb_image = sequence_reader.GetNextFrame();
 
 		// For reporting progress
 		double reported_completion = 0;
 
 		INFO_STREAM("Starting tracking");
-		while (!captured_image.empty())
+		while (!rgb_image.empty())
 		{
 
 			// Converting to grayscale
 			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
 			// The actual facial landmark detection / tracking
-			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_model, det_parameters);
+			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(rgb_image, face_model, det_parameters, grayscale_image);
 
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, 0); cv::Point3f gazeDirection1(0, 0, 0); cv::Vec2d gazeAngle(0, 0);
@@ -179,7 +177,7 @@ int main(int argc, char **argv)
 			// Perform AU detection and HOG feature extraction, as this can be expensive only compute it if needed by output or visualization
 			if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualizer.vis_align || visualizer.vis_hog)
 			{
-				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, sequence_reader.time_stamp, sequence_reader.IsWebcam());
+				face_analyser.AddNextFrame(rgb_image, face_model.detected_landmarks, face_model.detection_success, sequence_reader.time_stamp, sequence_reader.IsWebcam());
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 				face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			}
@@ -191,7 +189,7 @@ int main(int argc, char **argv)
 			fps_tracker.AddFrame();
 
 			// Displaying the tracking visualizations
-			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+			visualizer.SetImage(rgb_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 			visualizer.SetObservationFaceAlign(sim_warped_img);
 			visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.GetVisibilities());
@@ -232,7 +230,7 @@ int main(int argc, char **argv)
 			}
 
 			// Grabbing the next frame in the sequence
-			captured_image = sequence_reader.GetNextFrame();
+			rgb_image = sequence_reader.GetNextFrame();
 
 		}
 

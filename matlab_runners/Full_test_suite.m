@@ -5,16 +5,16 @@ tic
 %% Head pose
 cd('Head Pose Experiments');
 run_head_pose_tests_OpenFace_CECLM;
-assert(median(all_errors_biwi_OF(:)) < 2.7);
+assert(median(all_errors_biwi_OF(:)) < 2.45);
 assert(median(all_errors_bu_OF(:)) < 1.85);
 assert(median(all_errors_ict_OF(:)) < 1.9);
-run_head_pose_tests_OpenFace;
+run_head_pose_tests_OpenFace_CLNF;
 assert(median(all_errors_biwi_OF(:)) < 2.7);
 assert(median(all_errors_bu_OF(:)) < 2.0);
 assert(median(all_errors_ict_OF(:)) < 2.0);
 cd('../');
 
-%% Features
+%% Landmarks
 cd('Feature Point Experiments');
 run_OpenFace_feature_point_tests_300W;
 assert(median(err_ceclm) < 0.035);

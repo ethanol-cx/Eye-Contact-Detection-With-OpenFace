@@ -133,17 +133,17 @@ int main(int argc, char **argv)
 		}
 		INFO_STREAM("Device or file opened");
 
-		cv::Mat captured_image = sequence_reader.GetNextFrame();
+		cv::Mat rgb_image = sequence_reader.GetNextFrame();
 
 		INFO_STREAM("Starting tracking");
-		while (!captured_image.empty()) // this is not a for loop as we might also be reading from a webcam
+		while (!rgb_image.empty()) // this is not a for loop as we might also be reading from a webcam
 		{
 
-			// Reading the images
+			// Reading the grayscale image as well (face detection is done in RGB, landmark detection in grayscale)
 			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
 			// The actual facial landmark detection / tracking
-			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_model, det_parameters);
+			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(rgb_image, face_model, det_parameters, grayscale_image);
 
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, -1);
@@ -163,7 +163,7 @@ int main(int argc, char **argv)
 			fps_tracker.AddFrame();
 
 			// Displaying the tracking visualizations
-			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+			visualizer.SetImage(rgb_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.GetVisibilities());
 			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
 			visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_model.detection_certainty);
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
 			}
 
 			// Grabbing the next frame in the sequence
-			captured_image = sequence_reader.GetNextFrame();
+			rgb_image = sequence_reader.GetNextFrame();
 
 		}
 
