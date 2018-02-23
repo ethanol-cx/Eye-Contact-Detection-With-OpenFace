@@ -77,6 +77,8 @@ namespace Utilities
 		float getCx() const { return cx; }
 		float getCy() const { return cy; }
 
+		void setOutputAUs(bool output_AUs) { this->output_AUs = output_AUs; }
+
 	private:
 		
 		// If we are recording results from a sequence each row refers to a frame, if we are recording an image each row is a face

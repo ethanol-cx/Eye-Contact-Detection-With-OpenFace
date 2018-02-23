@@ -153,7 +153,7 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 		CreateDirectory(aligned_output_directory);
 	}
 
-	observation_count = 0;
+	this->frame_number = 0;
 
 }
 
@@ -275,11 +275,9 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 
 void RecorderOpenFace::WriteObservation()
 {
-	observation_count++;
 
-	// Write out the CSV file (it will always be there, even if not outputting anything more but frame/face numbers)
-	
-	if(observation_count == 1)
+	// Write out the CSV file (it will always be there, even if not outputting anything more but frame/face numbers)	
+	if(!csv_recorder.isOpen())
 	{
 		// As we are writing out the header, work out some things like number of landmarks, names of AUs etc.
 		int num_face_landmarks = landmarks_2D.rows / 2;
@@ -315,7 +313,7 @@ void RecorderOpenFace::WriteObservation()
 			params.outputAUs(), params.outputGaze(), num_face_landmarks, num_model_modes, num_eye_landmarks, au_names_class, au_names_reg);
 	}
 
-	this->csv_recorder.WriteLine(observation_count, timestamp, landmark_detection_success, 
+	this->csv_recorder.WriteLine(face_id, frame_number, timestamp, landmark_detection_success, 
 		landmark_detection_confidence, landmarks_2D, landmarks_3D, pdm_params_local, pdm_params_global, head_pose,
 		gaze_direction0, gaze_direction1, gaze_angle, eye_landmarks2D, eye_landmarks3D, au_intensities, au_occurences);
 
@@ -331,9 +329,9 @@ void RecorderOpenFace::WriteObservation()
 
 		// Filename is based on frame number
 		if(params.isSequence())
-			std::sprintf(name, "frame_det_%06d.bmp", observation_count);
+			std::sprintf(name, "frame_det_%02d_%06d.bmp", face_id, frame_number);
 		else
-			std::sprintf(name, "face_det_%06d.bmp", observation_count);
+			std::sprintf(name, "face_det_%06d.bmp", face_id);
 
 		// Construct the output filename
 		boost::filesystem::path slash("/");
@@ -386,6 +384,19 @@ void RecorderOpenFace::SetObservationTimestamp(double timestamp)
 {
 	this->timestamp = timestamp;
 }
+
+// Required observations for video/image-sequence
+void RecorderOpenFace::SetObservationFrameNumber(double frame_number)
+{
+	this->frame_number = frame_number;
+}
+
+// If in multiple face mode, identifying which face was tracked
+void RecorderOpenFace::SetObservationFaceID(int face_id)
+{
+	this->face_id = face_id;
+}
+
 
 void RecorderOpenFace::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D,
 	const cv::Vec6d& pdm_params_global, const cv::Mat_<double>& pdm_params_local, double confidence, bool success)

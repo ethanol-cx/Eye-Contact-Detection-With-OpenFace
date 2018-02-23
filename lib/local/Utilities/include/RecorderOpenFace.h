@@ -70,6 +70,12 @@ namespace Utilities
 		// Required observations for video/image-sequence
 		void SetObservationTimestamp(double timestamp);
 
+		// Required observations for video/image-sequence
+		void SetObservationFrameNumber(double frame_number);
+
+		// If in multiple face mode, identifying which face was tracked
+		void SetObservationFaceID(int face_id);
+
 		// All observations relevant to facial landmarks
 		void SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D, 
 			const cv::Vec6d& params_global, const cv::Mat_<double>& params_local, double confidence, bool success);
@@ -123,7 +129,10 @@ namespace Utilities
 		RecorderHOG hog_recorder;
 
 		// The actual temporary storage for the observations
+		
 		double timestamp;
+		int face_id;
+		int frame_number;
 
 		// Facial landmark related observations
 		cv::Mat_<double> landmarks_2D;
@@ -147,7 +156,8 @@ namespace Utilities
 		std::vector<cv::Point2d> eye_landmarks2D;
 		std::vector<cv::Point3d> eye_landmarks3D;
 
-		int observation_count;
+		int m_frame_number; // TODO this should be set
+		int m_face_id; // TODO this should be set
 
 		// For video writing
 		cv::VideoWriter video_writer;

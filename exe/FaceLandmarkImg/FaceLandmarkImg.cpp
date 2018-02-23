@@ -85,6 +85,14 @@ int main (int argc, char **argv)
 	//Convert arguments to more convenient vector form
 	vector<string> arguments = get_arguments(argc, argv);
 
+	// no arguments: output usage
+	if (arguments.size() == 1)
+	{
+		cout << "For command line arguments see:" << endl;
+		cout << " https://github.com/TadasBaltrusaitis/OpenFace/wiki/Command-line-arguments";
+		return 0;
+	}
+
 	// Prepare for image reading
 	Utilities::ImageCapture image_reader;
 
@@ -205,6 +213,7 @@ int main (int argc, char **argv)
 			open_face_rec.SetObservationPose(pose_estimate);
 			open_face_rec.SetObservationGaze(gaze_direction0, gaze_direction1, gaze_angle, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy));
 			open_face_rec.SetObservationFaceAlign(sim_warped_img);
+			open_face_rec.SetObservationFaceID(face);
 			open_face_rec.WriteObservation();
 
 		}

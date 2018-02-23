@@ -103,6 +103,14 @@ int main (int argc, char **argv)
 
 	vector<string> arguments = get_arguments(argc, argv);
 
+	// no arguments: output usage
+	if (arguments.size() == 1)
+	{
+		cout << "For command line arguments see:" << endl;
+		cout << " https://github.com/TadasBaltrusaitis/OpenFace/wiki/Command-line-arguments";
+		return 0;
+	}
+
 	// Load the modules that are being used for tracking and face analysis
 	// Load face landmark detector
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);
@@ -217,6 +225,8 @@ int main (int argc, char **argv)
 			open_face_rec.SetObservationPose(pose_estimate);
 			open_face_rec.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy));
 			open_face_rec.SetObservationTimestamp(sequence_reader.time_stamp);
+			open_face_rec.SetObservationFaceID(0);
+			open_face_rec.SetObservationFrameNumber(sequence_reader.GetFrameNumber());
 			open_face_rec.SetObservationFaceAlign(sim_warped_img);
 			open_face_rec.WriteObservation();
 			

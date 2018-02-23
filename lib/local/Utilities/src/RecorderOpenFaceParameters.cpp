@@ -60,61 +60,61 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 
 	bool output_set = false;
 
-	output_2D_landmarks = false;
-	output_3D_landmarks = false;
-	output_model_params = false;
-	output_pose = false;
-	output_AUs = false;
-	output_gaze = false;
-	output_hog = false;
-	output_tracked = false;
-	output_aligned_faces = false;
+	this->output_2D_landmarks = false;
+	this->output_3D_landmarks = false;
+	this->output_model_params = false;
+	this->output_pose = false;
+	this->output_AUs = false;
+	this->output_gaze = false;
+	this->output_hog = false;
+	this->output_tracked = false;
+	this->output_aligned_faces = false;
 
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
 		if (arguments[i].compare("-simalign") == 0)
 		{
-			output_aligned_faces = true;
+			this->output_aligned_faces = true;
 			output_set = true;
 		}
 		else if (arguments[i].compare("-hogalign") == 0)
 		{
-			output_hog = true;
+			this->output_hog = true;
 			output_set = true;
 		}
 		else if (arguments[i].compare("-2Dfp") == 0)
 		{
-			output_2D_landmarks = true;
+			this->output_2D_landmarks = true;
 			output_set = true;
 		}
 		else if (arguments[i].compare("-3Dfp") == 0)
 		{
-			output_3D_landmarks = true;
+			this->output_3D_landmarks = true;
 			output_set = true;
 		}
 		else if (arguments[i].compare("-pdmparams") == 0)
 		{
-			output_model_params = true;
+			this->output_model_params = true;
 			output_set = true;
 		}
 		else if (arguments[i].compare("-pose") == 0)
 		{
-			output_pose = true;
+			this->output_pose = true;
 			output_set = true;
 		}
 		else if (arguments[i].compare("-aus") == 0)
 		{
-			output_AUs = true;
+			this->output_AUs = true;
 			output_set = true;
 		}
 		else if (arguments[i].compare("-gaze") == 0)
 		{
-			output_gaze = true;
+			this->output_gaze = true;
 			output_set = true;
 		}
 		else if (arguments[i].compare("-tracked") == 0)
 		{
-			output_tracked = true;
+			this->output_tracked = true;
 			output_set = true;
 		}
 	}
@@ -123,15 +123,15 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 
 	if (!output_set)
 	{
-		output_2D_landmarks = true;
-		output_3D_landmarks = true;
-		output_model_params = true;
-		output_pose = true;
-		output_AUs = true;
-		output_gaze = true;
-		output_hog = true;
-		output_tracked = true;
-		output_aligned_faces = true;
+		this->output_2D_landmarks = true;
+		this->output_3D_landmarks = true;
+		this->output_model_params = true;
+		this->output_pose = true;
+		this->output_AUs = true;
+		this->output_gaze = true;
+		this->output_hog = true;
+		this->output_tracked = true;
+		this->output_aligned_faces = true;
 	}
 
 }
