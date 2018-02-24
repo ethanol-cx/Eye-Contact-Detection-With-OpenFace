@@ -91,6 +91,14 @@ int main (int argc, char **argv)
 
 	vector<string> arguments = get_arguments(argc, argv);
 
+	// no arguments: output usage
+	if (arguments.size() == 1)
+	{
+		cout << "For command line arguments see:" << endl;
+		cout << " https://github.com/TadasBaltrusaitis/OpenFace/wiki/Command-line-arguments";
+		return 0;
+	}
+
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);
 
 	// The modules that are being used for tracking
@@ -112,25 +120,9 @@ int main (int argc, char **argv)
 	{
 
 		// The sequence reader chooses what to open based on command line arguments provided
-		if(!sequence_reader.Open(arguments))
-		{
-			// If failed to open because no input files specified, attempt to open a webcam
-			if (sequence_reader.no_input_specified && sequence_number == 0)
-			{
-				// If that fails, revert to webcam
-				INFO_STREAM("No input specified, attempting to open a webcam 0 at 640 x 480px");
-				if (!sequence_reader.OpenWebcam(0, 640, 480))
-				{
-					ERROR_STREAM("Failed to open the webcam");
-					break;
-				}
-			}
-			else
-			{
-				// Either reached the end of sequences provided or failed to open them
-				break;
-			}
-		}
+		if (!sequence_reader.Open(arguments))
+			break;
+
 		INFO_STREAM("Device or file opened");
 
 		cv::Mat captured_image = sequence_reader.GetNextFrame();
