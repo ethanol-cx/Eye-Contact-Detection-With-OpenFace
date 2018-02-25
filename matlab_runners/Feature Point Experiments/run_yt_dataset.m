@@ -75,20 +75,30 @@ preds_all_clm = [];
 gts_all = [];
 for i = 1:numel(files_yt)
     [~, name, ~] = fileparts(files_yt(i).name);
-    pred_landmarks = dlmread([d_loc, files_yt(i).name], ',', 1, 0);
-    pred_landmarks = pred_landmarks(:,5:end);
+
+    fname = [d_loc, files_yt(i).name];
+    if(i == 1)
+        % First read in the column names
+        tab = readtable(fname);
+        column_names = tab.Properties.VariableNames;
+
+        confidence_id = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'confidence'));
+        x_ids = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'x_'));
+        y_ids = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'y_'));
+    end
+
+    all_params  = dlmread(fname, ',', 1, 0);
     
-    xs = pred_landmarks(:, 1:end/2);
-    ys = pred_landmarks(:, end/2+1:end);
+    xs = all_params(:, x_ids);
+    ys = all_params(:, y_ids);
     pred_landmarks = zeros([size(xs,2), 2, size(xs,1)]);
     pred_landmarks(:,1,:) = xs';
     pred_landmarks(:,2,:) = ys';
     
-    pred_landmarks_clm = dlmread([d_loc_clm,  files_yt(i).name], ',', 1, 0);
-    pred_landmarks_clm = pred_landmarks_clm(:,5:end);
+    all_params = dlmread([d_loc_clm,  files_yt(i).name], ',', 1, 0);
     
-    xs = pred_landmarks_clm(:, 1:end/2);
-    ys = pred_landmarks_clm(:, end/2+1:end);
+    xs = all_params(:, x_ids);
+    ys = all_params(:, y_ids);
     pred_landmarks_clm = zeros([size(xs,2), 2, size(xs,1)]);
     pred_landmarks_clm(:,1,:) = xs';
     pred_landmarks_clm(:,2,:) = ys';    
