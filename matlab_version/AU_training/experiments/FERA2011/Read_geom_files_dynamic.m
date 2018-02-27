@@ -35,19 +35,24 @@ function [geom_data, valid_ids] = Read_geom_files_dynamic(users, params_data_dir
     user_inds = [];    
     
     for i=1:numel(users)
+               
+        geom_file = [params_data_dir, '/au_training_' users{i} '.csv'];        
         
-        geom_file = [params_data_dir, '/au_training_' users{i} '.txt'];
-        m_file = [params_data_dir, '/au_training_' users{i} '.params.mat'];        
-        
-        if(~exist(m_file, 'file'))
-            res = dlmread(geom_file, ',', 1, 0);
-            save(m_file, 'res');
-        else
-            load(m_file);
+        if(i == 1)
+            tab = readtable(geom_file);
+            column_names = tab.Properties.VariableNames; 
+            valid_ind = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'success'));
+            shape_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'p_'));
         end
-        
-        valid = res(:, 4);
-        res = res(:, 11:end);
+                
+        res = dlmread(geom_file, ',', 1, 0);    
+
+        % Check the confidence of detection
+        valid = logical(res(:, valid_ind));              
+        res = res(:, shape_inds);
+                
+        % Do not consider global parameters
+        res = res(:, 7:end);
         
         for k=1:numel(users_group)
             if(~isempty(strmatch(users{i}, users_group{k})))

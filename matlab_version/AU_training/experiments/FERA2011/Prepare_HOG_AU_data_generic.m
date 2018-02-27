@@ -1,19 +1,19 @@
 function [data_train, labels_train, data_devel, labels_devel, raw_devel, PC, means_norm, stds_norm, vid_ids_devel_string, valid_ids_devel] = ...
-    Prepare_HOG_AU_data_generic(train_users, devel_users, au_train, rest_aus, unbc_dir, hog_data_dir)
+    Prepare_HOG_AU_data_generic(train_users, devel_users, au_train, rest_aus, fera_dir, features_dir)
 
 %%
 addpath(genpath('../../data extraction/'));
 
 % First extracting the labels
-[ labels_train, valid_ids_train, filenames ] = extract_FERA2011_labels(unbc_dir, train_users, au_train);
+[ labels_train, valid_ids_train, filenames ] = extract_FERA2011_labels(fera_dir, train_users, au_train);
 
-[ labels_other, ~, ~ ] = extract_FERA2011_labels(unbc_dir, train_users, rest_aus);
+[ labels_other, ~, ~ ] = extract_FERA2011_labels(fera_dir, train_users, rest_aus);
 labels_other = cat(1, labels_other{:});
 
 % Reading in the HOG data (of only relevant frames)
-[train_appearance_data, valid_ids_train_hog, vid_ids_train_string] = Read_HOG_files(train_users, hog_data_dir);
+[train_appearance_data, valid_ids_train_hog, vid_ids_train_string] = Read_HOG_files(train_users, features_dir);
 
-[train_geom_data] = Read_geom_files(train_users, [hog_data_dir, '/../model_params']);
+[train_geom_data] = Read_geom_files(train_users, features_dir);
 
 % Subsample the data to make training quicker
 labels_train = cat(1, labels_train{:});
@@ -59,12 +59,12 @@ vid_ids_train_string = vid_ids_train_string(reduced_inds,:);
 %% Extract devel data
 
 % First extracting the labels
-[ labels_devel, valid_ids_devel, filenames_devel ] = extract_FERA2011_labels(unbc_dir, devel_users, au_train);
+[ labels_devel, valid_ids_devel, filenames_devel ] = extract_FERA2011_labels(fera_dir, devel_users, au_train);
 
 % Reading in the HOG data (of only relevant frames)
-[devel_appearance_data, valid_ids_devel_hog, vid_ids_devel_string] = Read_HOG_files(devel_users, hog_data_dir);
+[devel_appearance_data, valid_ids_devel_hog, vid_ids_devel_string] = Read_HOG_files(devel_users, features_dir);
 
-[devel_geom_data] = Read_geom_files(devel_users, [hog_data_dir, '/../model_params']);
+[devel_geom_data] = Read_geom_files(devel_users, features_dir);
 
 labels_devel = cat(1, labels_devel{:});
 

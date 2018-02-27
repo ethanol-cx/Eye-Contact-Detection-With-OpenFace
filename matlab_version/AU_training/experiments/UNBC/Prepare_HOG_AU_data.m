@@ -1,5 +1,5 @@
 function [data_train, labels_train, data_devel, labels_devel, raw_devel, PC, means_norm, stds_norm, devel_ids, devel_success] = ...
-    Prepare_HOG_AU_data(train_users, devel_users, au_train, rest_aus, UNBC_dir, hog_data_dir)
+    Prepare_HOG_AU_data(train_users, devel_users, au_train, rest_aus, UNBC_dir, features_dir)
 
 %%
 addpath(genpath('../data extraction/'));
@@ -11,10 +11,9 @@ addpath(genpath('../data extraction/'));
 labels_other = cat(1, labels_other{:});
 
 % Reading in the HOG data (of only relevant frames)
-[train_appearance_data, valid_ids_train_hog, vid_ids_train_string] = Read_HOG_files(train_users, hog_data_dir);
+[train_appearance_data, valid_ids_train_hog, vid_ids_train_string] = Read_HOG_files(train_users, features_dir);
 
-clm_data_dir = [hog_data_dir, '/../model_params'];
-[train_geom_data] = Read_geom_files(train_users,  clm_data_dir);
+[train_geom_data] = Read_geom_files(train_users,  features_dir);
 
 % Subsample the data to make training quicker
 labels_train = cat(1, labels_train{:});
@@ -64,11 +63,11 @@ end
 [ labels_devel, valid_ids_devel, vid_ids_devel ] = extract_UNBC_labels(UNBC_dir, devel_users, au_train);
 
 % Reading in the HOG data (of only relevant frames)
-[devel_appearance_data, valid_ids_devel_hog, vid_ids_devel_string] = Read_HOG_files(devel_users, hog_data_dir);
+[devel_appearance_data, valid_ids_devel_hog, vid_ids_devel_string] = Read_HOG_files(devel_users, features_dir);
 devel_success = valid_ids_devel_hog;
 devel_ids = vid_ids_devel_string;
 
-[devel_geom_data] = Read_geom_files(devel_users, clm_data_dir);
+[devel_geom_data] = Read_geom_files(devel_users, features_dir);
 
 labels_devel = cat(1, labels_devel{:});
 

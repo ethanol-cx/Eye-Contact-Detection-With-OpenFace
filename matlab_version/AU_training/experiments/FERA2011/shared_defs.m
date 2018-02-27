@@ -7,3 +7,5 @@ addpath('../../data extraction/');
 
 find_FERA2011;
 
+features_dir = 'E:\datasets\face_datasets_processed\fera2011';
+

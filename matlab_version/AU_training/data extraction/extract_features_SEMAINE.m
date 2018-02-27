@@ -24,7 +24,7 @@ parfor f1=1:numel(semaine_dirs)
 
             input_file = [SEMAINE_dir, f1_dir, '/', vid_files(v).name];
 
-            command = sprintf('%s -f "%s" -out_dir "%s" -hogalign -pdmparams', features_exe, input_file, output_dir );
+            command = sprintf('%s -f "%s" -out_dir "%s" -hogalign -pdmparams -of %s', features_exe, input_file, output_dir, f1_dir );
 
             dos(command);
         end
@@ -47,7 +47,7 @@ parfor f1=1:numel(semaine_dirs)
 
             input_file = [SEMAINE_dir, f1_dir, '/', vid_files(v).name];
 
-            command = sprintf('%s -f "%s" -out_dir "%s" -hogalign -pdmparams', features_exe, input_file, output_dir );
+            command = sprintf('%s -f "%s" -out_dir "%s" -hogalign -pdmparams -of %s', features_exe, input_file, output_dir, f1_dir );
 
             dos(command);
 

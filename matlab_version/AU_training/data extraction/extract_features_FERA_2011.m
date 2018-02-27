@@ -26,8 +26,9 @@ parfor f1=1:numel(fera_dirs)
         for v=1:numel(vid_files)
             
             input_file = [FERA2011_dir, fera_dirs(f1).name, '/', fera_dirs_level_2(f2).name, '/', vid_files(v).name];
-            
-            command = sprintf('%s -f "%s" -out_dir "%s" -hogalign -pdmparams', features_exe, input_file, output_dir );
+            [~, name, ~] = fileparts(vid_files(v).name);
+            out_name = [fera_dirs(f1).name '_' name];
+            command = sprintf('%s -f "%s" -out_dir "%s" -hogalign -pdmparams -of %s', features_exe, input_file, output_dir, out_name );
 
             dos(command);
             
