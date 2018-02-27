@@ -16,27 +16,15 @@ else
 end
 
 %% Run using CE-CLM model
-out_ceclm = [curr_dir '/out_ceclm/'];
-if(~exist(out_ceclm, 'file'))
-   mkdir(out_ceclm); 
-end
-
+out_ceclm = [curr_dir '/300W_experiments/out_ceclm/'];
 [err_ceclm, err_no_out_ceclm] = Run_OF_on_images(out_ceclm, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_ceclm_general.txt', 'multi_view', 1);
 
 %% Run using CLNF in the wild model
-out_clnf = [curr_dir '/out_clnf/'];
-if(~exist(out_clnf, 'file'))
-   mkdir(out_clnf); 
-end
-
+out_clnf = [curr_dir '/300W_experiments/out_clnf/'];
 [err_clnf, err_no_out_clnf] =Run_OF_on_images(out_clnf, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_clnf_wild.txt', 'multi_view', 1);
 
 %% Run using SVR model
-out_svr = [curr_dir '/out_svr/'];
-if(~exist(out_svr, 'file'))
-   mkdir(out_svr); 
-end
-
+out_svr = [curr_dir '/300W_experiments/out_svr/'];
 [err_svr, err_no_out_svr] = Run_OF_on_images(out_svr, database_root, 'use_afw', 'use_lfpw', 'use_ibug', 'use_helen', 'verbose', 'model', 'model/main_clm_wild.txt', 'multi_view', 1);                
 
 %%
@@ -50,7 +38,11 @@ fprintf(f, 'err svr: %f, %f\n', mean(err_svr), median(err_svr));
 
 fclose(f);
 
-%% Draw the corresponding error graphs comparing CLNF and SVR
+%% Draw the corresponding error graphs comparing OpenFace methods with others
+
+% Load results from other methods
+addpath('300W_baselines');
+Extract_baseline_results_300W;
 
 % set up the canvas
 scrsz = get(0,'ScreenSize');
@@ -66,25 +58,25 @@ hold on;
 axes1 = axes('Parent',figure1,'FontSize',40,'FontName','Helvetica');
 
 % load ce-clm errors
-load('out_ceclm/res.mat');
+load('300W_experiments/out_ceclm/res.mat');
 
 ceclm_error_cpp = compute_error( labels,  shapes);
 [error_x, error_y] = cummErrorCurve(ceclm_error_cpp);
-plot(error_x, error_y, 'r','DisplayName', 'CE-CLM', 'LineWidth',line_width);
+plot(error_x, error_y, 'r','DisplayName', 'OpenFace (CE-CLM)', 'LineWidth',line_width);
 hold on;
 
 % load clnf errors
-load('out_clnf/res.mat');
+load('300W_experiments/out_clnf/res.mat');
 clnf_error_cpp = compute_error( labels,  shapes);
 [error_x, error_y] = cummErrorCurve(clnf_error_cpp);
-plot(error_x, error_y,  'DisplayName', 'CLM+CLNF', 'LineWidth',line_width);
+plot(error_x, error_y,  'DisplayName', 'OpenFace (CLNF)', 'LineWidth',line_width);
 hold on;
 
 % load svr errors
-load('out_svr/res.mat');
+load('300W_experiments/out_svr/res.mat');
 svr_error_cpp = compute_error( labels,  shapes);
 [error_x, error_y] = cummErrorCurve(svr_error_cpp);
-plot(error_x, error_y, 'b-.','DisplayName', 'CLM+SVR', 'LineWidth',line_width);
+plot(error_x, error_y, 'b-.','DisplayName', 'OpenFace (CLM+)', 'LineWidth',line_width);
 
 set(gca,'xtick',[0.02:0.01:0.1])
 xlim([0.02,0.08]);

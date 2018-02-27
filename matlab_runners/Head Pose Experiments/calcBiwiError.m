@@ -15,15 +15,32 @@ seq_ids = {};
 for i=1:numel(seqNames)
         
     posesGround =  load ([gtDir '/' seqNames{i} '/groundTruthPose.txt']);
-   
-    [frame t, rels, sc tx ty tz rx ry rz] = textread([resDir '/' seqNames{i} '.csv'], '%f, %f, %f, %f, %f, %f, %f, %f, %f, %f', 'headerlines', 1);
-   
+     
+    fname = [resDir seqNames{i} '.csv'];
+    if(i == 1)
+        % First read in the column names
+        tab = readtable(fname);
+        column_names = tab.Properties.VariableNames;
+
+        confidence_id = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'confidence'));
+        rot_ids = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'pose_R'));
+        t_ids = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'pose_T'));
+    end
+
+    all_params  = dlmread(fname, ',', 1, 0);
+    
+    T = all_params(:,t_ids);
+    tx = T(:,1);    
+    ty = T(:,2);
+    tz = T(:,3);
+
+    rot{i} = all_params(:, rot_ids);    
+    rels = all_params(:, confidence_id);
+    
     % the reliabilities of head pose
     rels_all = cat(1, rels_all, rels);    
     
     rotg{i} = posesGround(:,[5 6 7]);
-    rot{i} = [rx ry rz];  
-    T = [tx ty tx];
     
     % Correct the first frame so it corresponds to (0,0,0), as slightly
     % different pose might be assumed frontal and this corrects for

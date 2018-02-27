@@ -15,14 +15,26 @@ rels_all = [];
 seq_ids = {};
 
 for i = 1:numel(seqNames)
+    fname = [resDir seqNames{i} '.csv'];
+    if(i == 1)
+        % First read in the column names
+        tab = readtable(fname);
+        column_names = tab.Properties.VariableNames;
+
+        confidence_id = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'confidence'));
+        rot_ids = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'pose_R'));
+    end
+
+    all_params  = dlmread(fname, ',', 1, 0);
     
-    [frame t, rels, sc tx ty tz rx ry rz] = textread([resDir seqNames{i} '.csv'], '%f, %f, %f, %f, %f, %f, %f, %f, %f, %f', 'headerlines', 1);
+    rot{i} = all_params(:, rot_ids);    
+    rels = all_params(:, confidence_id);
+    
     posesGround =  load ([gtDir seqNames{i} '.dat']);
 
     % the reliabilities of head pose
     rels_all = cat(1, rels_all, rels);
     
-    rot{i} = [rx ry rz];    
     % Flip because of different conventions
     rot{i}(:,2) = -rot{i}(:,2);
     rot{i}(:,3) = -rot{i}(:,3);

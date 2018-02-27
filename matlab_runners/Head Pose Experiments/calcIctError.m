@@ -18,13 +18,25 @@ function [meanError, all_rot_preds, all_rot_gts, meanErrors, all_errors, rels_al
     for i = 1:numel(sequences)
 
         [~, name,~] = fileparts(sequences(i).name);
-        [frame t, rels, sc tx ty tz rx ry rz] = textread([resDir '/' sequences(i).name], '%f, %f, %f, %f, %f, %f, %f, %f, %f, %f', 'headerlines', 1);
-        [txg tyg tzg rxg ryg rzg] =  textread([gtDir name '/'  polhemus], '%f,%f,%f,%f,%f,%f');
 
+        fname = [resDir '/' sequences(i).name];
+        if(i == 1)
+            % First read in the column names
+            tab = readtable(fname);
+            column_names = tab.Properties.VariableNames;
+
+            confidence_id = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'confidence'));
+            rot_ids = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'pose_R'));
+        end
+
+        all_params  = dlmread(fname, ',', 1, 0);
+
+        rot{i} = all_params(:, rot_ids);    
+        rels = all_params(:, confidence_id);
+        
         % the reliabilities of head pose
         rels_all = cat(1, rels_all, rels);
-
-        rot{i} = [rx ry rz];
+        [txg tyg tzg rxg ryg rzg] =  textread([gtDir name '/'  polhemus], '%f,%f,%f,%f,%f,%f');
         
         rotg{i} = [rxg ryg rzg];
         
