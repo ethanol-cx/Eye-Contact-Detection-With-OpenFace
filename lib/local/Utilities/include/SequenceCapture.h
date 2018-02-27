@@ -85,6 +85,8 @@ namespace Utilities
 		// Parameters describing the sequence and it's progress
 		double GetProgress();
 
+		int GetFrameNumber() { return frame_num; }
+
 		bool IsOpened();
 
 		void Close();

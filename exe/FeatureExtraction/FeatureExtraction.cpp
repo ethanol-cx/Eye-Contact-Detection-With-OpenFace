@@ -103,6 +103,14 @@ int main(int argc, char **argv)
 
 	vector<string> arguments = get_arguments(argc, argv);
 
+	// no arguments: output usage
+	if (arguments.size() == 1)
+	{
+		cout << "For command line arguments see:" << endl;
+		cout << " https://github.com/TadasBaltrusaitis/OpenFace/wiki/Command-line-arguments";
+		return 0;
+	}
+
 	// Load the modules that are being used for tracking and face analysis
 	// Load face landmark detector
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);
@@ -138,6 +146,8 @@ int main(int argc, char **argv)
 			visualizer.vis_track = true;
 		}
 
+		cv::Mat captured_image;
+
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.IsWebcam(),
 			sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, sequence_reader.fps);
 		Utilities::RecorderOpenFace open_face_rec(sequence_reader.name, recording_params, arguments);
@@ -145,20 +155,20 @@ int main(int argc, char **argv)
 		if (recording_params.outputGaze() && !face_model.eye_model)
 			cout << "WARNING: no eye model defined, but outputting gaze" << endl;
 
-		cv::Mat rgb_image = sequence_reader.GetNextFrame();
+		captured_image = sequence_reader.GetNextFrame();
 
 		// For reporting progress
 		double reported_completion = 0;
 
 		INFO_STREAM("Starting tracking");
-		while (!rgb_image.empty())
+		while (!captured_image.empty())
 		{
 
 			// Converting to grayscale
 			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
 			// The actual facial landmark detection / tracking
-			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(rgb_image, face_model, det_parameters, grayscale_image);
+			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
 
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, 0); cv::Point3f gazeDirection1(0, 0, 0); cv::Vec2d gazeAngle(0, 0);
@@ -177,7 +187,7 @@ int main(int argc, char **argv)
 			// Perform AU detection and HOG feature extraction, as this can be expensive only compute it if needed by output or visualization
 			if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualizer.vis_align || visualizer.vis_hog)
 			{
-				face_analyser.AddNextFrame(rgb_image, face_model.detected_landmarks, face_model.detection_success, sequence_reader.time_stamp, sequence_reader.IsWebcam());
+				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, sequence_reader.time_stamp, sequence_reader.IsWebcam());
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 				face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			}
@@ -189,7 +199,7 @@ int main(int argc, char **argv)
 			fps_tracker.AddFrame();
 
 			// Displaying the tracking visualizations
-			visualizer.SetImage(rgb_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 			visualizer.SetObservationFaceAlign(sim_warped_img);
 			visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.GetVisibilities());
@@ -215,6 +225,8 @@ int main(int argc, char **argv)
 			open_face_rec.SetObservationPose(pose_estimate);
 			open_face_rec.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy));
 			open_face_rec.SetObservationTimestamp(sequence_reader.time_stamp);
+			open_face_rec.SetObservationFaceID(0);
+			open_face_rec.SetObservationFrameNumber(sequence_reader.GetFrameNumber());
 			open_face_rec.SetObservationFaceAlign(sim_warped_img);
 			open_face_rec.WriteObservation();
 
@@ -230,7 +242,7 @@ int main(int argc, char **argv)
 			}
 
 			// Grabbing the next frame in the sequence
-			rgb_image = sequence_reader.GetNextFrame();
+			captured_image = sequence_reader.GetNextFrame();
 
 		}
 

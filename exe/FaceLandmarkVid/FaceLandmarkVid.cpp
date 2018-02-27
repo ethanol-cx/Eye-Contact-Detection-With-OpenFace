@@ -91,6 +91,14 @@ int main(int argc, char **argv)
 
 	vector<string> arguments = get_arguments(argc, argv);
 
+	// no arguments: output usage
+	if (arguments.size() == 1)
+	{
+		cout << "For command line arguments see:" << endl;
+		cout << " https://github.com/TadasBaltrusaitis/OpenFace/wiki/Command-line-arguments";
+		return 0;
+	}
+
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);
 
 	// The modules that are being used for tracking
@@ -113,37 +121,21 @@ int main(int argc, char **argv)
 
 		// The sequence reader chooses what to open based on command line arguments provided
 		if (!sequence_reader.Open(arguments))
-		{
-			// If failed to open because no input files specified, attempt to open a webcam
-			if (sequence_reader.no_input_specified && sequence_number == 0)
-			{
-				// If that fails, revert to webcam
-				INFO_STREAM("No input specified, attempting to open a webcam 0 at 640 x 480px");
-				if (!sequence_reader.OpenWebcam(0, 640, 480))
-				{
-					ERROR_STREAM("Failed to open the webcam");
-					break;
-				}
-			}
-			else
-			{
-				// Either reached the end of sequences provided or failed to open them
-				break;
-			}
-		}
+			break;
+
 		INFO_STREAM("Device or file opened");
 
-		cv::Mat rgb_image = sequence_reader.GetNextFrame();
+		cv::Mat captured_image = sequence_reader.GetNextFrame();
 
 		INFO_STREAM("Starting tracking");
-		while (!rgb_image.empty()) // this is not a for loop as we might also be reading from a webcam
+		while (!captured_image.empty()) // this is not a for loop as we might also be reading from a webcam
 		{
 
-			// Reading the grayscale image as well (face detection is done in RGB, landmark detection in grayscale)
+			// Reading the images
 			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
 			// The actual facial landmark detection / tracking
-			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(rgb_image, face_model, det_parameters, grayscale_image);
+			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
 
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, -1);
@@ -157,13 +149,13 @@ int main(int argc, char **argv)
 			}
 
 			// Work out the pose of the head from the tracked model
-			cv::Vec6f pose_estimate = LandmarkDetector::GetPose(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 
 			// Keeping track of FPS
 			fps_tracker.AddFrame();
 
 			// Displaying the tracking visualizations
-			visualizer.SetImage(rgb_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.GetVisibilities());
 			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
 			visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_model.detection_certainty);
@@ -183,7 +175,7 @@ int main(int argc, char **argv)
 			}
 
 			// Grabbing the next frame in the sequence
-			rgb_image = sequence_reader.GetNextFrame();
+			captured_image = sequence_reader.GetNextFrame();
 
 		}
 

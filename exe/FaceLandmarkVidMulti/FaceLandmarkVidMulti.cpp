@@ -39,6 +39,10 @@
 #include "VisualizationUtils.h"
 #include "Visualizer.h"
 #include "SequenceCapture.h"
+#include <RecorderOpenFace.h>
+#include <RecorderOpenFaceParameters.h>
+#include <GazeEstimation.h>
+#include <FaceAnalyser.h>
 
 #include <fstream>
 #include <sstream>
@@ -110,6 +114,13 @@ int main(int argc, char **argv)
 
 	vector<string> arguments = get_arguments(argc, argv);
 
+	// no arguments: output usage
+	if (arguments.size() == 1)
+	{
+		cout << "For command line arguments see:" << endl;
+		cout << " https://github.com/TadasBaltrusaitis/OpenFace/wiki/Command-line-arguments";
+		return 0;
+	}
 
 	LandmarkDetector::FaceModelParameters det_params(arguments);
 	// This is so that the model would not try re-initialising itself
@@ -146,6 +157,11 @@ int main(int argc, char **argv)
 		det_parameters.push_back(det_params);
 	}
 
+	// Load facial feature extractor and AU analyser (make sure it is static, as we don't reidentify faces)
+	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
+	face_analysis_params.OptimizeForImages();
+	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
+
 	// Open a sequence
 	Utilities::SequenceCapture sequence_reader;
 
@@ -160,31 +176,35 @@ int main(int argc, char **argv)
 
 	while (true) // this is not a for loop as we might also be reading from a webcam
 	{
-
 		// The sequence reader chooses what to open based on command line arguments provided
 		if (!sequence_reader.Open(arguments))
-		{
-			// If failed to open because no input files specified, attempt to open a webcam
-			if (sequence_reader.no_input_specified && sequence_number == 0)
-			{
-				// If that fails, revert to webcam
-				INFO_STREAM("No input specified, attempting to open a webcam 0");
-				if (!sequence_reader.OpenWebcam(0))
-				{
-					ERROR_STREAM("Failed to open the webcam");
-					break;
-				}
-			}
-			else
-			{
-				break;
-			}
-		}
+			break;
+
 		INFO_STREAM("Device or file opened");
 
 		cv::Mat rgb_image = sequence_reader.GetNextFrame();
 
 		int frame_count = 0;
+
+		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.IsWebcam(),
+			sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, sequence_reader.fps);
+		// Do not do AU detection on multi-face case as it is not supported
+		recording_params.setOutputAUs(false);
+		Utilities::RecorderOpenFace open_face_rec(sequence_reader.name, recording_params, arguments);
+
+		if (recording_params.outputGaze() && !face_model.eye_model)
+			cout << "WARNING: no eye model defined, but outputting gaze" << endl;
+
+		if (sequence_reader.IsWebcam())
+		{
+			INFO_STREAM("WARNING: using a webcam in feature extraction, forcing visualization of tracking to allow quitting the application (press q)");
+			visualizer.vis_track = true;
+		}
+
+		if (recording_params.outputAUs())
+		{
+			INFO_STREAM("WARNING: using a AU detection in multiple face mode, it might not be as accurate and is experimental");
+		}
 
 		INFO_STREAM("Starting tracking");
 		while (!rgb_image.empty())
@@ -282,14 +302,60 @@ int main(int argc, char **argv)
 
 			visualizer.SetImage(rgb_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 
-			// Go through every model and visualise the results
+			// Go through every model and detect eye gaze, record results and visualise the results
 			for (size_t model = 0; model < face_models.size(); ++model)
 			{
 				// Visualising the results
 				if (active_models[model])
 				{
+
+					// Estimate head pose and eye gaze				
+					cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_models[model], sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+
+					cv::Point3f gaze_direction0(0, 0, 0); cv::Point3f gaze_direction1(0, 0, 0); cv::Vec2d gaze_angle(0, 0);
+
+					// Detect eye gazes
+					if (face_models[model].detection_success && face_model.eye_model)
+					{
+						GazeAnalysis::EstimateGaze(face_models[model], gaze_direction0, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, true);
+						GazeAnalysis::EstimateGaze(face_models[model], gaze_direction1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, false);
+						gaze_angle = GazeAnalysis::GetGazeAngle(gaze_direction0, gaze_direction1);
+					}
+
+					// Face analysis step
+					cv::Mat sim_warped_img;
+					cv::Mat_<double> hog_descriptor; int num_hog_rows = 0, num_hog_cols = 0;
+
+					// Perform AU detection and HOG feature extraction, as this can be expensive only compute it if needed by output or visualization
+					if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualizer.vis_align || visualizer.vis_hog)
+					{
+						face_analyser.PredictStaticAUsAndComputeFeatures(rgb_image, face_models[model].detected_landmarks);
+						face_analyser.GetLatestAlignedFace(sim_warped_img);
+						face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
+					}
+
+					// Visualize the features
+					visualizer.SetObservationFaceAlign(sim_warped_img);
+					visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 					visualizer.SetObservationLandmarks(face_models[model].detected_landmarks, face_models[model].detection_certainty);
 					visualizer.SetObservationPose(LandmarkDetector::GetPose(face_models[model], sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_models[model].detection_certainty);
+					visualizer.SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(face_models[model]), LandmarkDetector::Calculate3DEyeLandmarks(face_models[model], sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_models[model].detection_certainty);
+
+					// Output features
+					open_face_rec.SetObservationHOG(face_models[model].detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
+					open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
+					open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
+					open_face_rec.SetObservationLandmarks(face_models[model].detected_landmarks, face_models[model].GetShape(sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy),
+						face_models[model].params_global, face_models[model].params_local, face_models[model].detection_certainty, face_models[model].detection_success);
+					open_face_rec.SetObservationPose(pose_estimate);
+					open_face_rec.SetObservationGaze(gaze_direction0, gaze_direction1, gaze_angle, LandmarkDetector::CalculateAllEyeLandmarks(face_models[model]), LandmarkDetector::Calculate3DEyeLandmarks(face_models[model], sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy));
+					open_face_rec.SetObservationFaceAlign(sim_warped_img);
+					open_face_rec.SetObservationFaceID(model);
+					open_face_rec.SetObservationTimestamp(sequence_reader.time_stamp);
+					open_face_rec.SetObservationFrameNumber(sequence_reader.GetFrameNumber());
+					open_face_rec.WriteObservation();
+
+
 				}
 			}
 			visualizer.SetFps(fps_tracker.GetFPS());

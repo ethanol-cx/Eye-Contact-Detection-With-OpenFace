@@ -78,7 +78,7 @@ bool RecorderCSV::Open(std::string output_file_name, bool is_sequence, bool outp
 	// Different headers if we are writing out the results on a sequence or an individual image
 	if(this->is_sequence)
 	{
-		output_file << "frame, timestamp, confidence, success";
+		output_file << "frame, face_id, timestamp, confidence, success";
 	}
 	else
 	{
@@ -176,7 +176,7 @@ bool RecorderCSV::Open(std::string output_file_name, bool is_sequence, bool outp
 
 }
 
-void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landmark_detection_success, float landmark_confidence,
+void RecorderCSV::WriteLine(int face_id, int frame_num, double time_stamp, bool landmark_detection_success, double landmark_confidence,
 	const cv::Mat_<float>& landmarks_2D, const cv::Mat_<float>& landmarks_3D, const cv::Mat_<float>& pdm_model_params, const cv::Vec6f& rigid_shape_params, cv::Vec6f& pose_estimate,
 	const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const cv::Vec2f& gaze_angle, const std::vector<cv::Point2f>& eye_landmarks2d, const std::vector<cv::Point3f>& eye_landmarks3d,
 	const std::vector<std::pair<std::string, double> >& au_intensities, const std::vector<std::pair<std::string, double> >& au_occurences)
@@ -193,8 +193,9 @@ void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landm
 	output_file << std::noshowpoint;
 	if(is_sequence)
 	{
+		
 		output_file << std::setprecision(3);
-		output_file << observation_count << ", " << time_stamp;
+		output_file << frame_num << ", " << face_id << ", " << time_stamp;
 		output_file << std::setprecision(2);
 		output_file << ", " << landmark_confidence;
 		output_file << std::setprecision(0);
@@ -203,7 +204,7 @@ void RecorderCSV::WriteLine(int observation_count, double time_stamp, bool landm
 	else
 	{
 		output_file << std::setprecision(3);
-		output_file << observation_count << ", " << landmark_confidence;
+		output_file << face_id << ", " << landmark_confidence;
 	}
 	// Output the estimated gaze
 	if (output_gaze)

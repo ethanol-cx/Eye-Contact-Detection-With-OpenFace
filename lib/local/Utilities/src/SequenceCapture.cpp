@@ -94,6 +94,8 @@ bool SequenceCapture::Open(std::vector<std::string>& arguments)
 	std::string input_video_file;
 	std::string input_sequence_directory;
 	int device = -1;
+	int cam_width = 640;
+	int cam_height = 480;
 
 	bool file_found = false;
 
@@ -147,6 +149,22 @@ bool SequenceCapture::Open(std::vector<std::string>& arguments)
 			valid[i + 1] = false;
 			i++;
 		}
+		else if (arguments[i].compare("-cam_width") == 0)
+		{
+			std::stringstream data(arguments[i + 1]);
+			data >> cam_width;
+			valid[i] = false;
+			valid[i + 1] = false;
+			i++;
+		}
+		else if (arguments[i].compare("-cam_height") == 0)
+		{
+			std::stringstream data(arguments[i + 1]);
+			data >> cam_height;
+			valid[i] = false;
+			valid[i + 1] = false;
+			i++;
+		}
 	}
 
 	for (int i = (int)arguments.size() - 1; i >= 0; --i)
@@ -162,8 +180,7 @@ bool SequenceCapture::Open(std::vector<std::string>& arguments)
 	// Based on what was read in open the sequence
 	if (device != -1)
 	{
-		// TODO allow to specify webcam resolution
-		return OpenWebcam(device, 640, 480, fx, fy, cx, cy);
+		return OpenWebcam(device, cam_width, cam_height, fx, fy, cx, cy);
 	}
 	if (!input_video_file.empty())
 	{

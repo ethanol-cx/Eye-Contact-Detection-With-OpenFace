@@ -77,9 +77,12 @@ namespace Utilities
 		float q2 = (rotation_matrix(0, 2) - rotation_matrix(2, 0)) / (4.0f*q0);
 		float q3 = (rotation_matrix(1, 0) - rotation_matrix(0, 1)) / (4.0f*q0);
 
+		// Slower, but dealing with degenerate cases due to precision
 		float t1 = 2.0f * (q0*q2 + q1*q3);
+		if (t1 > 1) t1 = 1.0f;
+		if (t1 < -1) t1 = -1.0f;
 
-		float yaw = asin(2.0 * (q0*q2 + q1*q3));
+		float yaw = asin(t1);
 		float pitch = atan2(2.0 * (q0*q1 - q2*q3), q0*q0 - q1*q1 - q2*q2 + q3*q3);
 		float roll = atan2(2.0 * (q0*q3 - q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3);
 
