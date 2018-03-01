@@ -1,5 +1,5 @@
 clear;
-version = '0.4.0';
+version = '0.4.1';
 
 out_x86 = sprintf('OpenFace_%s_win_x86', version);
 out_x64 = sprintf('OpenFace_%s_win_x64', version);
