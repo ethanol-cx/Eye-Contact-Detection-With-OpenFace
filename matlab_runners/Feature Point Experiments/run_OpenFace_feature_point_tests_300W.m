@@ -40,10 +40,6 @@ fclose(f);
 
 %% Draw the corresponding error graphs comparing OpenFace methods with others
 
-% Load results from other methods
-addpath('300W_baselines');
-Extract_baseline_results_300W;
-
 % set up the canvas
 scrsz = get(0,'ScreenSize');
 figure1 = figure('Position',[20 50 3*scrsz(3)/4 0.9*scrsz(4)]);
