@@ -133,10 +133,11 @@ feat_test = sprintf('FeatureExtraction.exe -f samples/default.wmv -verbose');
 dos(feat_test);
 img_test = sprintf('FaceLandmarkImg.exe -fdir samples -verbose');
 dos(img_test);
-vid_test = sprintf('FaceLandmarkVidMulti.exe -f samples/multi_face.avi');
+vid_test = sprintf('FaceLandmarkVidMulti.exe -f samples/multi_face.avi -verbose');
 dos(vid_test);
 rmdir('processed', 's');
 
+%%
 cd('..');
 cd(out_x86);
 vid_test = sprintf('FaceLandmarkVid.exe -f samples/default.wmv');
@@ -145,7 +146,7 @@ feat_test = sprintf('FeatureExtraction.exe -f samples/default.wmv -verbose');
 dos(feat_test);
 img_test = sprintf('FaceLandmarkImg.exe -fdir samples -verbose');
 dos(img_test);
-vid_test = sprintf('FaceLandmarkVidMulti.exe -f samples/multi_face.avi');
+vid_test = sprintf('FaceLandmarkVidMulti.exe -f samples/multi_face.avi -verbose');
 dos(vid_test);
 rmdir('processed', 's');
 cd('..');
