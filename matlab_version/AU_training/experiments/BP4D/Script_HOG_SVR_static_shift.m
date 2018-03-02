@@ -35,7 +35,7 @@ for a=1:numel(aus)
     rest_aus = setdiff(all_aus, au);        
     
     % load the training and testing data for the current fold
-    [train_samples, train_labels, ~, valid_samples, valid_labels, vid_ids_devel, ~, PC, means, scaling, success_devel] = Prepare_HOG_AU_data_generic_intensity(train_recs, devel_recs, au, BP4D_dir_int, hog_data_dir_BP4D, pca_loc);
+    [train_samples, train_labels, ~, valid_samples, valid_labels, vid_ids_devel, ~, PC, means, scaling, success_devel] = Prepare_HOG_AU_data_generic_intensity(train_recs, devel_recs, au, BP4D_dir_int, hog_data_dir_BP4D);
     
     ignore = valid_labels == 9;
     

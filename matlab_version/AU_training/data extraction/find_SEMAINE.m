@@ -11,11 +11,11 @@ elseif(exist('D:\Datasets\FERA_2015\semaine\SEMAINE-Sessions/', 'file'))
 elseif(exist('D:/fera_2015/semaine/SEMAINE-Sessions/', 'file'))
     SEMAINE_dir = 'D:/fera_2015/semaine/SEMAINE-Sessions/';
 else
-    fprintf('SEMAINE location not found (or not defined)\n'); 
+    fprintf('DISFA location not found (or not defined)\n'); 
 end
 
 if(exist('SEMAINE_dir', 'var'))
-    hog_data_dir = [SEMAINE_dir, '../processed_data/'];
+    hog_data_dir = 'E:\datasets\face_datasets_processed\semaine/';
 end
 
 train_recs = {'rec1', 'rec12', 'rec14', 'rec19', 'rec23', 'rec25', 'rec37', 'rec39', 'rec43', 'rec45', 'rec48', 'rec50', 'rec52', 'rec54', 'rec56', 'rec60'};

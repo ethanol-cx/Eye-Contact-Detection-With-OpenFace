@@ -1,12 +1,16 @@
 
-features_exe = '"..\..\..\x64\Release\FeatureExtraction.exe"';
+if(isunix)
+    features_exe = '"../../../build/bin/FeatureExtraction"';
+else
+    features_exe = '"../../../x64/Release/FeatureExtraction.exe"';
+end
 
 find_SEMAINE;
 
 
 % Go two levels deep
 semaine_dirs = train_recs;
-out_loc = [SEMAINE_dir, '../processed_data/train/'];
+output_dir = 'E:\datasets\face_datasets_processed\semaine\train';
 
 parfor f1=1:numel(semaine_dirs)
 
@@ -18,28 +22,18 @@ parfor f1=1:numel(semaine_dirs)
         
         for v=1:numel(vid_files)
 
-            command = features_exe;
+            input_file = [SEMAINE_dir, f1_dir, '/', vid_files(v).name];
 
-            curr_vid = [SEMAINE_dir, f1_dir, '/', vid_files(v).name];
+            command = sprintf('%s -f "%s" -out_dir "%s" -hogalign -pdmparams -of %s', features_exe, input_file, output_dir, f1_dir );
 
-            name = f1_dir;
-            output_file = [out_loc name '/'];
-
-            output_hog = [out_loc name '.hog'];
-            output_params = [out_loc name '.params.txt'];
-
-            command = cat(2, command, [' -rigid -f "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
-            command = cat(2, command, [' -hogalign "' output_hog '"']);
-            command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze -q ']);
             dos(command);
-
         end
     end
 end
 
 %%
 semaine_dirs = devel_recs;
-out_loc = [SEMAINE_dir, '../processed_data/devel/'];
+output_dir = 'E:\datasets\face_datasets_processed\semaine\devel';
 
 parfor f1=1:numel(semaine_dirs)
 
@@ -51,19 +45,10 @@ parfor f1=1:numel(semaine_dirs)
         
         for v=1:numel(vid_files)
 
-            command = features_exe;
+            input_file = [SEMAINE_dir, f1_dir, '/', vid_files(v).name];
 
-            curr_vid = [SEMAINE_dir, f1_dir, '/', vid_files(v).name];
+            command = sprintf('%s -f "%s" -out_dir "%s" -hogalign -pdmparams -of %s', features_exe, input_file, output_dir, f1_dir );
 
-            name = f1_dir;
-            output_file = [out_loc name '/'];
-
-            output_hog = [out_loc name '.hog'];
-            output_params = [out_loc name '.params.txt'];
-
-            command = cat(2, command, [' -rigid -f "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
-            command = cat(2, command, [' -hogalign "' output_hog '"']);
-            command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze -q ']);
             dos(command);
 
         end

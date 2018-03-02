@@ -36,7 +36,7 @@ for a=1:numel(aus)
         rest_aus = setdiff(all_aus, au);        
 
         % load the training and testing data for the current fold
-        [~, ~, test_samples, test_labels, ~, ~, ~, ~, test_ids, test_success] = Prepare_HOG_AU_data_generic_dynamic({}, test_folds{t}, au, rest_aus, hog_data_dir);
+        [~, ~, test_samples, test_labels, ~, ~, ~, ~, test_ids, test_success] = Prepare_HOG_AU_data_generic_dynamic({}, test_folds{t}, au, rest_aus, DISFA_dir, hog_data_dir);
 
         % create the training and validation data
         users_train = setdiff(users, unique(test_ids));        
@@ -44,7 +44,7 @@ for a=1:numel(aus)
         [users_train, users_valid] = get_balanced_fold(DISFA_dir, users_train, au, 1/4, 1);
         
         % need to split the rest
-        [train_samples, train_labels, valid_samples, valid_labels, ~, PC, means, scaling, valid_ids, valid_success] = Prepare_HOG_AU_data_generic_dynamic(users_train, users_valid, au, rest_aus, hog_data_dir);
+        [train_samples, train_labels, valid_samples, valid_labels, ~, PC, means, scaling, valid_ids, valid_success] = Prepare_HOG_AU_data_generic_dynamic(users_train, users_valid, au, rest_aus, DISFA_dir, hog_data_dir);
 
         train_samples = sparse(train_samples);
         valid_samples = sparse(valid_samples);

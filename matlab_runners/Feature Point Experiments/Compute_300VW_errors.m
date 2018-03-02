@@ -15,11 +15,11 @@ cat_2 = [203, 208, 211, 212, 213, 214, 218, 224, 403, 404, 405, 406, 407, 408, 4
 cat_3 = [410, 411, 516, 517, 526, 528, 529, 530, 531, 533, 557, 558, 559, 562];
 in_dirs = cat(2, cat_1, cat_2, cat_3);
 
-d_loc_ceclm = '300VW_features/ceclm/';
-d_loc_clnf = '300VW_features/clnf/';
+d_loc_ceclm = '300VW_experiment/ceclm/';
+d_loc_clnf = '300VW_experiment/clnf/';
 extra_dir = '300VW_extra';
 
-files_yt = dir([d_loc_ceclm, '/*.txt']);
+files_pred = dir([d_loc_ceclm, '/*.csv']);
 preds_all_ceclm = [];
 preds_all_clnf = [];
 confs_ceclm = [];
@@ -30,9 +30,9 @@ cat_1_ids = logical([]);
 cat_2_ids = logical([]);
 cat_3_ids = logical([]);
 
-for i = 1:numel(files_yt)
-    [~, name, ~] = fileparts(files_yt(i).name);
-    pred_landmarks_ceclm = dlmread([d_loc_ceclm, files_yt(i).name], ',', 1, 0);
+for i = 1:numel(files_pred)
+    [~, name, ~] = fileparts(files_pred(i).name);
+    pred_landmarks_ceclm = dlmread([d_loc_ceclm, files_pred(i).name], ',', 1, 0);
     conf_ceclm = pred_landmarks_ceclm(:,3);
     pred_landmarks_ceclm = pred_landmarks_ceclm(:,5:end);
     
@@ -42,7 +42,7 @@ for i = 1:numel(files_yt)
     pred_landmarks_ceclm(:,1,:) = xs';
     pred_landmarks_ceclm(:,2,:) = ys';
        
-    pred_landmarks_clnf = dlmread([d_loc_clnf, files_yt(i).name], ',', 1, 0);
+    pred_landmarks_clnf = dlmread([d_loc_clnf, files_pred(i).name], ',', 1, 0);
     conf_clnf = pred_landmarks_clnf(:,3);
     pred_landmarks_clnf = pred_landmarks_clnf(:,5:end);
     
@@ -52,7 +52,6 @@ for i = 1:numel(files_yt)
     pred_landmarks_clnf(:,1,:) = xs';
     pred_landmarks_clnf(:,2,:) = ys';
     
-    name = name(1:end-3);
     fps_all = dir([database_root, '/', name, '/annot/*.pts']);
     gt_landmarks = zeros(size(pred_landmarks_ceclm));
     for k = 1:size(fps_all)        

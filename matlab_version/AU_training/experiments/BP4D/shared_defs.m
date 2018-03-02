@@ -28,7 +28,7 @@ else
 end
 
 if(exist('BP4D_dir', 'var'))
-    hog_data_dir = [BP4D_dir, '../processed_data/'];
+    hog_data_dir = 'E:\datasets\face_datasets_processed\bp4d/';
 end
 
 train_recs = {'F001', 'F003', 'F005', 'F007', 'F009', 'F011', 'F013', 'F015', 'F017', 'F019', 'F021', 'F023', 'M001', 'M003', 'M005', 'M007', 'M009', 'M011', 'M013', 'M015' 'M017'};

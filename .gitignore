@@ -69,3 +69,6 @@ lib/local/Utilities/x64/
 exe/FaceLandmarkImg/processed/
 matlab_runners/Demos/processed_features/
 matlab_runners/Feature Point Experiments/yt_res/
+matlab_runners/Action Unit Experiments/out_bosph/
+matlab_runners/Feature Point Experiments/300VW_experiment/
+matlab_runners/Action Unit Experiments/out_bp4d/

@@ -18,7 +18,20 @@ function [ labels, valid_ids, filenames  ] = extract_FERA2011_labels( FERA2011_d
         [~, filename,~] = fileparts(file);
         filenames{file_id} = filename;
 
-        data = csvread(file); %import annotations for one video file
+        delimiter = {'   '};
+        formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
+
+        %% Open the text file.
+        fileID = fopen(file,'r');
+
+        %% Read columns of data according to the format.
+        data = textscan(fileID, formatSpec, 'Delimiter', delimiter, 'MultipleDelimsAsOne', true, 'TextType', 'string',  'ReturnOnError', false);
+        data = [data{1:end-1}];
+
+        %% Close the text file.
+        fclose(fileID);
+
+        %data = dlmread(file, ' '); %import annotations for one video file
        
         speech = data(:,end);
 
