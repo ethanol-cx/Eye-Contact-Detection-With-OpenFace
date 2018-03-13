@@ -1,5 +1,5 @@
 function [data_train, labels_train, data_devel, labels_devel, raw_devel, PC, means_norm, stds_norm, devel_ids, devel_success] = ...
-    Prepare_HOG_AU_data_dynamic(train_users, devel_users, au_train, rest_aus, Bosphorus_dir, hog_data_dir)
+    Prepare_HOG_AU_data_dynamic(train_users, devel_users, au_train, rest_aus, Bosphorus_dir, params_data_dir)
 
 %%
 addpath(genpath('../data extraction/'));
@@ -10,9 +10,8 @@ addpath(genpath('../data extraction/'));
 [ labels_other, ~, ~ ] = extract_Bosphorus_labels(Bosphorus_dir, train_users, rest_aus);
 
 % Reading in the HOG data (of only relevant frames)
-[train_appearance_data, valid_ids_train_hog, vid_ids_train_string] = Read_HOG_files_dynamic(filenames, [hog_data_dir, '/hog_aligned_rigid_b']);
+[train_appearance_data, valid_ids_train_hog, vid_ids_train_string] = Read_HOG_files_dynamic(filenames, params_data_dir);
 
-params_data_dir = [hog_data_dir, '/model_params_b'];
 [train_geom_data] = Read_geom_files_dynamic(filenames,  params_data_dir);
 
 if(numel(train_users) > 0)
@@ -59,7 +58,7 @@ end
 [ labels_devel, valid_ids_devel, devel_files ] = extract_Bosphorus_labels(Bosphorus_dir, devel_users, au_train);
 
 % Reading in the HOG data (of only relevant frames)
-[devel_appearance_data, valid_ids_devel_hog, vid_ids_devel_string] = Read_HOG_files_dynamic(devel_files, [hog_data_dir, '/hog_aligned_rigid_b']);
+[devel_appearance_data, valid_ids_devel_hog, vid_ids_devel_string] = Read_HOG_files_dynamic(devel_files, params_data_dir);
 devel_success = valid_ids_devel_hog;
 devel_ids = vid_ids_devel_string;
 

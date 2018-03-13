@@ -76,7 +76,7 @@ for a=1:numel(all_dataset_aus)
         [users_train, users_valid_fera] = get_balanced_fold(FERA2011_dir, all_recs, au, 1/3, 1);
         
         % load the training and testing data for the current fold
-        [train_samples_f2011, train_labels_f2011, valid_samples_f2011, valid_labels_f2011, ~, PC, means, scaling] = Prepare_HOG_AU_data_generic(users_train, users_valid_fera, au, rest_aus, FERA2011_dir, hog_data_dir);
+        [train_samples_f2011, train_labels_f2011, valid_samples_f2011, valid_labels_f2011, ~, PC, means, scaling] = Prepare_HOG_AU_data_generic(users_train, users_valid_fera, au, rest_aus, FERA2011_dir, features_dir);
 
         train_samples = cat(1, train_samples, train_samples_f2011);
         valid_samples = cat(1, valid_samples, valid_samples_f2011);
@@ -169,7 +169,7 @@ for a=1:numel(all_dataset_aus)
         [users_train, users_valid_disfa] = get_balanced_fold(DISFA_dir, users, au, 1/3, 1);
 
         % need to split the rest
-        [train_samples_disf, train_labels_disf, valid_samples_disf, valid_labels_disf, ~, PC, means, scaling, valid_ids, valid_success] = Prepare_HOG_AU_data_generic(users_train, users_valid_disfa, au, rest_aus, hog_data_dir);
+        [train_samples_disf, train_labels_disf, valid_samples_disf, valid_labels_disf, ~, PC, means, scaling, valid_ids, valid_success] = Prepare_HOG_AU_data_generic(users_train, users_valid_disfa, au, rest_aus, DISFA_dir, hog_data_dir);
 
         train_labels_disf(train_labels_disf > 1) = 1;
         valid_labels_disf(valid_labels_disf > 1) = 1;
@@ -200,7 +200,7 @@ for a=1:numel(all_dataset_aus)
         [users_train, users_valid_unbc] = get_balanced_fold(UNBC_dir, all_recs, au, 1/3, 1);
     
         % load the training and testing data for the current fold
-        [train_samples_unbc, train_labels_unbc, valid_samples_unbc, valid_labels_unbc, ~, PC, means, scaling] = Prepare_HOG_AU_data(users_train, users_valid_unbc, au, rest_aus, UNBC_dir, hog_data_dir);
+        [train_samples_unbc, train_labels_unbc, valid_samples_unbc, valid_labels_unbc, ~, PC, means, scaling] = Prepare_HOG_AU_data(users_train, users_valid_unbc, au, rest_aus, UNBC_dir, features_dir);
 
         % Binarizing the data
         train_labels_unbc(train_labels_unbc > 1) = 1;

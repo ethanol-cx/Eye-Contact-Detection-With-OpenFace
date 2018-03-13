@@ -7,10 +7,10 @@ function [geom_data, valid_ids] = Read_geom_files(users, hog_data_dir)
     
     for i=1:numel(users)
         
-        geom_files = dir([hog_data_dir, '/train/', users{i} '*.params.txt']);
+        geom_files = dir([hog_data_dir, '/train/', users{i} '*.csv']);
         geom_dir = [hog_data_dir, '/train/'];
         if(isempty(geom_files))
-            geom_files = dir([hog_data_dir, '/devel/', users{i} '*.params.txt']);
+            geom_files = dir([hog_data_dir, '/devel/', users{i} '*.csv']);
             geom_dir = [hog_data_dir, '/devel/'];
         end
         
@@ -20,14 +20,25 @@ function [geom_data, valid_ids] = Read_geom_files(users, hog_data_dir)
             m_file = [geom_dir, '/' nm '.params.mat'];
               
             if(~exist(m_file, 'file'))
+                if(i == 1)
+                    tab = readtable(geom_file);
+                    column_names = tab.Properties.VariableNames; 
+                    valid_ind = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'success'));
+                    shape_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'p_'));
+                end
+        
                 res = dlmread(geom_file, ',', 1, 0);
-                save(m_file, 'res');
+                
+                valid = res(:, valid_ind) > 0.7;        
+                res = res(:, shape_inds);
+                
+                % Do not consider global parameters
+                res = res(:, 7:end);
+                
+                save(m_file, 'res', 'valid');
             else
                 load(m_file);
             end
-
-            valid = res(:, 4);
-            res = res(:, 11:end);
                     
             actual_locs = res * V';
             res = cat(2, actual_locs, res);

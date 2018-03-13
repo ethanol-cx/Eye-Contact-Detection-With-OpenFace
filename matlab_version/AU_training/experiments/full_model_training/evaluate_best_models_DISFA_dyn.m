@@ -12,6 +12,7 @@ au = DISFA_aus(1);
 op = cd('../DISFA/');
 rest_aus = setdiff(DISFA_aus, au);        
 shared_defs;
+users = users(1);
 
 % need to split the rest
 [~, ~, test_samples, test_labels, raw_data, PC, means, scaling, vid_ids, success] = Prepare_HOG_AU_data_generic_dynamic([], users, au, rest_aus, hog_data_dir);
@@ -31,7 +32,7 @@ cd(op);
 % labels_gt_test(labels_gt_test > 1) = 1;
 
 %%
-for a=1:numel(DISFA_aus)
+for a=1:1%numel(DISFA_aus)
     
     name = sprintf('mat_models/AU_%d_dynamic_intensity_comb.mat', DISFA_aus(a));
     load(name);

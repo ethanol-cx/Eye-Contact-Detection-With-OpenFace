@@ -1,13 +1,12 @@
 clear
 
-executable = '"../../x64/Release/FeatureExtraction.exe"';
-
-output = '300VW_features/';
-
-if(~exist(output, 'file'))
-    mkdir(output)
+if(isunix)
+    executable = '"../../build/bin/FeatureExtraction"';
+else
+    executable = '"../../x64/Release/FeatureExtraction.exe"';
 end
-    
+
+
 if(exist('D:\Datasets\300VW_Dataset_2015_12_14\300VW_Dataset_2015_12_14/', 'file'))
     database_root = 'D:\Datasets\300VW_Dataset_2015_12_14\300VW_Dataset_2015_12_14/';    
 elseif(exist('E:\datasets\300VW\300VW_Dataset_2015_12_14', 'file'))
@@ -25,38 +24,30 @@ cat_3 = [410, 411, 516, 517, 526, 528, 529, 530, 531, 533, 557, 558, 559, 562];
 in_dirs = cat(2, cat_1, cat_2, cat_3);
 
 %% Running CE-CLM models
+output = '300VW_experiment/ceclm';
+
+command_shared = sprintf('%s -2Dfp -tracked -out_dir "%s" -verbose ', executable, output);
+
 parfor i=1:numel(in_dirs)
-    command = executable;
-
-    command = cat(2, command, ' -no3Dfp -noMparams -noPose -noGaze -noAUs ');
-    command = cat(2, command, [' -inroot "' database_root '" ']);
-
     name = num2str(in_dirs(i));
     
-    % where to output tracking results
-    outputFile_fp = [output '/ceclm/' name '_fp.txt'];
-    outputFile_vid = [output '/ceclm/' name '.avi'];
-    in_file_name = ['/', name, '/vid.avi'];        
+    in_file_name = [database_root '/', name, '/vid.avi'];        
     
-    command = cat(2, command, [' -f "' in_file_name '" -of "' outputFile_fp '" -ov "' outputFile_vid '"']);                     
+    command = cat(2, command_shared, [' -f "' in_file_name '" -of "' name '"']);                     
     dos(command);
 end
 
 %% Running CLNF models
+output = '300VW_experiment/clnf';
+
+command_shared = sprintf('%s -2Dfp -tracked -out_dir "%s" -mloc model/main_clnf_general.txt -verbose ', executable, output);
+
 parfor i=1:numel(in_dirs)
-    command = executable;
-
-    command = cat(2, command, ' -no3Dfp -noMparams -noPose -noGaze -noAUs -mloc model/main_clnf_general.txt ');
-    command = cat(2, command, [' -inroot "' database_root '" ']);
-
     name = num2str(in_dirs(i));
     
-    % where to output tracking results
-    outputFile_fp = [output '/clnf/' name '_fp.txt'];
-    outputFile_vid = [output '/clnf/' name '.avi'];
-    in_file_name = ['/', name, '/vid.avi'];        
+    in_file_name = [database_root '/', name, '/vid.avi'];        
     
-    command = cat(2, command, [' -f "' in_file_name '" -of "' outputFile_fp '" -ov "' outputFile_vid '"']);                     
+    command = cat(2, command_shared, [' -f "' in_file_name '" -of "' name '"']);                     
     dos(command);
 end
 

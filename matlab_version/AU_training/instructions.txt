@@ -14,7 +14,7 @@ The instructions are for a Windows machine, but it should be fairly easy to adap
     - this will take some time: 4-20 hours depending on your machine as you will need to process a lot of visual data
     - you need to make sure you have the right datasets and they are in the right locations
 3. Create a PCA model
-    - run the create_face_pca_models.m in the pca_generation folder
+    - run the createSubFaceModels.m in the pca_generation folder
     - this will create a full, lower and upper face PCAs
     - this will take some time (30-60 minutes or so) and require lots of RAM (up to 16GB)
 4. Training the actual models, go to experiments/full_model_training

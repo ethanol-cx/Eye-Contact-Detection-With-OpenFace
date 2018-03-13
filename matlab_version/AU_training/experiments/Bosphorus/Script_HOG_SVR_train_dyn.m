@@ -51,9 +51,9 @@ for a=1:numel(aus)
 
     svs = bsxfun(@times, PC, 1./scaling') * w;
 
-    name = sprintf('models/AU_%d_dyn_intensity.dat', au);
+    name = sprintf('models/AU_%d_static_intensity.dat', au);
 
-    write_lin_dyn_svr(name, means, svs, b);
+    write_lin_dyn_svr(name, means, svs, b, 0);
 
     name = sprintf('results_Bosphorus_devel/AU_%d_dyn_intensity.mat', au);
 

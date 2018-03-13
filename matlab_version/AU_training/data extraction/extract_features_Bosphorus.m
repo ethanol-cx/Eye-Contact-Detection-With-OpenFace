@@ -1,35 +1,29 @@
 clear
-features_exe = '"..\..\..\x64\Release\FeatureExtraction.exe"';
+if(isunix)
+    executable = '"..\..\../build/bin/FaceLandmarkImg"';
+else
+    executable = '"..\..\../x64/Release/FaceLandmarkImg.exe"';
+end
 
-bosph_loc = 'E:\Datasets\Bosphorus\BosphorusDB\BosphorusDB/';
+find_Bosphorus;
 
-out_loc = 'E:\Datasets\face_datasets/';
+out_loc = 'E:\datasets\face_datasets_processed/bosph';
+Bosphorus_dir = [Bosphorus_dir, 'BosphorusDB/BosphorusDB/'];
 
 % Go two levels deep
-bosph_dirs = dir([bosph_loc, '/bs*']);
+bosph_dirs = dir([Bosphorus_dir, 'bs*']);
 
-for f1=1:numel(bosph_dirs)
-        
-    name = [bosph_dirs(f1).name];
+parfor f1=1:numel(bosph_dirs)
+    
+    command = executable;
 
-    curr_vids = dir([bosph_loc, '/' name, '/*.png']);
+    input_dir = [Bosphorus_dir, bosph_dirs(f1).name];
+    command = cat(2, command, [' -fdir "' input_dir '" -out_dir "' out_loc '"']);
+    command = cat(2, command, ' -multi_view 1 -wild -pdmparams -hogalign');
 
-    for i=1:numel(curr_vids)
-        command = features_exe;
-        % Do not do angled faces, does not add much information for AU
-        if(~isempty(strfind(curr_vids(i).name, 'YR')) || ~isempty(strfind(curr_vids(i).name, 'PR'))|| ~isempty(strfind(curr_vids(i).name, 'CR')))
-            continue;
-        end
-        input_file = [bosph_loc, '/' name '/', curr_vids(i).name];
-        [~, curr_name, ~] = fileparts(curr_vids(i).name);
-        output_file = [out_loc, '/hog_aligned_rigid_b/',  curr_name, '/'];
-
-        output_hog = [out_loc, '/hog_aligned_rigid_b/',curr_name '.hog'];
-        output_params = [out_loc, '/model_params_b/', curr_name '.txt'];
-
-        command = cat(2, command, [' -rigid -f "' input_file '" -simalign "' output_file  '" -simscale 0.7 -simsize 112 ']);
-        command = cat(2, command, [' -hogalign "' output_hog '"' ' -of "' output_params ]);
-        command = cat(2, command, ['" -no2Dfp -no3Dfp -noAUs -noPose -noGaze -q']);
+    if(isunix)
+        unix(command, '-echo')
+    else
         dos(command);
     end
                 

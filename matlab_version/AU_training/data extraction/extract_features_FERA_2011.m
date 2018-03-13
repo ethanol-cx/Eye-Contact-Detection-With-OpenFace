@@ -1,42 +1,35 @@
 clear
-features_exe = '"..\..\..\x64\Release\FeatureExtraction.exe"';
 
-fera_loc = 'E:\Datasets\fera\';
+if(isunix)
+    features_exe = '"../../../build/bin/FeatureExtraction"';
+else
+    features_exe = '"../../../x64/Release/FeatureExtraction.exe"';
+end
 
-out_loc = 'E:\Datasets\face_datasets\hog_aligned_rigid\';
-out_loc_params = 'E:\Datasets\face_datasets\model_params\';
+find_FERA2011;
+
+output_dir = 'E:\datasets\face_datasets_processed\fera2011';
+FERA2011_dir = [FERA2011_dir, '/../'];
 
 % Go two levels deep
-fera_dirs = dir(fera_loc);
+fera_dirs = dir([FERA2011_dir, '*']);
 fera_dirs = fera_dirs(3:end);
+parfor f1=1:numel(fera_dirs)
 
-for f1=1:numel(fera_dirs)
-
-    fera_dirs_level_2 = dir([fera_loc, fera_dirs(f1).name]);
+    fera_dirs_level_2 = dir([FERA2011_dir, fera_dirs(f1).name]);
     fera_dirs_level_2 = fera_dirs_level_2(3:end);
    
     for f2=1:numel(fera_dirs_level_2)
 
-        vid_files = dir([fera_loc, fera_dirs(f1).name, '/', fera_dirs_level_2(f2).name, '/*.avi']);
+        vid_files = dir([FERA2011_dir, fera_dirs(f1).name, '/', fera_dirs_level_2(f2).name, '/*.avi']);
         
         for v=1:numel(vid_files)
             
-            command = features_exe;
-            
-            curr_vid = [fera_loc, fera_dirs(f1).name, '/', fera_dirs_level_2(f2).name, '/', vid_files(v).name];
-            
-            [~,name,~] = fileparts(curr_vid);
-            output_file = [out_loc fera_dirs(f1).name '_' name '/'];
+            input_file = [FERA2011_dir, fera_dirs(f1).name, '/', fera_dirs_level_2(f2).name, '/', vid_files(v).name];
+            [~, name, ~] = fileparts(vid_files(v).name);
+            out_name = [fera_dirs(f1).name '_' name];
+            command = sprintf('%s -f "%s" -out_dir "%s" -hogalign -pdmparams -of %s', features_exe, input_file, output_dir, out_name );
 
-            output_hog = [out_loc fera_dirs(f1).name '_' name '.hog'];
-                
-            output_params = [out_loc_params fera_dirs(f1).name '_' name '.txt'];
-            
-            command = cat(2, command, [' -rigid -f "' curr_vid '" -simalign "' output_file  '" -simscale 0.7 -simsize 112']);
-            command = cat(2, command, [' -hogalign "' output_hog '"']);
-    
-            command = cat(2, command, [' -of "' output_params '" -no2Dfp -no3Dfp -noAUs -noPose -noGaze -q ']);
-    
             dos(command);
             
         end

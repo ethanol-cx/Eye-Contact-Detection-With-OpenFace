@@ -8,7 +8,7 @@ function [hog_data, valid_data, vid_id] = Read_HOG_files(users, hog_data_dir)
 
     for i=1:numel(users)
         
-        hog_file = [hog_data_dir, '/au_training_', users{i} '.hog'];
+        hog_file = [hog_data_dir, '/au_training_' users{i} '.hog'];
         
         f = fopen(hog_file, 'r');
                           

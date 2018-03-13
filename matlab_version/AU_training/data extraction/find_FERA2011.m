@@ -1,9 +1,7 @@
 if(exist('D:\Datasets\fera/au_training', 'file'))
     FERA2011_dir = 'D:\Datasets\fera/au_training/';   
-    hog_data_dir = 'D:\Datasets\face_datasets\hog_aligned_rigid/';
 elseif(exist('E:\Datasets\fera/au_training', 'file'))
     FERA2011_dir = 'E:\Datasets\fera/au_training/';   
-    hog_data_dir = 'E:\Datasets\face_datasets\hog_aligned_rigid/';
 else
     fprintf('FERA2011 location not found (or not defined)\n'); 
 end

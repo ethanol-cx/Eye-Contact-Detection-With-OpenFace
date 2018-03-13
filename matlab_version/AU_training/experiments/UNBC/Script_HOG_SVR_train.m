@@ -33,7 +33,7 @@ for a=1:numel(aus)
     [users_train, users_valid] = get_balanced_fold(UNBC_dir, all_recs, au, 1/3, 1);
     
     % load the training and testing data for the current fold    
-    [train_samples, train_labels, valid_samples, valid_labels, ~, PC, means, scaling, valid_ids, valid_success] = Prepare_HOG_AU_data(users_train, users_valid, au, rest_aus, UNBC_dir, hog_data_dir);
+    [train_samples, train_labels, valid_samples, valid_labels, ~, PC, means, scaling, valid_ids, valid_success] = Prepare_HOG_AU_data(users_train, users_valid, au, rest_aus, UNBC_dir, features_dir);
         
     train_samples = sparse(train_samples);
     valid_samples = sparse(valid_samples);

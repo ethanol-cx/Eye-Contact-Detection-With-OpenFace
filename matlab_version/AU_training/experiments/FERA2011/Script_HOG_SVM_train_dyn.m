@@ -33,7 +33,7 @@ for a=1:numel(all_aus)
     [train_recs, devel_recs] = get_balanced_fold(FERA2011_dir, all_recs, au, 1/3, 1);
     
     % load the training and testing data for the current fold    
-    [train_samples, train_labels, valid_samples, valid_labels, ~, PC, means, scaling] = Prepare_HOG_AU_data_generic_dynamic(train_recs, devel_recs, au, rest_aus, FERA2011_dir, hog_data_dir);
+    [train_samples, train_labels, valid_samples, valid_labels, ~, PC, means, scaling] = Prepare_HOG_AU_data_generic_dynamic(train_recs, devel_recs, au, rest_aus, FERA2011_dir, features_dir);
     
     train_samples = sparse(train_samples);
     valid_samples = sparse(valid_samples);
