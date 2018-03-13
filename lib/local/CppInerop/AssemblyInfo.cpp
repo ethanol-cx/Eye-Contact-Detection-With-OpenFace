@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017, Tadas Baltrusaitis all rights reserved.
+// Copyright (C) 2017, Carnegie Mellon University and University of Cambridge,
+// all rights reserved.
 //
 // ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
 //
@@ -7,7 +8,7 @@
 // IF YOU DO NOT AGREE WITH THESE TERMS, YOU MAY NOT USE OR DOWNLOAD THE SOFTWARE.
 //
 // License can be found in OpenFace-license.txt
-//
+
 //     * Any publications arising from the use of this software, including but
 //       not limited to academic journal and conference publications, technical
 //       reports and manuals, must cite at least one of the following works:
@@ -31,46 +32,41 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __VISUALIZATION_UTILS_h_
-#define __VISUALIZATION_UTILS_h_
+using namespace System;
+using namespace System::Reflection;
+using namespace System::Runtime::CompilerServices;
+using namespace System::Runtime::InteropServices;
+using namespace System::Security::Permissions;
 
-#include <opencv2/core/core.hpp>
+//
+// General Information about an assembly is controlled through the following
+// set of attributes. Change these attribute values to modify the information
+// associated with an assembly.
+//
+[assembly:AssemblyTitleAttribute("CppInterop")];
+[assembly:AssemblyDescriptionAttribute("")];
+[assembly:AssemblyConfigurationAttribute("")];
+[assembly:AssemblyCompanyAttribute("")];
+[assembly:AssemblyProductAttribute("CppInterop")];
+[assembly:AssemblyCopyrightAttribute("Copyright (c)  2016")];
+[assembly:AssemblyTrademarkAttribute("")];
+[assembly:AssemblyCultureAttribute("")];
 
-#include <vector>
-#include <queue>
+//
+// Version information for an assembly consists of the following four values:
+//
+//      Major Version
+//      Minor Version
+//      Build Number
+//      Revision
+//
+// You can specify all the value or you can default the Revision and Build Numbers
+// by using the '*' as shown below:
 
-namespace Utilities
-{
+[assembly:AssemblyVersionAttribute("1.0.*")];
 
-	// TODO draw AU results
+[assembly:ComVisible(false)];
 
-	// Drawing a bounding box around the face in an image
-	void DrawBox(cv::Mat image, cv::Vec6f pose, cv::Scalar color, int thickness, float fx, float fy, float cx, float cy);
-	void DrawBox(const std::vector<std::pair<cv::Point2f, cv::Point2f>>& lines, cv::Mat image, cv::Scalar color, int thickness);
+[assembly:CLSCompliantAttribute(true)];
 
-	// Computing a bounding box to be drawn
-	std::vector<std::pair<cv::Point2f, cv::Point2f>> CalculateBox(cv::Vec6f pose, float fx, float fy, float cx, float cy);
-
-    void Visualise_FHOG(const cv::Mat_<double>& descriptor, int num_rows, int num_cols, cv::Mat& visualisation);
-
-	class FpsTracker
-	{
-	public:
-		
-		double history_length;
-
-		void AddFrame();
-
-		double GetFPS();
-
-		FpsTracker();
-
-	private:
-		std::queue<double> frame_times;
-
-		void DiscardOldFrames();
-
-	};
-
-}
-#endif
+[assembly:SecurityPermission(SecurityAction::RequestMinimum, UnmanagedCode = true)];

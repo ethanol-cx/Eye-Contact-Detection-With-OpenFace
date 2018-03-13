@@ -503,16 +503,16 @@ namespace LandmarkDetector
 	}
 
 	// Computing landmarks (to be drawn later possibly)
-	vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities)
+	vector<cv::Point2f> CalculateVisibleLandmarks(const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities)
 	{
 		int n = shape2D.rows / 2;
-		vector<cv::Point2d> landmarks;
+		vector<cv::Point2f> landmarks;
 
 		for (int i = 0; i < n; ++i)
 		{
 			if (visibilities.at<int>(i))
 			{
-				cv::Point2d featurePoint(shape2D.at<float>(i), shape2D.at<float>(i + n));
+				cv::Point2f featurePoint(shape2D.at<float>(i), shape2D.at<float>(i + n));
 
 				landmarks.push_back(featurePoint);
 			}
@@ -562,7 +562,7 @@ namespace LandmarkDetector
 	}
 
 	// Computing landmarks (to be drawn later possibly)
-	vector<cv::Point2d> CalculateVisibleLandmarks(const CLNF& clnf_model)
+	vector<cv::Point2f> CalculateVisibleLandmarks(const CLNF& clnf_model)
 	{
 		// If the detection was not successful no landmarks are visible
 		if (clnf_model.detection_success)
@@ -573,15 +573,15 @@ namespace LandmarkDetector
 		}
 		else
 		{
-			return vector<cv::Point2d>();
+			return vector<cv::Point2f>();
 		}
 	}
 
 	// Computing eye landmarks (to be drawn later or in different interfaces)
-	vector<cv::Point2d> CalculateVisibleEyeLandmarks(const CLNF& clnf_model)
+	vector<cv::Point2f> CalculateVisibleEyeLandmarks(const CLNF& clnf_model)
 	{
 
-		vector<cv::Point2d> to_return;
+		vector<cv::Point2f> to_return;
 		// If the model has hierarchical updates draw those too
 		for (size_t i = 0; i < clnf_model.hierarchical_models.size(); ++i)
 		{

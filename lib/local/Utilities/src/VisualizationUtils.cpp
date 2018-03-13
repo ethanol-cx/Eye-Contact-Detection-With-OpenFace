@@ -83,7 +83,7 @@ namespace Utilities
 		DrawBox(edge_lines, image, color, thickness);
 	}
 
-	std::vector<std::pair<cv::Point2d, cv::Point2d>> CalculateBox(cv::Vec6f pose, float fx, float fy, float cx, float cy)
+	std::vector<std::pair<cv::Point2f, cv::Point2f>> CalculateBox(cv::Vec6f pose, float fx, float fy, float cx, float cy)
 	{
 		float boxVerts[] = { -1, 1, -1,
 			1, 1, -1,
@@ -127,7 +127,7 @@ namespace Utilities
 		cv::Mat_<float> rotBoxProj;
 		Project(rotBoxProj, rotBox, fx, fy, cx, cy);
 
-		std::vector<std::pair<cv::Point2d, cv::Point2d>> lines;
+		std::vector<std::pair<cv::Point2f, cv::Point2f>> lines;
 
 		for (size_t i = 0; i < edges.size(); ++i)
 		{
@@ -137,24 +137,24 @@ namespace Utilities
 			rotBoxProj.row(edges[i].first).copyTo(begin);
 			rotBoxProj.row(edges[i].second).copyTo(end);
 
-			cv::Point2d p1(begin.at<float>(0), begin.at<float>(1));
-			cv::Point2d p2(end.at<float>(0), end.at<float>(1));
+			cv::Point2f p1(begin.at<float>(0), begin.at<float>(1));
+			cv::Point2f p2(end.at<float>(0), end.at<float>(1));
 
-			lines.push_back(std::pair<cv::Point2d, cv::Point2d>(p1, p2));
+			lines.push_back(std::pair<cv::Point2f, cv::Point2f>(p1, p2));
 
 		}
 
 		return lines;
 	}
 
-	void DrawBox(const std::vector<std::pair<cv::Point2d, cv::Point2d>>& lines, cv::Mat image, cv::Scalar color, int thickness)
+	void DrawBox(const std::vector<std::pair<cv::Point2f, cv::Point2f>>& lines, cv::Mat image, cv::Scalar color, int thickness)
 	{
 		cv::Rect image_rect(0, 0, image.cols, image.rows);
 
 		for (size_t i = 0; i < lines.size(); ++i)
 		{
-			cv::Point2d p1 = lines.at(i).first;
-			cv::Point2d p2 = lines.at(i).second;
+			cv::Point2f p1 = lines.at(i).first;
+			cv::Point2f p2 = lines.at(i).second;
 			// Only draw the line if one of the points is inside the image
 			if (p1.inside(image_rect) || p2.inside(image_rect))
 			{

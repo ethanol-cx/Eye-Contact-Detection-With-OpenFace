@@ -69,3 +69,16 @@ lib/local/Utilities/x64/
 exe/FaceLandmarkImg/processed/
 matlab_runners/Demos/processed_features/
 matlab_runners/Feature Point Experiments/yt_res/
+matlab_runners/Feature Point Experiments/300W_experiments/
+gui/OpenFaceOffline/obj/Release/
+lib/local/CppInerop/x64/
+gui/OpenFaceOffline/obj/Debug/
+gui/HeadPose-live/obj/x86/
+gui/OpenFaceDemo/obj/Debug/
+gui/OpenFaceDemo/obj/Release/
+gui/HeadPose-live/obj/Release/
+gui/HeadPose-live/obj/Debug/
+gui/HeadPose-live/Properties/
+gui/OpenFaceDemo/Properties/
+gui/OpenFaceOffline/Properties/
+lib/3rdParty/CameraEnumerator/x64/

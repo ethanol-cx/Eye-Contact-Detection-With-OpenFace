@@ -74,10 +74,9 @@ namespace LandmarkDetector
 	// Useful utility for grabing a bounding box around a set of 2D landmarks (as a 1D 2n x 1 vector of xs followed by doubles or as an n x 2 vector)
 	void ExtractBoundingBox(const cv::Mat_<float>& landmarks, float &min_x, float &max_x, float &min_y, float &max_y);
 
-	// TODO all these should return floats rather than doubles
-	vector<cv::Point2d> CalculateVisibleLandmarks(const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities);
-	vector<cv::Point2d> CalculateVisibleLandmarks(const CLNF& clnf_model);
-	vector<cv::Point2d> CalculateVisibleEyeLandmarks(const CLNF& clnf_model);
+	vector<cv::Point2f> CalculateVisibleLandmarks(const cv::Mat_<float>& shape2D, const cv::Mat_<int>& visibilities);
+	vector<cv::Point2f> CalculateVisibleLandmarks(const CLNF& clnf_model);
+	vector<cv::Point2f> CalculateVisibleEyeLandmarks(const CLNF& clnf_model);
 
 	vector<cv::Point2f> CalculateAllLandmarks(const cv::Mat_<float>& shape2D);
 	vector<cv::Point2f> CalculateAllLandmarks(const CLNF& clnf_model);
