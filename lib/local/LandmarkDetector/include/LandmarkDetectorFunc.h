@@ -55,17 +55,17 @@ namespace LandmarkDetector
 	// Optionally can provide a bounding box from which to start tracking
 	// Can also optionally pass a grayscale image if it has already been computed to speed things up a bit
 	//================================================================================================================
-	bool DetectLandmarksInVideo(const cv::Mat &rgb_image, CLNF& clnf_model, FaceModelParameters& params, cv::Mat_<uchar> &grayscale_image = cv::Mat_<uchar>());
-	bool DetectLandmarksInVideo(const cv::Mat &rgb_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params, cv::Mat_<uchar> &grayscale_image = cv::Mat_<uchar>());
+	bool DetectLandmarksInVideo(const cv::Mat &rgb_image, CLNF& clnf_model, FaceModelParameters& params, cv::Mat &grayscale_image = cv::Mat());
+	bool DetectLandmarksInVideo(const cv::Mat &rgb_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params, cv::Mat &grayscale_image = cv::Mat());
 
 	//================================================================================================================
 	// Landmark detection in image, need to provide an image and optionally CLNF model together with parameters (default values work well)
 	// Optionally can provide a bounding box in which detection is performed (this is useful if multiple faces are to be detected in images)
 	// Can also optionally pass a grayscale image if it has already been computed to speed things up a bit
 	//================================================================================================================
-	bool DetectLandmarksInImage(const cv::Mat &rgb_image, CLNF& clnf_model, FaceModelParameters& params, cv::Mat_<uchar> &grayscale_image = cv::Mat_<uchar>());
+	bool DetectLandmarksInImage(const cv::Mat &rgb_image, CLNF& clnf_model, FaceModelParameters& params, cv::Mat &grayscale_image = cv::Mat());
 	// Providing a bounding box
-	bool DetectLandmarksInImage(const cv::Mat &rgb_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params, cv::Mat_<uchar> &grayscale_image = cv::Mat_<uchar>());
+	bool DetectLandmarksInImage(const cv::Mat &rgb_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params, cv::Mat &grayscale_image = cv::Mat());
 
 	//================================================================
 	// Helper function for getting head pose from CLNF parameters

@@ -218,7 +218,7 @@ namespace OpenFaceOffline
                 }
 
                 double progress = reader.GetProgress();
-                bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(gray_frame, face_model_params);
+                bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(frame, face_model_params, gray_frame);
 
                 // The face analysis step (for AUs and eye gaze)
                 face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detection_succeeding, false);
@@ -311,14 +311,14 @@ namespace OpenFaceOffline
                 // Detect faces here and return bounding boxes
                 List<Rect> face_detections = new List<Rect>();
                 List<float> confidences = new List<float>();
-                face_detector.DetectFacesMTCNN(face_detections, gray_frame, confidences);
+                face_detector.DetectFacesMTCNN(face_detections, frame, confidences);
 
                 // For visualization
                 double progress = reader.GetProgress();
 
                 for (int i = 0; i < face_detections.Count; ++i)
                 {
-                    bool detection_succeeding = landmark_detector.DetectFaceLandmarksInImage(gray_frame, face_detections[i], face_model_params);
+                    bool detection_succeeding = landmark_detector.DetectFaceLandmarksInImage(frame, face_detections[i], face_model_params, gray_frame);
 
                     var landmarks = landmark_detector.CalculateAllLandmarks();
                     

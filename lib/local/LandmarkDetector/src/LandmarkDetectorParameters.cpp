@@ -208,8 +208,13 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 
 	if (model_path.stem().string().compare("main_ceclm_general") == 0)
 	{
+		is_ceclm_model = true;
 		sigma = 1.5f * sigma;
 		reg_factor = 0.9f * reg_factor;
+	}
+	else
+	{
+		is_ceclm_model = false;
 	}
 
 	// Make sure face detector location is valid
@@ -291,6 +296,7 @@ void FaceModelParameters::init()
 	window_sizes_current = window_sizes_init;
 
 	model_location = "model/main_ceclm_general.txt";
+	is_ceclm_model = true;
 
 	sigma = 1.5f;
 	reg_factor = 25.0f;

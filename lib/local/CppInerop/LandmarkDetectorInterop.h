@@ -140,7 +140,7 @@ namespace CppInterop {
 				params->window_sizes_init[0] = 15;
 				params->window_sizes_init[1] = 13; 
 				params->window_sizes_init[2] = 11; 
-				params->window_sizes_init[3] = 9;
+				params->window_sizes_init[3] = 11;
 
 				params->multi_view = true;
 
@@ -148,6 +148,14 @@ namespace CppInterop {
 				params->reg_factor = 35;
 				params->weight_factor = 2.5;
 				params->num_optimisation_iteration = 10;
+
+				// Parameter optimizations for CE-CLM
+				if (params->is_ceclm_model)
+				{
+					params->sigma = 1.5f * params->sigma;
+					params->reg_factor = 0.9f * params->reg_factor;
+				}
+
 			}			
 
 			::LandmarkDetector::FaceModelParameters* getParams() {
@@ -202,17 +210,18 @@ namespace CppInterop {
 				return clnf->detection_certainty;
 			}
 
-			bool DetectLandmarksInVideo(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {
-				return ::LandmarkDetector::DetectLandmarksInVideo(image->Mat, *clnf, *modelParams->getParams());
+			bool DetectLandmarksInVideo(OpenCVWrappers::RawImage^ rgb_image, FaceModelParameters^ modelParams, OpenCVWrappers::RawImage^ gray_image) {
+				//cout << modelParams->getParams()->curr_face_detector << endl;
+				return ::LandmarkDetector::DetectLandmarksInVideo(rgb_image->Mat, *clnf, *modelParams->getParams(), gray_image->Mat);
 			}
 
-			bool DetectFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {
-				return ::LandmarkDetector::DetectLandmarksInImage(image->Mat, *clnf, *modelParams->getParams());
+			bool DetectFaceLandmarksInImage(OpenCVWrappers::RawImage^ rgb_image, FaceModelParameters^ modelParams, OpenCVWrappers::RawImage^ gray_image) {
+				return ::LandmarkDetector::DetectLandmarksInImage(rgb_image->Mat, *clnf, *modelParams->getParams(), gray_image->Mat);
 			}
 			
-			bool DetectFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, Rect^ bounding_box, FaceModelParameters^ modelParams) {
+			bool DetectFaceLandmarksInImage(OpenCVWrappers::RawImage^ rgb_image, Rect^ bounding_box, FaceModelParameters^ modelParams, OpenCVWrappers::RawImage^ gray_image) {
 				cv::Rect_<float> bbox(bounding_box->Left, bounding_box->Top, bounding_box->Width, bounding_box->Height);
-				return ::LandmarkDetector::DetectLandmarksInImage(image->Mat, bbox, *clnf, *modelParams->getParams());
+				return ::LandmarkDetector::DetectLandmarksInImage(rgb_image->Mat, bbox, *clnf, *modelParams->getParams(), gray_image->Mat);
 			}
 
 			void GetPoseWRTCamera(List<float>^ pose, float fx, float fy, float cx, float cy) {

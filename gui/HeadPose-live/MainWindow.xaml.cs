@@ -284,7 +284,7 @@ namespace HeadPoseLive
 
         private bool ProcessFrame(CLNF landmark_detector, GazeAnalyserManaged gaze_analyser, FaceModelParameters model_params, RawImage frame, RawImage grayscale_frame, float fx, float fy, float cx, float cy)
         {
-            bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(grayscale_frame, model_params);
+            bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(frame, model_params, grayscale_frame);
             gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, fx, fy, cx, cy);
             return detection_succeeding;
 
@@ -516,22 +516,16 @@ namespace HeadPoseLive
                             confidence = 1;
 
                         frame.UpdateWriteableBitmap(latest_img);
+                        webcam_img.Clear();
 
                         webcam_img.Source = latest_img;
-                        webcam_img.Confidence = confidence;
+                        webcam_img.Confidence.Add(confidence);
                         webcam_img.FPS = processing_fps.GetFPS();
-                        if (!detectionSucceeding)
+                        if(detectionSucceeding)
                         {
-                            webcam_img.OverlayLines.Clear();
-                            webcam_img.OverlayPoints.Clear();
-                            webcam_img.OverlayEyePoints.Clear();
-                            webcam_img.GazeLines.Clear();
-                        }
-                        else
-                        {
-                            webcam_img.OverlayLines = lines;
-                            webcam_img.OverlayPoints = landmarks;
-                            webcam_img.FaceScale = scale;
+                            webcam_img.OverlayLines.Add(lines);
+                            webcam_img.OverlayPoints.Add(landmarks);
+                            webcam_img.FaceScale.Add(scale);
 
                             List<System.Windows.Point> eye_landmark_points = new List<System.Windows.Point>();
                             foreach (var p in eye_landmarks)
@@ -540,8 +534,8 @@ namespace HeadPoseLive
                             }
 
 
-                            webcam_img.OverlayEyePoints = eye_landmark_points;
-                            webcam_img.GazeLines = gaze_lines;
+                            webcam_img.OverlayEyePoints.Add(eye_landmark_points);
+                            webcam_img.GazeLines.Add(gaze_lines);
 
                             // Publish the information for other applications
                             String str_head_pose = String.Format("{0}:{1:F2}, {2:F2}, {3:F2}, {4:F2}, {5:F2}, {6:F2}", "HeadPose", pose[0], pose[1], pose[2],

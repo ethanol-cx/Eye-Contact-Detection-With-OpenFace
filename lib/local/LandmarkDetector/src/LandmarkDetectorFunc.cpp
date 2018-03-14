@@ -212,7 +212,7 @@ void CorrectGlobalParametersVideo(const cv::Mat_<uchar> &grayscale_image, CLNF& 
 	
 }
 
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, CLNF& clnf_model, FaceModelParameters& params, cv::Mat_<uchar>& grayscale_image)
+bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, CLNF& clnf_model, FaceModelParameters& params, cv::Mat& grayscale_image)
 {
 	// First need to decide if the landmarks should be "detected" or "tracked"
 	// Detected means running face detection and a larger search area, tracked means initialising from previous step
@@ -331,7 +331,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, CLNF& cl
 			// Do the actual landmark detection (and keep it only if successful)
 			// Perform multi-hypothesis detection here (as face detector can pick up multiple of them)
 			params.multi_view = true;
-			bool landmark_detection_success = DetectLandmarksInImage(grayscale_image, bounding_box, clnf_model, params);
+			bool landmark_detection_success = DetectLandmarksInImage(rgb_image, bounding_box, clnf_model, params, grayscale_image);
 			params.multi_view = false;
 
 
@@ -376,7 +376,7 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, CLNF& cl
 	
 }
 
-bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params, cv::Mat_<uchar> &grayscale_image)
+bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params, cv::Mat &grayscale_image)
 {
 	if(bounding_box.width > 0)
 	{
@@ -642,7 +642,7 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 
 
 // This is the one where the actual work gets done, other DetectLandmarksInImage calls lead to this one
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &rgb_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params, cv::Mat_<uchar> &grayscale_image)
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &rgb_image, const cv::Rect_<double> bounding_box, CLNF& clnf_model, FaceModelParameters& params, cv::Mat &grayscale_image)
 {
 
 	if (grayscale_image.empty())
@@ -689,7 +689,7 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &rgb_image, const cv
 	return success;
 }
 
-bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &rgb_image, CLNF& clnf_model, FaceModelParameters& params, cv::Mat_<uchar> &grayscale_image)
+bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &rgb_image, CLNF& clnf_model, FaceModelParameters& params, cv::Mat &grayscale_image)
 {
 	if (grayscale_image.empty())
 	{

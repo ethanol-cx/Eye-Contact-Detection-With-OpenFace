@@ -220,9 +220,8 @@ namespace OpenFaceDemo
                 lastFrameTime = CurrentTime;
                 processing_fps.AddFrame();
 
-
                 // The face analysis step
-                bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(gray_frame, face_model_params);
+                bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(frame, face_model_params, gray_frame);
                 face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detection_succeeding, true);
                 gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
@@ -327,6 +326,8 @@ namespace OpenFaceDemo
 
                     if(detection_succeeding)
                     {
+                        video.FaceScale.Add(scale);
+
                         video.OverlayLines.Add(lines);
 
                         List<Point> landmark_points = new List<Point>();
