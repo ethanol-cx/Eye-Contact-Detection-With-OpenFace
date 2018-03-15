@@ -228,7 +228,7 @@ namespace OpenFaceOffline
                 VisualizeFeatures(frame, visualizer_of, landmark_detector.CalculateAllLandmarks(), landmark_detector.GetVisibilities(), detection_succeeding, true, false, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                 // Record an observation
-                RecordObservation(recorder, visualizer_of.GetVisImage(), detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), reader.GetTimestamp());
+                RecordObservation(recorder, visualizer_of.GetVisImage(), 0, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), reader.GetTimestamp());
 
                 while (thread_running & thread_paused && skip_frames == 0)
                 {
@@ -332,7 +332,7 @@ namespace OpenFaceOffline
                     VisualizeFeatures(frame, visualizer_of, landmarks, landmark_detector.GetVisibilities(), detection_succeeding, i == 0, true, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                     // Record an observation
-                    RecordObservation(recorder, visualizer_of.GetVisImage(), detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), 0);
+                    RecordObservation(recorder, visualizer_of.GetVisImage(), i, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), 0);
 
                 }
 
@@ -354,7 +354,7 @@ namespace OpenFaceOffline
 
         }
 
-        private void RecordObservation(RecorderOpenFace recorder, RawImage vis_image, bool success, float fx, float fy, float cx, float cy, double timestamp)
+        private void RecordObservation(RecorderOpenFace recorder, RawImage vis_image, int face_id, bool success, float fx, float fy, float cx, float cy, double timestamp)
         {
 
             recorder.SetObservationTimestamp(timestamp);
@@ -382,6 +382,8 @@ namespace OpenFaceOffline
             var au_regs = face_analyser.GetCurrentAUsReg();
             var au_classes = face_analyser.GetCurrentAUsClass();
             recorder.SetObservationActionUnits(au_regs, au_classes);
+
+            recorder.SetObservationFaceID(face_id);
 
             recorder.SetObservationFaceAlign(face_analyser.GetLatestAlignedFace());
             
