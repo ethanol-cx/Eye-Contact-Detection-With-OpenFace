@@ -324,6 +324,8 @@ namespace OpenFaceDemo
                     // First clear the old results
                     video.Clear();
 
+                    video.Confidence.Add(confidence);
+
                     if(detection_succeeding)
                     {
                         video.FaceScale.Add(scale);

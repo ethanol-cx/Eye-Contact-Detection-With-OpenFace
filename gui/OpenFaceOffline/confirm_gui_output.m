@@ -1,6 +1,6 @@
 addpath('../../matlab_runners/Demos');
 
-root1 = "C:\Users\Tadas Baltrusaitis\Documents\OpenFace-CECLM_clean\exe\FaceLandmarkImg\processed_cpp";
+root1 = "C:\Users\Tadas Baltrusaitis\Documents\OpenFace-CECLM_clean\exe\FeatureExtraction\processed";
 root2 = "C:\Users\Tadas Baltrusaitis\Documents\OpenFace-CECLM_clean\x64\Release\processed";
 
 gui_files = dir(sprintf('%s/*.csv', root1));

@@ -110,7 +110,7 @@ namespace CppInterop {
 				params->window_sizes_small[0] = 0;
 				params->window_sizes_small[1] = 9;
 				params->window_sizes_small[2] = 7;
-				params->window_sizes_small[3] = 5;
+				params->window_sizes_small[3] = 0;
 
 				// Just for initialisation
 				params->window_sizes_init.at(0) = 11;
@@ -127,7 +127,14 @@ namespace CppInterop {
 				params->sigma = 1.5;
 				params->reg_factor = 25;
 				params->weight_factor = 0;
-			}			
+
+				// Parameter optimizations for CE-CLM
+				if (params->is_ceclm_model)
+				{
+					params->sigma = 1.5f * params->sigma;
+					params->reg_factor = 0.9f * params->reg_factor;
+				}
+			}
 
 			System::String^ GetMTCNNLocation()
 			{
@@ -162,9 +169,14 @@ namespace CppInterop {
 				return params;
 			}
 
-			~FaceModelParameters()
+			!FaceModelParameters()
 			{
 				delete params;
+			}
+
+			~FaceModelParameters()
+			{
+				this->!FaceModelParameters();
 			}
 
 		};
@@ -187,10 +199,16 @@ namespace CppInterop {
 
 			}
 			
-			~CLNF()
+			!CLNF()
 			{
 				delete clnf;
 			}
+
+			~CLNF()
+			{
+				this->!CLNF();
+			}
+
 
 			::LandmarkDetector::CLNF* getCLNF() {
 				return clnf;

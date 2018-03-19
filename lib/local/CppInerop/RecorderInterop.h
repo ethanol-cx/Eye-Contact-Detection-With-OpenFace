@@ -196,6 +196,11 @@ namespace UtilitiesOF {
 			m_recorder->SetObservationFaceID(face_id);
 		}
 
+		void SetObservationFrameNumber(int frame_number)
+		{
+			m_recorder->SetObservationFrameNumber(frame_number);
+		}
+
 		void SetObservationHOG(bool success, OpenCVWrappers::RawImage^ aligned_face_image, int num_cols, int num_rows, int num_channels)
 		{
 			m_recorder->SetObservationHOG(success, aligned_face_image->Mat, num_cols, num_rows, num_channels);

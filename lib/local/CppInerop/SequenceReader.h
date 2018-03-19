@@ -159,6 +159,11 @@ namespace UtilitiesOF {
 			return m_rgb_frame;
 		}
 
+		int GetFrameNumber()
+		{
+			return m_sequence_capture->GetFrameNumber();
+		}
+
 		double GetTimestamp()
 		{
 			return m_sequence_capture->time_stamp;

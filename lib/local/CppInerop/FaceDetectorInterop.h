@@ -74,17 +74,17 @@ namespace FaceDetectorInterop {
 		// Where the face detectors are stored
 		dlib::frontal_face_detector* face_detector_hog;
 		LandmarkDetector::FaceDetectorMTCNN* face_detector_mtcnn;
+		cv::CascadeClassifier* face_detector_haar;
 
 	public:
 
 		// The constructor initializes the dlib face detector
-		FaceDetector(System::String^ mtcnn_location) 
+		FaceDetector(System::String^ haar_location, System::String^ mtcnn_location) 
 		{
+			// Initialize all of the detectors (TODO should be done on need only basis)
 			face_detector_hog = new dlib::frontal_face_detector(dlib::get_frontal_face_detector());
-
-			// Base it on root directory
 			face_detector_mtcnn = new LandmarkDetector::FaceDetectorMTCNN(msclr::interop::marshal_as<std::string>(mtcnn_location));
-
+			face_detector_haar = new cv::CascadeClassifier(msclr::interop::marshal_as<std::string>(haar_location));
 		}
 
 		// Face detection using HOG-SVM classifier
@@ -123,9 +123,21 @@ namespace FaceDetectorInterop {
 			}
 		}
 
+		// Finalizer. Definitely called before Garbage Collection,
+		// but not automatically called on explicit Dispose().
+		// May be called multiple times.
+		!FaceDetector()
+		{
+			// TODO need only basis (might be null)
+			delete face_detector_hog;
+			delete face_detector_mtcnn;
+			delete face_detector_haar;
+		}
+
+		// Destructor. Called on explicit Dispose() only.
 		~FaceDetector()
 		{
-			delete face_detector_hog;
+			this->!FaceDetector();
 		}
 
 	};

@@ -39,6 +39,9 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Media.Imaging;
+using System.Windows.Controls;
+using System.Windows.Interactivity;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 // Internal libraries
 using OpenCVWrappers;
@@ -47,8 +50,6 @@ using FaceAnalyser_Interop;
 using GazeAnalyser_Interop;
 using FaceDetectorInterop;
 using UtilitiesOF;
-using Microsoft.WindowsAPICodePack.Dialogs;
-using System.Windows.Forms;
 
 namespace OpenFaceOffline
 {
@@ -129,6 +130,11 @@ namespace OpenFaceOffline
         // Where the recording is done (by default in a record directory, from where the application executed)
         String record_root = "./processed";
 
+        // Selecting which face detector will be used
+        public bool DetectorHaar { get; set; } = false;
+        public bool DetectorHOG { get; set; } = false;
+        public bool DetectorCNN { get; set; } = true;
+
         // For AU prediction, if videos are long dynamic models should be used
         public bool DynamicAUModels { get; set; } = true;
 
@@ -143,13 +149,17 @@ namespace OpenFaceOffline
             // Set the icon
             Uri iconUri = new Uri("logo1.ico", UriKind.RelativeOrAbsolute);
             this.Icon = BitmapFrame.Create(iconUri);
-            
+
+            // Initialize the default face detectors and landmark detectors
+
+            //as MenuItemWithRadioButton;
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
             face_model_params = new FaceModelParameters(root, false);
             landmark_detector = new CLNF(face_model_params);
 
             gaze_analyser = new GazeAnalyserManaged();
+
 
         }
 
@@ -218,17 +228,18 @@ namespace OpenFaceOffline
                 }
 
                 double progress = reader.GetProgress();
+                
                 bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(frame, face_model_params, gray_frame);
 
                 // The face analysis step (for AUs and eye gaze)
-                face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detection_succeeding, false);
-                gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                //face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detection_succeeding, false);
+                //gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                 // Only the final face will contain the details
-                VisualizeFeatures(frame, visualizer_of, landmark_detector.CalculateAllLandmarks(), landmark_detector.GetVisibilities(), detection_succeeding, true, false, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
+                //VisualizeFeatures(frame, visualizer_of, landmark_detector.CalculateAllLandmarks(), landmark_detector.GetVisibilities(), detection_succeeding, true, false, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                 // Record an observation
-                RecordObservation(recorder, visualizer_of.GetVisImage(), 0, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), reader.GetTimestamp());
+                //RecordObservation(recorder, visualizer_of.GetVisImage(), 0, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), reader.GetTimestamp(), reader.GetFrameNumber());
 
                 while (thread_running & thread_paused && skip_frames == 0)
                 {
@@ -311,7 +322,14 @@ namespace OpenFaceOffline
                 // Detect faces here and return bounding boxes
                 List<Rect> face_detections = new List<Rect>();
                 List<float> confidences = new List<float>();
-                face_detector.DetectFacesMTCNN(face_detections, frame, confidences);
+                if(DetectorHOG)
+                {
+                    face_detector.DetectFacesHOG(face_detections, gray_frame, confidences);
+                }
+                else if(DetectorCNN)
+                { 
+                    face_detector.DetectFacesMTCNN(face_detections, frame, confidences);
+                }
 
                 // For visualization
                 double progress = reader.GetProgress();
@@ -332,7 +350,7 @@ namespace OpenFaceOffline
                     VisualizeFeatures(frame, visualizer_of, landmarks, landmark_detector.GetVisibilities(), detection_succeeding, i == 0, true, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                     // Record an observation
-                    RecordObservation(recorder, visualizer_of.GetVisImage(), i, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), 0);
+                    RecordObservation(recorder, visualizer_of.GetVisImage(), i, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), 0, 0);
 
                 }
 
@@ -354,7 +372,7 @@ namespace OpenFaceOffline
 
         }
 
-        private void RecordObservation(RecorderOpenFace recorder, RawImage vis_image, int face_id, bool success, float fx, float fy, float cx, float cy, double timestamp)
+        private void RecordObservation(RecorderOpenFace recorder, RawImage vis_image, int face_id, bool success, float fx, float fy, float cx, float cy, double timestamp, int frame_number)
         {
 
             recorder.SetObservationTimestamp(timestamp);
@@ -384,6 +402,7 @@ namespace OpenFaceOffline
             recorder.SetObservationActionUnits(au_regs, au_classes);
 
             recorder.SetObservationFaceID(face_id);
+            recorder.SetObservationFrameNumber(frame_number);
 
             recorder.SetObservationFaceAlign(face_analyser.GetLatestAlignedFace());
             
@@ -661,9 +680,9 @@ namespace OpenFaceOffline
         private string openDirectory()
         {
             string to_return = "";
-            using (var fbd = new FolderBrowserDialog())
+            using (var fbd = new System.Windows.Forms.FolderBrowserDialog())
             {
-                DialogResult result = fbd.ShowDialog();
+                System.Windows.Forms.DialogResult result = fbd.ShowDialog();
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     to_return = fbd.SelectedPath;
@@ -927,6 +946,20 @@ namespace OpenFaceOffline
             }
         }
 
+        // Making sure only one radio button is selected
+        private void MenuItemWithRadioButtons_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            MenuItem mi = sender as MenuItem;
+            if (mi != null)
+            {
+                RadioButton rb = mi.Icon as RadioButton;
+                if (rb != null)
+                {
+                    rb.IsChecked = true;
+                }
+            }
+        }
+
         private void OutputLocationItem_Click(object sender, RoutedEventArgs e)
         {
             var dlg = new CommonOpenFileDialog();
@@ -948,4 +981,5 @@ namespace OpenFaceOffline
         }
 
     }
+
 }
