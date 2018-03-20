@@ -57,6 +57,7 @@ FaceModelParameters::FaceModelParameters()
 {
 	// initialise the default values
 	init();
+	check_model_path();
 }
 
 FaceModelParameters::FaceModelParameters(vector<string> &arguments)
@@ -182,17 +183,24 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 		}
 	}
 
+	check_model_path(root.string());
+}
+
+void FaceModelParameters::check_model_path(const std::string& root)
+{
 	// Make sure model_location is valid
 	// First check working directory, then the executable's directory, then the config path set by the build process.
 	boost::filesystem::path config_path = boost::filesystem::path(CONFIG_DIR);
 	boost::filesystem::path model_path = boost::filesystem::path(model_location);
+	boost::filesystem::path root_path = boost::filesystem::path(root);
+
 	if (boost::filesystem::exists(model_path))
 	{
 		model_location = model_path.string();
 	}
-	else if (boost::filesystem::exists(root/model_path))
+	else if (boost::filesystem::exists(root_path/model_path))
 	{
-		model_location = (root/model_path).string();
+		model_location = (root_path/model_path).string();
 	}
 	else if (boost::filesystem::exists(config_path/model_path))
 	{
