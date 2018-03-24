@@ -31,6 +31,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <sstream>
+#include <iomanip>
+#include <map>
+
 #include "Visualizer.h"
 #include "VisualizationUtils.h"
 #include "RotationHelpers.h"
@@ -45,12 +49,35 @@ using namespace Utilities;
 const int draw_shiftbits = 4;
 const int draw_multiplier = 1 << 4;
 
+const std::map<std::string, std::string> AUS_DESCRIPTION = {
+        {"AU01", "Inner Brow Raiser   "}, 
+        {"AU02", "Outer Brow Raiser   "}, 
+        {"AU04", "Brow Lowerer        "}, 
+        {"AU05", "Upper Lid Raiser    "}, 
+        {"AU06", "Cheek Raiser        "}, 
+        {"AU07", "Lid Tightener       "}, 
+        {"AU09", "Nose Wrinkler       "}, 
+        {"AU10", "Upper Lip Raiser    "}, 
+        {"AU12", "Lip Corner Puller   "}, 
+        {"AU14", "Dimpler             "}, 
+        {"AU15", "Lip Corner Depressor"}, 
+        {"AU17", "Chin Raiser         "}, 
+        {"AU20", "Lip stretcher       "}, 
+        {"AU23", "Lip Tightener       "}, 
+        {"AU25", "Lips part           "}, 
+        {"AU26", "Jaw Drop            "}, 
+        {"AU28", "Lip Suck            "}, 
+        {"AU45", "Blink               "}, 
+
+};
+
 Visualizer::Visualizer(std::vector<std::string> arguments)
 {
 	// By default not visualizing anything
 	this->vis_track = false;
 	this->vis_hog = false;
 	this->vis_align = false;
+	this->vis_aus = false;
 
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
@@ -71,6 +98,10 @@ Visualizer::Visualizer(std::vector<std::string> arguments)
 		else if (arguments[i].compare("-vis-track") == 0)
 		{
 			vis_track = true;
+		}
+		else if (arguments[i].compare("-vis-aus") == 0)
+		{
+			vis_aus = true;
 		}
 	}
 
@@ -99,6 +130,7 @@ void Visualizer::SetImage(const cv::Mat& canvas, float fx, float fy, float cx, f
 	// Clearing other images
 	hog_image = cv::Mat();
 	aligned_face_image = cv::Mat();
+	action_units_image = cv::Mat();
 
 }
 
@@ -195,6 +227,53 @@ void Visualizer::SetObservationPose(const cv::Vec6d& pose, double confidence)
 		// Draw it in reddish if uncertain, blueish if certain
 		DrawBox(captured_image, pose, cv::Scalar(vis_certainty*255.0, 0, (1 - vis_certainty) * 255), thickness, fx, fy, cx, cy);
 	}
+}
+
+void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::string, double> >& au_intensities,
+	const std::vector<std::pair<std::string, double> >& au_occurences)
+{
+    const int NB_AUS = 17;
+
+    const int AU_TRACKBAR_LENGTH = 400;
+    const int AU_TRACKBAR_HEIGHT = 10;
+
+    const int MARGIN_X = 185;
+    const int MARGIN_Y = 10;
+
+    action_units_image = cv::Mat(NB_AUS * (AU_TRACKBAR_HEIGHT + 10) + MARGIN_Y * 2, AU_TRACKBAR_LENGTH + MARGIN_X, CV_8UC3, cv::Scalar(255,255,255));
+
+    std::map<std::string, std::pair<bool, double>> aus;
+
+    // first, prepare a mapping "AU name" -> { present, intensity }
+    for (size_t idx = 0; idx < au_intensities.size(); idx++) {
+        aus[au_intensities[idx].first] = std::make_pair(au_occurences[idx].second != 0, au_intensities[idx].second);
+    }
+
+    // then, build the graph
+    size_t idx = 0;
+    for (auto& au : aus) {
+            std::string name = au.first;
+            bool present = au.second.first;
+            double intensity = au.second.second;
+
+            auto offset = MARGIN_Y + idx * (AU_TRACKBAR_HEIGHT + 10);
+            std::ostringstream au_i;
+            au_i << std::setprecision(2) << std::setw(4) << std::fixed << intensity;
+            cv::putText(action_units_image, name, cv::Point(10, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(present ? 0 : 200, 0, 0), 1, CV_AA);
+            cv::putText(action_units_image, AUS_DESCRIPTION.at(name), cv::Point(55, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, CV_AA);
+
+            if(present) {
+                cv::putText(action_units_image, au_i.str(), cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 100, 0), 1, CV_AA);
+                cv::rectangle(action_units_image, cv::Point(MARGIN_X, offset),
+                                              cv::Point(MARGIN_X + AU_TRACKBAR_LENGTH * intensity/5, offset + AU_TRACKBAR_HEIGHT),
+                                              cv::Scalar(128,128,128),
+                                              CV_FILLED);
+            }
+            else {
+                cv::putText(action_units_image, "0.00", cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, CV_AA);
+            }
+            idx++;
+    }
 }
 
 // Eye gaze infomration drawing, first of eye landmarks then of gaze
@@ -297,6 +376,10 @@ char Visualizer::ShowObservation()
 	if (vis_hog)
 	{
 		cv::imshow("hog", hog_image);
+	}
+	if (vis_aus)
+	{
+		cv::imshow("action units", action_units_image);
 	}
 	return cv::waitKey(1);
 }
