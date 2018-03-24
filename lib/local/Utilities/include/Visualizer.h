@@ -66,7 +66,9 @@ namespace Utilities
 
 		// Pose related observations
 		void SetObservationPose(const cv::Vec6d& pose, double confidence);
-		
+
+		void SetObservationActionUnits(const std::vector<std::pair<std::string, double> >& au_intensities, const std::vector<std::pair<std::string, double> >& au_occurences);
+	
 		// Gaze related observations
 		void SetObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1, const std::vector<cv::Point2d>& eye_landmarks, const std::vector<cv::Point3d>& eye_landmarks3d, double confidence);
 
@@ -88,6 +90,7 @@ namespace Utilities
 		bool vis_track;
 		bool vis_hog;
 		bool vis_align;
+		bool vis_aus;
 		
 		// Can be adjusted to show less confident frames
 		double visualisation_boundary = 0.4;
@@ -99,6 +102,7 @@ namespace Utilities
 		cv::Mat tracked_image;
 		cv::Mat hog_image;
 		cv::Mat aligned_face_image;
+		cv::Mat action_units_image;
 
 		// Useful for drawing 3d
 		float fx, fy, cx, cy;
