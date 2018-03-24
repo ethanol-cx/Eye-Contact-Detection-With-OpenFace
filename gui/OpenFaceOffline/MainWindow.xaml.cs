@@ -185,7 +185,7 @@ namespace OpenFaceOffline
             face_model_params.optimiseForVideo();
 
             // Setup the visualization
-            Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance);
+            Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance, false);
 
             // Initialize the face analyser
             face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, DynamicAUModels, image_output_size, MaskAligned);
@@ -273,7 +273,7 @@ namespace OpenFaceOffline
             face_model_params.optimiseForImages();
 
             // Setup the visualization
-            Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance);
+            Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance, false);
 
             // Initialize the face detector if it has not been initialized yet
             if (face_detector == null)

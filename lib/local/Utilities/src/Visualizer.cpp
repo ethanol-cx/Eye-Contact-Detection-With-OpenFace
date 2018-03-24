@@ -86,6 +86,7 @@ Visualizer::Visualizer(std::vector<std::string> arguments)
 			vis_track = true;
 			vis_align = true;
 			vis_hog = true;
+			vis_aus = true;
 		}
 		else if (arguments[i].compare("-vis-align") == 0)
 		{
@@ -107,11 +108,12 @@ Visualizer::Visualizer(std::vector<std::string> arguments)
 
 }
 
-Visualizer::Visualizer(bool vis_track, bool vis_hog, bool vis_align)
+Visualizer::Visualizer(bool vis_track, bool vis_hog, bool vis_align, bool vis_aus)
 {
 	this->vis_track = vis_track;
 	this->vis_hog = vis_hog;
 	this->vis_align = vis_align;
+	this->vis_aus = vis_aus;
 }
 
 

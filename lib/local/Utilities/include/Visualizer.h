@@ -54,7 +54,7 @@ namespace Utilities
 
 		// The constructor for the visualizer that specifies what to visualize
 		Visualizer(std::vector<std::string> arguments);
-		Visualizer(bool vis_track, bool vis_hog, bool vis_align);
+		Visualizer(bool vis_track, bool vis_hog, bool vis_align, bool vis_aus);
 		
 		// Adding observations to the visualizer
 		
