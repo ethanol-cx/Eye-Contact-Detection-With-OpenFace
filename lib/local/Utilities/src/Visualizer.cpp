@@ -366,11 +366,6 @@ void Visualizer::SetFps(double fps)
 
 char Visualizer::ShowObservation()
 {
-	if (vis_track)
-	{
-		cv::namedWindow("tracking_result", 1);
-		cv::imshow("tracking_result", captured_image);
-	}
 	if (vis_align)
 	{
 		cv::imshow("sim_warp", aligned_face_image);
@@ -381,7 +376,13 @@ char Visualizer::ShowObservation()
 	}
 	if (vis_aus)
 	{
+		cv::namedWindow("action units", cv::WindowFlags::WINDOW_NORMAL);
 		cv::imshow("action units", action_units_image);
+	}
+	if (vis_track)
+	{
+		cv::namedWindow("tracking result", cv::WindowFlags::WINDOW_NORMAL);
+		cv::imshow("tracking result", captured_image);
 	}
 	return cv::waitKey(1);
 }
