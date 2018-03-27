@@ -234,48 +234,54 @@ void Visualizer::SetObservationPose(const cv::Vec6d& pose, double confidence)
 void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::string, double> >& au_intensities,
 	const std::vector<std::pair<std::string, double> >& au_occurences)
 {
-    const int NB_AUS = 17;
+	if(au_intensities.size() > 0 || au_occurences.size() > 0)
+	{
+		const int NB_AUS = 17;
 
-    const int AU_TRACKBAR_LENGTH = 400;
-    const int AU_TRACKBAR_HEIGHT = 10;
+		const int AU_TRACKBAR_LENGTH = 400;
+		const int AU_TRACKBAR_HEIGHT = 10;
 
-    const int MARGIN_X = 185;
-    const int MARGIN_Y = 10;
+		const int MARGIN_X = 185;
+		const int MARGIN_Y = 10;
 
-    action_units_image = cv::Mat(NB_AUS * (AU_TRACKBAR_HEIGHT + 10) + MARGIN_Y * 2, AU_TRACKBAR_LENGTH + MARGIN_X, CV_8UC3, cv::Scalar(255,255,255));
+		action_units_image = cv::Mat(NB_AUS * (AU_TRACKBAR_HEIGHT + 10) + MARGIN_Y * 2, AU_TRACKBAR_LENGTH + MARGIN_X, CV_8UC3, cv::Scalar(255,255,255));
 
-    std::map<std::string, std::pair<bool, double>> aus;
+		std::map<std::string, std::pair<bool, double>> aus;
 
-    // first, prepare a mapping "AU name" -> { present, intensity }
-    for (size_t idx = 0; idx < au_intensities.size(); idx++) {
-        aus[au_intensities[idx].first] = std::make_pair(au_occurences[idx].second != 0, au_intensities[idx].second);
-    }
+		// first, prepare a mapping "AU name" -> { present, intensity }
+		for (size_t idx = 0; idx < au_intensities.size(); idx++) {
+			aus[au_intensities[idx].first] = std::make_pair(au_occurences[idx].second != 0, au_intensities[idx].second);
+		}
 
-    // then, build the graph
-    size_t idx = 0;
-    for (auto& au : aus) {
-            std::string name = au.first;
-            bool present = au.second.first;
-            double intensity = au.second.second;
+		// then, build the graph
+		size_t idx = 0;
+		for (auto& au : aus) 
+		{
+			std::string name = au.first;
+			bool present = au.second.first;
+			double intensity = au.second.second;
 
-            auto offset = MARGIN_Y + idx * (AU_TRACKBAR_HEIGHT + 10);
-            std::ostringstream au_i;
-            au_i << std::setprecision(2) << std::setw(4) << std::fixed << intensity;
-            cv::putText(action_units_image, name, cv::Point(10, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(present ? 0 : 200, 0, 0), 1, CV_AA);
-            cv::putText(action_units_image, AUS_DESCRIPTION.at(name), cv::Point(55, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, CV_AA);
+			auto offset = MARGIN_Y + idx * (AU_TRACKBAR_HEIGHT + 10);
+			std::ostringstream au_i;
+			au_i << std::setprecision(2) << std::setw(4) << std::fixed << intensity;
+			cv::putText(action_units_image, name, cv::Point(10, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(present ? 0 : 200, 0, 0), 1, CV_AA);
+			cv::putText(action_units_image, AUS_DESCRIPTION.at(name), cv::Point(55, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, CV_AA);
 
-            if(present) {
-                cv::putText(action_units_image, au_i.str(), cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 100, 0), 1, CV_AA);
-                cv::rectangle(action_units_image, cv::Point(MARGIN_X, offset),
-                                              cv::Point(MARGIN_X + AU_TRACKBAR_LENGTH * intensity/5, offset + AU_TRACKBAR_HEIGHT),
-                                              cv::Scalar(128,128,128),
-                                              CV_FILLED);
-            }
-            else {
-                cv::putText(action_units_image, "0.00", cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, CV_AA);
-            }
-            idx++;
-    }
+			if(present) 
+			{
+				cv::putText(action_units_image, au_i.str(), cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 100, 0), 1, CV_AA);
+				cv::rectangle(action_units_image, cv::Point(MARGIN_X, offset),
+												cv::Point(MARGIN_X + AU_TRACKBAR_LENGTH * intensity/5, offset + AU_TRACKBAR_HEIGHT),
+												cv::Scalar(128,128,128),
+												CV_FILLED);
+			}
+			else 
+			{
+				cv::putText(action_units_image, "0.00", cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, CV_AA);
+			}
+			idx++;
+		}
+	}
 }
 
 // Eye gaze infomration drawing, first of eye landmarks then of gaze
@@ -374,14 +380,14 @@ char Visualizer::ShowObservation()
 	{
 		cv::imshow("hog", hog_image);
 	}
-	if (vis_aus)
+	if (vis_aus && !action_units_image.empty())
 	{
-		cv::namedWindow("action units", cv::WindowFlags::WINDOW_NORMAL);
+		cv::namedWindow("action units", cv::WindowFlags::WINDOW_KEEPRATIO);
 		cv::imshow("action units", action_units_image);
 	}
 	if (vis_track)
 	{
-		cv::namedWindow("tracking result", cv::WindowFlags::WINDOW_NORMAL);
+		cv::namedWindow("tracking result", cv::WindowFlags::WINDOW_KEEPRATIO);
 		cv::imshow("tracking result", captured_image);
 	}
 	return cv::waitKey(1);

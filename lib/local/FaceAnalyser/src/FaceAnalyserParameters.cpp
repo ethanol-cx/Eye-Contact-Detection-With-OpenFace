@@ -182,7 +182,7 @@ void FaceAnalyserParameters::init()
 	}
 	else
 	{
-		std::cout << "Could not find the AU detection model to load" << std::endl;
+		std::cout << "Could not find the face analysis module to load" << std::endl;
 	}
 
 	orientation_bins = vector<cv::Vec3d>();
@@ -226,7 +226,7 @@ void FaceAnalyserParameters::OptimizeForVideos()
 	}
 	else
 	{
-		std::cout << "Could not find the AU detection model to load" << std::endl;
+		std::cout << "Could not find the face analysis module to load" << std::endl;
 	}
 
 }
@@ -256,7 +256,7 @@ void FaceAnalyserParameters::OptimizeForImages()
 	}
 	else
 	{
-		std::cout << "Could not find the AU detection model to load" << std::endl;
+		std::cout << "Could not find the face analysis module to load" << std::endl;
 	}
 }
 
