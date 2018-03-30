@@ -421,11 +421,11 @@ void Visualizer::SetFps(double fps)
 
 char Visualizer::ShowObservation()
 {
-	if (vis_align)
+	if (vis_align && !aligned_face_image.empty())
 	{
 		cv::imshow("sim_warp", aligned_face_image);
 	}
-	if (vis_hog)
+	if (vis_hog && !hog_image.empty())
 	{
 		cv::imshow("hog", hog_image);
 	}
