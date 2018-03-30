@@ -34,6 +34,7 @@
 #include <sstream>
 #include <iomanip>
 #include <map>
+#include <set>
 
 #include "Visualizer.h"
 #include "VisualizationUtils.h"
@@ -236,21 +237,69 @@ void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::stri
 {
 	if(au_intensities.size() > 0 || au_occurences.size() > 0)
 	{
-		const int NB_AUS = 17;
 
+		std::set<std::string> au_names;
+		std::map<std::string, bool> occurences_map;
+		std::map<std::string, double> intensities_map;
+
+		for (size_t idx = 0; idx < au_intensities.size(); idx++)
+		{
+			au_names.insert(au_intensities[idx].first);
+			intensities_map[au_intensities[idx].first] = au_intensities[idx].second;
+		}
+
+		for (size_t idx = 0; idx < au_occurences.size(); idx++)
+		{
+			au_names.insert(au_occurences[idx].first);
+			occurences_map[au_occurences[idx].first] = au_occurences[idx].second;
+		}
+		
 		const int AU_TRACKBAR_LENGTH = 400;
 		const int AU_TRACKBAR_HEIGHT = 10;
 
 		const int MARGIN_X = 185;
 		const int MARGIN_Y = 10;
 
-		action_units_image = cv::Mat(NB_AUS * (AU_TRACKBAR_HEIGHT + 10) + MARGIN_Y * 2, AU_TRACKBAR_LENGTH + MARGIN_X, CV_8UC3, cv::Scalar(255,255,255));
+		const int nb_aus = au_names.size();
+
+		// Do not reinitialize
+		if(action_units_image.empty())
+		{
+			action_units_image = cv::Mat(nb_aus * (AU_TRACKBAR_HEIGHT + 10) + MARGIN_Y * 2, AU_TRACKBAR_LENGTH + MARGIN_X, CV_8UC3, cv::Scalar(255,255,255));
+		}
+		else
+		{
+			action_units_image.setTo(255);
+		}
 
 		std::map<std::string, std::pair<bool, double>> aus;
 
 		// first, prepare a mapping "AU name" -> { present, intensity }
-		for (size_t idx = 0; idx < au_intensities.size(); idx++) {
-			aus[au_intensities[idx].first] = std::make_pair(au_occurences[idx].second != 0, au_intensities[idx].second);
+		for (auto au_name : au_names)
+		{
+			// Insert the intensity and AU presense (as these do not always overlap check if they exist first)
+			bool occurence = false;
+			if (occurences_map.find(au_name) != occurences_map.end())
+			{
+				occurence = occurences_map[au_name] != 0;
+			}
+			else
+			{
+				// If we do not have an occurence label, trust the intensity one
+				occurence = intensities_map[au_name] > 1;
+			}
+			double intensity = 0.0;
+			if (intensities_map.find(au_name) != intensities_map.end())
+			{
+				intensity = intensities_map[au_name];
+			}
+			else
+			{
+				// If we do not have an intensity label, trust the occurence one
+				intensity = occurences_map[au_name] == 0 ? 0 : 5;
+			}
+
+			aus[au_name] = std::make_pair(occurence, intensity);
 		}
 
 		// then, build the graph
@@ -382,12 +431,10 @@ char Visualizer::ShowObservation()
 	}
 	if (vis_aus && !action_units_image.empty())
 	{
-		cv::namedWindow("action units", cv::WindowFlags::WINDOW_KEEPRATIO);
 		cv::imshow("action units", action_units_image);
 	}
 	if (vis_track)
 	{
-		cv::namedWindow("tracking result", cv::WindowFlags::WINDOW_KEEPRATIO);
 		cv::imshow("tracking result", captured_image);
 	}
 	return cv::waitKey(1);

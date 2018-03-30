@@ -95,3 +95,5 @@ lib/3rdParty/CameraEnumerator/Release/
 lib/local/Utilities/Release/
 exe/FaceLandmarkVidMulti/processed/
 matlab_runners/Demos/processed/multi_face_aligned/
+exe/releases/OpenFace_0.4.1_win_x64_landmarks/
+exe/releases/OpenFace_*

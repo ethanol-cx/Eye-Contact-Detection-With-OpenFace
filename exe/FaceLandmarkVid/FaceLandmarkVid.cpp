@@ -104,6 +104,11 @@ int main (int argc, char **argv)
 	// The modules that are being used for tracking
 	LandmarkDetector::CLNF face_model(det_parameters.model_location);
 
+	if (!face_model.eye_model)
+	{
+		cout << "WARNING: no eye model found" << endl;
+	}
+
 	// Open a sequence
 	Utilities::SequenceCapture sequence_reader;
 

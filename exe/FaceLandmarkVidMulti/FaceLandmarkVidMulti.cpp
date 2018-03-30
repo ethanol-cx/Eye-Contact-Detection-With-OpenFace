@@ -158,6 +158,16 @@ int main (int argc, char **argv)
 	face_analysis_params.OptimizeForImages();
 	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
+	if (!face_model.eye_model)
+	{
+		cout << "WARNING: no eye model found" << endl;
+	}
+
+	if (face_analyser.GetAUClassNames().size() == 0 && face_analyser.GetAUClassNames().size() == 0)
+	{
+		cout << "WARNING: no Action Unit models found" << endl;
+	}
+
 	// Open a sequence
 	Utilities::SequenceCapture sequence_reader;
 
@@ -185,12 +195,13 @@ int main (int argc, char **argv)
 
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.IsWebcam(),
 			sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, sequence_reader.fps);
-		// Do not do AU detection on multi-face case as it is not supported
-		recording_params.setOutputAUs(false);
+		if (!face_model.eye_model)
+		{
+			recording_params.setOutputGaze(false);
+		}
+
 		Utilities::RecorderOpenFace open_face_rec(sequence_reader.name, recording_params, arguments);
 
-		if (recording_params.outputGaze() && !face_model.eye_model)
-			cout << "WARNING: no eye model defined, but outputting gaze" << endl;
 
 		if (sequence_reader.IsWebcam())
 		{

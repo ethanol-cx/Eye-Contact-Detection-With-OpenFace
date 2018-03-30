@@ -127,18 +127,30 @@ int main (int argc, char **argv)
 
  	captured_image = image_reader.GetNextImage();
 
+	if (!face_model.eye_model)
+	{
+		cout << "WARNING: no eye model found" << endl;
+	}
+
+	if (face_analyser.GetAUClassNames().size() == 0 && face_analyser.GetAUClassNames().size() == 0)
+	{
+		cout << "WARNING: no Action Unit models found" << endl;
+	}
+
 	cout << "Starting tracking" << endl;
 	while (!captured_image.empty())
 	{
 
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, false, false,
 			image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
+		if (!face_model.eye_model)
+		{
+			recording_params.setOutputGaze(false);
+		}
 		Utilities::RecorderOpenFace open_face_rec(image_reader.name, recording_params, arguments);
 
 		visualizer.SetImage(captured_image, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
 
-		if (recording_params.outputGaze() && !face_model.eye_model)
-			cout << "WARNING: no eye model defined, but outputting gaze" << endl;
 
 		// Making sure the image is in uchar grayscale
 		cv::Mat_<uchar> grayscale_image = image_reader.GetGrayFrame();

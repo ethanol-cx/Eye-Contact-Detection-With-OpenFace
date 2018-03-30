@@ -78,6 +78,7 @@ namespace Utilities
 		float getCy() const { return cy; }
 
 		void setOutputAUs(bool output_AUs) { this->output_AUs = output_AUs; }
+		void setOutputGaze(bool output_gaze) { this->output_gaze = output_gaze; }
 
 	private:
 		
