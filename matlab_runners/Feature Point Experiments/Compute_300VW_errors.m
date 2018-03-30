@@ -32,22 +32,33 @@ cat_3_ids = logical([]);
 
 for i = 1:numel(files_pred)
     [~, name, ~] = fileparts(files_pred(i).name);
-    pred_landmarks_ceclm = dlmread([d_loc_ceclm, files_pred(i).name], ',', 1, 0);
-    conf_ceclm = pred_landmarks_ceclm(:,3);
-    pred_landmarks_ceclm = pred_landmarks_ceclm(:,5:end);
     
-    xs = pred_landmarks_ceclm(:, 1:end/2);
-    ys = pred_landmarks_ceclm(:, end/2+1:end);
+    fname = [d_loc_ceclm, files_pred(i).name];
+    if(i == 1)
+        % First read in the column names
+        tab = readtable(fname);
+        column_names = tab.Properties.VariableNames;
+
+        confidence_id = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'confidence'));
+        x_ids = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'x_'));
+        y_ids = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'y_'));
+    end
+
+    all_params  = dlmread(fname, ',', 1, 0);
+    
+    xs = all_params(:, x_ids);
+    ys = all_params(:, y_ids);
+    conf_ceclm = all_params(:, confidence_id);
     pred_landmarks_ceclm = zeros([size(xs,2), 2, size(xs,1)]);
     pred_landmarks_ceclm(:,1,:) = xs';
     pred_landmarks_ceclm(:,2,:) = ys';
        
-    pred_landmarks_clnf = dlmread([d_loc_clnf, files_pred(i).name], ',', 1, 0);
-    conf_clnf = pred_landmarks_clnf(:,3);
-    pred_landmarks_clnf = pred_landmarks_clnf(:,5:end);
+    fname = [d_loc_clnf, files_pred(i).name];
+    all_params  = dlmread(fname, ',', 1, 0);
     
-    xs = pred_landmarks_clnf(:, 1:end/2);
-    ys = pred_landmarks_clnf(:, end/2+1:end);
+    xs = all_params(:, x_ids);
+    ys = all_params(:, y_ids);
+    conf_clnf = all_params(:, confidence_id);
     pred_landmarks_clnf = zeros([size(xs,2), 2, size(xs,1)]);
     pred_landmarks_clnf(:,1,:) = xs';
     pred_landmarks_clnf(:,2,:) = ys';
