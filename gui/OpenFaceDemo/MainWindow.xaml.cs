@@ -116,7 +116,7 @@ namespace OpenFaceDemo
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
             // TODO, create a demo version of parameters
-            face_model_params = new FaceModelParameters(root, false);
+            face_model_params = new FaceModelParameters(root, true, false, false);
             face_model_params.optimiseForVideo();
 
             landmark_detector = new CLNF(face_model_params);
@@ -246,7 +246,8 @@ namespace OpenFaceDemo
                 List<Tuple<float, float>> landmarks = null;
                 List<Tuple<float, float>> eye_landmarks = null;
                 List<Tuple<Point, Point>> gaze_lines = null;
-
+                List<bool> visibilities = null;
+ 
                 Tuple<float, float> gaze_angle = gaze_analyser.GetGazeAngle();
 
                 if (detection_succeeding)
@@ -255,6 +256,7 @@ namespace OpenFaceDemo
                     eye_landmarks = landmark_detector.CalculateVisibleEyeLandmarks();
                     lines = landmark_detector.CalculateBox(reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
                     gaze_lines = gaze_analyser.CalculateGazeLines(reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                    visibilities = landmark_detector.GetVisibilities();
                 }
 
                 // Visualisation
@@ -344,9 +346,11 @@ namespace OpenFaceDemo
                             eye_landmark_points.Add(new Point(p.Item1, p.Item2));
                         }
 
-
                         video.OverlayPoints.Add(landmark_points);
                         video.OverlayEyePoints.Add(eye_landmark_points);
+                        video.OverlayPointsVisibility.Add(visibilities);
+                        video.OverlayEyePoints.Add(eye_landmark_points);
+
                         video.GazeLines.Add(gaze_lines);
                     }
 

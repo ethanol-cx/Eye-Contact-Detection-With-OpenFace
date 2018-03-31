@@ -98,10 +98,29 @@ namespace FaceDetectorInterop {
 			o_regions->Clear();
 			o_confidences->Clear();
 
-			for(size_t i = 0; i < regions_ocv.size(); ++i)
+			for (size_t i = 0; i < regions_ocv.size(); ++i)
 			{
 				o_regions->Add(System::Windows::Rect(regions_ocv[i].x, regions_ocv[i].y, regions_ocv[i].width, regions_ocv[i].height));
 				o_confidences->Add(confidences_std[i]);
+			}
+		}
+		
+		// Face detection using HOG-SVM classifier
+		void DetectFacesHaar(List<System::Windows::Rect>^ o_regions, OpenCVWrappers::RawImage^ intensity, List<float>^ o_confidences)
+		{
+			
+			std::vector<cv::Rect_<float> > regions_ocv;
+
+			::LandmarkDetector::DetectFaces(regions_ocv, intensity->Mat, *face_detector_haar);
+
+			o_regions->Clear();
+			o_confidences->Clear();
+
+			for(size_t i = 0; i < regions_ocv.size(); ++i)
+			{
+				o_regions->Add(System::Windows::Rect(regions_ocv[i].x, regions_ocv[i].y, regions_ocv[i].width, regions_ocv[i].height));
+				// As Haar does not provide confidence, create a fake value
+				o_confidences->Add(1);
 			}
 		}
 
@@ -128,10 +147,18 @@ namespace FaceDetectorInterop {
 		// May be called multiple times.
 		!FaceDetector()
 		{
-			// TODO need only basis (might be null)
-			delete face_detector_hog;
-			delete face_detector_mtcnn;
-			delete face_detector_haar;
+			if (face_detector_hog != nullptr)
+			{
+				delete face_detector_hog;
+			}
+			if (face_detector_mtcnn != nullptr)
+			{
+				delete face_detector_mtcnn;
+			}
+			if (face_detector_haar != nullptr)
+			{
+				delete face_detector_haar;
+			}
 		}
 
 		// Destructor. Called on explicit Dispose() only.

@@ -268,14 +268,14 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, CLNF& cl
 	{
 
 		cv::Rect_<float> bounding_box;
-
-		// If the face detector has not been initialised read it in
-		if(clnf_model.face_detector_HAAR.empty())
+		
+		// If the face detector has not been initialised and we're using it, then read it in
+		if(clnf_model.face_detector_HAAR.empty() && params.curr_face_detector == params.HAAR_DETECTOR)
 		{
 			clnf_model.face_detector_HAAR.load(params.haar_face_detector_location);
 			clnf_model.haar_face_detector_location = params.haar_face_detector_location;
 		}
-		if (clnf_model.face_detector_MTCNN.empty())
+		if (clnf_model.face_detector_MTCNN.empty() && params.curr_face_detector == params.MTCNN_DETECTOR)
 		{
 			clnf_model.face_detector_MTCNN.Read(params.mtcnn_face_detector_location);
 			clnf_model.mtcnn_face_detector_location = params.haar_face_detector_location;
@@ -405,6 +405,7 @@ bool DetectLandmarksInImageMultiHypBasic(const cv::Mat_<uchar> &grayscale_image,
 
 	// Store the current best estimate
 	float best_likelihood;
+	float best_detection_certainty;
 	cv::Vec6f best_global_parameters;
 	cv::Mat_<float> best_local_parameters;
 	cv::Mat_<float> best_detected_landmarks;
@@ -440,8 +441,9 @@ bool DetectLandmarksInImageMultiHypBasic(const cv::Mat_<uchar> &grayscale_image,
 			best_local_parameters = clnf_model.params_local.clone();
 			best_detected_landmarks = clnf_model.detected_landmarks.clone();
 			best_landmark_likelihoods = clnf_model.landmark_likelihoods.clone();
+			best_detection_certainty = clnf_model.detection_certainty;
 			best_success = success;
-
+			
 			for (size_t part = 0; part < clnf_model.hierarchical_models.size(); ++part)
 			{
 				best_likelihood_h[part] = clnf_model.hierarchical_models[part].model_likelihood;
@@ -461,6 +463,7 @@ bool DetectLandmarksInImageMultiHypBasic(const cv::Mat_<uchar> &grayscale_image,
 	clnf_model.detected_landmarks = best_detected_landmarks.clone();
 	clnf_model.detection_success = best_success;
 	clnf_model.landmark_likelihoods = best_landmark_likelihoods.clone();
+	clnf_model.detection_certainty = best_detection_certainty;
 
 	for (size_t part = 0; part < clnf_model.hierarchical_models.size(); ++part)
 	{

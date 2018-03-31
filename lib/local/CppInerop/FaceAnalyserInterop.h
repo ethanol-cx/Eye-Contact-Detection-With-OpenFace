@@ -275,6 +275,7 @@ public:
 	// May be called multiple times.
 	!FaceAnalyserManaged()
 	{
+		// TODO check for null pointers
 		delete hog_features;
 		delete aligned_face;
 		delete num_cols;

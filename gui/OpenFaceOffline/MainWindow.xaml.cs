@@ -101,7 +101,7 @@ namespace OpenFaceOffline
 
         // For tracking
         FaceDetector face_detector;
-        FaceModelParameters face_model_params;
+        FaceModelParameters face_model_params; // TODO does this need to be reinitialized every time to deal with model reloading?
         CLNF landmark_detector;
 
         // For face analysis
@@ -135,6 +135,11 @@ namespace OpenFaceOffline
         public bool DetectorHOG { get; set; } = false;
         public bool DetectorCNN { get; set; } = true;
 
+        // Selecting which landmark detector will be used
+        public bool LandmarkDetectorCLM { get; set; } = false;
+        public bool LandmarkDetectorCLNF { get; set; } = false;
+        public bool LandmarkDetectorCECLM { get; set; } = true;
+
         // For AU prediction, if videos are long dynamic models should be used
         public bool DynamicAUModels { get; set; } = true;
 
@@ -150,12 +155,9 @@ namespace OpenFaceOffline
             Uri iconUri = new Uri("logo1.ico", UriKind.RelativeOrAbsolute);
             this.Icon = BitmapFrame.Create(iconUri);
 
-            // Initialize the default face detectors and landmark detectors
-
-            //as MenuItemWithRadioButton;
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
-            face_model_params = new FaceModelParameters(root, false);
+            face_model_params = new FaceModelParameters(root, LandmarkDetectorCECLM, LandmarkDetectorCLNF, LandmarkDetectorCLM);
             landmark_detector = new CLNF(face_model_params);
 
             gaze_analyser = new GazeAnalyserManaged();
@@ -192,6 +194,11 @@ namespace OpenFaceOffline
 
             thread_running = true;
 
+            // Reload the face landmark detector if needed
+            ReloadLandmarkDetector();
+
+            // Set the face detector
+            face_model_params.SetFaceDetector(DetectorHaar, DetectorHOG, DetectorCNN);
             face_model_params.optimiseForVideo();
 
             // Setup the visualization
@@ -220,8 +227,9 @@ namespace OpenFaceOffline
             var lastFrameTime = CurrentTime;
 
             // Empty image would indicate that the stream is over
-            while (gray_frame.Width != 0)
+            while (!gray_frame.IsEmpty)
             {
+
                 if(!thread_running)
                 {
                     break;
@@ -232,14 +240,14 @@ namespace OpenFaceOffline
                 bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(frame, face_model_params, gray_frame);
 
                 // The face analysis step (for AUs and eye gaze)
-                //face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detection_succeeding, false);
-                //gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detection_succeeding, false);
+                gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                 // Only the final face will contain the details
-                //VisualizeFeatures(frame, visualizer_of, landmark_detector.CalculateAllLandmarks(), landmark_detector.GetVisibilities(), detection_succeeding, true, false, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
+                VisualizeFeatures(frame, visualizer_of, landmark_detector.CalculateAllLandmarks(), landmark_detector.GetVisibilities(), detection_succeeding, true, false, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), progress);
 
                 // Record an observation
-                //RecordObservation(recorder, visualizer_of.GetVisImage(), 0, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), reader.GetTimestamp(), reader.GetFrameNumber());
+                RecordObservation(recorder, visualizer_of.GetVisImage(), 0, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), reader.GetTimestamp(), reader.GetFrameNumber());
 
                 while (thread_running & thread_paused && skip_frames == 0)
                 {
@@ -280,8 +288,11 @@ namespace OpenFaceOffline
             // Indicate we will start running the thread
             thread_running = true;
 
+            // Reload the face landmark detector if needed
+            ReloadLandmarkDetector();
             // Setup the parameters optimized for working on individual images rather than sequences
             face_model_params.optimiseForImages();
+
 
             // Setup the visualization
             Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance);
@@ -289,7 +300,7 @@ namespace OpenFaceOffline
             // Initialize the face detector if it has not been initialized yet
             if (face_detector == null)
             {
-                face_detector = new FaceDetector(face_model_params.GetMTCNNLocation());
+                face_detector = new FaceDetector(face_model_params.GetHaarLocation(), face_model_params.GetMTCNNLocation());
             }
 
             // Initialize the face analyser
@@ -329,6 +340,10 @@ namespace OpenFaceOffline
                 else if(DetectorCNN)
                 { 
                     face_detector.DetectFacesMTCNN(face_detections, frame, confidences);
+                }
+                else if(DetectorHaar)
+                {
+                    face_detector.DetectFacesHaar(face_detections, gray_frame, confidences);
                 }
 
                 // For visualization
@@ -371,6 +386,34 @@ namespace OpenFaceOffline
             EndMode();
 
         }
+
+        // If the landmark detector model changed need to reload it
+        private void ReloadLandmarkDetector()
+        {
+            bool reload = false;
+            if (face_model_params.IsCECLM() && !LandmarkDetectorCECLM)
+            {
+                reload = true;
+            }
+            else if(face_model_params.IsCLNF() && !LandmarkDetectorCLNF)
+            {
+                reload = true;
+            }
+            else if (face_model_params.IsCLM() && !LandmarkDetectorCLM)
+            {
+                reload = true;
+            }
+
+            if(reload)
+            {
+                String root = AppDomain.CurrentDomain.BaseDirectory;
+
+                face_model_params = new FaceModelParameters(root, LandmarkDetectorCECLM, LandmarkDetectorCLNF, LandmarkDetectorCLM);
+                landmark_detector = new CLNF(face_model_params);
+            }
+        }
+
+
 
         private void RecordObservation(RecorderOpenFace recorder, RawImage vis_image, int face_id, bool success, float fx, float fy, float cx, float cy, double timestamp, int frame_number)
         {
@@ -738,11 +781,14 @@ namespace OpenFaceOffline
             StopTracking();
 
             var image_files = openMediaDialog(true);
-            ImageReader reader = new ImageReader(image_files, fx, fy, cx, cy);
 
-            processing_thread = new Thread(() => ProcessIndividualImages(reader));
-            processing_thread.Start();
+            if(image_files.Count > 0)
+            { 
+                ImageReader reader = new ImageReader(image_files, fx, fy, cx, cy);
 
+                processing_thread = new Thread(() => ProcessIndividualImages(reader));
+                processing_thread.Start();
+            }
         }
 
         // Selecting a directory containing images

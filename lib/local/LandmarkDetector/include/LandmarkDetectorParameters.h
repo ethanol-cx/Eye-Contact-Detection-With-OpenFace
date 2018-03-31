@@ -84,7 +84,8 @@ struct FaceModelParameters
 	bool multi_view;
 	
 	// Based on model location, this affects the parameter settings
-	bool is_ceclm_model;
+	enum LandmarkDetector { CLM_DETECTOR, CLNF_DETECTOR, CECLM_DETECTOR };
+	LandmarkDetector curr_landmark_detector;
 
 	// How often should face detection be used to attempt reinitialisation, every n frames (set to negative not to reinit)
 	int reinit_video_every;

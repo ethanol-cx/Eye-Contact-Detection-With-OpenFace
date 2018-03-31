@@ -208,13 +208,17 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 
 	if (model_path.stem().string().compare("main_ceclm_general") == 0)
 	{
-		is_ceclm_model = true;
+		curr_landmark_detector = CECLM_DETECTOR;
 		sigma = 1.5f * sigma;
 		reg_factor = 0.9f * reg_factor;
 	}
-	else
+	else if (model_path.stem().string().compare("main_clnf_general") == 0)
 	{
-		is_ceclm_model = false;
+		curr_landmark_detector = CLNF_DETECTOR;
+	}
+	else if (model_path.stem().string().compare("main_clm_general") == 0)
+	{
+		curr_landmark_detector = CLM_DETECTOR;
 	}
 
 	// Make sure face detector location is valid
@@ -296,7 +300,7 @@ void FaceModelParameters::init()
 	window_sizes_current = window_sizes_init;
 
 	model_location = "model/main_ceclm_general.txt";
-	is_ceclm_model = true;
+	curr_landmark_detector = CECLM_DETECTOR;
 
 	sigma = 1.5f;
 	reg_factor = 25.0f;

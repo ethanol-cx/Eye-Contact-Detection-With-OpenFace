@@ -75,9 +75,9 @@
             </MenuItem>
             <MenuItem Header="Landmark Detector">
 
-                <MenuItem x:Name="LandmarkDetCLM" Header="CLM" IsCheckable="true" IsChecked="True"></MenuItem>
-                <MenuItem x:Name="LandmarkDetCLNF" Header="CLNF" IsCheckable="true"></MenuItem>
-                <MenuItem x:Name="LandmarkDetCECLM" Header="CE-CLM" IsCheckable="true" ></MenuItem>
+                <MenuItem x:Name="LandmarkDetCLM" Header="CLM" IsCheckable="true" IsChecked="{Binding LandmarkDetectorCLM}"></MenuItem>
+                <MenuItem x:Name="LandmarkDetCLNF" Header="CLNF" IsCheckable="true" IsChecked="{Binding LandmarkDetectorCLNF}"></MenuItem>
+                <MenuItem x:Name="LandmarkDetCECLM" Header="CE-CLM" IsCheckable="true" IsChecked="{Binding LandmarkDetectorCECLM}"></MenuItem>
                 <i:Interaction.Behaviors>
                     <local:ExclusiveMenuItemBehavior></local:ExclusiveMenuItemBehavior>
                 </i:Interaction.Behaviors>

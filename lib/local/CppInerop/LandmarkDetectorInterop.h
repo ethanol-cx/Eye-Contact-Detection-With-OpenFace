@@ -85,18 +85,32 @@ namespace CppInterop {
 		public:
 
 			// Initialise the parameters
-			FaceModelParameters(System::String^ root, bool demo)
+			FaceModelParameters(System::String^ root, bool ceclm, bool clnf, bool clm)
 			{
 				std::string root_std = msclr::interop::marshal_as<std::string>(root);
 				vector<std::string> args;
 				args.push_back(root_std);
 
+				std::string model_loc = "model/main_ceclm_general.txt";
+				if (ceclm)
+				{
+					model_loc = "model/main_ceclm_general.txt";
+				}
+				else if(clnf)
+				{
+					model_loc = "model/main_clnf_general.txt";
+				}
+				else if (clm)
+				{
+					model_loc = "model/main_clm_general.txt";
+
+				}
+
+				args.push_back("-mloc");
+				args.push_back(model_loc);
+
 				params = new ::LandmarkDetector::FaceModelParameters(args);
 
-				if(demo)
-				{
-					params->model_location = "model/main_clnf_demos.txt";
-				}
 
 			}
 
@@ -129,16 +143,52 @@ namespace CppInterop {
 				params->weight_factor = 0;
 
 				// Parameter optimizations for CE-CLM
-				if (params->is_ceclm_model)
+				if (params->curr_landmark_detector == ::LandmarkDetector::FaceModelParameters::CECLM_DETECTOR)
 				{
 					params->sigma = 1.5f * params->sigma;
 					params->reg_factor = 0.9f * params->reg_factor;
 				}
 			}
 
+			bool IsCECLM()
+			{
+				return params->curr_face_detector == ::LandmarkDetector::FaceModelParameters::CECLM_DETECTOR;
+			}
+
+			bool IsCLNF()
+			{
+				return params->curr_face_detector == ::LandmarkDetector::FaceModelParameters::CLNF_DETECTOR;
+			}
+
+			bool IsCLM()
+			{
+				return params->curr_face_detector == ::LandmarkDetector::FaceModelParameters::CLM_DETECTOR;
+			}
+
 			System::String^ GetMTCNNLocation()
 			{
 				return gcnew System::String(params->mtcnn_face_detector_location.c_str());
+			}
+
+			System::String^ GetHaarLocation()
+			{
+				return gcnew System::String(params->haar_face_detector_location.c_str());
+			}
+
+			void SetFaceDetector(bool haar, bool hog, bool cnn)
+			{
+				if (cnn)
+				{
+					params->curr_face_detector = params->MTCNN_DETECTOR;
+				}
+				else if (hog)
+				{
+					params->curr_face_detector = params->HOG_SVM_DETECTOR;
+				}
+				else if (haar)
+				{
+					params->curr_face_detector = params->HAAR_DETECTOR;
+				}
 			}
 
 			void optimiseForImages()
@@ -157,7 +207,7 @@ namespace CppInterop {
 				params->num_optimisation_iteration = 10;
 
 				// Parameter optimizations for CE-CLM
-				if (params->is_ceclm_model)
+				if (params->curr_landmark_detector == ::LandmarkDetector::FaceModelParameters::MTCNN_DETECTOR)
 				{
 					params->sigma = 1.5f * params->sigma;
 					params->reg_factor = 0.9f * params->reg_factor;

@@ -683,7 +683,7 @@ namespace LandmarkDetector
 		}
 
 		// Convert from int bounding box do a double one with corrections
-		for (size_t face = 0; face < o_regions.size(); ++face)
+		for (size_t face = 0; face < face_detections.size(); ++face)
 		{
 			// OpenCV is overgenerous with face size and y location is off
 			// CLNF detector expects the bounding box to encompass from eyebrow to chin in y, and from cheeck outline to cheeck outline in x, so we need to compensate
@@ -798,9 +798,6 @@ namespace LandmarkDetector
 		detector(cv_grayscale, face_detections, -0.2);
 
 		// Convert from int bounding box do a double one with corrections
-		//o_regions.resize(face_detections.size());
-		//o_confidences.resize(face_detections.size());
-
 		for (size_t face = 0; face < face_detections.size(); ++face)
 		{
 			// CLNF expects the bounding box to encompass from eyebrow to chin in y, and from cheeck outline to cheeck outline in x, so we need to compensate
