@@ -74,7 +74,7 @@ CLNF::CLNF(string fname)
 CLNF::CLNF(const CLNF& other): pdm(other.pdm), params_local(other.params_local.clone()), params_global(other.params_global), detected_landmarks(other.detected_landmarks.clone()),
 	landmark_likelihoods(other.landmark_likelihoods.clone()), patch_experts(other.patch_experts), landmark_validator(other.landmark_validator), haar_face_detector_location(other.haar_face_detector_location),
 	mtcnn_face_detector_location(other.mtcnn_face_detector_location), hierarchical_mapping(other.hierarchical_mapping), hierarchical_models(other.hierarchical_models), hierarchical_model_names(other.hierarchical_model_names),
-	hierarchical_params(other.hierarchical_params), eye_model(other.eye_model), face_detector_MTCNN(other.face_detector_MTCNN)
+	hierarchical_params(other.hierarchical_params), eye_model(other.eye_model), face_detector_MTCNN(other.face_detector_MTCNN), preference_det(other.preference_det)
 {
 	this->detection_success = other.detection_success;
 	this->tracking_initialised = other.tracking_initialised;
@@ -127,6 +127,8 @@ CLNF & CLNF::operator= (const CLNF& other)
 		this->failures_in_a_row = other.failures_in_a_row;
 
 		this->eye_model = other.eye_model;
+		
+		this->preference_det = other.preference_det;
 
 		// Load the CascadeClassifier (as it does not have a proper copy constructor)
 		if(!haar_face_detector_location.empty())
@@ -195,6 +197,8 @@ CLNF::CLNF(const CLNF&& other)
 
 	this->eye_model = other.eye_model;
 
+	this->preference_det = other.preference_det;
+
 }
 
 // Assignment operator for rvalues
@@ -230,6 +234,8 @@ CLNF & CLNF::operator= (const CLNF&& other)
 	this->hierarchical_params = other.hierarchical_params;
 
 	this->eye_model = other.eye_model;
+
+	this->preference_det = other.preference_det;
 
 	return *this;
 }
@@ -536,6 +542,9 @@ void CLNF::Read(string main_location)
 	params_global = cv::Vec6f(1, 0, 0, 0, 0, 0);
 
 	failures_in_a_row = -1;
+
+	preference_det.x = -1;
+	preference_det.y = -1;
 
 }
 
