@@ -369,7 +369,7 @@ namespace HeadPoseLive
             Thread.CurrentThread.IsBackground = true;
 
             String root = AppDomain.CurrentDomain.BaseDirectory;
-            FaceModelParameters model_params = new FaceModelParameters(root, false);
+            FaceModelParameters model_params = new FaceModelParameters(root, true, false, false);
             CLNF face_model = new CLNF(model_params);
             GazeAnalyserManaged gaze_analyser = new GazeAnalyserManaged();
 

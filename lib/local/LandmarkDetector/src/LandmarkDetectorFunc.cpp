@@ -256,8 +256,12 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, CLNF& cl
 		else
 		{
 			// indicate that tracking is a success
-			clnf_model.failures_in_a_row = -1;			
-			UpdateTemplate(grayscale_image, clnf_model);
+			clnf_model.failures_in_a_row = -1;		
+			
+			if(params.use_face_template)
+			{
+				UpdateTemplate(grayscale_image, clnf_model);
+			}
 		}
 	}
 
@@ -354,7 +358,12 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, CLNF& cl
 			else
 			{
 				clnf_model.failures_in_a_row = -1;			
-				UpdateTemplate(grayscale_image, clnf_model);
+				
+				if(params.use_face_template)
+				{
+					UpdateTemplate(grayscale_image, clnf_model);
+				}
+
 				return true;
 			}
 		}
