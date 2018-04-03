@@ -1,4 +1,4 @@
-# OpenFace 0.4.1: an open source facial behavior analysis toolkit
+# OpenFace 1.0.0: an open source facial behavior analysis toolkit
 
 [![Build Status](https://travis-ci.org/TadasBaltrusaitis/OpenFace.svg?branch=master)](https://travis-ci.org/TadasBaltrusaitis/OpenFace)
 [![Build status](https://ci.appveyor.com/api/projects/status/8msiklxfbhlnsmxp/branch/master?svg=true)](https://ci.appveyor.com/project/TadasBaltrusaitis/openface/branch/master)
