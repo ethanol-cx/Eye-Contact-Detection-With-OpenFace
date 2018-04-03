@@ -7,5 +7,5 @@ DRMF	3.33	3.55	5.27
 PO-CR	2.95	3.08	3.68
 CFAN	3.17	3.72	4.94
 ------------------------------
-OpenFace CLNF	2.83	3.38	3.82
-OpenFace CE-CLM	2.41	2.68	3.21
+OpenFace CLNF	2.83	3.39	3.82
+OpenFace CE-CLM	2.41	2.67	3.21
