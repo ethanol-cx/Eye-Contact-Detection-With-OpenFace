@@ -121,6 +121,16 @@ int main(int argc, char **argv)
 	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
 	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
+	if (!face_model.eye_model)
+	{
+		cout << "WARNING: no eye model found" << endl;
+	}
+
+	if (face_analyser.GetAUClassNames().size() == 0 && face_analyser.GetAUClassNames().size() == 0)
+	{
+		cout << "WARNING: no Action Unit models found" << endl;
+	}
+
 	Utilities::SequenceCapture sequence_reader;
 
 	// A utility for visualizing the results
@@ -150,6 +160,10 @@ int main(int argc, char **argv)
 
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.IsWebcam(),
 			sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, sequence_reader.fps);
+		if (!face_model.eye_model)
+		{
+			recording_params.setOutputGaze(false);
+		}
 		Utilities::RecorderOpenFace open_face_rec(sequence_reader.name, recording_params, arguments);
 
 		if (recording_params.outputGaze() && !face_model.eye_model)
@@ -205,6 +219,7 @@ int main(int argc, char **argv)
 			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.GetVisibilities());
 			visualizer.SetObservationPose(pose_estimate, face_model.detection_certainty);
 			visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_model.detection_certainty);
+			visualizer.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
 			visualizer.SetFps(fps_tracker.GetFPS());
 
 			// detect key presses

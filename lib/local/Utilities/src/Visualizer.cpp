@@ -36,6 +36,11 @@
 #include "RotationHelpers.h"
 #include "ImageManipulationHelpers.h"
 
+#include <sstream>
+#include <iomanip>
+#include <map>
+#include <set>
+
 // For drawing on images
 #include <opencv2/imgproc.hpp>
 
@@ -45,12 +50,35 @@ using namespace Utilities;
 const int draw_shiftbits = 4;
 const int draw_multiplier = 1 << 4;
 
+const std::map<std::string, std::string> AUS_DESCRIPTION = {
+	{ "AU01", "Inner Brow Raiser   " },
+	{ "AU02", "Outer Brow Raiser   " },
+	{ "AU04", "Brow Lowerer        " },
+	{ "AU05", "Upper Lid Raiser    " },
+	{ "AU06", "Cheek Raiser        " },
+	{ "AU07", "Lid Tightener       " },
+	{ "AU09", "Nose Wrinkler       " },
+	{ "AU10", "Upper Lip Raiser    " },
+	{ "AU12", "Lip Corner Puller   " },
+	{ "AU14", "Dimpler             " },
+	{ "AU15", "Lip Corner Depressor" },
+	{ "AU17", "Chin Raiser         " },
+	{ "AU20", "Lip stretcher       " },
+	{ "AU23", "Lip Tightener       " },
+	{ "AU25", "Lips part           " },
+	{ "AU26", "Jaw Drop            " },
+	{ "AU28", "Lip Suck            " },
+	{ "AU45", "Blink               " },
+
+};
+
 Visualizer::Visualizer(std::vector<std::string> arguments)
 {
 	// By default not visualizing anything
 	this->vis_track = false;
 	this->vis_hog = false;
 	this->vis_align = false;
+	this->vis_aus = false;
 
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
@@ -59,6 +87,7 @@ Visualizer::Visualizer(std::vector<std::string> arguments)
 			vis_track = true;
 			vis_align = true;
 			vis_hog = true;
+			vis_aus = true;
 		}
 		else if (arguments[i].compare("-vis-align") == 0)
 		{
@@ -72,18 +101,21 @@ Visualizer::Visualizer(std::vector<std::string> arguments)
 		{
 			vis_track = true;
 		}
+		else if (arguments[i].compare("-vis-aus") == 0)
+		{
+			vis_aus = true;
+		}
 	}
 
 }
 
-Visualizer::Visualizer(bool vis_track, bool vis_hog, bool vis_align)
+Visualizer::Visualizer(bool vis_track, bool vis_hog, bool vis_align, bool vis_aus)
 {
 	this->vis_track = vis_track;
 	this->vis_hog = vis_hog;
 	this->vis_align = vis_align;
+	this->vis_aus = vis_aus;
 }
-
-
 
 // Setting the image on which to draw
 void Visualizer::SetImage(const cv::Mat& canvas, float fx, float fy, float cx, float cy)
@@ -99,6 +131,7 @@ void Visualizer::SetImage(const cv::Mat& canvas, float fx, float fy, float cx, f
 	// Clearing other images
 	hog_image = cv::Mat();
 	aligned_face_image = cv::Mat();
+	action_units_image = cv::Mat();
 
 }
 
@@ -195,6 +228,108 @@ void Visualizer::SetObservationPose(const cv::Vec6f& pose, double confidence)
 	}
 }
 
+void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::string, double> >& au_intensities,
+	const std::vector<std::pair<std::string, double> >& au_occurences)
+{
+	if (au_intensities.size() > 0 || au_occurences.size() > 0)
+	{
+
+		std::set<std::string> au_names;
+		std::map<std::string, bool> occurences_map;
+		std::map<std::string, double> intensities_map;
+
+		for (size_t idx = 0; idx < au_intensities.size(); idx++)
+		{
+			au_names.insert(au_intensities[idx].first);
+			intensities_map[au_intensities[idx].first] = au_intensities[idx].second;
+		}
+
+		for (size_t idx = 0; idx < au_occurences.size(); idx++)
+		{
+			au_names.insert(au_occurences[idx].first);
+			occurences_map[au_occurences[idx].first] = au_occurences[idx].second;
+		}
+
+		const int AU_TRACKBAR_LENGTH = 400;
+		const int AU_TRACKBAR_HEIGHT = 10;
+
+		const int MARGIN_X = 185;
+		const int MARGIN_Y = 10;
+
+		const int nb_aus = au_names.size();
+
+		// Do not reinitialize
+		if (action_units_image.empty())
+		{
+			action_units_image = cv::Mat(nb_aus * (AU_TRACKBAR_HEIGHT + 10) + MARGIN_Y * 2, AU_TRACKBAR_LENGTH + MARGIN_X, CV_8UC3, cv::Scalar(255, 255, 255));
+		}
+		else
+		{
+			action_units_image.setTo(255);
+		}
+
+		std::map<std::string, std::pair<bool, double>> aus;
+
+		// first, prepare a mapping "AU name" -> { present, intensity }
+		for (auto au_name : au_names)
+		{
+			// Insert the intensity and AU presense (as these do not always overlap check if they exist first)
+			bool occurence = false;
+			if (occurences_map.find(au_name) != occurences_map.end())
+			{
+				occurence = occurences_map[au_name] != 0;
+			}
+			else
+			{
+				// If we do not have an occurence label, trust the intensity one
+				occurence = intensities_map[au_name] > 1;
+			}
+			double intensity = 0.0;
+			if (intensities_map.find(au_name) != intensities_map.end())
+			{
+				intensity = intensities_map[au_name];
+			}
+			else
+			{
+				// If we do not have an intensity label, trust the occurence one
+				intensity = occurences_map[au_name] == 0 ? 0 : 5;
+			}
+
+			aus[au_name] = std::make_pair(occurence, intensity);
+		}
+
+		// then, build the graph
+		size_t idx = 0;
+		for (auto& au : aus)
+		{
+			std::string name = au.first;
+			bool present = au.second.first;
+			double intensity = au.second.second;
+
+			auto offset = MARGIN_Y + idx * (AU_TRACKBAR_HEIGHT + 10);
+			std::ostringstream au_i;
+			au_i << std::setprecision(2) << std::setw(4) << std::fixed << intensity;
+			cv::putText(action_units_image, name, cv::Point(10, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(present ? 0 : 200, 0, 0), 1, CV_AA);
+			cv::putText(action_units_image, AUS_DESCRIPTION.at(name), cv::Point(55, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, CV_AA);
+
+			if (present)
+			{
+				cv::putText(action_units_image, au_i.str(), cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 100, 0), 1, CV_AA);
+				cv::rectangle(action_units_image, cv::Point(MARGIN_X, offset),
+					cv::Point(MARGIN_X + AU_TRACKBAR_LENGTH * intensity / 5, offset + AU_TRACKBAR_HEIGHT),
+					cv::Scalar(128, 128, 128),
+					CV_FILLED);
+			}
+			else
+			{
+				cv::putText(action_units_image, "0.00", cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, CV_AA);
+			}
+			idx++;
+		}
+	}
+}
+
+
 // Eye gaze infomration drawing, first of eye landmarks then of gaze
 void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv::Point3f& gaze_direction1, const std::vector<cv::Point2f>& eye_landmarks2d, const std::vector<cv::Point3f>& eye_landmarks3d, double confidence)
 {
@@ -283,18 +418,21 @@ void Visualizer::SetFps(double fps)
 
 char Visualizer::ShowObservation()
 {
-	if (vis_track)
-	{
-		cv::namedWindow("tracking_result", 1);
-		cv::imshow("tracking_result", captured_image);
-	}
-	if (vis_align)
+	if (vis_align && !aligned_face_image.empty())
 	{
 		cv::imshow("sim_warp", aligned_face_image);
 	}
-	if (vis_hog)
+	if (vis_hog && !hog_image.empty())
 	{
 		cv::imshow("hog", hog_image);
+	}
+	if (vis_aus && !action_units_image.empty())
+	{
+		cv::imshow("action units", action_units_image);
+	}
+	if (vis_track)
+	{
+		cv::imshow("tracking result", captured_image);
 	}
 	return cv::waitKey(1);
 }

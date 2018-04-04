@@ -128,18 +128,30 @@ int main(int argc, char **argv)
 
 	rgb_image = image_reader.GetNextImage();
 	
+	if (!face_model.eye_model)
+	{
+		cout << "WARNING: no eye model found" << endl;
+	}
+
+	if (face_analyser.GetAUClassNames().size() == 0 && face_analyser.GetAUClassNames().size() == 0)
+	{
+		cout << "WARNING: no Action Unit models found" << endl;
+	}
+
 	cout << "Starting tracking" << endl;
 	while (!rgb_image.empty())
 	{
 	
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, false, false,
 			image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
+
+		if (!face_model.eye_model)
+		{
+			recording_params.setOutputGaze(false);
+		}
 		Utilities::RecorderOpenFace open_face_rec(image_reader.name, recording_params, arguments);
 
 		visualizer.SetImage(rgb_image, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy);
-
-		if (recording_params.outputGaze() && !face_model.eye_model)
-			cout << "WARNING: no eye model defined, but outputting gaze" << endl;
 
 		// Making sure the image is in uchar grayscale (some face detectors use RGB, landmark detector uses grayscale)
 		cv::Mat_<uchar> grayscale_image = image_reader.GetGrayFrame();
@@ -209,6 +221,7 @@ int main(int argc, char **argv)
 			visualizer.SetObservationLandmarks(face_model.detected_landmarks, 1.0, face_model.GetVisibilities()); // Set confidence to high to make sure we always visualize
 			visualizer.SetObservationPose(pose_estimate, 1.0);
 			visualizer.SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy), face_model.detection_certainty);
+			visualizer.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
 
 			// Setting up the recorder output
 			open_face_rec.SetObservationHOG(face_model.detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG

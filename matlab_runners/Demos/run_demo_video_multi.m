@@ -22,7 +22,7 @@ model = 'model/main_ceclm_general.txt'; % Trained on in the wild, menpo and mult
 %model = 'model/main_clm_wild.txt'; % Trained on in-the-wild
 
 % Create a command that will run the tracker on set of videos and display the output 
-command = sprintf('%s -mloc "%s" ', executable, model);
+command = sprintf('%s -mloc "%s" -verbose ', executable, model);
 
 % add all videos to single argument list (so as not to load the model anew
 % for every video)

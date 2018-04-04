@@ -114,6 +114,8 @@ struct FaceModelParameters
 
 	private:
 		void init();
+		void check_model_path(const std::string& root = "/");
+
 };
 
 }

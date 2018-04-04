@@ -272,6 +272,9 @@ namespace CppInterop {
 				clnf->Reset(x, y);
 			}
 
+			bool HasEyeModel() {
+				return clnf->eye_model;
+			}
 
 			double GetConfidence()
 			{

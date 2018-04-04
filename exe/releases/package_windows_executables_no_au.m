@@ -1,8 +1,8 @@
 clear;
 version = '0.4.1';
 
-out_x86 = sprintf('OpenFace_%s_win_x86', version);
-out_x64 = sprintf('OpenFace_%s_win_x64', version);
+out_x86 = sprintf('OpenFace_%s_win_x86_landmarks', version);
+out_x64 = sprintf('OpenFace_%s_win_x64_landmarks', version);
 
 mkdir(out_x86);
 mkdir(out_x64);
@@ -12,10 +12,14 @@ in_x64 = '../../x64/Release/';
 
 % Copy models
 copyfile([in_x86, 'AU_predictors'], [out_x86, '/AU_predictors'])
+rmdir([ out_x86, '/AU_predictors/svm_combined'], 's');
+rmdir([ out_x86, '/AU_predictors/svr_combined'], 's');
 copyfile([in_x86, 'classifiers'], [out_x86, '/classifiers'])
 copyfile([in_x86, 'model'], [out_x86, '/model'])
 
 copyfile([in_x64, 'AU_predictors'], [out_x64, '/AU_predictors'])
+rmdir([ out_x64, '/AU_predictors/svm_combined'], 's');
+rmdir([ out_x64, '/AU_predictors/svr_combined'], 's');
 copyfile([in_x64, 'classifiers'], [out_x64, '/classifiers'])
 copyfile([in_x64, 'model'], [out_x64, '/model'])
 

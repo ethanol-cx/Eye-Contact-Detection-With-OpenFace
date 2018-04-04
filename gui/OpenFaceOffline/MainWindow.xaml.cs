@@ -162,7 +162,6 @@ namespace OpenFaceOffline
 
             gaze_analyser = new GazeAnalyserManaged();
 
-
         }
 
         // ----------------------------------------------------------
@@ -202,7 +201,7 @@ namespace OpenFaceOffline
             face_model_params.optimiseForVideo();
 
             // Setup the visualization
-            Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance);
+            Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance, false);
 
             // Initialize the face analyser
             face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, DynamicAUModels, image_output_size, MaskAligned);
@@ -241,6 +240,7 @@ namespace OpenFaceOffline
 
                 // The face analysis step (for AUs and eye gaze)
                 face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detection_succeeding, false);
+
                 gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                 // Only the final face will contain the details
@@ -295,7 +295,7 @@ namespace OpenFaceOffline
 
 
             // Setup the visualization
-            Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance);
+            Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance, false);
 
             // Initialize the face detector if it has not been initialized yet
             if (face_detector == null)
@@ -630,6 +630,8 @@ namespace OpenFaceOffline
                 SettingsMenu.IsEnabled = false;
                 RecordingMenu.IsEnabled = false;
                 AUSetting.IsEnabled = false;
+                FaceDetectorMenu.IsEnabled = false;
+                LandmarkDetectorMenu.IsEnabled = false;
 
                 PauseButton.IsEnabled = true;
                 StopButton.IsEnabled = true;
@@ -659,6 +661,8 @@ namespace OpenFaceOffline
                 SettingsMenu.IsEnabled = true;
                 RecordingMenu.IsEnabled = true;
                 AUSetting.IsEnabled = true;
+                FaceDetectorMenu.IsEnabled = true;
+                LandmarkDetectorMenu.IsEnabled = true;
 
                 PauseButton.IsEnabled = false;
                 StopButton.IsEnabled = false;

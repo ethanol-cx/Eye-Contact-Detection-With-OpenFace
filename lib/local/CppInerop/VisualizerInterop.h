@@ -54,9 +54,9 @@ namespace UtilitiesOF {
 
 	public:
 
-		Visualizer(bool vis_track, bool vis_hog, bool vis_aligned)
+		Visualizer(bool vis_track, bool vis_hog, bool vis_aligned, bool vis_aus)
 		{
-			m_visualizer = new Utilities::Visualizer(vis_track, vis_hog, vis_aligned);
+			m_visualizer = new Utilities::Visualizer(vis_track, vis_hog, vis_aligned, vis_aus);
 		}
 
 		void SetObservationGaze(System::Tuple<float, float, float>^ gaze_direction0, System::Tuple<float, float, float>^ gaze_direction1,

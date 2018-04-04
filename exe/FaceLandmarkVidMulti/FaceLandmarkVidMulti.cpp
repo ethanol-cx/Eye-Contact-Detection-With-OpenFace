@@ -162,11 +162,21 @@ int main(int argc, char **argv)
 	face_analysis_params.OptimizeForImages();
 	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);
 
+	if (!face_model.eye_model)
+	{
+		cout << "WARNING: no eye model found" << endl;
+	}
+
+	if (face_analyser.GetAUClassNames().size() == 0 && face_analyser.GetAUClassNames().size() == 0)
+	{
+		cout << "WARNING: no Action Unit models found" << endl;
+	}
+
 	// Open a sequence
 	Utilities::SequenceCapture sequence_reader;
 
 	// A utility for visualizing the results (show just the tracks)
-	Utilities::Visualizer visualizer(true, false, false);
+	Utilities::Visualizer visualizer(arguments);
 
 	// Tracking FPS for visualization
 	Utilities::FpsTracker fps_tracker;
@@ -188,12 +198,13 @@ int main(int argc, char **argv)
 
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.IsWebcam(),
 			sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, sequence_reader.fps);
-		// Do not do AU detection on multi-face case as it is not supported
-		recording_params.setOutputAUs(false);
-		Utilities::RecorderOpenFace open_face_rec(sequence_reader.name, recording_params, arguments);
 
-		if (recording_params.outputGaze() && !face_model.eye_model)
-			cout << "WARNING: no eye model defined, but outputting gaze" << endl;
+		if (!face_model.eye_model)
+		{
+			recording_params.setOutputGaze(false);
+		}
+
+		Utilities::RecorderOpenFace open_face_rec(sequence_reader.name, recording_params, arguments);
 
 		if (sequence_reader.IsWebcam())
 		{
@@ -340,6 +351,7 @@ int main(int argc, char **argv)
 					visualizer.SetObservationLandmarks(face_models[model].detected_landmarks, face_models[model].detection_certainty);
 					visualizer.SetObservationPose(LandmarkDetector::GetPose(face_models[model], sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_models[model].detection_certainty);
 					visualizer.SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(face_models[model]), LandmarkDetector::Calculate3DEyeLandmarks(face_models[model], sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_models[model].detection_certainty);
+					visualizer.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
 
 					// Output features
 					open_face_rec.SetObservationHOG(face_models[model].detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG

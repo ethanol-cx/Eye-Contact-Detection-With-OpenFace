@@ -104,11 +104,16 @@ int main(int argc, char **argv)
 	// The modules that are being used for tracking
 	LandmarkDetector::CLNF face_model(det_parameters.model_location);
 
+	if (!face_model.eye_model)
+	{
+		cout << "WARNING: no eye model found" << endl;
+	}
+
 	// Open a sequence
 	Utilities::SequenceCapture sequence_reader;
 
 	// A utility for visualizing the results (show just the tracks)
-	Utilities::Visualizer visualizer(true, false, false);
+	Utilities::Visualizer visualizer(true, false, false, false);
 
 	// Tracking FPS for visualization
 	Utilities::FpsTracker fps_tracker;

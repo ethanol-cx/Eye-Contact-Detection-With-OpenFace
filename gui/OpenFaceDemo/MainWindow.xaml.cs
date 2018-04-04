@@ -264,37 +264,47 @@ namespace OpenFaceDemo
                 {
 
                     var au_regs = face_analyser.GetCurrentAUsReg();
+                    if (au_regs.Count > 0)
+                    {
+                        double smile = (au_regs["AU12"] + au_regs["AU06"] + au_regs["AU25"]) / 13.0;
+                        double frown = (au_regs["AU15"] + au_regs["AU17"]) / 12.0;
 
-                    double smile = (au_regs["AU12"] + au_regs["AU06"] + au_regs["AU25"]) / 13.0;
-                    double frown = (au_regs["AU15"] + au_regs["AU17"]) / 12.0;
+                        double brow_up = (au_regs["AU01"] + au_regs["AU02"]) / 10.0;
+                        double brow_down = au_regs["AU04"] / 5.0;
 
-                    double brow_up = (au_regs["AU01"] + au_regs["AU02"]) / 10.0;
-                    double brow_down = au_regs["AU04"] / 5.0;
+                        double eye_widen = au_regs["AU05"] / 3.0;
+                        double nose_wrinkle = au_regs["AU09"] / 4.0;
 
-                    double eye_widen = au_regs["AU05"] / 3.0;
-                    double nose_wrinkle = au_regs["AU09"] / 4.0;
+                        Dictionary<int, double> smileDict = new Dictionary<int, double>();
+                        smileDict[0] = 0.7 * smile_cumm + 0.3 * smile;
+                        smileDict[1] = 0.7 * frown_cumm + 0.3 * frown;
+                        smilePlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = smileDict, Confidence = confidence });
 
-                    Dictionary<int, double> smileDict = new Dictionary<int, double>();
-                    smileDict[0] = 0.7 * smile_cumm + 0.3 * smile;
-                    smileDict[1] = 0.7 * frown_cumm + 0.3 * frown;
-                    smilePlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = smileDict, Confidence = confidence });
+                        Dictionary<int, double> browDict = new Dictionary<int, double>();
+                        browDict[0] = 0.7 * brow_up_cumm + 0.3 * brow_up;
+                        browDict[1] = 0.7 * brow_down_cumm + 0.3 * brow_down;
+                        browPlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = browDict, Confidence = confidence });
 
-                    Dictionary<int, double> browDict = new Dictionary<int, double>();
-                    browDict[0] = 0.7 * brow_up_cumm + 0.3 * brow_up;
-                    browDict[1] = 0.7 * brow_down_cumm + 0.3 * brow_down;
-                    browPlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = browDict, Confidence = confidence });
+                        Dictionary<int, double> eyeDict = new Dictionary<int, double>();
+                        eyeDict[0] = 0.7 * widen_cumm + 0.3 * eye_widen;
+                        eyeDict[1] = 0.7 * wrinkle_cumm + 0.3 * nose_wrinkle;
+                        eyePlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = eyeDict, Confidence = confidence });
 
-                    Dictionary<int, double> eyeDict = new Dictionary<int, double>();
-                    eyeDict[0] = 0.7 * widen_cumm + 0.3 * eye_widen;
-                    eyeDict[1] = 0.7 * wrinkle_cumm + 0.3 * nose_wrinkle;
-                    eyePlot.AddDataPoint(new DataPointGraph() { Time = CurrentTime, values = eyeDict, Confidence = confidence });
-
-                    smile_cumm = smileDict[0];
-                    frown_cumm = smileDict[1];
-                    brow_up_cumm = browDict[0];
-                    brow_down_cumm = browDict[1];
-                    widen_cumm = eyeDict[0];
-                    wrinkle_cumm = eyeDict[1];
+                        smile_cumm = smileDict[0];
+                        frown_cumm = smileDict[1];
+                        brow_up_cumm = browDict[0];
+                        brow_down_cumm = browDict[1];
+                        widen_cumm = eyeDict[0];
+                        wrinkle_cumm = eyeDict[1];
+                    }
+                    else
+                    {
+                        // If no AUs present disable the AU visualization
+                        MainGrid.ColumnDefinitions[2].Width = new GridLength(0);
+                        eyePlot.Visibility = Visibility.Collapsed;
+                        browPlot.Visibility = Visibility.Collapsed;
+                        smilePlot.Visibility = Visibility.Collapsed;
+                    }
 
                     Dictionary<int, double> poseDict = new Dictionary<int, double>();
                     poseDict[0] = -pose[3];
