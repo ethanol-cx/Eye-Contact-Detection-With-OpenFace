@@ -108,6 +108,8 @@ void GazeAnalysis::EstimateGaze(const LandmarkDetector::CLNF& clnf_model, cv::Po
 	if (part == -1)
 	{
 		std::cout << "Couldn't find the eye model, something wrong" << std::endl;
+		gaze_absolute = cv::Point3f(0, 0, 0);
+		return;
 	}
 
 	cv::Mat eyeLdmks3d = clnf_model.hierarchical_models[part].GetShape(fx, fy, cx, cy);

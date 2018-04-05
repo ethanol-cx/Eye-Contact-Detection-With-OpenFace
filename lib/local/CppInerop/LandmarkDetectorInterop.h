@@ -282,7 +282,6 @@ namespace CppInterop {
 			}
 
 			bool DetectLandmarksInVideo(OpenCVWrappers::RawImage^ rgb_image, FaceModelParameters^ modelParams, OpenCVWrappers::RawImage^ gray_image) {
-				//cout << modelParams->getParams()->curr_face_detector << endl;
 				return ::LandmarkDetector::DetectLandmarksInVideo(rgb_image->Mat, *clnf, *modelParams->getParams(), gray_image->Mat);
 			}
 
