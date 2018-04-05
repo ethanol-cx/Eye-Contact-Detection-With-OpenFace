@@ -32,14 +32,6 @@ Copyright can be found in the copyright.txt
     ./mtcnn - The most recent and accurate model, MTCNN face detector based on the paper "Joint Face Detection and Alignment using Multi-task Cascaded Convolutional Neural Networks" by Zhang et al.
 ./face_validation - A module for validating face detections (training and inference), it is used for tracking in videos so as to know when reinitialisation is needed
 ./PDM_helpers - utility functions that deal with PDM fitting, Jacobians and other shape manipulations
-./bounding_box_mapping - learning the mapping from face detector bounding box to one suitable for landmark detection initialisation
-./learn_error_mapping - for learning the early termination parameters for multiple hypothesis setup (CE-CLM only) and for learning the sparse landmarks
-
-//====================== Model Training ===============//
-./pdm_generation - code for training the Point Distribution Model (PDM)
-
-You can find the CLNF patch training code here - https://github.com/TadasBaltrusaitis/CCNF
-For CEN patch expert training - COMING SOON
 	
 --------------------------------------- Results -----------------------------------------------------------------------------	
 	
