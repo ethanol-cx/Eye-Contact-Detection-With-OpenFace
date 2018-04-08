@@ -51,6 +51,17 @@ for a=1:numel(aus)
 
     [ accuracies, F1s, corrs, ccc, rms, classes ] = evaluate_regression_results( prediction, valid_labels );    
 
-    save(name, 'model', 'accuracies', 'F1s', 'corrs', 'rms', 'ccc', 'prediction', 'valid_labels');        
+    save(name, 'model', 'accuracies', 'F1s', 'corrs', 'rms', 'ccc', 'prediction', 'valid_labels'); 
+    
+    name = sprintf('classifiers/AU_%d_stat.dat', au);
+
+    pos_lbl = model.Label(1);
+    neg_lbl = model.Label(2);
+    
+    w = model.w(1:end-1)';
+    b = model.w(end);
+
+    svs = bsxfun(@times, PC, 1./scaling') * w;
+    write_lin_svm(name, means, svs, b, pos_lbl, neg_lbl);
 
 end
