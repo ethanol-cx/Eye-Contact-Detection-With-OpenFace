@@ -12,6 +12,7 @@ views = [0,0,0];
 
 % Loading eye PDM and patch experts
 [clmParams_eye, pdm_right_eye, pdm_left_eye] = Load_CLM_params_eye_28();
+
 [patches_right_eye] = Load_Patch_Experts( '../models/hierarch/', 'ccnf_patches_*_synth_right_eye.mat', [], [], clmParams_eye);
 [patches_left_eye] = Load_Patch_Experts( '../models/hierarch/', 'ccnf_patches_*_synth_left_eye.mat', [], [], clmParams_eye);
 clmParams_eye.multi_modal_types  = patches_right_eye(1).multi_modal_types;
@@ -78,34 +79,11 @@ for img=1:numel(images)
         
         % shape correction for matlab format
         shape = shape + 1;
-              
-        [shape_2, shape_r_eye_2] = Fitting_from_bb_hierarch(image, pdm, pdm_right_eye, patches_right_eye, clmParams_eye, shape, right_eye_inds, right_eye_inds_synth);
-        [shape_2, shape_l_eye_2] = Fitting_from_bb_hierarch(image, pdm, pdm_left_eye, patches_left_eye, clmParams_eye, shape_2, left_eye_inds, left_eye_inds_synth);
-        
+             
         % Perform eye fitting now
-        shape_r_eye = zeros(numel(pdm_right_eye.M)/3, 2);
-        shape_r_eye(right_eye_inds_synth,:) = shape(right_eye_inds, :);
-
-        [ a, R, T, ~, l_params] = fit_PDM_ortho_proj_to_2D(pdm_right_eye.M, pdm_right_eye.E, pdm_right_eye.V, shape_r_eye);
-
-        bbox = [min(shape_r_eye(:,1)), min(shape_r_eye(:,2)), max(shape_r_eye(:,1)), max(shape_r_eye(:,2))];
-
-        g_param = [a; Rot2Euler(R)'; T];
-
-        [shape_r_eye] = Fitting_from_bb(image, [], bbox, pdm_right_eye, patches_right_eye, clmParams_eye, 'gparam', g_param, 'lparam', l_params);
-
-        % Perform eye fitting now 
-        shape_l_eye = zeros(numel(pdm_right_eye.M)/3, 2);        
-        shape_l_eye(left_eye_inds_synth,:) = shape(left_eye_inds, :);
-
-        [ a, R, T, ~, l_params] = fit_PDM_ortho_proj_to_2D(pdm_left_eye.M, pdm_left_eye.E, pdm_left_eye.V, shape_l_eye);
-
-        bbox = [min(shape_l_eye(:,1)), min(shape_l_eye(:,2)), max(shape_l_eye(:,1)), max(shape_l_eye(:,2))];
-
-        g_param = [a; Rot2Euler(R)'; T];
-
-        [shape_l_eye] = Fitting_from_bb(image, [], bbox, pdm_left_eye, patches_left_eye, clmParams_eye, 'gparam', g_param, 'lparam', l_params);
-
+        [shape, shape_r_eye] = Fitting_from_bb_hierarch(image, pdm, pdm_right_eye, patches_right_eye, clmParams_eye, shape, right_eye_inds, right_eye_inds_synth);
+        [shape, shape_l_eye] = Fitting_from_bb_hierarch(image, pdm, pdm_left_eye, patches_left_eye, clmParams_eye, shape, left_eye_inds, left_eye_inds_synth);
+        
         plot(shape_l_eye(9:20,1), shape_l_eye(9:20,2), '.g', 'MarkerSize',7);
         plot(shape_l_eye(1:8,1), shape_l_eye(1:8,2), '.b', 'MarkerSize',7);
 

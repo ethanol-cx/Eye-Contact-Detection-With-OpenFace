@@ -93,27 +93,4 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
 
     end
     
-    % Check if a hierarchical model is defined, and if it is apply it here
-    if(isfield(clmParams, 'hierarch'))
-        % Perform hierarchical model fitting
-        %, TODO this should be a loop
-        shape_hierarch = shape2D(clmParams.hierarch.inds,:);
-
-        [ a, R, T, ~, l_params, err] = fit_PDM_ortho_proj_to_2D_no_reg(clmParams.hierarch.pdm.M, clmParams.hierarch.pdm.E, clmParams.hierarch.pdm.V, shape_hierarch);
-        if(a > 0.9)
-            g_param = [a; Rot2Euler(R)'; T];
-
-            bbox_2 = [min(shape_hierarch(:,1)), min(shape_hierarch(:,2)), max(shape_hierarch(:,1)), max(shape_hierarch(:,2))];
-
-            [shape_hierarch] = Fitting_from_bb(Image, [], bbox_2, clmParams.hierarch.pdm, clmParams.hierarch.patches, clmParams.hierarch.clmParams, 'gparam', g_param, 'lparam', l_params);
-
-            % Now after detections incorporate the subset of the landmarks into the main model
-            shape2D(clmParams.hierarch.inds, :) = shape_hierarch;
-
-            [ ~, ~, ~, ~, ~, ~, shape2D] = fit_PDM_ortho_proj_to_2D_no_reg(PDM.M, PDM.E, PDM.V, shape2D);    
-
-        end    
-
-    end
-    
 end

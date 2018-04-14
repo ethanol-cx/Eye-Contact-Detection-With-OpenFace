@@ -6,7 +6,7 @@ addpath(genpath('../'));
 if(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
     root_test_data = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
 else
-    root_test_data = 'D:/Dropbox/Dropbox/AAM/test data/';
+    root_test_data = 'F:\Dropbox\AAM\test data/';
 end
 
 [images, detections, labels] = Collect_wild_imgs(root_test_data);
@@ -16,6 +16,7 @@ end
 views = [0,0,0; 0,-30,0; 0,30,0; 0,0,30; 0,0,-30;];
 views = views * pi/180;                                                                                     
 
+[ patches_51, pdm_51, clmParams_51, inds_full, inds_inner ] = Load_CLNF_inner();
 
 %% Change if you want to visualize the outputs
 verbose = false;
@@ -53,6 +54,9 @@ for i=1:numel(images)
     bbox = detections(i,:);                  
 
     [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views);
+             
+    % Perform inner landmark fitting now
+    [shape, shape_inner] = Fitting_from_bb_hierarch(image, pdm, pdm_51, patches_51, clmParams_51, shape, inds_full, inds_inner);
 
     shapes_all(:,:,i) = shape;
 

@@ -8,7 +8,7 @@ function [ shape2D_full, shape_hierarch, global_params, local_params, final_lhoo
 
     % Get the hierarchical model parameters based on current parent
     % landmark locations
-    [ a, R, T, ~, l_params, ~] = fit_PDM_ortho_proj_to_2D_no_reg(pdm_hierarch.M, pdm_hierarch.E, pdm_hierarch.V, shape_hierarch);
+    [ a, R, T, ~, l_params, ~] = fit_PDM_ortho_proj_to_2D(pdm_hierarch.M, pdm_hierarch.E, pdm_hierarch.V, shape_hierarch);
 
     g_param = [a; Rot2Euler(R)'; T];
 
@@ -21,7 +21,7 @@ function [ shape2D_full, shape_hierarch, global_params, local_params, final_lhoo
     if(a > 0.9)
         shape2D_full(inds_full, :) = shape_hierarch(inds_hierarch,:);
         % Make sure the combined version can be expressed by the PDM
-        [ ~, ~, ~, ~, ~, ~, shape2D_full] = fit_PDM_ortho_proj_to_2D_no_reg(pdm_full.M, pdm_full.E, pdm_full.V, shape2D_full);    
+        [ ~, ~, ~, ~, ~, ~, shape2D_full] = fit_PDM_ortho_proj_to_2D(pdm_full.M, pdm_full.E, pdm_full.V, shape2D_full);    
 
     end    
     

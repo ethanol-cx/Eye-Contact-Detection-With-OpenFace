@@ -6,7 +6,7 @@ addpath(genpath('../'));
 if(exist([getenv('USERPROFILE') '/Dropbox/AAM/test data/'], 'file'))
     root_test_data = [getenv('USERPROFILE') '/Dropbox/AAM/test data/'];    
 else
-    root_test_data = 'D:/Dropbox/Dropbox/AAM/test data/';
+    root_test_data = 'F:\Dropbox\AAM\test data/';
 end
 [images, detections, labels] = Collect_wild_imgs(root_test_data);
 
