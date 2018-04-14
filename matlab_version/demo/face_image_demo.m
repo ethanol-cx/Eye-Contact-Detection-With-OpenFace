@@ -7,9 +7,10 @@ addpath('../CCNF/');
 
 %% loading the patch experts
    
-[clmParams, pdm] = Load_CLM_params_wild();
+%[patches, pdm, clmParams, early_term_params] = Load_CECLM_general();
 
 % An accurate CCNF (or CLNF) model
+[clmParams, pdm] = Load_CLM_params_wild();
 [patches] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*_general.mat', [], [], clmParams);
 % A simpler (but less accurate SVR)
 % [patches] = Load_Patch_Experts( '../models/general/', 'svr_patches_*_general.mat', [], [], clmParams);
@@ -25,6 +26,7 @@ root_dir = '../../samples/';
 images = dir([root_dir, '*.jpg']);
 
 verbose = true;
+multi_view = true;
 
 for img=1:numel(images)
     image_orig = imread([root_dir images(img).name]);
@@ -44,7 +46,9 @@ for img=1:numel(images)
     
     if(size(image_orig,3) == 3)
         image = rgb2gray(image_orig);
-    end              
+    else
+        image = image_orig;
+    end
 
     %%
 
@@ -66,7 +70,22 @@ for img=1:numel(images)
         
         bbox = bboxs(i,:);
 
-        [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
+        % have a multi-view version
+        if(multi_view)
+
+            views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
+            views = views * pi/180;                                                                                                                                                                     
+
+            if(exist('early_term_params', 'var'))
+                [shape,~,~,lhood,lmark_lhood,view_used] =...
+                    Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
+            else
+                [shape,~,~,lhood,lmark_lhood,view_used] =...
+                    Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views);
+            end
+        else
+            [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
+        end
         
         % shape correction for matlab format
         shape = shape + 1;

@@ -11,6 +11,11 @@ width_orig = size(img,2);
 % Everything is done in floats
 img = single(img);
 
+% Deal with the image being grayscale
+if(size(img,3) == 1)
+    img = cat(3, img, img, img);
+end
+
 % Minimum face size
 if(nargin ==1)
     min_face_size = 30;

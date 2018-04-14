@@ -3,14 +3,15 @@ function Script_CECLM_general()
 addpath(genpath('../'));
 
 % Replace this with the location of the IJB-FL data location
-root_test_data = 'D:/Datasets/janus_labeled';
+root_test_data = 'C:\Users\Tadas Baltrusaitis\Dropbox\janus_labeled';
 [images, detections, labels] = Collect_JANUS_imgs(root_test_data);
 
 %% loading the CE-CLM model and parameters   
 [patches, pdm, clmParams, early_term_params] = Load_CECLM_general();
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
-multi_view = true;
+views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
+views = views * pi/180;                                                                                     
 
 %% Setup recording
 experiment.params = clmParams;
@@ -52,17 +53,8 @@ for i=1:numel(images)
 
     bbox = detections(i,:);                  
     
-    % have a multi-view version
-    if(multi_view)
-
-        views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
-        views = views * pi/180;                                                                                     
-        
-        [shape,~,~,lhood,lmark_lhood,view_used] =...
-            Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
-    else
-        [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
-    end
+    [shape,~,~,lhood,lmark_lhood,view_used] =...
+        Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
 
     all_lmark_lhoods(:,i) = lmark_lhood;
     all_views_used(i) = view_used;

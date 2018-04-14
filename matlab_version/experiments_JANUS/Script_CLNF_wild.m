@@ -8,40 +8,12 @@ root_test_data = 'D:/Datasets/janus_labeled';
 
 %% loading the patch experts
    
-clmParams = struct;
+[ patches, pdm, clmParams ] = Load_CLNF_wild();
+views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
+views = views * pi/180;                                                                                     
 
-clmParams.window_size = [25,25; 23,23; 21,21; 21,21];
-clmParams.numPatchIters = size(clmParams.window_size,1);
-
-[patches] = Load_Patch_Experts( '../models/wild/', 'ccnf_patches_*_wild.mat', [], [], clmParams);
-
-%% Fitting the model to the provided image
-
-% the default PDM to use
-pdmLoc = ['../models/pdm/pdm_68_aligned_wild.mat'];
-
-load(pdmLoc);
-
-pdm = struct;
-pdm.M = double(M);
-pdm.E = double(E);
-pdm.V = double(V);
-
-clmParams.regFactor = [35, 27, 20, 20];
-clmParams.sigmaMeanShift = [1.25, 1.375, 1.5, 1.5]; 
-clmParams.tikhonov_factor = [2.5, 5, 7.5, 7.5];
-
-clmParams.startScale = 1;
-clmParams.num_RLMS_iter = 10;
-clmParams.fTol = 0.01;
-clmParams.useMultiScale = true;
-clmParams.use_multi_modal = 1;
-clmParams.multi_modal_types  = patches(1).multi_modal_types;
-   
 % for recording purposes
 experiment.params = clmParams;
-
-num_points = numel(M)/3;
 
 shapes_all = zeros(size(labels,2),size(labels,3), size(labels,1));
 labels_all = zeros(size(labels,2),size(labels,3), size(labels,1));
@@ -49,7 +21,6 @@ lhoods = zeros(numel(images),1);
 
 % Use the multi-hypothesis model, as bounding box tells nothing about
 % orientation
-multi_view = true;
 verbose = false; % set to true to visualise the fitting
 
 tic
@@ -64,26 +35,8 @@ for i=1:numel(images)
 
     bbox = detections(i,:);                  
 
-    % have a multi-view version
-    if(multi_view)
+    [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views);
 
-        views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
-        views = views * pi/180;                                                                                     
-
-        shapes = zeros(num_points, 2, size(views,1));
-        ls = zeros(size(views,1),1);
-
-        % Find the best orientation
-        for v = 1:size(views,1)
-            [shapes(:,:,v),~,~,ls(v)] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams, 'orientation', views(v,:));                                            
-        end
-
-        [lhood, v_ind] = max(ls);
-        shape = shapes(:,:,v_ind);
-
-    else
-        [shape,~,~,lhood] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
-    end
     shapes_all(:,:,i) = shape;
     labels_all(:,:,i) = labels(i,:,:);
 

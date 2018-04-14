@@ -6,13 +6,9 @@ addpath(genpath('../face_detection'));
 addpath('../CCNF/');
 
 %% loading the patch experts
-   
-[clmParams, pdm] = Load_CLM_params_wild();
 
-% An accurate CCNF (or CLNF) model
-[patches] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*_general.mat', [], [], clmParams);
-% A simpler (but less accurate SVR)
-% [patches] = Load_Patch_Experts( '../models/general/', 'svr_patches_*_general.mat', [], [], clmParams);
+[patches, pdm, clmParams, early_term_params] = Load_CECLM_general();
+views = [0,0,0];
 
 % Loading eye PDM and patch experts
 [clmParams_eye, pdm_right_eye, pdm_left_eye] = Load_CLM_params_eye_28();
@@ -41,15 +37,18 @@ verbose = true;
 for img=1:numel(images)
     image_orig = imread([root_dir images(img).name]);
 
+    % MTCNN face detector
+    [bboxs, det_shapes, confidences] = detect_face_mtcnn(image_orig);
+
     % First attempt to use the Matlab one (fastest but not as accurate, if not present use yu et al.)
-    [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu'});
+    % [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu'});
     % Zhu and Ramanan and Yu et al. are slower, but also more accurate 
     % and can be used when vision toolbox is unavailable
-%     [bboxs, det_shapes] = detect_faces(image_orig, {'yu', 'zhu'});
+    % [bboxs, det_shapes] = detect_faces(image_orig, {'yu', 'zhu'});
     
     % The complete set that tries all three detectors starting with fastest
     % and moving onto slower ones if fastest can't detect anything
-%     [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu', 'zhu'});
+    % [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu', 'zhu'});
     
     if(size(image_orig,3) == 3)
         image = rgb2gray(image_orig);
@@ -68,32 +67,21 @@ for img=1:numel(images)
         hold on;
     end
 
-    for i=1:size(bboxs,2)
+    for i=1:size(bboxs,1)
 
         % Convert from the initial detected shape to CLM model parameters,
         % if shape is available
         
-        bbox = bboxs(:,i);
+        bbox = bboxs(i,:);
         
-        if(~isempty(det_shapes))
-            shape = det_shapes(:,:,i);
-            inds = [1:60,62:64,66:68];
-            M = pdm.M([inds, inds+68, inds+68*2]);
-            E = pdm.E;
-            V = pdm.V([inds, inds+68, inds+68*2],:);
-            [ a, R, T, ~, params, err, shapeOrtho] = fit_PDM_ortho_proj_to_2D(M, E, V, shape);
-            g_param = [a; Rot2Euler(R)'; T];
-            l_param = params;
-
-            % Use the initial global and local params for clm fitting in the image
-            [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams, 'gparam', g_param, 'lparam', l_param);
-        else
-            [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
-        end
+        [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views);
         
         % shape correction for matlab format
         shape = shape + 1;
               
+        [shape_2, shape_r_eye_2] = Fitting_from_bb_hierarch(image, pdm, pdm_right_eye, patches_right_eye, clmParams_eye, shape, right_eye_inds, right_eye_inds_synth);
+        [shape_2, shape_l_eye_2] = Fitting_from_bb_hierarch(image, pdm, pdm_left_eye, patches_left_eye, clmParams_eye, shape_2, left_eye_inds, left_eye_inds_synth);
+        
         % Perform eye fitting now
         shape_r_eye = zeros(numel(pdm_right_eye.M)/3, 2);
         shape_r_eye(right_eye_inds_synth,:) = shape(right_eye_inds, :);

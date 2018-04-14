@@ -33,6 +33,6 @@ function [patches, pdm, clmParams, early_term_params] = Load_CECLM_general()
     clmParams.numPatchIters = 4;
     
     % As the orientations are not equally reliable reweigh them
-    load('../learn_error_mapping/cen_general_mapping.mat');    
+    load('../models/cen/cen_general_mapping.mat');    
 end
 

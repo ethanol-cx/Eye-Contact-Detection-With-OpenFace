@@ -33,6 +33,6 @@ function [patches, pdm, clmParams, early_term_params] = Load_CECLM_menpo()
     clmParams.numPatchIters = 4;
     
     % As the orientations are not equally reliable reweigh them
-    load('../learn_error_mapping/cen_menpo_mapping.mat');    
+    load('../models/cen/cen_menpo_mapping.mat');    
 end
 
