@@ -16,10 +16,10 @@ line_width = 6;
 hold on;
 
 [error_x, error_y] = cummErrorCurve(ceclm_error);
-plot(error_x, error_y, 'r','DisplayName', 'CE-CLM', 'LineWidth',line_width);
+plot(error_x, error_y, 'r','DisplayName', 'OpenFace 2.0', 'LineWidth',line_width);
 
 [error_x, error_y] = cummErrorCurve(clnf_error);
-plot(error_x, error_y, 'DisplayName', 'CLNF', 'LineWidth',line_width);
+plot(error_x, error_y, 'DisplayName', 'OpenFace', 'LineWidth',line_width);
 
 [error_x, error_y] = cummErrorCurve(cfss_error);
 plot(error_x, error_y, 'DisplayName', 'CFSS', 'LineWidth',line_width);
@@ -47,7 +47,7 @@ grid on
 % title('Fitting in the wild without outline','FontSize',60,'FontName','Helvetica');
 
 leg = legend('show', 'Location', 'SouthEast');
-set(leg,'FontSize',30)
+set(leg,'FontSize',40)
 
 print -dpdf results/Janus-no-outline.pdf
 print -dpng results/Janus-no-outline.png

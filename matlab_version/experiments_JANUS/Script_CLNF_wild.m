@@ -3,7 +3,7 @@ function Script_CLNF_wild()
 addpath(genpath('../'));
 
 % Replace this with the location of the IJB-FL data location
-root_test_data = 'D:/Datasets/janus_labeled';
+root_test_data = 'F:\Dropbox\janus_labeled';
 [images, detections, labels] = Collect_JANUS_imgs(root_test_data);
 
 %% loading the patch experts

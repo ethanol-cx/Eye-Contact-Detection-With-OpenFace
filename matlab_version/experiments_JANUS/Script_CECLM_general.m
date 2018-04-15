@@ -3,7 +3,7 @@ function Script_CECLM_general()
 addpath(genpath('../'));
 
 % Replace this with the location of the IJB-FL data location
-root_test_data = 'C:\Users\Tadas Baltrusaitis\Dropbox\janus_labeled';
+root_test_data = 'F:\Dropbox\janus_labeled';
 [images, detections, labels] = Collect_JANUS_imgs(root_test_data);
 
 %% loading the CE-CLM model and parameters   
