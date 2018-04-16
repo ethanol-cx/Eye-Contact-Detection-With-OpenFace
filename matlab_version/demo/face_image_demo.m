@@ -29,35 +29,27 @@ root_dir = '../../samples/';
 images = dir([root_dir, '*.jpg']);
 
 verbose = true;
-multi_view = true;
 
 for img=1:numel(images)
     image_orig = imread([root_dir images(img).name]);
 
-    % MTCNN face detector
-    [bboxs, det_shapes, confidences] = detect_face_mtcnn(image_orig);
-
-    % First attempt to use the Matlab one (fastest but not as accurate, if not present use yu et al.)
-    % [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu'});
-    % Zhu and Ramanan and Yu et al. are slower, but also more accurate 
-    % and can be used when vision toolbox is unavailable
-    % [bboxs, det_shapes] = detect_faces(image_orig, {'yu', 'zhu'});
+    % Face detectiopn
+    [bboxs] = detect_faces(image_orig, 'mtcnn');
     
-    % The complete set that tries all three detectors starting with fastest
-    % and moving onto slower ones if fastest can't detect anything
-    % [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu', 'zhu'});
+    % If MTCNN detector not available, can use the cascaded regression one
+    % [bboxs] = detect_faces(image_orig, 'cascade');
     
     if(size(image_orig,3) == 3)
-        image = rgb2gray(image_orig);
+        image_gray = rgb2gray(image_orig);
     else
-        image = image_orig;
+        image_gray = image_orig; 
     end
 
     %%
 
     if(verbose)
         f = figure;    
-        if(max(image(:)) > 1)
+        if(max(image_orig(:)) > 1)
             imshow(double(image_orig)/255, 'Border', 'tight');
         else
             imshow(double(image_orig), 'Border', 'tight');
@@ -75,10 +67,10 @@ for img=1:numel(images)
 
         if(exist('early_term_params', 'var'))
             [shape,~,~,lhood,lmark_lhood,view_used] =...
-                Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
+                Fitting_from_bb_multi_hyp(image_gray, [], bbox, pdm, patches, clmParams, views, early_term_params);
         else
             [shape,~,~,lhood,lmark_lhood,view_used] =...
-                Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views);
+                Fitting_from_bb_multi_hyp(image_gray, [], bbox, pdm, patches, clmParams, views);
         end
         
         % shape correction for matlab format

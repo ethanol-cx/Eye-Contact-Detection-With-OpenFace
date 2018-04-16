@@ -40,28 +40,23 @@ verbose = true;
 for img=1:numel(images)
     image_orig = imread([root_dir images(img).name]);
 
-    % MTCNN face detector
-    [bboxs, det_shapes, confidences] = detect_face_mtcnn(image_orig);
-
-    % First attempt to use the Matlab one (fastest but not as accurate, if not present use yu et al.)
-    % [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu'});
-    % Zhu and Ramanan and Yu et al. are slower, but also more accurate 
-    % and can be used when vision toolbox is unavailable
-    % [bboxs, det_shapes] = detect_faces(image_orig, {'yu', 'zhu'});
+    % Face detectiopn
+    [bboxs] = detect_faces(image_orig, 'mtcnn');
     
-    % The complete set that tries all three detectors starting with fastest
-    % and moving onto slower ones if fastest can't detect anything
-    % [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu', 'zhu'});
+    % If MTCNN detector not available, can use the cascaded regression one
+    % [bboxs] = detect_faces(image_orig, 'cascade');
     
     if(size(image_orig,3) == 3)
-        image = rgb2gray(image_orig);
-    end              
+        image_gray = rgb2gray(image_orig);
+    else
+        image_gray = image_orig; 
+    end
 
     %%
 
     if(verbose)
         f = figure;    
-        if(max(image(:)) > 1)
+        if(max(image_orig(:)) > 1)
             imshow(double(image_orig)/255, 'Border', 'tight');
         else
             imshow(double(image_orig), 'Border', 'tight');
@@ -77,11 +72,11 @@ for img=1:numel(images)
         
         bbox = bboxs(i,:);
         
-        [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views);
+        [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb_multi_hyp(image_gray, [], bbox, pdm, patches, clmParams, views);
         
         % Perform eye fitting now
-        [shape, shape_r_eye] = Fitting_from_bb_hierarch(image, pdm, pdm_right_eye, patches_right_eye, clmParams_eye, shape, right_eye_inds_in_68, right_eye_inds_in_28);
-        [shape, shape_l_eye] = Fitting_from_bb_hierarch(image, pdm, pdm_left_eye, patches_left_eye, clmParams_eye, shape, left_eye_inds_in_68, left_eye_inds_in_28);
+        [shape, shape_r_eye] = Fitting_from_bb_hierarch(image_gray, pdm, pdm_right_eye, patches_right_eye, clmParams_eye, shape, right_eye_inds_in_68, right_eye_inds_in_28);
+        [shape, shape_l_eye] = Fitting_from_bb_hierarch(image_gray, pdm, pdm_left_eye, patches_left_eye, clmParams_eye, shape, left_eye_inds_in_68, left_eye_inds_in_28);
         
         % Convert it to matlab convention
         shape_r_eye = shape_r_eye + 1;
