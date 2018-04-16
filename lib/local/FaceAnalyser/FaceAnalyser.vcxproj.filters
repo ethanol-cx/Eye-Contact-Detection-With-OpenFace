@@ -33,9 +33,6 @@
     <ClInclude Include="include\SVR_static_lin_regressors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\PDM.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\FaceAnalyserParameters.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -57,9 +54,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\SVR_static_lin_regressors.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PDM.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\FaceAnalyserParameters.cpp">

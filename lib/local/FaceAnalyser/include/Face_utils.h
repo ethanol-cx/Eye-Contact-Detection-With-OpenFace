@@ -47,8 +47,8 @@ namespace FaceAnalysis
 	// Defining a set of useful utility functions to be used within FaceAnalyser
 
 	// Aligning a face to a common reference frame
-	void AlignFace(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const PDM& pdm, bool rigid = true, float scale = 0.6, int width = 96, int height = 96);
-	void AlignFaceMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid = true, float scale = 0.6, int width = 96, int height = 96);
+	void AlignFace(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const LandmarkDetector::PDM& pdm, bool rigid = true, float scale = 0.6, int width = 96, int height = 96);
+	void AlignFaceMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const LandmarkDetector::PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid = true, float scale = 0.6, int width = 96, int height = 96);
 
 	void Extract_FHOG_descriptor(cv::Mat_<double>& descriptor, const cv::Mat& image, int& num_rows, int& num_cols, int cell_size = 8);
 

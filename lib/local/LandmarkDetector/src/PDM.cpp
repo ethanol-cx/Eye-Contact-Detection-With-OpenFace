@@ -60,7 +60,7 @@ using namespace LandmarkDetector;
 
 //=============================================================================
 // Orthonormalising the 3x3 rotation matrix
-void Orthonormalise(cv::Matx33f &R)
+void PDM::Orthonormalise(cv::Matx33f &R)
 {
 
 	cv::SVD svd(R, cv::SVD::MODIFY_A);
@@ -278,9 +278,9 @@ void PDM::ComputeRigidJacobian(const cv::Mat_<float>& p_local, const cv::Vec6f& 
 	for(int i = 0; i < n; i++)
 	{
     
-		X = shape_3D.at<float>(i,0);
-		Y = shape_3D.at<float>(i+n,0);
-		Z = shape_3D.at<float>(i+n*2,0);    
+		X = shape_3D.at<float>(i, 0);
+		Y = shape_3D.at<float>(i + n, 0);
+		Z = shape_3D.at<float>(i + n * 2, 0);
 		
 		// The rigid jacobian from the axis angle rotation matrix approximation using small angle assumption (R * R')
 		// where R' = [1, -wz, wy
@@ -355,15 +355,15 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6f& 
 	cv::Vec3f euler(params_global[1], params_global[2], params_global[3]);
 	cv::Matx33f currRot = Utilities::Euler2RotationMatrix(euler);
 	
-	float r11 = currRot(0,0);
-	float r12 = currRot(0,1);
-	float r13 = currRot(0,2);
-	float r21 = currRot(1,0);
-	float r22 = currRot(1,1);
-	float r23 = currRot(1,2);
-	float r31 = currRot(2,0);
-	float r32 = currRot(2,1);
-	float r33 = currRot(2,2);
+	float r11 = currRot(0, 0);
+	float r12 = currRot(0, 1);
+	float r13 = currRot(0, 2);
+	float r21 = currRot(1, 0);
+	float r22 = currRot(1, 1);
+	float r23 = currRot(1, 2);
+	float r31 = currRot(2, 0);
+	float r32 = currRot(2, 1);
+	float r33 = currRot(2, 2);
 
 	cv::MatIterator_<float> Jx =  Jacobian.begin();
 	cv::MatIterator_<float> Jy =  Jx + n * (6 + m);
@@ -374,9 +374,9 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6f& 
 	for(int i = 0; i < n; i++)
 	{
     
-		X = shape_3D.at<float>(i,0);
-		Y = shape_3D.at<float>(i+n,0);
-		Z = shape_3D.at<float>(i+n*2,0);    
+		X = shape_3D.at<float>(i, 0);
+		Y = shape_3D.at<float>(i + n, 0);
+		Z = shape_3D.at<float>(i + n * 2, 0);
     
 		// The rigid jacobian from the axis angle rotation matrix approximation using small angle assumption (R * R')
 		// where R' = [1, -wz, wy

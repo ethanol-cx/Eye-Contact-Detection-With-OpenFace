@@ -96,6 +96,9 @@ class PDM{
 		// Given the current parameters, and the computed delta_p compute the updated parameters
 		void UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>& params_local, cv::Vec6f& params_global);
 
+	private:
+		// Helper utilities
+		static void Orthonormalise(cv::Matx33f &R);
   };
   //===========================================================================
 }

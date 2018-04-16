@@ -84,3 +84,5 @@ matlab_runners/Action Unit Experiments/out_bp4d/
 matlab_runners/Feature Point Experiments/300VW_experiment/
 gui/OpenFaceOffline/obj/
 gui/OpenFaceDemo/obj/
+exe/FeatureExtraction/processed/
+matlab_runners/
