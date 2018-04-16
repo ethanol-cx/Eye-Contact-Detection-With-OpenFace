@@ -14,17 +14,14 @@ verbose = true;
 record = true;
 
 %% loading the patch experts
-[clmParams, pdm] = Load_CLM_params_vid();
+% Default OpenFace landmark model, using CE-CLM patch experts
+[patches, pdm, clmParams, early_term_params] = Load_CECLM_general();
 
-% An accurate CCNF (or CLNF) model
-[patches] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*_general.mat', [], [], clmParams);
-% A simpler (but less accurate SVR)
-% [patches] = Load_Patch_Experts( '../models/wild/', 'svr_patches_*_wild.mat', [], [], clmParams);
+% faster but less accurate
+%[patches, pdm, clmParams] = Load_CLNF_general();
 
-% A general SVR
-% [patches] = Load_Patch_Experts( '../models/general/', 'svr_patches_*_general.mat', [], [], clmParams);
-
-clmParams.multi_modal_types  = patches(1).multi_modal_types;
+% even faster but even less accurate
+%[patches, pdm, clmParams] = Load_CLM_general();
 
 % load the face validator and add its dependency
 load('../face_validation/trained/faceCheckers.mat', 'faceCheckers');
@@ -72,12 +69,11 @@ for v=1:numel(vids)
         image_orig = read(vr, i);
         if((~det && mod(i,4) == 0) || ~initialised)
             
-            [bboxs, det_shapes, confidences] = detect_face_mtcnn(image_orig);            
-            % First attempt to use the Matlab one (fastest but not as accurate, if not present use yu et al.)
-            % [bboxs, det_shapes] = detect_faces(image_orig, {'cascade', 'yu'});
-            % Zhu and Ramanan and Yu et al. are slower, but also more accurate
-            % and can be used when vision toolbox is unavailable
-            % [bboxs, det_shapes] = detect_faces(image_orig, {'yu', 'zhu'});
+            % Face detection
+            [bboxs] = detect_faces(image_orig, 'mtcnn');
+
+            % If MTCNN detector not available, can use the cascaded regression one
+            % [bboxs] = detect_faces(image_orig, 'cascade');
 
             if(~isempty(bboxs))
 

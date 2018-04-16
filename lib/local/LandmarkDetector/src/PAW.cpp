@@ -165,7 +165,6 @@ PAW::PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangul
 
 }
 
-
 // Manually define min and max values
 PAW::PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangulation, float in_min_x, float in_min_y, float in_max_x, float in_max_y)
 {
@@ -287,23 +286,23 @@ void PAW::Read(std::ifstream& stream)
 	min_y = (float)min_y_d;
 
 	cv::Mat_<double> destination_landmarks_d;
-	LandmarkDetector::ReadMatBin(stream, destination_landmarks_d);
+	ReadMatBin(stream, destination_landmarks_d);
 	destination_landmarks_d.convertTo(destination_landmarks, CV_32F);
 
-	LandmarkDetector::ReadMatBin(stream, triangulation);
+	ReadMatBin(stream, triangulation);
 
-	LandmarkDetector::ReadMatBin(stream, triangle_id);
+	ReadMatBin(stream, triangle_id);
 
 	cv::Mat tmpMask;
-	LandmarkDetector::ReadMatBin(stream, tmpMask);
+	ReadMatBin(stream, tmpMask);
 	tmpMask.convertTo(pixel_mask, CV_8U);
 
 	cv::Mat_<double> alpha_d;
-	LandmarkDetector::ReadMatBin(stream, alpha_d);
+	ReadMatBin(stream, alpha_d);
 	alpha_d.convertTo(alpha, CV_32F);
 
 	cv::Mat_<double> beta_d;
-	LandmarkDetector::ReadMatBin(stream, beta_d);
+	ReadMatBin(stream, beta_d);
 	beta_d.convertTo(beta, CV_32F);
 
 	map_x.create(pixel_mask.rows, pixel_mask.cols);
@@ -441,18 +440,18 @@ void PAW::WarpRegion(cv::Mat_<float>& mapx, cv::Mat_<float>& mapy)
 // ============================================================
 
 // Is the point (x0,y0) on same side as a half-plane defined by (x1,y1), (x2, y2), and (x3, y3)
-bool sameSide(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3)
+bool PAW::sameSide(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3)
 {
-    
-	float x = (x3-x2)*(y0-y2) - (x0-x2)*(y3-y2);
-	float y = (x3-x2)*(y1-y2) - (x1-x2)*(y3-y2);
 
-    return x*y >= 0;
+	float x = (x3 - x2)*(y0 - y2) - (x0 - x2)*(y3 - y2);
+	float y = (x3 - x2)*(y1 - y2) - (x1 - x2)*(y3 - y2);
+
+	return x*y >= 0;
 
 }
 
 // if point (x0, y0) is on same side for all three half-planes it is in a triangle
-bool pointInTriangle(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3)
+bool PAW::pointInTriangle(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3)
 {
 	bool same_1 = sameSide(x0, y0, x1, y1, x2, y2, x3, y3);
 	bool same_2 = sameSide(x0, y0, x2, y2, x1, y1, x3, y3);
@@ -463,7 +462,7 @@ bool pointInTriangle(float x0, float y0, float x1, float y1, float x2, float y2,
 }
 
 // Find if a given point lies in the triangles
-int PAW::findTriangle(const cv::Point_<float>& point, const std::vector<std::vector<float>>& control_points, int guess) const
+int PAW::findTriangle(const cv::Point_<float>& point, const std::vector<std::vector<float>>& control_points, int guess)
 {
 
 	int num_tris = control_points.size();

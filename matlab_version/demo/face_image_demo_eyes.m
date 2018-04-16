@@ -40,7 +40,7 @@ verbose = true;
 for img=1:numel(images)
     image_orig = imread([root_dir images(img).name]);
 
-    % Face detectiopn
+    % Face detection
     [bboxs] = detect_faces(image_orig, 'mtcnn');
     
     % If MTCNN detector not available, can use the cascaded regression one
