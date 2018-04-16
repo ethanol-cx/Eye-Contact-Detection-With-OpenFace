@@ -6,16 +6,19 @@ addpath(genpath('../face_detection'));
 addpath('../CCNF/');
 
 %% loading the patch experts
-   
-%[patches, pdm, clmParams, early_term_params] = Load_CECLM_general();
 
-% An accurate CCNF (or CLNF) model
-[clmParams, pdm] = Load_CLM_params_wild();
-[patches] = Load_Patch_Experts( '../models/general/', 'ccnf_patches_*_general.mat', [], [], clmParams);
-% A simpler (but less accurate SVR)
-% [patches] = Load_Patch_Experts( '../models/general/', 'svr_patches_*_general.mat', [], [], clmParams);
+% Default OpenFace landmark model, using CE-CLM patch experts
+[patches, pdm, clmParams, early_term_params] = Load_CECLM_general();
 
-clmParams.multi_modal_types  = patches(1).multi_modal_types;
+% faster but less accurate
+%[patches, pdm, clmParams] = Load_CLNF_general();
+
+% even faster but even less accurate
+%[patches, pdm, clmParams] = Load_CLM_general();
+
+% Using a multi-view approach
+views = [0,0,0; 0,-30,0; 0,30,0; 0,0,30; 0,0,-30;];
+views = views * pi/180;                                                                                                                                                                     
 
 % Dependencies for face detection (MatConvNet), remove if not present
 setup_mconvnet;
@@ -70,21 +73,12 @@ for img=1:numel(images)
         
         bbox = bboxs(i,:);
 
-        % have a multi-view version
-        if(multi_view)
-
-            views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
-            views = views * pi/180;                                                                                                                                                                     
-
-            if(exist('early_term_params', 'var'))
-                [shape,~,~,lhood,lmark_lhood,view_used] =...
-                    Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
-            else
-                [shape,~,~,lhood,lmark_lhood,view_used] =...
-                    Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views);
-            end
+        if(exist('early_term_params', 'var'))
+            [shape,~,~,lhood,lmark_lhood,view_used] =...
+                Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
         else
-            [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
+            [shape,~,~,lhood,lmark_lhood,view_used] =...
+                Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views);
         end
         
         % shape correction for matlab format

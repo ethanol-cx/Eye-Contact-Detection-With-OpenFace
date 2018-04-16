@@ -7,22 +7,24 @@ addpath('../CCNF/');
 
 %% loading the patch experts
 
+% Default OpenFace landmark model, using CE-CLM patch experts
 [patches, pdm, clmParams, early_term_params] = Load_CECLM_general();
-views = [0,0,0];
 
-% Loading eye PDM and patch experts
-[clmParams_eye, pdm_right_eye, pdm_left_eye] = Load_CLM_params_eye_28();
+% faster but less accurate
+%[patches, pdm, clmParams] = Load_CLNF_general();
 
-[patches_right_eye] = Load_Patch_Experts( '../models/hierarch/', 'ccnf_patches_*_synth_right_eye.mat', [], [], clmParams_eye);
-[patches_left_eye] = Load_Patch_Experts( '../models/hierarch/', 'ccnf_patches_*_synth_left_eye.mat', [], [], clmParams_eye);
-clmParams_eye.multi_modal_types  = patches_right_eye(1).multi_modal_types;
-right_eye_inds = [43,44,45,46,47,48];
-left_eye_inds = [37,38,39,40,41,42];
+% even faster but even less accurate
+%[patches, pdm, clmParams] = Load_CLM_general();
 
-right_eye_inds_synth = [9 11 13 15 17 19];
-left_eye_inds_synth = [9 11 13 15 17 19];
+% Using a multi-view approach
+views = [0,0,0; 0,-30,0; 0,30,0; 0,0,30; 0,0,-30;];
+views = views * pi/180;  
 
-clmParams.multi_modal_types  = patches(1).multi_modal_types;
+% Load the eye landmark models that will be used
+[ clmParams_eye, pdm_right_eye, pdm_left_eye, ...
+    patches_left_eye, patches_right_eye,...
+    left_eye_inds_in_68, right_eye_inds_in_68,...
+    left_eye_inds_in_28, right_eye_inds_in_28] = Load_eye_models();
 
 %%
 % root_dir = 'C:\Users\Tadas\Dropbox\AAM\test data\gaze_original\p00/';
@@ -77,12 +79,13 @@ for img=1:numel(images)
         
         [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views);
         
-        % shape correction for matlab format
-        shape = shape + 1;
-             
         % Perform eye fitting now
-        [shape, shape_r_eye] = Fitting_from_bb_hierarch(image, pdm, pdm_right_eye, patches_right_eye, clmParams_eye, shape, right_eye_inds, right_eye_inds_synth);
-        [shape, shape_l_eye] = Fitting_from_bb_hierarch(image, pdm, pdm_left_eye, patches_left_eye, clmParams_eye, shape, left_eye_inds, left_eye_inds_synth);
+        [shape, shape_r_eye] = Fitting_from_bb_hierarch(image, pdm, pdm_right_eye, patches_right_eye, clmParams_eye, shape, right_eye_inds_in_68, right_eye_inds_in_28);
+        [shape, shape_l_eye] = Fitting_from_bb_hierarch(image, pdm, pdm_left_eye, patches_left_eye, clmParams_eye, shape, left_eye_inds_in_68, left_eye_inds_in_28);
+        
+        % Convert it to matlab convention
+        shape_r_eye = shape_r_eye + 1;
+        shape_l_eye = shape_l_eye + 1;
         
         plot(shape_l_eye(9:20,1), shape_l_eye(9:20,2), '.g', 'MarkerSize',7);
         plot(shape_l_eye(1:8,1), shape_l_eye(1:8,2), '.b', 'MarkerSize',7);
