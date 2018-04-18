@@ -583,25 +583,17 @@ void CCNF_patch_expert::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::
 	int h = area_of_interest.rows - neurons[0].weights.rows + 1;
 	int w = area_of_interest.cols - neurons[0].weights.cols + 1;
 
-	// TODO integrate bias and norm weights into this?
 
-	cv::Mat_<float> neuron_resp_full = this->weight_matrix * normalized_input;
+	cv::Mat_<float> neuron_resp_full(weight_matrix.rows, normalized_input.cols, 0.0f);
+	// Perform matrix multiplication in OpenBLAS (fortran call)
+	float alpha1 = 1.0;
+	float beta1 = 0.0;
+	// TODO this should be a macro
+	sgemm_("N", "N", &normalized_input.cols, &weight_matrix.rows, &weight_matrix.cols, &alpha1, (float*)normalized_input.data, &normalized_input.cols, (float*)weight_matrix.data, &weight_matrix.cols, &beta1, (float*)neuron_resp_full.data, &normalized_input.cols);
 
-	// We are performing response = weights[layers] * response(t), but in OpenBLAS as that is significantly quicker than OpenCV		
-	//cv::Mat_<float> resp = normalized_input;
-	//float* m1 = (float*)resp.data;
-	//cv::Mat_<float> weight = this->weight_matrix;
-	//float* m2 = (float*)weight.data;
+	// Above is a faster version of this
+	//cv::Mat_<float> neuron_resp_full = this->weight_matrix * normalized_input;
 
-	//cv::Mat_<float> neuron_resp_full(weight.rows, resp.cols);
-	//float* m3 = (float*)neuron_resp_full.data;
-
-	//// Perform matrix multiplication in OpenBLAS (fortran call)
-	//float alpha1 = 1.0;
-	//float beta1 = 0.0;
-	//sgemm_("N", "N", &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
-
-	//cv::Mat_<float> resp_tmp = response.clone();
 	for (size_t i = 0; i < neurons.size(); i++)
 	{
 		if (neurons[i].alpha > 1e-4)
@@ -621,46 +613,6 @@ void CCNF_patch_expert::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::
 	}
 	response = response.t();
 
-	// responses from the neural layers
-	//for (size_t i = 0; i < neurons.size(); i++)
-	//{
-	//	// Do not bother with neuron response if the alpha is tiny and will not contribute much to overall result
-	//	if (neurons[i].alpha > 1e-4)
-	//	{
-
-	//		if (neurons[i].neuron_type != 0)
-	//		{
-	//			printf("ERROR(%s,%d): Unsupported patch type %d!\n", __FILE__, __LINE__, neurons[i].neuron_type);
-	//			abort();
-	//		}
-
-	//		// Flatten the weights (TODO could pull this out or do it during model reading)
-	//		cv::Mat_<float> w_tmp = neurons[i].weights.t();
-	//		cv::Mat_<float> weights_flat = w_tmp.reshape(1, neurons[i].weights.rows * neurons[i].weights.cols);
-	//		weights_flat = weights_flat.t();
-
-	//		// Perform computation (TODO OpenBlas it)
-	//		neuron_response = weights_flat * normalized_input;
-	//		neuron_response = neuron_response.reshape(1, h);
-
-	//		cv::MatIterator_<float> p = neuron_response.begin();
-
-	//		cv::MatIterator_<float> q1 = neuron_response.begin(); // respone for each pixel
-	//		cv::MatIterator_<float> q2 = neuron_response.end();
-
-	//		// the logistic function (sigmoid) applied to the response
-	//		while (q1 != q2)
-	//		{
-	//			*p++ = (2 * neurons[i].alpha) * 1.0 / (1.0 + exp(-(*q1++ * neurons[i].norm_weights + neurons[i].bias)));
-	//		}
-	//		neuron_response = neuron_response.t();
-
-	//		//neurons[i].ResponseOB(area_of_interest, input_col, neuron_response);
-
-	//		response = response + neuron_response;
-	//	}
-	//}
-
 	int s_to_use = -1;
 
 	// Find the matching sigma
@@ -676,8 +628,16 @@ void CCNF_patch_expert::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::
 
 	cv::Mat_<float> resp_vec_f = response.reshape(1, response_height * response_width);
 
-	// TODO blas this
-	cv::Mat out = Sigmas[s_to_use] * resp_vec_f;
+	cv::Mat_<float> out(Sigmas[s_to_use].rows, resp_vec_f.cols, 0.0f);
+	
+	// Perform matrix multiplication in OpenBLAS (fortran call)
+	alpha1 = 1.0;
+	beta1 = 0.0;
+	// TODO this should be a macro
+	sgemm_("N", "N", &resp_vec_f.cols, &Sigmas[s_to_use].rows, &Sigmas[s_to_use].cols, &alpha1, (float*)resp_vec_f.data, &resp_vec_f.cols, (float*)Sigmas[s_to_use].data, &Sigmas[s_to_use].cols, &beta1, (float*)out.data, &resp_vec_f.cols);
+
+	// Above is a faster version of this
+	//cv::Mat out = Sigmas[s_to_use] * resp_vec_f;
 
 	response = out.reshape(1, response_height);
 
