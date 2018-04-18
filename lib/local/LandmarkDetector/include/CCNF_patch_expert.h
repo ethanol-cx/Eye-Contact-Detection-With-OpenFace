@@ -103,6 +103,9 @@ public:
 	std::vector<cv::Mat_<float> >	Sigmas;
 	std::vector<double>				betas;
 
+	// Combined weight matrix from each neuron
+	cv::Mat_<float> weight_matrix;
+
 	// How confident we are in the patch
 	double   patch_confidence;
 

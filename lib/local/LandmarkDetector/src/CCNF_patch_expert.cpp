@@ -43,6 +43,10 @@
 // Local includes
 #include "LandmarkDetectorUtils.h"
 
+// OpenBLAS
+#include <cblas.h>
+#include <f77blas.h>
+
 using namespace LandmarkDetector;
 
 // Copy constructors of neuron and patch expert
@@ -66,6 +70,8 @@ CCNF_patch_expert::CCNF_patch_expert(const CCNF_patch_expert& other) : neurons(o
 	this->width = other.width;
 	this->height = other.height;
 	this->patch_confidence = other.patch_confidence;
+	
+	this->weight_matrix = other.weight_matrix.clone();
 
 	// Copy the Sigmas in a deep way
 	for (std::vector<cv::Mat_<float> >::const_iterator it = other.Sigmas.begin(); it != other.Sigmas.end(); it++)
@@ -133,6 +139,162 @@ void CCNF_neuron::Read(ifstream &stream)
 
 }
 
+void im2col(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
+{
+
+	const int m = input.rows;
+	const int n = input.cols;
+
+	// determine how many blocks there will be with a sliding window of width x height in the input
+	const int yB = m - height + 1;
+	const int xB = n - width + 1;
+
+	// Allocate the output size
+	if (output.rows != xB*yB && output.cols != width * height)
+	{
+		output = cv::Mat::zeros(xB*yB, width * height, CV_32F);
+	}
+
+	// Iterate over the blocks
+	for (int j = 0; j< xB; j++)
+	{
+		for (int i = 0; i< yB; i++)
+		{
+			int rowIdx = i + j*yB;
+
+			for (unsigned int yy = 0; yy < height; ++yy)
+				for (unsigned int xx = 0; xx < width; ++xx)
+				{
+					int colIdx = xx*height + yy;
+					output.at<float>(rowIdx, colIdx) = input.at<float>(i + yy, j + xx);
+					// TODO could compute the mean here instead of contrast norm
+				}
+		}
+	}
+}
+
+// TODO this was optimized more in CEN that can be re-used
+// Contrast normalize the input for response map computation (TODO if it works move to utilities)
+void contrastNormCCNF(const cv::Mat_<float>& input, cv::Mat_<float>& output)
+{
+
+	const int num_cols = input.cols;
+
+	const int num_rows = input.rows;
+
+	output = input.clone();
+
+	cv::MatConstIterator_<float> p = input.begin();
+
+	cv::MatIterator_<float> o = output.begin();
+
+	// Compute row wise
+	for (size_t y = 0; y < num_rows; ++y)
+	{
+		// TODO means could be computed externally
+		cv::Scalar mean_s = cv::mean(input(cv::Rect(0, y, num_cols, 1)));
+		float mean = (float)mean_s[0];
+
+		float sum_sq = 0;
+		// TODO Some of this could be pre-computed? e.g. mean*mean and curr*curr in im2col
+		for (size_t x = 0; x < num_cols; ++x)
+		{
+			float curr = *p++;
+			sum_sq += (curr - mean) * (curr - mean);
+		}
+
+		float norm = sqrt(sum_sq);
+
+		if (norm == 0)
+			norm = 1;
+		
+		// Faster to multiply
+		norm = 1.0 / norm;
+
+		for (size_t x = 0; x < num_cols; ++x)
+		{
+			//output.at<float>(y, x) = (output.at<float>(y, x) - mean) / norm;
+			*o++ = (*o - mean) * norm;
+		}
+
+	}
+
+}
+
+// Perform im2col, while at the same time doing contrast normalization and adding a bias term (also skip every other region)
+void im2colContrastNorm(const cv::Mat_<float>& input, const int width, const int height, cv::Mat_<float>& output)
+{
+	const int m = input.rows;
+	const int n = input.cols;
+
+	// determine how many blocks there will be with a sliding window of width x height in the input
+	const int yB = m - height + 1;
+	const int xB = n - width + 1;
+
+	// Allocate the output size
+	if (output.rows != xB*yB && output.cols != width * height)
+	{
+		output = cv::Mat::zeros(xB*yB, width * height, CV_32F);
+	}
+
+	// Iterate over the blocks,
+	int rowIdx = 0;
+	for (int j = 0; j< xB; j++)
+	{
+		for (int i = 0; i< yB; i++)
+		{
+
+			float* Mo = output.ptr<float>(rowIdx);
+
+			float sum = 0;
+
+			for (unsigned int yy = 0; yy < height; ++yy)
+			{
+				const float* Mi = input.ptr<float>(i + yy);
+				for (unsigned int xx = 0; xx < width; ++xx)
+				{
+					int colIdx = xx*height + yy;
+					float in = Mi[j + xx];
+					sum += in;
+
+					Mo[colIdx] = in;
+				}
+			}
+
+			// Working out the mean
+			float mean = sum / (float)(width * height);
+
+			float sum_sq = 0;
+
+			// Working out the sum squared and subtracting the mean
+			for (size_t x = 0; x < width*height; ++x)
+			{
+				float in = Mo[x] - mean;
+				Mo[x] = in;
+				sum_sq += in * in;
+			}
+
+			float norm = sqrt(sum_sq);
+
+			// Avoiding division by 0
+			if (norm == 0)
+			{
+				norm = 1;
+			}
+
+			// Flip multiplication to division for speed
+			norm = 1.0 / norm;
+
+			for (size_t x = 0; x < width*height; ++x)
+			{
+				Mo[x] *= norm;
+			}
+
+			rowIdx++;
+		}
+	}
+}
+
 //===========================================================================
 void CCNF_neuron::Response(const cv::Mat_<float> &im, cv::Mat_<double> &im_dft, cv::Mat &integral_img, cv::Mat &integral_img_sq, cv::Mat_<float> &resp)
 {
@@ -194,7 +356,7 @@ void CCNF_neuron::Response(const cv::Mat_<float> &im, cv::Mat_<double> &im_dft, 
 	{
 		matchTemplate_m(I, im_dft, integral_img, integral_img_sq, weights, weights_dfts, resp, CV_TM_CCOEFF_NORMED); // the linear multiplication, efficient calc of response
 	}
-
+	
 	cv::MatIterator_<float> p = resp.begin();
 
 	cv::MatIterator_<float> q1 = resp.begin(); // respone for each pixel
@@ -208,85 +370,10 @@ void CCNF_neuron::Response(const cv::Mat_<float> &im, cv::Mat_<double> &im_dft, 
 
 }
 
-void im2col(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
-{
-
-	const int m = input.rows;
-	const int n = input.cols;
-
-	// determine how many blocks there will be with a sliding window of width x height in the input
-	const int yB = m - height + 1;
-	const int xB = n - width + 1;
-
-	// Allocate the output size
-	if (output.rows != xB*yB && output.cols != width * height)
-	{
-		output = cv::Mat::ones(xB*yB, width * height, CV_32F);
-	}
-
-	// Iterate over the blocks
-	for (int j = 0; j< xB; j++)
-	{
-		for (int i = 0; i< yB; i++)
-		{
-			int rowIdx = i + j*yB;
-
-			for (unsigned int yy = 0; yy < height; ++yy)
-				for (unsigned int xx = 0; xx < width; ++xx)
-				{
-					int colIdx = xx*height + yy;
-					output.at<float>(rowIdx, colIdx) = input.at<float>(i + yy, j + xx);
-					// TODO could compute the mean here instead of contrast norm
-				}
-		}
-	}
-}
-
-// Contrast normalize the input for response map computation (TODO if it works move to utilities)
-void contrastNormCCNF(const cv::Mat_<float>& input, cv::Mat_<float>& output)
-{
-
-	const int num_cols = input.cols;
-
-	const int num_rows = input.rows;
-
-	output = input.clone();
-
-	cv::MatConstIterator_<float> p = input.begin();
-
-	// Compute row wise
-	for (size_t y = 0; y < num_rows; ++y)
-	{
-
-		cv::Scalar mean_s = cv::mean(input(cv::Rect(0, y, num_cols, 1)));
-		float mean = (float)mean_s[0];
-
-		p++;
-
-		float sum_sq = 0;
-		for (size_t x = 0; x < num_cols; ++x)
-		{
-			float curr = *p++;
-			sum_sq += (curr - mean) * (curr - mean);
-		}
-
-		float norm = sqrt(sum_sq);
-
-		if (norm == 0)
-			norm = 1;
-
-		for (size_t x = 0; x < num_cols; ++x)
-		{
-			output.at<float>(y, x) = (output.at<float>(y, x) - mean) / norm;
-		}
-
-	}
-
-}
 
 
-// TODO building up from individual responses (although in future would want to move this up rather than per individual neuron)
-void CCNF_neuron::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::Mat_<float>& input_col, cv::Mat_<float> &resp)
+// TODO building up from individual responses (although in future would want to move this up rather than per individual neuron), remove
+void CCNF_neuron::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::Mat_<float>& normalized_input, cv::Mat_<float> &resp)
 {
 
 	int h = area_of_interest.rows - weights.rows + 1;
@@ -298,27 +385,25 @@ void CCNF_neuron::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::Mat_<f
 		abort();
 	}
 
-	if (resp.empty())
-	{
-		resp.create(h, w);
-	}
-
-	// Need to flatten the weights
-
+	//if (resp.empty())
+	//{
+	//	resp.create(h, w);
+	//}
+	
 	// Perform im2col and contrast normalization
-	if(input_col.empty())
+	if(normalized_input.empty())
 	{
-		im2col(area_of_interest, weights.cols, weights.rows, input_col);
+		// TODO cleanup
+		//im2col(area_of_interest, weights.cols, weights.rows, input_col);
 
 		// Mean and standard deviation normalization
-		contrastNormCCNF(input_col, resp);
-		input_col = resp.clone();
+		//contrastNormCCNF(input_col, resp);
+
+		cv::Mat_<float> tmp_out;
+		im2colContrastNorm(area_of_interest, weights.cols, weights.rows, normalized_input);
+		
+		normalized_input = normalized_input.t();
 	}
-	else 
-	{
-		resp = input_col.clone();
-	}
-	resp = resp.t();
 
 	// Flatten the weights (TODO could pull this out or do it during model reading)
 	cv::Mat_<float> w_tmp = weights.t();
@@ -326,7 +411,7 @@ void CCNF_neuron::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::Mat_<f
 	weights_flat = weights_flat.t();
 
 	// Perform computation (TODO OpenBlas it)
-	resp = weights_flat * resp;
+	resp = weights_flat * normalized_input;
 	resp = resp.reshape(1, h);
 
 	cv::MatIterator_<float> p = resp.begin();
@@ -370,6 +455,16 @@ void CCNF_patch_expert::Read(ifstream &stream, std::vector<int> window_sizes, st
 	neurons.resize(num_neurons);
 	for(int i = 0; i < num_neurons; i++)
 		neurons[i].Read(stream);
+		
+	// Combine the neuron weights to one weight matrix for more efficient computation
+	weight_matrix = cv::Mat_<float>(neurons.size(), neurons[0].weights.rows * neurons[0].weights.cols);
+	for (size_t i = 0; i < neurons.size(); i++)
+	{
+		cv::Mat_<float> w_tmp = neurons[i].weights.t();
+		cv::Mat_<float> weights_flat = w_tmp.reshape(1, neurons[i].weights.rows * neurons[i].weights.cols);
+		weights_flat = weights_flat.t();
+		weights_flat.copyTo(weight_matrix(cv::Rect(0, i, neurons[i].weights.rows * neurons[i].weights.cols, 1)));
+	}
 
 	int n_sigmas = window_sizes.size();
 
@@ -467,9 +562,16 @@ void CCNF_patch_expert::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::
 	}
 
 	response.setTo(0);
+	if (neurons.size() == 0)
+	{
+		return;
+	}
 
 	// the placeholder for the column normalized representation of the image, don't get recalculated for every response
-	cv::Mat_<float> input_col;
+	cv::Mat_<float> normalized_input;
+
+	im2colContrastNorm(area_of_interest, neurons[0].weights.cols, neurons[0].weights.rows, normalized_input);
+	normalized_input = normalized_input.t();
 
 	// the placeholder for the DFT of the image, the integral image, and squared integral image so they don't get recalculated for every response
 	cv::Mat_<double> area_of_interest_dft;
@@ -477,21 +579,87 @@ void CCNF_patch_expert::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::
 
 	cv::Mat_<float> neuron_response;
 
-	// responses from the neural layers
+	
+	int h = area_of_interest.rows - neurons[0].weights.rows + 1;
+	int w = area_of_interest.cols - neurons[0].weights.cols + 1;
+
+	// TODO integrate bias and norm weights into this?
+
+	cv::Mat_<float> neuron_resp_full = this->weight_matrix * normalized_input;
+
+	// We are performing response = weights[layers] * response(t), but in OpenBLAS as that is significantly quicker than OpenCV		
+	//cv::Mat_<float> resp = normalized_input;
+	//float* m1 = (float*)resp.data;
+	//cv::Mat_<float> weight = this->weight_matrix;
+	//float* m2 = (float*)weight.data;
+
+	//cv::Mat_<float> neuron_resp_full(weight.rows, resp.cols);
+	//float* m3 = (float*)neuron_resp_full.data;
+
+	//// Perform matrix multiplication in OpenBLAS (fortran call)
+	//float alpha1 = 1.0;
+	//float beta1 = 0.0;
+	//sgemm_("N", "N", &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
+
+	//cv::Mat_<float> resp_tmp = response.clone();
 	for (size_t i = 0; i < neurons.size(); i++)
 	{
-		// Do not bother with neuron response if the alpha is tiny and will not contribute much to overall result
 		if (neurons[i].alpha > 1e-4)
 		{
+			cv::MatIterator_<float> p = response.begin();
 
-			neurons[i].ResponseOB(area_of_interest, input_col, neuron_response);
+			cv::Mat_<float> rel_row = neuron_resp_full.row(i);// .clone();
+			cv::MatIterator_<float> q1 = rel_row.begin(); // respone for each pixel
+			cv::MatIterator_<float> q2 = rel_row.end();
 
-			cv::Mat_<float> resp_tmp;
-			neurons[i].Response(area_of_interest, area_of_interest_dft, integral_image, integral_image_sq, resp_tmp);
-
-			response = response + neuron_response;
+			// the logistic function (sigmoid) applied to the response
+			while (q1 != q2)
+			{
+				*p++ += (2 * neurons[i].alpha) * 1.0 / (1.0 + exp(-(*q1++ * neurons[i].norm_weights + neurons[i].bias)));
+			}
 		}
 	}
+	response = response.t();
+
+	// responses from the neural layers
+	//for (size_t i = 0; i < neurons.size(); i++)
+	//{
+	//	// Do not bother with neuron response if the alpha is tiny and will not contribute much to overall result
+	//	if (neurons[i].alpha > 1e-4)
+	//	{
+
+	//		if (neurons[i].neuron_type != 0)
+	//		{
+	//			printf("ERROR(%s,%d): Unsupported patch type %d!\n", __FILE__, __LINE__, neurons[i].neuron_type);
+	//			abort();
+	//		}
+
+	//		// Flatten the weights (TODO could pull this out or do it during model reading)
+	//		cv::Mat_<float> w_tmp = neurons[i].weights.t();
+	//		cv::Mat_<float> weights_flat = w_tmp.reshape(1, neurons[i].weights.rows * neurons[i].weights.cols);
+	//		weights_flat = weights_flat.t();
+
+	//		// Perform computation (TODO OpenBlas it)
+	//		neuron_response = weights_flat * normalized_input;
+	//		neuron_response = neuron_response.reshape(1, h);
+
+	//		cv::MatIterator_<float> p = neuron_response.begin();
+
+	//		cv::MatIterator_<float> q1 = neuron_response.begin(); // respone for each pixel
+	//		cv::MatIterator_<float> q2 = neuron_response.end();
+
+	//		// the logistic function (sigmoid) applied to the response
+	//		while (q1 != q2)
+	//		{
+	//			*p++ = (2 * neurons[i].alpha) * 1.0 / (1.0 + exp(-(*q1++ * neurons[i].norm_weights + neurons[i].bias)));
+	//		}
+	//		neuron_response = neuron_response.t();
+
+	//		//neurons[i].ResponseOB(area_of_interest, input_col, neuron_response);
+
+	//		response = response + neuron_response;
+	//	}
+	//}
 
 	int s_to_use = -1;
 
@@ -508,6 +676,7 @@ void CCNF_patch_expert::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::
 
 	cv::Mat_<float> resp_vec_f = response.reshape(1, response_height * response_width);
 
+	// TODO blas this
 	cv::Mat out = Sigmas[s_to_use] * resp_vec_f;
 
 	response = out.reshape(1, response_height);
