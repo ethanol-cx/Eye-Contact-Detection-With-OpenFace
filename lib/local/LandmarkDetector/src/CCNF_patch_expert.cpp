@@ -134,7 +134,7 @@ void CCNF_neuron::Read(ifstream &stream)
 }
 
 //===========================================================================
-void CCNF_neuron::Response(cv::Mat_<float> &im, cv::Mat_<double> &im_dft, cv::Mat &integral_img, cv::Mat &integral_img_sq, cv::Mat_<float> &resp)
+void CCNF_neuron::Response(const cv::Mat_<float> &im, cv::Mat_<double> &im_dft, cv::Mat &integral_img, cv::Mat &integral_img_sq, cv::Mat_<float> &resp)
 {
 
 	int h = im.rows - weights.rows + 1;
@@ -208,6 +208,140 @@ void CCNF_neuron::Response(cv::Mat_<float> &im, cv::Mat_<double> &im_dft, cv::Ma
 
 }
 
+void im2col(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
+{
+
+	const int m = input.rows;
+	const int n = input.cols;
+
+	// determine how many blocks there will be with a sliding window of width x height in the input
+	const int yB = m - height + 1;
+	const int xB = n - width + 1;
+
+	// Allocate the output size
+	if (output.rows != xB*yB && output.cols != width * height)
+	{
+		output = cv::Mat::ones(xB*yB, width * height, CV_32F);
+	}
+
+	// Iterate over the blocks
+	for (int j = 0; j< xB; j++)
+	{
+		for (int i = 0; i< yB; i++)
+		{
+			int rowIdx = i + j*yB;
+
+			for (unsigned int yy = 0; yy < height; ++yy)
+				for (unsigned int xx = 0; xx < width; ++xx)
+				{
+					int colIdx = xx*height + yy;
+					output.at<float>(rowIdx, colIdx) = input.at<float>(i + yy, j + xx);
+					// TODO could compute the mean here instead of contrast norm
+				}
+		}
+	}
+}
+
+// Contrast normalize the input for response map computation (TODO if it works move to utilities)
+void contrastNormCCNF(const cv::Mat_<float>& input, cv::Mat_<float>& output)
+{
+
+	const int num_cols = input.cols;
+
+	const int num_rows = input.rows;
+
+	output = input.clone();
+
+	cv::MatConstIterator_<float> p = input.begin();
+
+	// Compute row wise
+	for (size_t y = 0; y < num_rows; ++y)
+	{
+
+		cv::Scalar mean_s = cv::mean(input(cv::Rect(0, y, num_cols, 1)));
+		float mean = (float)mean_s[0];
+
+		p++;
+
+		float sum_sq = 0;
+		for (size_t x = 0; x < num_cols; ++x)
+		{
+			float curr = *p++;
+			sum_sq += (curr - mean) * (curr - mean);
+		}
+
+		float norm = sqrt(sum_sq);
+
+		if (norm == 0)
+			norm = 1;
+
+		for (size_t x = 0; x < num_cols; ++x)
+		{
+			output.at<float>(y, x) = (output.at<float>(y, x) - mean) / norm;
+		}
+
+	}
+
+}
+
+
+// TODO building up from individual responses (although in future would want to move this up rather than per individual neuron)
+void CCNF_neuron::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::Mat_<float>& input_col, cv::Mat_<float> &resp)
+{
+
+	int h = area_of_interest.rows - weights.rows + 1;
+	int w = area_of_interest.cols - weights.cols + 1;
+
+	if (neuron_type != 0)
+	{
+		printf("ERROR(%s,%d): Unsupported patch type %d!\n", __FILE__, __LINE__, neuron_type);
+		abort();
+	}
+
+	if (resp.empty())
+	{
+		resp.create(h, w);
+	}
+
+	// Need to flatten the weights
+
+	// Perform im2col and contrast normalization
+	if(input_col.empty())
+	{
+		im2col(area_of_interest, weights.cols, weights.rows, input_col);
+
+		// Mean and standard deviation normalization
+		contrastNormCCNF(input_col, resp);
+		input_col = resp.clone();
+	}
+	else 
+	{
+		resp = input_col.clone();
+	}
+	resp = resp.t();
+
+	// Flatten the weights (TODO could pull this out or do it during model reading)
+	cv::Mat_<float> w_tmp = weights.t();
+	cv::Mat_<float> weights_flat = w_tmp.reshape(1, weights.rows * weights.cols);
+	weights_flat = weights_flat.t();
+
+	// Perform computation (TODO OpenBlas it)
+	resp = weights_flat * resp;
+	resp = resp.reshape(1, h);
+
+	cv::MatIterator_<float> p = resp.begin();
+
+	cv::MatIterator_<float> q1 = resp.begin(); // respone for each pixel
+	cv::MatIterator_<float> q2 = resp.end();
+
+	// the logistic function (sigmoid) applied to the response
+	while (q1 != q2)
+	{
+		*p++ = (2 * alpha) * 1.0 / (1.0 + exp(-(*q1++ * norm_weights + bias)));
+	}
+	resp = resp.t();
+}
+
 //===========================================================================
 void CCNF_patch_expert::Read(ifstream &stream, std::vector<int> window_sizes, std::vector<std::vector<cv::Mat_<float> > > sigma_components)
 {
@@ -259,7 +393,7 @@ void CCNF_patch_expert::Read(ifstream &stream, std::vector<int> window_sizes, st
 }
 
 //===========================================================================
-void CCNF_patch_expert::Response(cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response)
+void CCNF_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response)
 {
 	
 	int response_height = area_of_interest.rows - height + 1;
@@ -284,8 +418,9 @@ void CCNF_patch_expert::Response(cv::Mat_<float> &area_of_interest, cv::Mat_<flo
 		// Do not bother with neuron response if the alpha is tiny and will not contribute much to overall result
 		if(neurons[i].alpha > 1e-4)
 		{
+
 			neurons[i].Response(area_of_interest, area_of_interest_dft, integral_image, integral_image_sq, neuron_response);
-			response = response + neuron_response;						
+			response = response + neuron_response;
 		}
 	}
 
@@ -313,6 +448,75 @@ void CCNF_patch_expert::Response(cv::Mat_<float> &area_of_interest, cv::Mat_<flo
 
 	minMaxIdx(response, &min, 0);
 	if(min < 0)
+	{
+		response = response - min;
+	}
+
+}
+
+//===========================================================================
+void CCNF_patch_expert::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response)
+{
+
+	int response_height = area_of_interest.rows - height + 1;
+	int response_width = area_of_interest.cols - width + 1;
+
+	if (response.rows != response_height || response.cols != response_width)
+	{
+		response.create(response_height, response_width);
+	}
+
+	response.setTo(0);
+
+	// the placeholder for the column normalized representation of the image, don't get recalculated for every response
+	cv::Mat_<float> input_col;
+
+	// the placeholder for the DFT of the image, the integral image, and squared integral image so they don't get recalculated for every response
+	cv::Mat_<double> area_of_interest_dft;
+	cv::Mat integral_image, integral_image_sq;
+
+	cv::Mat_<float> neuron_response;
+
+	// responses from the neural layers
+	for (size_t i = 0; i < neurons.size(); i++)
+	{
+		// Do not bother with neuron response if the alpha is tiny and will not contribute much to overall result
+		if (neurons[i].alpha > 1e-4)
+		{
+
+			neurons[i].ResponseOB(area_of_interest, input_col, neuron_response);
+
+			cv::Mat_<float> resp_tmp;
+			neurons[i].Response(area_of_interest, area_of_interest_dft, integral_image, integral_image_sq, resp_tmp);
+
+			response = response + neuron_response;
+		}
+	}
+
+	int s_to_use = -1;
+
+	// Find the matching sigma
+	for (size_t i = 0; i < window_sizes.size(); ++i)
+	{
+		if (window_sizes[i] == response_height)
+		{
+			// Found the correct sigma
+			s_to_use = i;
+			break;
+		}
+	}
+
+	cv::Mat_<float> resp_vec_f = response.reshape(1, response_height * response_width);
+
+	cv::Mat out = Sigmas[s_to_use] * resp_vec_f;
+
+	response = out.reshape(1, response_height);
+
+	// Making sure the response does not have negative numbers
+	double min;
+
+	minMaxIdx(response, &min, 0);
+	if (min < 0)
 	{
 		response = response - min;
 	}

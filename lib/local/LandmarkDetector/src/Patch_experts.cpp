@@ -217,8 +217,8 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 //#ifdef _OPENMP
 //#pragma omp parallel for
 //#endif
-	tbb::parallel_for(0, (int)vis_lmk.size(), [&](int i){
-	//for(int i = 0; i < vis_lmk.size(); i++)
+	//tbb::parallel_for(0, (int)vis_lmk.size(), [&](int i){
+	for(int i = 0; i < vis_lmk.size(); i++)
 	{
 
 		// Work out how big the area of interest has to be to get a response of window size
@@ -313,6 +313,12 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 			patch_expert_responses[ind] = cv::Mat_<float>(window_size, window_size);
 
 			ccnf_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
+
+			cv::Mat_<float> placeholder(window_size, window_size);
+
+			ccnf_expert_intensity[scale][view_id][ind].ResponseOB(area_of_interest, placeholder);
+
+			cout << cv::norm(placeholder - patch_expert_responses[ind]) << endl;
 		}
 		else
 		{				
@@ -322,7 +328,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 			svr_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
 		}
 	}
-	});
+	//});
 
 }
 

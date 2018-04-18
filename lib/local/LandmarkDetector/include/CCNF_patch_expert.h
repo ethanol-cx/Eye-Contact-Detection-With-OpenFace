@@ -78,7 +78,9 @@ public:
 
 	void Read(std::ifstream &stream);
 	// The im_dft, integral_img, and integral_img_sq are precomputed images for convolution speedups (they get set if passed in empty values)
-	void Response(cv::Mat_<float> &im, cv::Mat_<double> &im_dft, cv::Mat &integral_img, cv::Mat &integral_img_sq, cv::Mat_<float> &resp);
+	void Response(const cv::Mat_<float> &im, cv::Mat_<double> &im_dft, cv::Mat &integral_img, cv::Mat &integral_img_sq, cv::Mat_<float> &resp);
+
+	void ResponseOB(const cv::Mat_<float> &im, cv::Mat_<float> &input_col, cv::Mat_<float> &resp);
 
 };
 
@@ -113,7 +115,10 @@ public:
 	void Read(std::ifstream &stream, std::vector<int> window_sizes, std::vector<std::vector<cv::Mat_<float> > > sigma_components);
 
 	// actual work (can pass in an image and a potential depth image, if the CCNF is trained with depth)
-	void Response(cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
+	void Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
+
+	// TODO rem
+	void ResponseOB(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
 
 	// Helper function to compute relevant sigmas
 	void ComputeSigmas(std::vector<cv::Mat_<float> > sigma_components, int window_size);
