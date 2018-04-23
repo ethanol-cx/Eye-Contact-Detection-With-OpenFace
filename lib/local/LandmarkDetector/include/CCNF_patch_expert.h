@@ -80,8 +80,6 @@ public:
 	// The im_dft, integral_img, and integral_img_sq are precomputed images for convolution speedups (they get set if passed in empty values)
 	void Response(const cv::Mat_<float> &im, cv::Mat_<double> &im_dft, cv::Mat &integral_img, cv::Mat &integral_img_sq, cv::Mat_<float> &resp);
 
-	void ResponseOB(const cv::Mat_<float> &im, cv::Mat_<float> &input_col, cv::Mat_<float> &resp);
-
 };
 
 //===========================================================================
