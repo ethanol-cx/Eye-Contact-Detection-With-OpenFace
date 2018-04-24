@@ -139,82 +139,7 @@ void CCNF_neuron::Read(ifstream &stream)
 
 }
 
-
-// Perform im2col, while at the same time doing contrast normalization and adding a bias term (also skip every other region)
-void im2colContrastNorm(const cv::Mat_<float>& input, const int width, const int height, cv::Mat_<float>& output)
-{
-	const int m = input.rows;
-	const int n = input.cols;
-
-	// determine how many blocks there will be with a sliding window of width x height in the input
-	const int yB = m - height + 1;
-	const int xB = n - width + 1;
-
-	// Allocate the output size
-	if (output.rows != xB*yB && output.cols != width * height)
-	{
-		output = cv::Mat::zeros(xB*yB, width * height, CV_32F);
-	}
-
-	// Iterate over the blocks,
-	int rowIdx = 0;
-	for (int j = 0; j< xB; j++)
-	{
-		for (int i = 0; i< yB; i++)
-		{
-
-			float* Mo = output.ptr<float>(rowIdx);
-
-			float sum = 0;
-
-			for (unsigned int yy = 0; yy < height; ++yy)
-			{
-				const float* Mi = input.ptr<float>(i + yy);
-				for (unsigned int xx = 0; xx < width; ++xx)
-				{
-					int colIdx = xx*height + yy;
-					float in = Mi[j + xx];
-					sum += in;
-
-					Mo[colIdx] = in;
-				}
-			}
-
-			// Working out the mean
-			float mean = sum / (float)(width * height);
-
-			float sum_sq = 0;
-
-			// Working out the sum squared and subtracting the mean
-			for (size_t x = 0; x < width*height; ++x)
-			{
-				float in = Mo[x] - mean;
-				Mo[x] = in;
-				sum_sq += in * in;
-			}
-
-			float norm = sqrt(sum_sq);
-
-			// Avoiding division by 0
-			if (norm == 0)
-			{
-				norm = 1;
-			}
-
-			// Flip multiplication to division for speed
-			norm = 1.0 / norm;
-
-			for (size_t x = 0; x < width*height; ++x)
-			{
-				Mo[x] *= norm;
-			}
-
-			rowIdx++;
-		}
-	}
-}
-
-// Perform im2col, while at the same time doing contrast normalization and adding a bias term (also skip every other region)
+// Perform im2col, while at the same time doing contrast normalization and adding a bias term 
 void im2colContrastNormBias(const cv::Mat_<float>& input, const int width, const int height, cv::Mat_<float>& output)
 {
 	const int m = input.rows;
@@ -407,6 +332,9 @@ void CCNF_patch_expert::Read(ifstream &stream, std::vector<int> window_sizes, st
 		weight_matrix.at<float>(i, 0) = neurons[i].bias;
 	}
 
+	// In case we are using OpenBLAS, make sure it is not multi-threading as we are multi-threading outside of it
+	openblas_set_num_threads(1);
+
 	int n_sigmas = window_sizes.size();
 
 	int n_betas = 0;
@@ -491,7 +419,7 @@ void CCNF_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Ma
 }
 
 //===========================================================================
-void CCNF_patch_expert::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response)
+void CCNF_patch_expert::ResponseOpenBlas(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response)
 {
 
 	int response_height = area_of_interest.rows - height + 1;
@@ -540,15 +468,14 @@ void CCNF_patch_expert::ResponseOB(const cv::Mat_<float> &area_of_interest, cv::
 		{
 			cv::MatIterator_<float> p = response.begin();
 
-			cv::Mat_<float> rel_row = neuron_resp_full.row(i);// .clone();
+			cv::Mat_<float> rel_row = neuron_resp_full.row(i);
 			cv::MatIterator_<float> q1 = rel_row.begin(); // respone for each pixel
 			cv::MatIterator_<float> q2 = rel_row.end();
 
 			// the logistic function (sigmoid) applied to the response
 			while (q1 != q2)
 			{
-				//*p++ += (2 * neurons[i].alpha) * 1.0 / (1.0 + exp(-(*q1++ * neurons[i].norm_weights + neurons[i].bias)));
-				*p++ += (2 * neurons[i].alpha) * 1.0 / (1.0 + exp(-*q1++));
+				*p++ += (2.0 * neurons[i].alpha) / (1.0 + exp(-*q1++));
 			}
 		}
 	}

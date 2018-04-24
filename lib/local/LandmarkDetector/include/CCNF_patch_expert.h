@@ -118,8 +118,8 @@ public:
 	// actual work (can pass in an image and a potential depth image, if the CCNF is trained with depth)
 	void Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
 
-	// TODO rem
-	void ResponseOB(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
+	// A more efficient way to compute patch responses using matrix multiplication with OpenBLAS
+	void ResponseOpenBlas(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
 
 	// Helper function to compute relevant sigmas
 	void ComputeSigmas(std::vector<cv::Mat_<float> > sigma_components, int window_size);

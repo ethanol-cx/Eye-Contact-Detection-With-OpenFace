@@ -101,7 +101,7 @@ namespace OpenFaceOffline
 
         // For tracking
         FaceDetector face_detector;
-        FaceModelParameters face_model_params; // TODO does this need to be reinitialized every time to deal with model reloading?
+        FaceModelParameters face_model_params;
         CLNF landmark_detector;
 
         // For face analysis

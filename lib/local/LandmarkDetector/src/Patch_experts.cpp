@@ -312,12 +312,11 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 			// get the correct size response window			
 			patch_expert_responses[ind] = cv::Mat_<float>(window_size, window_size);
 			
-			ccnf_expert_intensity[scale][view_id][ind].ResponseOB(area_of_interest, patch_expert_responses[ind]);
+			ccnf_expert_intensity[scale][view_id][ind].ResponseOpenBlas(area_of_interest, patch_expert_responses[ind]);
 
-			// TODO rem
+			// Below is an alternative way to compute the same, but that uses FFT instead of OpenBLAS
 			// ccnf_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
-			// cv::Mat_<float> placeholder(window_size, window_size);
-			// cout << cv::norm(placeholder - patch_expert_responses[ind]) << endl;
+
 		}
 		else
 		{				
