@@ -142,8 +142,19 @@ void PDM::Clamp(cv::Mat_<float>& local_params, cv::Vec6f& params_global, const F
 // Compute the 3D representation of shape (in object space) using the local parameters
 void PDM::CalcShape3D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& p_local) const
 {
-	out_shape.create(mean_shape.rows, mean_shape.cols);
-	out_shape = mean_shape + princ_comp * p_local;	 
+	out_shape = mean_shape.clone();
+
+	// Perform matrix vector multiplication in OpenBLAS (fortran call)
+	float alpha1 = 1.0;
+	float beta1 = 1.0;
+	int p_local_cols = p_local.cols;
+	int princ_comp_rows = princ_comp.rows;
+	int princ_comp_cols = princ_comp.cols;
+	sgemm_("N", "N", &p_local_cols, &princ_comp_rows, &princ_comp_cols, &alpha1, (float*)p_local.data, &p_local_cols, (float*)princ_comp.data, &princ_comp_cols, &beta1, (float*)out_shape.data, &p_local_cols);
+
+	// Above is a fast (but ugly) version of 
+	// out_shape = mean_shape + princ_comp * p_local;	 
+
 }
 
 //===========================================================================
@@ -410,11 +421,10 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6f& 
 		}
 	}	
 
-	// Adding the weights here
-	cv::Mat Jacob_w = Jacobian.clone();
-	
+	// Adding the weights here	
 	if(cv::trace(W)[0] != W.rows) 
 	{
+		cv::Mat Jacob_w = Jacobian.clone();
 		Jx =  Jacobian.begin();
 		Jy =  Jx + n*(6+m);
 
@@ -433,9 +443,12 @@ void PDM::ComputeJacobian(const cv::Mat_<float>& params_local, const cv::Vec6f& 
 				*Jy_w++ = *Jy++ * w_y;
 			}
 		}
+		Jacob_t_w = Jacob_w.t();
 	}
-	Jacob_t_w = Jacob_w.t();
-
+	else
+	{
+		Jacob_t_w = Jacobian.t();
+	}
 }
 
 //===========================================================================
