@@ -347,7 +347,7 @@ float DetectionValidator::Check(const cv::Vec3d& orientation, const cv::Mat_<uch
 	cv::Mat_<float> warped;
 	
 	// First only use the ROI of the image of interest
-	cv::Mat_<float>& detected_landmarks_local = detected_landmarks.clone();
+	cv::Mat_<float> detected_landmarks_local = detected_landmarks.clone();
 
 	float min_x_f, max_x_f, min_y_f, max_y_f;
 	ExtractBoundingBox(detected_landmarks_local, min_x_f, max_x_f, min_y_f, max_y_f);
