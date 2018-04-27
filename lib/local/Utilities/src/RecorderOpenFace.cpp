@@ -505,7 +505,7 @@ void RecorderOpenFace::Close()
 	metadata_file.close();
 
 	// Wait for the writing threads to finish
-	//writing_threads.wait();
+	writing_threads.wait();
 }
 
 
