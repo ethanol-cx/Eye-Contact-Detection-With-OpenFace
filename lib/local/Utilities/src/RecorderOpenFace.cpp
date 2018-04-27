@@ -499,13 +499,14 @@ void RecorderOpenFace::Close()
 {
 	recording = false;
 
+	// Wait for the writing threads to finish
+	writing_threads.wait();
+
 	hog_recorder.Close();
 	csv_recorder.Close();
 	video_writer.release();
 	metadata_file.close();
 
-	// Wait for the writing threads to finish
-	writing_threads.wait();
 }
 
 
