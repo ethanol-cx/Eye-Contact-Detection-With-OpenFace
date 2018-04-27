@@ -5,11 +5,13 @@ include_directories(${TBB_ROOT_DIR}/include)
 include_directories(${LandmarkDetector_SOURCE_DIR}/include)
 	
 include_directories(../../lib/local/LandmarkDetector/include)
+include_directories(../../lib/local/FaceAnalyser/include)		
 include_directories(../../lib/local/GazeAnalyser/include)	
 include_directories(../../lib/local/Utilities/include)		
 			
 add_executable(FaceLandmarkVidMulti FaceLandmarkVidMulti.cpp)
 target_link_libraries(FaceLandmarkVidMulti LandmarkDetector)
+target_link_libraries(FaceLandmarkVidMulti FaceAnalyser)
 target_link_libraries(FaceLandmarkVidMulti dlib)
 target_link_libraries(FaceLandmarkVidMulti GazeAnalyser)
 target_link_libraries(FaceLandmarkVidMulti Utilities)
