@@ -46,6 +46,10 @@
 #include <filesystem/fstream.hpp>
 #include <boost/algorithm/string.hpp>
 
+// For threading
+#include <chrono>
+#include <thread>
+
 using namespace boost::filesystem;
 
 using namespace Utilities;
@@ -142,6 +146,9 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 			metadata_file << "Output image:" << this->media_filename << endl;
 			this->media_filename = (path(record_root) / this->media_filename).string();
 		}
+
+		// Start the video and image writing thread
+		writing_threads.run([&] {VideoWritingTask(); });
 	}
 
 	// Prepare image recording
@@ -151,9 +158,15 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 		metadata_file << "Output aligned directory:" << this->aligned_output_directory << endl;
 		this->aligned_output_directory = (path(record_root) / this->aligned_output_directory).string();
 		CreateDirectory(aligned_output_directory);
+
+		// Start the video and image writing thread
+		writing_threads.run([&] {AlignedImageWritingTask(); });
 	}
 
 	this->frame_number = 0;
+	
+	recording = true;
+	
 
 }
 
@@ -214,6 +227,7 @@ RecorderOpenFace::RecorderOpenFace(const std::string in_filename, const Recorder
 	}
 
 	PrepareRecording(in_filename);
+
 }
 
 RecorderOpenFace::RecorderOpenFace(const std::string in_filename, const RecorderOpenFaceParameters& parameters, std::string output_directory):video_writer(), params(parameters)
@@ -255,6 +269,10 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 			{
 				video_writer.open(media_filename, CV_FOURCC(output_codec[0], output_codec[1], output_codec[2], output_codec[3]), params.outputFps(), vis_track.size(), true);
 
+				// Set up the queue for video writing based on output size
+				int capacity = (1024 * 1024 * TRACKED_QUEUE_CAPACITY) / (vis_track.size().width * vis_track.size().height * vis_track.channels());
+				vis_to_out_queue.set_capacity(capacity);
+
 				if (!video_writer.isOpened())
 				{
 					WARN_STREAM("Could not open VideoWriter, OUTPUT FILE WILL NOT BE WRITTEN.");
@@ -266,11 +284,59 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 			}
 
 		}
-
 		vis_to_out = vis_track;
 
 	}
 
+}
+
+void RecorderOpenFace::AlignedImageWritingTask()
+{
+	while (recording)
+	{
+		std::pair<std::string, cv::Mat> tracked_data;
+
+		if (aligned_face_queue.try_pop(tracked_data))
+		{
+			bool write_success = cv::imwrite(tracked_data.first, tracked_data.second);
+
+			if (!write_success)
+			{
+				WARN_STREAM("Could not output similarity aligned image image");
+			}
+		}
+		std::this_thread::sleep_for(std::chrono::microseconds(1000));
+
+	}
+}
+
+void RecorderOpenFace::VideoWritingTask()
+{
+	while(recording)
+	{
+		std::pair<std::string, cv::Mat> tracked_data;
+
+		if(vis_to_out_queue.try_pop(tracked_data))
+		{
+			if (params.isSequence())
+			{
+				if (video_writer.isOpened())
+				{
+					video_writer.write(tracked_data.second);
+				}
+			}
+			else
+			{
+				bool out_success = cv::imwrite(tracked_data.first, tracked_data.second);
+				if (!out_success)
+				{
+					WARN_STREAM("Could not output tracked image");
+				}
+			}
+		}
+		std::this_thread::sleep_for(std::chrono::microseconds(1000));
+
+	}
 }
 
 void RecorderOpenFace::WriteObservation()
@@ -339,35 +405,26 @@ void RecorderOpenFace::WriteObservation()
 		std::string preferredSlash = slash.make_preferred().string();
 
 		string out_file = aligned_output_directory + preferredSlash + string(name);
-		bool write_success = cv::imwrite(out_file, aligned_face);
 
-		if (!write_success)
-		{
-			WARN_STREAM("Could not output similarity aligned image image");
-		}
+		aligned_face_queue.push(std::pair<std::string, cv::Mat>(out_file, aligned_face));
+
 	}
 
 	if(params.outputTracked())
 	{
+
 		if (vis_to_out.empty())
 		{
 			WARN_STREAM("Output tracked video frame is not set");
 		}
 
-		if(params.isSequence() )
+		if (params.isSequence())
 		{
-			if(video_writer.isOpened())
-			{
-				video_writer.write(vis_to_out);
-			}
+			vis_to_out_queue.push(std::pair<std::string, cv::Mat>("", vis_to_out));
 		}
 		else
 		{
-			bool out_success = cv::imwrite(media_filename, vis_to_out);
-			if (!out_success)
-			{
-				WARN_STREAM("Could not output tracked image");
-			}
+			vis_to_out_queue.push(std::pair<std::string, cv::Mat>(media_filename, vis_to_out));
 		}
 		// Clear the output
 		vis_to_out = cv::Mat();
@@ -440,11 +497,15 @@ RecorderOpenFace::~RecorderOpenFace()
 
 void RecorderOpenFace::Close()
 {
+	recording = false;
+
 	hog_recorder.Close();
 	csv_recorder.Close();
 	video_writer.release();
 	metadata_file.close();
 
+	// Wait for the writing threads to finish
+	//writing_threads.wait();
 }
 
 

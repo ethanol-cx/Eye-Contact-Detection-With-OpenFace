@@ -38,6 +38,10 @@
 #include "RecorderHOG.h"
 #include "RecorderOpenFaceParameters.h"
 
+// For speeding up writing
+#include "tbb/concurrent_queue.h"
+#include "tbb/task_group.h"
+
 // System includes
 #include <vector>
 
@@ -105,6 +109,16 @@ namespace Utilities
 
 	private:
 
+		// Used to keep track if the recording is still going (for the writing threads)
+		bool recording;
+
+		// For keeping track of tasks
+		tbb::task_group writing_threads;
+
+		// A thread that will write video output, so that the rest of the application does not block on it
+		void VideoWritingTask();
+		void AlignedImageWritingTask();
+
 		// Blocking copy, assignment and move operators, as it does not make sense to save to the same location
 		RecorderOpenFace & operator= (const RecorderOpenFace& other);
 		RecorderOpenFace & operator= (const RecorderOpenFace&& other);
@@ -159,10 +173,16 @@ namespace Utilities
 		// For video writing
 		cv::VideoWriter video_writer;
 		std::string media_filename;
+		
+		// Do not exceed 100MB in the concurrent queue
+		const int TRACKED_QUEUE_CAPACITY = 100;
 		cv::Mat vis_to_out;
+		tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > vis_to_out_queue;
 
 		// For aligned face writing
+		const int ALIGNED_QUEUE_CAPACITY = 100;
 		cv::Mat aligned_face;
+		tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > aligned_face_queue;
 
 	};
 }
