@@ -67,18 +67,26 @@ void RecorderHOG::Write()
 		good_frame_float = -1;
 
 	hog_file.write((char*)(&good_frame_float), 4);
-
-	cv::MatConstIterator_<double> descriptor_it = hog_descriptor.begin();
-
-	for (int y = 0; y < num_cols; ++y)
+	if(hog_descriptor.isContinuous())
 	{
-		for (int x = 0; x < num_rows; ++x)
-		{
-			for (unsigned int o = 0; o < 31; ++o)
-			{
+		cv::Mat_<float> desc;
+		hog_descriptor.convertTo(desc, CV_32F);
+		hog_file.write((char*)desc.data, 4 * num_cols * num_rows * 31);
+	}
+	else
+	{
+		cv::MatConstIterator_<double> descriptor_it = hog_descriptor.begin();
 
-				float hog_data = (float)(*descriptor_it++);
-				hog_file.write((char*)&hog_data, 4);
+		for (int y = 0; y < num_cols; ++y)
+		{
+			for (int x = 0; x < num_rows; ++x)
+			{
+				for (unsigned int o = 0; o < 31; ++o)
+				{
+
+					float hog_data = (float)(*descriptor_it++);
+					hog_file.write((char*)&hog_data, 4);
+				}
 			}
 		}
 	}
