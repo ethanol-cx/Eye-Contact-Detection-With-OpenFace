@@ -129,7 +129,7 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 		hog_filename = (path(record_root) / hog_filename).string();
 		hog_recorder.Open(hog_filename);
 	}
-
+	
 	// saving the videos	
 	if (params.outputTracked())
 	{
@@ -158,7 +158,7 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 		metadata_file << "Output aligned directory:" << this->aligned_output_directory << endl;
 		this->aligned_output_directory = (path(record_root) / this->aligned_output_directory).string();
 		CreateDirectory(aligned_output_directory);
-
+		
 		// Start the video and image writing thread
 		writing_threads.run([&] {AlignedImageWritingTask(); });
 	}
@@ -292,6 +292,7 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 
 void RecorderOpenFace::AlignedImageWritingTask()
 {
+
 	while (recording)
 	{
 		std::pair<std::string, cv::Mat> tracked_data;
@@ -305,9 +306,11 @@ void RecorderOpenFace::AlignedImageWritingTask()
 				WARN_STREAM("Could not output similarity aligned image image");
 			}
 		}
-		std::this_thread::sleep_for(std::chrono::microseconds(1000));
 
+		std::this_thread::sleep_for(std::chrono::microseconds(10000));
+	
 	}
+
 }
 
 void RecorderOpenFace::VideoWritingTask()
@@ -334,9 +337,11 @@ void RecorderOpenFace::VideoWritingTask()
 				}
 			}
 		}
-		std::this_thread::sleep_for(std::chrono::microseconds(1000));
+		//cout << "Vis size:" << vis_to_out_queue.size() << endl;
+		std::this_thread::sleep_for(std::chrono::microseconds(10000));
 
 	}
+
 }
 
 void RecorderOpenFace::WriteObservation()
@@ -391,6 +396,12 @@ void RecorderOpenFace::WriteObservation()
 	// Write aligned faces
 	if (params.outputAlignedFaces())
 	{
+		if (frame_number == 1)
+		{
+			int capacity = (1024 * 1024 * ALIGNED_QUEUE_CAPACITY) / (aligned_face.size().width *aligned_face.size().height * aligned_face.channels());
+			aligned_face_queue.set_capacity(capacity);
+		}
+
 		char name[100];
 
 		// Filename is based on frame number
@@ -407,6 +418,9 @@ void RecorderOpenFace::WriteObservation()
 		string out_file = aligned_output_directory + preferredSlash + string(name);
 
 		aligned_face_queue.push(std::pair<std::string, cv::Mat>(out_file, aligned_face));
+		
+		// Clear the image
+		aligned_face = cv::Mat();
 
 	}
 

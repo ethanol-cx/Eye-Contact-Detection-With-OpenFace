@@ -268,6 +268,8 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 	this->name = "webcam_" + time;
 
 	start_time = cv::getTickCount();
+	capturing = true;
+	capture_threads.run([&] {CaptureThread(); });
 
 	return true;
 
@@ -275,8 +277,14 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 
 void SequenceCapture::Close()
 {
+	// Close the capturing threads
+	capturing = false;
+	capture_threads.wait();
+
+	// Release the capture objects
 	if (capture.isOpened())
 		capture.release();
+
 }
 
 // Destructor that releases the capture
@@ -325,6 +333,8 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 	SetCameraIntrinsics(fx, fy, cx, cy);
 
 	this->name = video_file;
+	capturing = true;
+	capture_threads.run([&] {CaptureThread(); });
 
 	return true;
 
@@ -381,6 +391,8 @@ bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 	is_webcam = false;
 	is_image_seq = true;	
 	vid_length = image_files.size();
+	capturing = true;
+	capture_threads.run([&] {CaptureThread(); });
 
 	return true;
 
@@ -415,47 +427,70 @@ void SequenceCapture::SetCameraIntrinsics(float fx, float fy, float cx, float cy
 	}
 }
 
+void SequenceCapture::CaptureThread()
+{
+	int capacity = (CAPTURE_CAPACITY * 1024 * 1024) / (4 * frame_width * frame_height);
+	capture_queue.set_capacity(capacity);
+	int frame_num_int = 0;
+
+	while(capturing)
+	{
+		double timestamp_curr = 0;
+		cv::Mat tmp_frame;
+		cv::Mat_<uchar> tmp_gray_frame;
+
+		if (is_webcam || !is_image_seq)
+		{
+			bool success = capture.read(tmp_frame);
+
+			if (!success)
+			{
+				// Indicate lack of success by returning an empty image
+				tmp_frame = cv::Mat();
+				capturing = false;
+			}
+
+			// Recording the timestamp
+			if (!is_webcam)
+			{
+				timestamp_curr = frame_num_int * (1.0 / fps);
+			}
+			else
+			{
+				timestamp_curr = (cv::getTickCount() - start_time) / cv::getTickFrequency();
+			}
+
+		}
+		else if (is_image_seq)
+		{
+			if (image_files.empty() || frame_num_int >= image_files.size())
+			{
+				// Indicate lack of success by returning an empty image
+				tmp_frame = cv::Mat();
+				capturing = false;
+			}
+			else
+			{
+				tmp_frame = cv::imread(image_files[frame_num_int], CV_LOAD_IMAGE_COLOR);
+			}
+			timestamp_curr = 0;
+		}
+
+		frame_num_int++;
+		// Set the grayscale frame
+		ConvertToGrayscale_8bit(tmp_frame, tmp_gray_frame);
+
+		capture_queue.push(std::make_tuple(timestamp_curr, tmp_frame, tmp_gray_frame));
+	}
+}
+
 cv::Mat SequenceCapture::GetNextFrame()
 {
-
-	if (is_webcam || !is_image_seq)
-	{
-
-		bool success = capture.read(latest_frame);
-
-		if (!success)
-		{
-			// Indicate lack of success by returning an empty image
-			latest_frame = cv::Mat();
-		}
-
-		// Recording the timestamp
-		if (!is_webcam)
-		{
-			time_stamp = frame_num * (1.0 / fps);
-		}
-		else
-		{
-			time_stamp = (cv::getTickCount() - start_time) / cv::getTickFrequency();
-		}
-
-	}
-	else if (is_image_seq)
-	{
-		if (image_files.empty() || frame_num >= image_files.size())
-		{
-			// Indicate lack of success by returning an empty image
-			latest_frame = cv::Mat();
-		}
-		else
-		{
-			latest_frame = cv::imread(image_files[frame_num], CV_LOAD_IMAGE_COLOR);			
-		}
-		time_stamp = 0;
-	}
-	
-	// Set the grayscale frame
-	ConvertToGrayscale_8bit(latest_frame, latest_gray_frame);
+	std::tuple<double, cv::Mat, cv::Mat_<uchar> > data;
+	capture_queue.pop(data);
+	time_stamp = std::get<0>(data);
+	latest_frame = std::get<1>(data);
+	latest_gray_frame = std::get<2>(data);
 
 	frame_num++;
 
