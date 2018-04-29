@@ -2,11 +2,13 @@ function Script_CECLM_cross_data()
 
 addpath(genpath('../'));
 
-[images, detections, labels] = Collect_menpo_imgs('D:\Datasets\menpo/');
+[images, detections, labels] = Collect_menpo_imgs('G:\Datasets\menpo/');
 
 %% loading the CE-CLM model and parameters   
 [patches, pdm, clmParams, early_term_params] = Load_CECLM_general();
-
+views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
+views = views * pi/180;
+        
 % As early termination weights were trained on part of menpo turn them off, 
 % to perform a clean cross-data experiment
 early_term_params.weights_scale(:) = 1;
@@ -53,18 +55,9 @@ for i=1:numel(images)
 
     bbox = squeeze(detections(i,:));                  
     
-    % have a multi-view version
-    if(multi_view)
-
-        views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
-        views = views * pi/180;                                                                                                                                                                     
-        
-        [shape,~,~,lhood,lmark_lhood,view_used] =...
-            Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
-
-    else
-        [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
-    end
+    % The actual work get's done here
+    [shape,~,~,lhood,lmark_lhood,view_used] =...
+        Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
 
     all_lmark_lhoods(:,i) = lmark_lhood;
     all_views_used(i) = view_used;

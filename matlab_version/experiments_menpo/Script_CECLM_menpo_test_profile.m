@@ -3,14 +3,12 @@ function Script_CECLM_menpo_test_profile()
 addpath(genpath('../'));
 addpath(genpath('./menpo_challenge_helpers'));
 
-[images, detections] = Collect_menpo_test_profile('D:\Datasets\menpo\testset\profile/');
+[images, detections] = Collect_menpo_test_profile('G:\Datasets\menpo\testset\profile/');
 
 %% loading the CE-CLM model and parameters   
 [patches, pdm, clmParams, early_term_params] = Load_CECLM_menpo();
-
-% Use the multi-hypothesis model, as bounding box tells nothing about
-% orientation
-multi_view = true;
+views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
+views = views * pi/180;  
 
 %% Setup recording
 experiment.params = clmParams;
@@ -41,7 +39,7 @@ if(~exist(out_pts, 'dir'))
     mkdir(out_pts);
 end
 
-load('../pdm_generation/menpo_pdm/menpo_chin/conversion.mat');
+load('menpo_challenge_helpers/conversion.mat');
 
 %%
 for i=1:numel(images)
@@ -55,19 +53,8 @@ for i=1:numel(images)
 
     bbox = squeeze(detections(i,:));                  
     
-    % have a multi-view version
-    % have a multi-view version
-    if(multi_view)
-
-        views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
-        views = views * pi/180;                                                                                                                                                                     
-        
-        [shape,g_params,~,lhood,lmark_lhood,view_used] =...
-            Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
-
-    else
-        [shape,g_params,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
-    end
+    [shape,g_params,~,lhood,lmark_lhood,view_used] =...
+        Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
 
     shape = shape + 0.5;
     
