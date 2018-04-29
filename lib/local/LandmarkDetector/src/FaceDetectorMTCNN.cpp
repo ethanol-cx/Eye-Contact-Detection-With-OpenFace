@@ -289,6 +289,7 @@ void CNN::ClearPrecomp()
 
 void CNN::Read(const string& location)
 {
+	goto_set_num_threads(1);
 	openblas_set_num_threads(1);
 	
 	ifstream cnn_stream(location, ios::in | ios::binary);

@@ -262,7 +262,7 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 		INFO_STREAM("FPS of the webcam cannot be determined, assuming 30");
 		fps = 30;
 	}
-
+	
 	SetCameraIntrinsics(fx, fy, cx, cy);
 	std::string time = currentDateTime();
 	this->name = "webcam_" + time;
@@ -279,6 +279,11 @@ void SequenceCapture::Close()
 {
 	// Close the capturing threads
 	capturing = false;
+
+	// In case the queue is full and the thread is blocking, try popping to release it
+	std::tuple<double, cv::Mat, cv::Mat_<uchar> > data;
+	capture_queue.try_pop(data);
+
 	capture_threads.wait();
 
 	// Release the capture objects

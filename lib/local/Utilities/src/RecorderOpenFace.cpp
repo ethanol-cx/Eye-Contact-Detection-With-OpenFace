@@ -306,9 +306,10 @@ void RecorderOpenFace::AlignedImageWritingTask()
 				WARN_STREAM("Could not output similarity aligned image image");
 			}
 		}
-
-		std::this_thread::sleep_for(std::chrono::microseconds(10000));
-	
+		else
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		}
 	}
 
 }
@@ -337,8 +338,10 @@ void RecorderOpenFace::VideoWritingTask()
 				}
 			}
 		}
-		//cout << "Vis size:" << vis_to_out_queue.size() << endl;
-		std::this_thread::sleep_for(std::chrono::microseconds(10000));
+		else
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		}
 
 	}
 
