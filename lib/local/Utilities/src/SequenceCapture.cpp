@@ -269,7 +269,7 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 
 	start_time = cv::getTickCount();
 	capturing = true;
-	capture_threads.run([&] {CaptureThread(); });
+	//capture_threads.run([&] {CaptureThread(); });
 
 	return true;
 
@@ -447,7 +447,7 @@ void SequenceCapture::CaptureThread()
 		cv::Mat tmp_frame;
 		cv::Mat_<uchar> tmp_gray_frame;
 
-		if (is_webcam || !is_image_seq)
+		if (!is_image_seq)
 		{
 			bool success = capture.read(tmp_frame);
 
@@ -459,15 +459,7 @@ void SequenceCapture::CaptureThread()
 			}
 
 			// Recording the timestamp
-			if (!is_webcam)
-			{
-				timestamp_curr = frame_num_int * (1.0 / fps);
-			}
-			else
-			{
-				timestamp_curr = (cv::getTickCount() - start_time) / cv::getTickFrequency();
-			}
-
+			timestamp_curr = frame_num_int * (1.0 / fps);			
 		}
 		else if (is_image_seq)
 		{
@@ -494,12 +486,30 @@ void SequenceCapture::CaptureThread()
 
 cv::Mat SequenceCapture::GetNextFrame()
 {
-	std::tuple<double, cv::Mat, cv::Mat_<uchar> > data;
-	capture_queue.pop(data);
-	time_stamp = std::get<0>(data);
-	latest_frame = std::get<1>(data);
-	latest_gray_frame = std::get<2>(data);
+	if(!is_webcam)
+	{
+		std::tuple<double, cv::Mat, cv::Mat_<uchar> > data;
+		capture_queue.pop(data);
+		time_stamp = std::get<0>(data);
+		latest_frame = std::get<1>(data);
+		latest_gray_frame = std::get<2>(data);
+	}
+	else
+	{
+		// Webcam does not use the threaded interface
+		bool success = capture.read(latest_frame);
 
+		time_stamp = (cv::getTickCount() - start_time) / cv::getTickFrequency();
+
+		if (!success)
+		{
+			// Indicate lack of success by returning an empty image
+			latest_frame = cv::Mat();
+		}
+		
+		ConvertToGrayscale_8bit(latest_frame, latest_gray_frame);
+
+	}
 	frame_num++;
 
 	return latest_frame;
