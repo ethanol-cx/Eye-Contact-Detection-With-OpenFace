@@ -2,14 +2,12 @@ function Script_CECLM_menpo_valid()
 
 addpath(genpath('../'));
 
-[images, detections, labels] = Collect_valid_imgs('D:\Datasets\menpo/');
+[images, detections, labels] = Collect_valid_imgs('G:\Datasets\menpo/');
 
 %% loading the CE-CLM model and parameters   
 [patches, pdm, clmParams, early_term_params] = Load_CECLM_menpo();
-
-% Use the multi-hypothesis model, as bounding box tells nothing about
-% orientation
-multi_view = true;
+views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
+views = views * pi/180;   
 
 %% Setup recording
 experiment.params = clmParams;
@@ -47,18 +45,8 @@ for i=1:numel(images)
 
     bbox = squeeze(detections(i,:));                  
     
-    % have a multi-view version
-    if(multi_view)
-
-        views = [0,0,0; 0,-30,0; 0,30,0; 0,-55,0; 0,55,0; 0,0,30; 0,0,-30; 0,-90,0; 0,90,0; 0,-70,40; 0,70,-40];
-        views = views * pi/180;                                                                                                                                                                     
-        
-        [shape,~,~,lhood,lmark_lhood,view_used] =...
-            Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
-
-    else
-        [shape,~,~,lhood,lmark_lhood,view_used] = Fitting_from_bb(image, [], bbox, pdm, patches, clmParams);
-    end
+    [shape,~,~,lhood,lmark_lhood,view_used] =...
+        Fitting_from_bb_multi_hyp(image, [], bbox, pdm, patches, clmParams, views, early_term_params);
 
     all_lmark_lhoods(:,i) = lmark_lhood;
     all_views_used(i) = view_used;

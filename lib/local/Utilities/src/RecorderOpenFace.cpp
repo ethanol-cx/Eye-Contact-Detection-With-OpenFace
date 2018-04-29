@@ -82,6 +82,8 @@ void CreateDirectory(std::string output_path)
 
 void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 {
+	recording = true;
+
 	// Construct the directories required for the output
 	CreateDirectory(record_root);
 
@@ -129,7 +131,7 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 		hog_filename = (path(record_root) / hog_filename).string();
 		hog_recorder.Open(hog_filename);
 	}
-
+		
 	// saving the videos	
 	if (params.outputTracked())
 	{
@@ -146,7 +148,7 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 			metadata_file << "Output image:" << this->media_filename << endl;
 			this->media_filename = (path(record_root) / this->media_filename).string();
 		}
-
+		
 		// Start the video and image writing thread
 		writing_threads.run([&] {VideoWritingTask(); });
 	}
@@ -158,16 +160,13 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 		metadata_file << "Output aligned directory:" << this->aligned_output_directory << endl;
 		this->aligned_output_directory = (path(record_root) / this->aligned_output_directory).string();
 		CreateDirectory(aligned_output_directory);
-
+		
 		// Start the video and image writing thread
 		writing_threads.run([&] {AlignedImageWritingTask(); });
 	}
 
 	this->frame_number = 0;
-	
-	recording = true;
-	
-
+		
 }
 
 RecorderOpenFace::RecorderOpenFace(const std::string in_filename, const RecorderOpenFaceParameters& parameters, std::vector<std::string>& arguments):video_writer(), params(parameters)
@@ -269,10 +268,6 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 			{
 				video_writer.open(media_filename, CV_FOURCC(output_codec[0], output_codec[1], output_codec[2], output_codec[3]), params.outputFps(), vis_track.size(), true);
 
-				// Set up the queue for video writing based on output size
-				int capacity = (1024 * 1024 * TRACKED_QUEUE_CAPACITY) / (vis_track.size().width * vis_track.size().height * vis_track.channels());
-				vis_to_out_queue.set_capacity(capacity);
-
 				if (!video_writer.isOpened())
 				{
 					WARN_STREAM("Could not open VideoWriter, OUTPUT FILE WILL NOT BE WRITTEN.");
@@ -292,12 +287,13 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 
 void RecorderOpenFace::AlignedImageWritingTask()
 {
-	while (recording)
+
+	while (recording || !aligned_face_queue.empty())
 	{
 		std::pair<std::string, cv::Mat> tracked_data;
 
-		if (aligned_face_queue.try_pop(tracked_data))
-		{
+		try {
+			aligned_face_queue.pop(tracked_data);
 			bool write_success = cv::imwrite(tracked_data.first, tracked_data.second);
 
 			if (!write_success)
@@ -305,19 +301,26 @@ void RecorderOpenFace::AlignedImageWritingTask()
 				WARN_STREAM("Could not output similarity aligned image image");
 			}
 		}
-		std::this_thread::sleep_for(std::chrono::microseconds(1000));
-
+		catch (tbb::user_abort e1)
+		{
+			// This means the thread finished successfully
+		}
 	}
+
 }
 
 void RecorderOpenFace::VideoWritingTask()
 {
-	while(recording)
+
+	while(recording || !vis_to_out_queue.empty())
 	{
+
 		std::pair<std::string, cv::Mat> tracked_data;
 
-		if(vis_to_out_queue.try_pop(tracked_data))
-		{
+		try {
+
+			vis_to_out_queue.pop(tracked_data);
+
 			if (params.isSequence())
 			{
 				if (video_writer.isOpened())
@@ -334,9 +337,13 @@ void RecorderOpenFace::VideoWritingTask()
 				}
 			}
 		}
-		std::this_thread::sleep_for(std::chrono::microseconds(1000));
+		catch (tbb::user_abort e1)
+		{
+			// This means the thread finished successfully
+		}
 
 	}
+
 }
 
 void RecorderOpenFace::WriteObservation()
@@ -391,6 +398,12 @@ void RecorderOpenFace::WriteObservation()
 	// Write aligned faces
 	if (params.outputAlignedFaces())
 	{
+		if (frame_number == 1)
+		{
+			int capacity = (1024 * 1024 * ALIGNED_QUEUE_CAPACITY) / (aligned_face.size().width *aligned_face.size().height * aligned_face.channels());
+			aligned_face_queue.set_capacity(capacity);
+		}
+
 		char name[100];
 
 		// Filename is based on frame number
@@ -407,11 +420,21 @@ void RecorderOpenFace::WriteObservation()
 		string out_file = aligned_output_directory + preferredSlash + string(name);
 
 		aligned_face_queue.push(std::pair<std::string, cv::Mat>(out_file, aligned_face));
+		
+		// Clear the image
+		aligned_face = cv::Mat();
 
 	}
 
 	if(params.outputTracked())
 	{
+
+		if (frame_number == 1)
+		{
+			// Set up the queue for video writing based on output size
+			int capacity = (1024 * 1024 * TRACKED_QUEUE_CAPACITY) / (vis_to_out.size().width * vis_to_out.size().height * vis_to_out.channels());
+			vis_to_out_queue.set_capacity(capacity);
+		}
 
 		if (vis_to_out.empty())
 		{
@@ -499,8 +522,22 @@ void RecorderOpenFace::Close()
 {
 	recording = false;
 
+	// Make sure the recording threads complete
+	while (!vis_to_out_queue.empty())
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+	while (!aligned_face_queue.empty())
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+
+	// Free the waiting queues
+	vis_to_out_queue.abort();
+	aligned_face_queue.abort();
+
 	// Wait for the writing threads to finish
-	writing_threads.wait();
+	writing_threads.wait();	
 
 	hog_recorder.Close();
 	csv_recorder.Close();

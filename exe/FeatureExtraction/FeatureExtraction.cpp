@@ -262,6 +262,7 @@ int main(int argc, char **argv)
 		}
 
 		open_face_rec.Close();
+		sequence_reader.Close();
 
 		if (recording_params.outputAUs())
 		{

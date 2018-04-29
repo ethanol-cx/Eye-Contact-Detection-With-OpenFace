@@ -186,6 +186,7 @@ int main(int argc, char **argv)
 
 		// Reset the model, for the next video
 		face_model.Reset();
+		sequence_reader.Close();
 
 		sequence_number++;
 

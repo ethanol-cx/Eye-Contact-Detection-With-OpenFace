@@ -407,6 +407,8 @@ int main(int argc, char **argv)
 			active_models[model] = false;
 		}
 
+		sequence_reader.Close();
+
 		sequence_number++;
 
 	}

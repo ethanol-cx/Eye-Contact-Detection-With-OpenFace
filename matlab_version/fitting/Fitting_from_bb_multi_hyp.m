@@ -89,7 +89,7 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
         local_params = locals{v_ind};
 
         shape2D = shapes(:,:,v_ind);
-        view_used = views_used(v);
+        view_used = views_used(v_ind);
 
     end
     

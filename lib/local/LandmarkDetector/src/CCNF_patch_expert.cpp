@@ -333,6 +333,7 @@ void CCNF_patch_expert::Read(ifstream &stream, std::vector<int> window_sizes, st
 	}
 
 	// In case we are using OpenBLAS, make sure it is not multi-threading as we are multi-threading outside of it
+	goto_set_num_threads(1);
 	openblas_set_num_threads(1);
 
 	int n_sigmas = window_sizes.size();
