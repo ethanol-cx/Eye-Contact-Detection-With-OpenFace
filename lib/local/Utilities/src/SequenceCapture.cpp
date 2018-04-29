@@ -280,11 +280,14 @@ void SequenceCapture::Close()
 	// Close the capturing threads
 	capturing = false;
 
-	// In case the queue is full and the thread is blocking, try popping to release it
+	// In case the queue is full and the thread is blocking, free one element so it can finish
 	std::tuple<double, cv::Mat, cv::Mat_<uchar> > data;
 	capture_queue.try_pop(data);
 
 	capture_threads.wait();
+	
+	// Empty the capture queue
+	capture_queue.clear();
 
 	// Release the capture objects
 	if (capture.isOpened())
