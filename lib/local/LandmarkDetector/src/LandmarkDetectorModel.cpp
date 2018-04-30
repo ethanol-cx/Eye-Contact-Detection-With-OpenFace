@@ -590,7 +590,7 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 
 	// Store the landmarks converged on in detected_landmarks
 	pdm.CalcShape2D(detected_landmarks, params_local, params_global);	
-	
+
 	if(params.refine_hierarchical && hierarchical_models.size() > 0)
 	{
 		bool parts_used = false;		
@@ -658,11 +658,13 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 	// Check detection correctness
 	if(params.validate_detections && fit_success)
 	{
+
 		cv::Vec3d orientation(params_global[1], params_global[2], params_global[3]);
 
 		detection_certainty = landmark_validator.Check(orientation, image, detected_landmarks);
 
 		detection_success = detection_certainty > params.validation_boundary;
+
 	}
 	else
 	{
@@ -717,7 +719,7 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const std::vector<int>& window_sizes, 
 
 		// The patch expert response computation
 		patch_experts.Response(patch_expert_responses, sim_ref_to_img, sim_img_to_ref, im,  pdm, params_global, params_local, window_size, scale);
-		
+
 		if(parameters.refine_parameters == true)
 		{
 			int scale_max = scale >= 2 ? 2 : scale;

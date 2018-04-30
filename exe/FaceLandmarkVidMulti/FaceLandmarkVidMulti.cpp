@@ -145,6 +145,13 @@ int main(int argc, char **argv)
 	face_model.face_detector_MTCNN.Read(det_parameters[0].mtcnn_face_detector_location);
 	face_model.mtcnn_face_detector_location = det_parameters[0].mtcnn_face_detector_location;
 
+	// If can't find MTCNN face detector, default to HOG one
+	if (det_parameters[0].curr_face_detector == LandmarkDetector::FaceModelParameters::MTCNN_DETECTOR && face_model.face_detector_MTCNN.empty())
+	{
+		cout << "INFO: defaulting to HOG-SVM face detector" << endl;
+		det_parameters[0].curr_face_detector = LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR;
+	}
+
 	face_models.reserve(num_faces_max);
 
 	face_models.push_back(face_model);
@@ -316,7 +323,7 @@ int main(int argc, char **argv)
 			// Go through every model and detect eye gaze, record results and visualise the results
 			for (size_t model = 0; model < face_models.size(); ++model)
 			{
-				// Visualising the results
+				// Visualising and recording the results
 				if (active_models[model])
 				{
 
@@ -355,7 +362,6 @@ int main(int argc, char **argv)
 
 					// Output features
 					open_face_rec.SetObservationHOG(face_models[model].detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
-					open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
 					open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
 					open_face_rec.SetObservationLandmarks(face_models[model].detected_landmarks, face_models[model].GetShape(sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy),
 						face_models[model].params_global, face_models[model].params_local, face_models[model].detection_certainty, face_models[model].detection_success);
@@ -367,10 +373,14 @@ int main(int argc, char **argv)
 					open_face_rec.SetObservationFrameNumber(sequence_reader.GetFrameNumber());
 					open_face_rec.WriteObservation();
 
-
 				}
 			}
+
 			visualizer.SetFps(fps_tracker.GetFPS());
+
+			// Record frame
+			open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
+			open_face_rec.WriteObservationTracked();
 
 			// show visualization and detect key presses
 			char character_press = visualizer.ShowObservation();

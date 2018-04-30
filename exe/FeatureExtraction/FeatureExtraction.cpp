@@ -244,6 +244,7 @@ int main(int argc, char **argv)
 			open_face_rec.SetObservationFrameNumber(sequence_reader.GetFrameNumber());
 			open_face_rec.SetObservationFaceAlign(sim_warped_img);
 			open_face_rec.WriteObservation();
+			open_face_rec.WriteObservationTracked();
 
 			// Reporting progress
 			if (sequence_reader.GetProgress() >= reported_completion / 10.0)

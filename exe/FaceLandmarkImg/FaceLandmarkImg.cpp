@@ -121,6 +121,13 @@ int main(int argc, char **argv)
 	dlib::frontal_face_detector face_detector_hog = dlib::get_frontal_face_detector();
 	LandmarkDetector::FaceDetectorMTCNN face_detector_mtcnn(det_parameters.mtcnn_face_detector_location);
 
+	// If can't find MTCNN face detector, default to HOG one
+	if (det_parameters.curr_face_detector == LandmarkDetector::FaceModelParameters::MTCNN_DETECTOR && face_detector_mtcnn.empty())
+	{
+		cout << "INFO: defaulting to HOG-SVM face detector" << endl;
+		det_parameters.curr_face_detector = LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR;
+	}
+
 	// A utility for visualizing the results
 	Utilities::Visualizer visualizer(arguments);
 
@@ -186,6 +193,7 @@ int main(int argc, char **argv)
 		// perform landmark detection for every face detected
 		for (size_t face = 0; face < face_detections.size(); ++face)
 		{
+
 			// if there are multiple detections go through them
 			bool success = LandmarkDetector::DetectLandmarksInImage(rgb_image, face_detections[face], face_model, det_parameters, grayscale_image);
 
@@ -240,6 +248,8 @@ int main(int argc, char **argv)
 		{
 			visualizer.ShowObservation();
 		}
+
+		open_face_rec.WriteObservationTracked();
 
 		// Grabbing the next frame in the sequence
 		rgb_image = image_reader.GetNextImage();

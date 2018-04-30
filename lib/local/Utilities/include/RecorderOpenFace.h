@@ -103,7 +103,11 @@ namespace Utilities
 
 		void SetObservationVisualization(const cv::Mat &vis_track);
 
+		// Write out all observations for current face (except for tracked image/video)
 		void WriteObservation();
+
+		// Separate method for writing tracked video observation, this is done because video observation is written once a frame/image, other observations can happen multiple times a frame/image
+		void WriteObservationTracked();
 
 		std::string GetCSVFile() { return csv_filename; }
 

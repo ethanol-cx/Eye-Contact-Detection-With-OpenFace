@@ -443,7 +443,7 @@ void FaceDetectorMTCNN::Read(const string& location)
 	ifstream locations(location.c_str(), ios_base::in);
 	if (!locations.is_open())
 	{
-		cout << "Couldn't open the model file, aborting" << endl;
+		cout << "MTCNN model file not found or can't be opened" << endl;
 		return;
 	}
 	string line;

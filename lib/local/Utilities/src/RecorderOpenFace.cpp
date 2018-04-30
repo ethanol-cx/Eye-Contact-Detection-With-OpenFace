@@ -426,7 +426,11 @@ void RecorderOpenFace::WriteObservation()
 
 	}
 
-	if(params.outputTracked())
+}
+
+void RecorderOpenFace::WriteObservationTracked()
+{
+	if (params.outputTracked())
 	{
 
 		if (frame_number == 1)
@@ -453,7 +457,6 @@ void RecorderOpenFace::WriteObservation()
 		vis_to_out = cv::Mat();
 	}
 }
-
 
 void RecorderOpenFace::SetObservationHOG(bool good_frame, const cv::Mat_<double>& hog_descriptor, int num_cols, int num_rows, int num_channels)
 {

@@ -282,7 +282,15 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, CLNF& cl
 		if (clnf_model.face_detector_MTCNN.empty() && params.curr_face_detector == params.MTCNN_DETECTOR)
 		{
 			clnf_model.face_detector_MTCNN.Read(params.mtcnn_face_detector_location);
-			clnf_model.mtcnn_face_detector_location = params.haar_face_detector_location;
+			clnf_model.mtcnn_face_detector_location = params.mtcnn_face_detector_location;
+
+			// If the model is still empty default to HOG
+			if (clnf_model.face_detector_MTCNN.empty())
+			{
+				cout << "INFO: defaulting to HOG-SVM face detector" << endl;
+				params.curr_face_detector = LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR;
+			}
+
 		}
 
 		cv::Point preference_det(-1, -1);
@@ -720,6 +728,15 @@ bool LandmarkDetector::DetectLandmarksInImage(const cv::Mat &rgb_image, CLNF& cl
 	if (clnf_model.face_detector_MTCNN.empty() && params.curr_face_detector == FaceModelParameters::MTCNN_DETECTOR)
 	{
 		clnf_model.face_detector_MTCNN.Read(params.mtcnn_face_detector_location);
+		clnf_model.mtcnn_face_detector_location = params.mtcnn_face_detector_location;
+
+		// If the model is still empty default to HOG
+		if (clnf_model.face_detector_MTCNN.empty())
+		{
+			cout << "INFO: defaulting to HOG-SVM face detector" << endl;
+			params.curr_face_detector = LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR;
+		}
+
 	}
 
 	// Detect the face first
