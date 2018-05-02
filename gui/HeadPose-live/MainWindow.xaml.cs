@@ -48,6 +48,7 @@ using CppInterop;
 using CppInterop.LandmarkDetector;
 using System.Windows.Threading;
 using GazeAnalyser_Interop;
+using FaceDetectorInterop;
 
 using ZeroMQ;
 using System.Drawing;
@@ -370,6 +371,16 @@ namespace HeadPoseLive
 
             String root = AppDomain.CurrentDomain.BaseDirectory;
             FaceModelParameters model_params = new FaceModelParameters(root, true, false, false);
+
+            // Initialize the face detector
+            FaceDetector face_detector = new FaceDetector(model_params.GetHaarLocation(), model_params.GetMTCNNLocation());
+
+            // If MTCNN model not available, use HOG
+            if (!face_detector.IsMTCNNLoaded())
+            {
+                model_params.SetFaceDetector(false, true, false);
+            }
+
             CLNF face_model = new CLNF(model_params);
             GazeAnalyserManaged gaze_analyser = new GazeAnalyserManaged();
 
@@ -417,11 +428,12 @@ namespace HeadPoseLive
                 List<System.Windows.Point> landmarks = new List<System.Windows.Point>();
                 List<Tuple<System.Windows.Point, System.Windows.Point>> gaze_lines = null;
                 Tuple<float, float> gaze_angle = new Tuple<float, float>(0, 0);
+                var visibilities = face_model.GetVisibilities();
                 double scale = face_model.GetRigidParams()[0];
 
                 if (detectionSucceeding)
                 {
-                    List<Tuple<float, float>> landmarks_doubles = face_model.CalculateVisibleLandmarks();
+                    List<Tuple<float, float>> landmarks_doubles = face_model.CalculateAllLandmarks();
 
                     foreach (var p in landmarks_doubles)
                         landmarks.Add(new System.Windows.Point(p.Item1, p.Item2));
@@ -525,6 +537,7 @@ namespace HeadPoseLive
                         {
                             webcam_img.OverlayLines.Add(lines);
                             webcam_img.OverlayPoints.Add(landmarks);
+                            webcam_img.OverlayPointsVisibility.Add(visibilities);
                             webcam_img.FaceScale.Add(scale);
 
                             List<System.Windows.Point> eye_landmark_points = new List<System.Windows.Point>();

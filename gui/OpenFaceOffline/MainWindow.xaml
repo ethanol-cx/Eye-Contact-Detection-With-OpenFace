@@ -64,24 +64,15 @@
             </MenuItem>
 
             <MenuItem Header="Face Detector" Name="FaceDetectorMenu">
-
-                <MenuItem x:Name="FaceDetHaar" Header="OpenCV (Haar)" IsCheckable="true" IsChecked="{Binding DetectorHaar}"></MenuItem>
-                <MenuItem x:Name="FaceDetHOG" Header="dlib (HOG-SVM)" IsCheckable="true" IsChecked="{Binding DetectorHOG}"></MenuItem>
-                <MenuItem x:Name="FaceDetCNN" Header="OpenFace (MTCNN)" IsCheckable="true" IsChecked="{Binding DetectorCNN}"></MenuItem>
-                <i:Interaction.Behaviors>
-                    <OpenFaceOffline:ExclusiveMenuItemBehavior></OpenFaceOffline:ExclusiveMenuItemBehavior>
-                </i:Interaction.Behaviors>
-
+                <MenuItem x:Name="FaceDetHaar" Header="OpenCV (Haar)" IsCheckable="true" IsChecked="{Binding DetectorHaar}" Click="ExclusiveMenuItem_Click"></MenuItem>
+                <MenuItem x:Name="FaceDetHOG" Header="dlib (HOG-SVM)" IsCheckable="true" IsChecked="{Binding DetectorHOG}" Click="ExclusiveMenuItem_Click"></MenuItem>
+                <MenuItem x:Name="FaceDetCNN" Header="OpenFace (MTCNN)" IsCheckable="true" IsChecked="{Binding DetectorCNN}" Click="ExclusiveMenuItem_Click"></MenuItem>
             </MenuItem>
+
             <MenuItem Header="Landmark Detector" Name="LandmarkDetectorMenu">
-
-                <MenuItem x:Name="LandmarkDetCLM" Header="CLM" IsCheckable="true" IsChecked="{Binding LandmarkDetectorCLM}"></MenuItem>
-                <MenuItem x:Name="LandmarkDetCLNF" Header="CLNF" IsCheckable="true" IsChecked="{Binding LandmarkDetectorCLNF}"></MenuItem>
-                <MenuItem x:Name="LandmarkDetCECLM" Header="CE-CLM" IsCheckable="true" IsChecked="{Binding LandmarkDetectorCECLM}"></MenuItem>
-                <i:Interaction.Behaviors>
-                    <OpenFaceOffline:ExclusiveMenuItemBehavior></OpenFaceOffline:ExclusiveMenuItemBehavior>
-                </i:Interaction.Behaviors>
-
+                <MenuItem x:Name="LandmarkDetCLM" Header="CLM" IsCheckable="true" IsChecked="{Binding LandmarkDetectorCLM}" Click="ExclusiveMenuItem_Click"></MenuItem>
+                <MenuItem x:Name="LandmarkDetCLNF" Header="CLNF" IsCheckable="true" IsChecked="{Binding LandmarkDetectorCLNF}" Click="ExclusiveMenuItem_Click"></MenuItem>
+                <MenuItem x:Name="LandmarkDetCECLM" Header="CE-CLM" IsCheckable="true" IsChecked="{Binding LandmarkDetectorCECLM}" Click="ExclusiveMenuItem_Click"></MenuItem>
             </MenuItem>
 
         </Menu>

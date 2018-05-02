@@ -124,6 +124,11 @@ namespace FaceDetectorInterop {
 			}
 		}
 
+		bool IsMTCNNLoaded()
+		{
+			return !face_detector_mtcnn->empty();
+		}
+
 		// Face detection using MTCNN face detector
 		void DetectFacesMTCNN(List<System::Windows::Rect>^ o_regions, OpenCVWrappers::RawImage^ rgb_image, List<float>^ o_confidences)
 		{

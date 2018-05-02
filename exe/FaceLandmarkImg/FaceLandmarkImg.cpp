@@ -233,7 +233,6 @@ int main(int argc, char **argv)
 
 			// Setting up the recorder output
 			open_face_rec.SetObservationHOG(face_model.detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
-			open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
 			open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
 			open_face_rec.SetObservationLandmarks(face_model.detected_landmarks, face_model.GetShape(image_reader.fx, image_reader.fy, image_reader.cx, image_reader.cy),
 				face_model.params_global, face_model.params_local, face_model.detection_certainty, face_model.detection_success);
@@ -249,6 +248,7 @@ int main(int argc, char **argv)
 			visualizer.ShowObservation();
 		}
 
+		open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
 		open_face_rec.WriteObservationTracked();
 
 		// Grabbing the next frame in the sequence

@@ -156,8 +156,20 @@ namespace OpenFaceOffline
             this.Icon = BitmapFrame.Create(iconUri);
 
             String root = AppDomain.CurrentDomain.BaseDirectory;
-
+                        
             face_model_params = new FaceModelParameters(root, LandmarkDetectorCECLM, LandmarkDetectorCLNF, LandmarkDetectorCLM);
+            // Initialize the face detector
+            face_detector = new FaceDetector(face_model_params.GetHaarLocation(), face_model_params.GetMTCNNLocation());
+
+            // If MTCNN model not available, use HOG
+            if (!face_detector.IsMTCNNLoaded())
+            {
+                FaceDetCNN.IsEnabled = false;
+                DetectorCNN = false;
+                DetectorHOG = true;
+            }
+            face_model_params.SetFaceDetector(DetectorHaar, DetectorHOG, DetectorCNN);
+
             landmark_detector = new CLNF(face_model_params);
 
             gaze_analyser = new GazeAnalyserManaged();
@@ -978,6 +990,18 @@ namespace OpenFaceOffline
             {
                 image_output_size = number_entry_window.OutputInt;
             }
+        }
+
+        private void ExclusiveMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            // Disable all other items but this one
+            MenuItem parent = (MenuItem)((MenuItem)sender).Parent;
+            foreach (var me in parent.Items)
+            {
+                ((MenuItem)me).IsChecked = false;
+            }
+            ((MenuItem)sender).IsChecked = true;
+
         }
 
         private void setCameraParameters_Click(object sender, RoutedEventArgs e)

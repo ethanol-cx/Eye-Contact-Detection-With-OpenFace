@@ -86,3 +86,4 @@ gui/OpenFaceOffline/obj/
 gui/OpenFaceDemo/obj/
 exe/FeatureExtraction/processed/
 matlab_runners/
+exe/FaceLandmarkVidMulti/processed/

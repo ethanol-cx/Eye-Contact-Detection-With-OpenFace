@@ -50,6 +50,7 @@ using OpenFaceOffline;
 using OpenCVWrappers;
 using CppInterop.LandmarkDetector;
 using FaceAnalyser_Interop;
+using FaceDetectorInterop;
 using GazeAnalyser_Interop;
 using UtilitiesOF;
 
@@ -118,6 +119,15 @@ namespace OpenFaceDemo
             // TODO, create a demo version of parameters
             face_model_params = new FaceModelParameters(root, true, false, false);
             face_model_params.optimiseForVideo();
+
+            // Initialize the face detector
+            FaceDetector face_detector = new FaceDetector(face_model_params.GetHaarLocation(), face_model_params.GetMTCNNLocation());
+
+            // If MTCNN model not available, use HOG
+            if (!face_detector.IsMTCNNLoaded())
+            {
+                face_model_params.SetFaceDetector(false, true, false);
+            }
 
             landmark_detector = new CLNF(face_model_params);
             face_analyser = new FaceAnalyserManaged(root, true, 112, true);
