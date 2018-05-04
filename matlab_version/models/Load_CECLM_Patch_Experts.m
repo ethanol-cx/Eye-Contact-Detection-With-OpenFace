@@ -3,7 +3,8 @@ function [patches] = Load_CECLM_Patch_Experts( col_patch_dir, col_patch_file)
 %   Detailed explanation goes here
    
     colourPatchFiles = dir([col_patch_dir col_patch_file]);
-    
+    patches = [];
+
     % load all of the pathes
     for i=1:numel(colourPatchFiles)
         
@@ -32,5 +33,12 @@ function [patches] = Load_CECLM_Patch_Experts( col_patch_dir, col_patch_file)
         end
                      
     end
+    
+    if(isempty(patches))
+       fprintf("Could not find CEN patch experts, for instructions of how to download them, please visit - https://github.com/TadasBaltrusaitis/OpenFace/wiki/Model-download\n"); 
+       ME = MException('cenExperts:modelError', 'Could not find CEN model at location %s, see - https://github.com/TadasBaltrusaitis/OpenFace/wiki/Model-download',[col_patch_dir col_patch_file]);       
+       throw(ME);
+    end
+    
 end
 

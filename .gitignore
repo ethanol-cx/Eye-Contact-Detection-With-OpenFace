@@ -87,3 +87,6 @@ gui/OpenFaceDemo/obj/
 exe/FeatureExtraction/processed/
 matlab_runners/
 exe/FaceLandmarkVidMulti/processed/
+lib/3rdParty/CameraEnumerator/Release/
+lib/local/CppInerop/Release/
+lib/local/Utilities/Release/
