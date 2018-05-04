@@ -67,6 +67,9 @@ public:
 	// The collection of CEN patch experts (for intensity images), the experts are laid out scale->view->landmark
 	vector<vector<vector<CEN_patch_expert> > >			cen_expert_intensity;
 
+	//Useful to pre-allocate data for im2col so that it is not allocated for every iteration and every patch
+	vector< map<int, cv::Mat_<float> > > preallocated_im2col;
+
 	// The available scales for intensity patch experts
 	vector<double>							patch_scaling;
 

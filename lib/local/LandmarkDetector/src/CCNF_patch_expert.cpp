@@ -419,8 +419,7 @@ void CCNF_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Ma
 
 }
 
-//===========================================================================
-void CCNF_patch_expert::ResponseOpenBlas(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response)
+void CCNF_patch_expert::ResponseOpenBlas(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& im2col_prealloc)
 {
 
 	int response_height = area_of_interest.rows - height + 1;
@@ -438,10 +437,8 @@ void CCNF_patch_expert::ResponseOpenBlas(const cv::Mat_<float> &area_of_interest
 	}
 
 	// the placeholder for the column normalized representation of the image, don't get recalculated for every response
-	cv::Mat_<float> normalized_input;
-
-	im2colContrastNormBias(area_of_interest, neurons[0].weights.cols, neurons[0].weights.rows, normalized_input);
-	normalized_input = normalized_input.t();
+	im2colContrastNormBias(area_of_interest, neurons[0].weights.cols, neurons[0].weights.rows, im2col_prealloc);
+	cv::Mat_<float> normalized_input = im2col_prealloc.t();
 
 	// the placeholder for the DFT of the image, the integral image, and squared integral image so they don't get recalculated for every response
 	cv::Mat_<double> area_of_interest_dft;
@@ -449,7 +446,7 @@ void CCNF_patch_expert::ResponseOpenBlas(const cv::Mat_<float> &area_of_interest
 
 	cv::Mat_<float> neuron_response;
 
-	
+
 	int h = area_of_interest.rows - neurons[0].weights.rows + 1;
 	int w = area_of_interest.cols - neurons[0].weights.cols + 1;
 
@@ -498,7 +495,7 @@ void CCNF_patch_expert::ResponseOpenBlas(const cv::Mat_<float> &area_of_interest
 	cv::Mat_<float> resp_vec_f = response.reshape(1, response_height * response_width);
 
 	cv::Mat_<float> out(Sigmas[s_to_use].rows, resp_vec_f.cols, 0.0f);
-	
+
 	// Perform matrix multiplication in OpenBLAS (fortran call)
 	alpha1 = 1.0;
 	beta1 = 0.0;

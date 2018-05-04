@@ -503,15 +503,15 @@ void LandmarkDetector::interpolationMatrix(cv::Mat_<float>& mapMatrix, int respo
 }
 
 //===========================================================================
-void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix)
+void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc)
 {
 
 	int response_height = area_of_interest.rows - height + 1;
 	int response_width = area_of_interest.cols - width + 1;
 
 	// Extract im2col but in a sparse way and contrast normalize
-	im2colBiasSparseContrastNorm(area_of_interest, width, height, response);
-	response = response.t();
+	im2colBiasSparseContrastNorm(area_of_interest, width, height, im2col_prealloc);
+	response = im2col_prealloc.t();
 
 	for (size_t layer = 0; layer < activation_function.size(); ++layer)
 	{
@@ -532,7 +532,7 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 
 		// The above is a faster version of this, by calling the fortran version directly
 		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, resp.cols, weight.rows, weight.cols, 1, m1, resp.cols, m2, weight.cols, 0.0, m3, resp.cols);
-		
+
 		// Adding the bias (bit ugly, but the fastest way to do this)
 		response = resp_blas;
 
@@ -558,7 +558,7 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 
 			// Iterate over the data directly
 			float* data = (float*)response.data;
-				
+
 			for (size_t counter = 0; counter < resp_size; ++counter)
 			{
 				float in = *data;
@@ -572,15 +572,15 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 		}
 
 	}
-	
-	response =  response * mapMatrix;
+
+	response = response * mapMatrix;
 	response = response.t();
 	response = response.reshape(1, response_height);
 	response = response.t();
 }
 
 //===========================================================================
-void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix)
+void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc)
 {
 
 	int response_height = area_of_interest.rows - height + 1;
@@ -589,9 +589,9 @@ void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_inte
 	cv::flip(area_of_interest, area_of_interest, 1);
 
 	// Extract im2col but in a sparse way and contrast normalize
-	im2colBiasSparseContrastNorm(area_of_interest, width, height, response);
+	im2colBiasSparseContrastNorm(area_of_interest, width, height, im2col_prealloc);
 
-	response = response.t();
+	response = im2col_prealloc.t();
 
 	for (size_t layer = 0; layer < activation_function.size(); ++layer)
 	{
@@ -660,7 +660,7 @@ void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_inte
 	cv::flip(response, response, 1);
 }
 
-void CEN_patch_expert::ResponseSparse_mirror_joint(const cv::Mat_<float> &area_of_interest_left, const cv::Mat_<float> &area_of_interest_right, cv::Mat_<float> &response_left, cv::Mat_<float> &response_right, cv::Mat_<float>& mapMatrix)
+void CEN_patch_expert::ResponseSparse_mirror_joint(const cv::Mat_<float> &area_of_interest_left, const cv::Mat_<float> &area_of_interest_right, cv::Mat_<float> &response_left, cv::Mat_<float> &response_right, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc_left, cv::Mat_<float>& im2col_prealloc_right)
 {
 	int response_height = area_of_interest_left.rows - height + 1;
 	int response_width = area_of_interest_left.cols - width + 1;
@@ -668,13 +668,11 @@ void CEN_patch_expert::ResponseSparse_mirror_joint(const cv::Mat_<float> &area_o
 	cv::flip(area_of_interest_right, area_of_interest_right, 1);
 
 	// Extract im2col but in a sparse way and contrast normalize
-	cv::Mat_<float> resp_l;
-	im2colBiasSparseContrastNorm(area_of_interest_left, width, height, resp_l);
-	cv::Mat_<float> resp_r;
-	im2colBiasSparseContrastNorm(area_of_interest_right, width, height, resp_r);
-	
+	im2colBiasSparseContrastNorm(area_of_interest_left, width, height, im2col_prealloc_left);
+	im2colBiasSparseContrastNorm(area_of_interest_right, width, height, im2col_prealloc_right);
+
 	cv::Mat_<float> response;
-	cv::vconcat(resp_l, resp_r, response);
+	cv::vconcat(im2col_prealloc_left, im2col_prealloc_right, response);
 
 	response = response.t();
 
@@ -730,8 +728,8 @@ void CEN_patch_expert::ResponseSparse_mirror_joint(const cv::Mat_<float> &area_o
 
 			for (size_t counter = 0; counter < resp_size; ++counter)
 			{
-				float in = *data;
-				*data++ = 1.0 / (1.0 + std::exp(-(in)));
+			float in = *data;
+			*data++ = 1.0 / (1.0 + std::exp(-(in)));
 			}*/
 
 		}

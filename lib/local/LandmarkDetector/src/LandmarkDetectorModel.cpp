@@ -718,7 +718,7 @@ bool CLNF::Fit(const cv::Mat_<uchar>& im, const std::vector<int>& window_sizes, 
 		int window_size = window_sizes[scale];
 
 		// The patch expert response computation
-		patch_experts.Response(patch_expert_responses, sim_ref_to_img, sim_img_to_ref, im,  pdm, params_global, params_local, window_size, scale);
+		patch_experts.Response(patch_expert_responses, sim_ref_to_img, sim_img_to_ref, im, pdm, params_global, params_local, window_size, scale);
 
 		if(parameters.refine_parameters == true)
 		{

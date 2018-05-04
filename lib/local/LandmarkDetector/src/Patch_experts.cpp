@@ -88,6 +88,8 @@ Patch_experts::Patch_experts(const Patch_experts& other) : patch_scaling(other.p
 			this->visibilities[i][j] = other.visibilities[i][j].clone();
 		}
 	}
+
+	preallocated_im2col.resize(other.preallocated_im2col.size());
 }
 
 // Returns indices to landmarks that need to have patch responses computed (omits mirrored frontal landmarks for CEN as they will be computed together with their mirrored pair)
@@ -133,27 +135,27 @@ std::vector<int> Patch_experts::Collect_visible_landmarks(vector<vector<cv::Mat_
 // Additionally returns the transform from the image coordinates to the response coordinates (and vice versa).
 // The computation also requires the current landmark locations to compute response around, the PDM corresponding to the desired model, and the parameters describing its instance
 // Also need to provide the size of the area of interest and the desired scale of analysis
-void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, cv::Matx22f& sim_ref_to_img, cv::Matx22f& sim_img_to_ref, const cv::Mat_<uchar>& grayscale_image, 
-							 const PDM& pdm, const cv::Vec6f& params_global, const cv::Mat_<float>& params_local, int window_size, int scale)
+void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, cv::Matx22f& sim_ref_to_img, cv::Matx22f& sim_img_to_ref, const cv::Mat_<uchar>& grayscale_image,
+	const PDM& pdm, const cv::Vec6f& params_global, const cv::Mat_<float>& params_local, int window_size, int scale)
 {
 
-	int view_id = GetViewIdx(params_global, scale);		
+	int view_id = GetViewIdx(params_global, scale);
 
 	int n = pdm.NumberOfPoints();
-		
+
 	// Compute the current landmark locations (around which responses will be computed)
 	cv::Mat_<float> landmark_locations;
 
 	pdm.CalcShape2D(landmark_locations, params_local, params_global);
 
 	cv::Mat_<float> reference_shape;
-		
+
 	// Initialise the reference shape on which we'll be warping
 	cv::Vec6f global_ref(patch_scaling[scale], 0, 0, 0, 0, 0);
 
 	// Compute the reference shape
 	pdm.CalcShape2D(reference_shape, params_local, global_ref);
-		
+
 	// similarity and inverse similarity transform to and from image and reference shape
 	cv::Mat_<float> reference_shape_2D = (reference_shape.reshape(1, 2).t());
 	cv::Mat_<float> image_shape_2D = landmark_locations.reshape(1, 2).t();
@@ -161,34 +163,34 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 	sim_img_to_ref = AlignShapesWithScale_f(image_shape_2D, reference_shape_2D);
 	sim_ref_to_img = sim_img_to_ref.inv(cv::DECOMP_LU);
 
-	float a1 = sim_ref_to_img(0,0);
-	float b1 = -sim_ref_to_img(0,1);		
+	float a1 = sim_ref_to_img(0, 0);
+	float b1 = -sim_ref_to_img(0, 1);
 
 	bool use_ccnf = !this->ccnf_expert_intensity.empty();
 	bool use_cen = !this->cen_expert_intensity.empty();
 
 	// If using CCNF patch experts might need to precalculate Sigmas
-	if(use_ccnf)
+	if (use_ccnf)
 	{
 		vector<cv::Mat_<float> > sigma_components;
 
 		// Retrieve the correct sigma component size
-		for( size_t w_size = 0; w_size < this->sigma_components.size(); ++w_size)
+		for (size_t w_size = 0; w_size < this->sigma_components.size(); ++w_size)
 		{
-			if(!this->sigma_components[w_size].empty())
+			if (!this->sigma_components[w_size].empty())
 			{
-				if(window_size*window_size == this->sigma_components[w_size][0].rows)
+				if (window_size*window_size == this->sigma_components[w_size][0].rows)
 				{
 					sigma_components = this->sigma_components[w_size];
 				}
 			}
-		}			
+		}
 
 		// Go through all of the landmarks and compute the Sigma for each
-		for( int lmark = 0; lmark < n; lmark++)
+		for (int lmark = 0; lmark < n; lmark++)
 		{
 			// Only for visible landmarks
-			if(visibilities[scale][view_id].at<int>(lmark,0))
+			if (visibilities[scale][view_id].at<int>(lmark, 0))
 			{
 				// Precompute sigmas if they are not computed yet
 				ccnf_expert_intensity[scale][view_id][lmark].ComputeSigmas(sigma_components, window_size);
@@ -214,11 +216,11 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 
 	// calculate the patch responses for every landmark, Actual work happens here. If openMP is turned on it is possible to do this in parallel,
 	// this might work well on some machines, while potentially have an adverse effect on others
-//#ifdef _OPENMP
-//#pragma omp parallel for
-//#endif
-	tbb::parallel_for(0, (int)vis_lmk.size(), [&](int i){
-	//for(int i = 0; i < vis_lmk.size(); i++)
+	//#ifdef _OPENMP
+	//#pragma omp parallel for
+	//#endif
+	tbb::parallel_for(0, (int)vis_lmk.size(), [&](int i) {
+	//for (int i = 0; i < vis_lmk.size(); i++)
 	{
 
 		// Work out how big the area of interest has to be to get a response of window size
@@ -259,6 +261,10 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 		if (!cen_expert_intensity.empty())
 		{
 
+			int im2col_size = (area_of_interest_width * area_of_interest_height - 1) / 2;
+
+			cv::Mat_<float> prealloc_mat = preallocated_im2col[ind][im2col_size];
+
 			// If frontal view we can do mirrored landmarks together
 			if (view_id == 0)
 			{
@@ -269,7 +275,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 					int mirror_id = mirror_inds.at<int>(ind);
 					if (mirror_id == ind)
 					{
-						cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, patch_expert_responses[ind], interp_mat);
+						cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, patch_expert_responses[ind], interp_mat, prealloc_mat);
 					}
 					else
 					{
@@ -285,7 +291,11 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 						IplImage im_o_r = grayscale_image;
 						cvGetQuadrangleSubPix(&im_o_r, &area_of_interest_o_r, &sim_o_r);
 
-						cen_expert_intensity[scale][view_id][ind].ResponseSparse_mirror_joint(area_of_interest, area_of_interest_r, patch_expert_responses[ind], patch_expert_responses[mirror_id], interp_mat);
+						cv::Mat_<float> prealloc_mat_right = preallocated_im2col[mirror_id][im2col_size];
+
+						cen_expert_intensity[scale][view_id][ind].ResponseSparse_mirror_joint(area_of_interest, area_of_interest_r, patch_expert_responses[ind], patch_expert_responses[mirror_id], interp_mat, prealloc_mat, prealloc_mat_right);
+
+						preallocated_im2col[mirror_id][im2col_size] = prealloc_mat_right;
 
 					}
 				}
@@ -293,33 +303,40 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 			else
 			{
 				// For space and memory saving use a mirrored patch expert
-				if(!cen_expert_intensity[scale][view_id][ind].biases.empty())
+				if (!cen_expert_intensity[scale][view_id][ind].biases.empty())
 				{
-					cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, patch_expert_responses[ind], interp_mat);
+					cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, patch_expert_responses[ind], interp_mat, prealloc_mat);
 					// A slower, but slightly more accurate version
 					//cen_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
 				}
 				else
 				{
-					cen_expert_intensity[scale][mirror_views.at<int>(view_id)][mirror_inds.at<int>(ind)].ResponseSparse_mirror(area_of_interest, patch_expert_responses[ind], interp_mat);
+					cen_expert_intensity[scale][mirror_views.at<int>(view_id)][mirror_inds.at<int>(ind)].ResponseSparse_mirror(area_of_interest, patch_expert_responses[ind], interp_mat, prealloc_mat);
 				}
 			}
 
+			preallocated_im2col[ind][im2col_size] = prealloc_mat;
 
 		}
 		else if (!ccnf_expert_intensity.empty())
 		{
 			// get the correct size response window			
 			patch_expert_responses[ind] = cv::Mat_<float>(window_size, window_size);
-			
-			ccnf_expert_intensity[scale][view_id][ind].ResponseOpenBlas(area_of_interest, patch_expert_responses[ind]);
+
+			int im2col_size = area_of_interest_width * area_of_interest_height;
+
+			cv::Mat_<float> prealloc_mat = preallocated_im2col[ind][im2col_size];
+
+			ccnf_expert_intensity[scale][view_id][ind].ResponseOpenBlas(area_of_interest, patch_expert_responses[ind], prealloc_mat);
+
+			preallocated_im2col[ind][im2col_size] = prealloc_mat;
 
 			// Below is an alternative way to compute the same, but that uses FFT instead of OpenBLAS
 			// ccnf_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
 
 		}
 		else
-		{				
+		{
 			// get the correct size response window			
 			patch_expert_responses[ind] = cv::Mat_<float>(window_size, window_size);
 
@@ -327,8 +344,8 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 		}
 	}
 	});
-
 }
+
 
 //=============================================================================
 // Getting the closest view center based on orientation
@@ -393,6 +410,11 @@ void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 		string location = intensity_ccnf_expert_locations[scale];
 		cout << "Reading the intensity CCNF patch experts from: " << location << "....";
 		Read_CCNF_patch_experts(location,  centers[scale], visibilities[scale], ccnf_expert_intensity[scale], patch_scaling[scale]);
+
+		if (scale == 0)
+		{
+			preallocated_im2col.resize(ccnf_expert_intensity[0][0].size());
+		}
 	}
 
 	// Initialise and read CEN patch experts (currently only intensity based), 
@@ -412,6 +434,12 @@ void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 		string location = intensity_cen_expert_locations[scale];
 		cout << "Reading the intensity CEN patch experts from: " << location << "....";
 		Read_CEN_patch_experts(location, centers[scale], visibilities[scale], cen_expert_intensity[scale], patch_scaling[scale]);
+
+		if (scale == 0)
+		{
+			preallocated_im2col.resize(cen_expert_intensity[0][0].size());
+		}
+
 	}
 
 
