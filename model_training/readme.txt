@@ -6,11 +6,11 @@ AU_training - contains facial expression training modules
 
 //====================== SVR and CLNF patch expers ======= //
 
-You can find the CLNF and SVR patch training code here - https://github.com/TadasBaltrusaitis/CCNF
+You can find the CLNF and SVR patch training code in CCNF folder
 
 //====================== CE-CLM patch experts ========= //
 
-For CEN patch expert training - COMING SOON
+For CEN patch expert training see ce-clm_training folder
 
 //====================== Point distribution models ===//
 
