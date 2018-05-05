@@ -152,17 +152,17 @@ namespace CppInterop {
 
 			bool IsCECLM()
 			{
-				return params->curr_face_detector == ::LandmarkDetector::FaceModelParameters::CECLM_DETECTOR;
+				return params->curr_landmark_detector == ::LandmarkDetector::FaceModelParameters::CECLM_DETECTOR;
 			}
 
 			bool IsCLNF()
 			{
-				return params->curr_face_detector == ::LandmarkDetector::FaceModelParameters::CLNF_DETECTOR;
+				return params->curr_landmark_detector == ::LandmarkDetector::FaceModelParameters::CLNF_DETECTOR;
 			}
 
 			bool IsCLM()
 			{
-				return params->curr_face_detector == ::LandmarkDetector::FaceModelParameters::CLM_DETECTOR;
+				return params->curr_landmark_detector == ::LandmarkDetector::FaceModelParameters::CLM_DETECTOR;
 			}
 
 			System::String^ GetMTCNNLocation()
@@ -257,6 +257,11 @@ namespace CppInterop {
 			~CLNF()
 			{
 				this->!CLNF();
+			}
+
+			bool isLoaded()
+			{
+				return clnf->loaded_successfully;
 			}
 
 

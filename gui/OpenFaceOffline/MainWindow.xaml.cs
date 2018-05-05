@@ -208,6 +208,14 @@ namespace OpenFaceOffline
             // Reload the face landmark detector if needed
             ReloadLandmarkDetector();
 
+            if(!landmark_detector.isLoaded())
+            {
+                DetectorNotFoundWarning();
+                EndMode();
+                thread_running = false;
+                return;
+            }
+
             // Set the face detector
             face_model_params.SetFaceDetector(DetectorHaar, DetectorHOG, DetectorCNN);
             face_model_params.optimiseForVideo();
@@ -302,9 +310,17 @@ namespace OpenFaceOffline
 
             // Reload the face landmark detector if needed
             ReloadLandmarkDetector();
+
+            if (!landmark_detector.isLoaded())
+            {
+                DetectorNotFoundWarning();
+                EndMode();
+                thread_running = false;
+                return;
+            }
+
             // Setup the parameters optimized for working on individual images rather than sequences
             face_model_params.optimiseForImages();
-
 
             // Setup the visualization
             Visualizer visualizer_of = new Visualizer(ShowTrackedVideo || RecordTracked, ShowAppearance, ShowAppearance, false);
@@ -425,7 +441,17 @@ namespace OpenFaceOffline
             }
         }
 
+        private void DetectorNotFoundWarning()
+        {
+            string messageBoxText = "Could not open the landmark detector model file. For instructions of how to download them, see https://github.com/TadasBaltrusaitis/OpenFace/wiki/Model-download";
+            string caption = "Model file not found or corrupt";
+            MessageBoxButton button = MessageBoxButton.OK;
+            MessageBoxImage icon = MessageBoxImage.Warning;
 
+            // Display message box
+            System.Windows.MessageBox.Show(messageBoxText, caption, button, icon);
+
+        }
 
         private void RecordObservation(RecorderOpenFace recorder, RawImage vis_image, int face_id, bool success, float fx, float fy, float cx, float cy, double timestamp, int frame_number)
         {
