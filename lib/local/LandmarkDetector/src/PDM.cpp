@@ -173,7 +173,8 @@ void PDM::CalcShape2D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& params_
 	cv::Matx33f currRot = Utilities::Euler2RotationMatrix(euler);
 	
 	// get the 3D shape of the object
-	cv::Mat_<float> Shape_3D = mean_shape + princ_comp * params_local;
+	cv::Mat_<float> Shape_3D;
+	this->CalcShape3D(Shape_3D, params_local);
 
 	// create the 2D shape matrix (if it has not been defined yet)
 	if((out_shape.rows != 2 * mean_shape.rows / 3) || (out_shape.cols != 1))
