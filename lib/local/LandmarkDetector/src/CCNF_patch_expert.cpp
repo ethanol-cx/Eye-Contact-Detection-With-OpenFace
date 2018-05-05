@@ -140,14 +140,14 @@ void CCNF_neuron::Read(ifstream &stream)
 }
 
 // Perform im2col, while at the same time doing contrast normalization and adding a bias term 
-void im2colContrastNormBias(const cv::Mat_<float>& input, const int width, const int height, cv::Mat_<float>& output)
+void im2colContrastNormBias(const cv::Mat_<float>& input, const unsigned int width, const unsigned int height, cv::Mat_<float>& output)
 {
-	const int m = input.rows;
-	const int n = input.cols;
+	const unsigned int m = input.rows;
+	const unsigned int n = input.cols;
 
 	// determine how many blocks there will be with a sliding window of width x height in the input
-	const int yB = m - height + 1;
-	const int xB = n - width + 1;
+	const unsigned int yB = m - height + 1;
+	const unsigned int xB = n - width + 1;
 
 	// Allocate the output size
 	if (output.rows != xB*yB && output.cols != width * height + 1) 
@@ -156,7 +156,7 @@ void im2colContrastNormBias(const cv::Mat_<float>& input, const int width, const
 	}
 
 	// Iterate over the blocks
-	int rowIdx = 0;
+	unsigned int rowIdx = 0;
 	for (int j = 0; j< xB; j++)
 	{
 		for (int i = 0; i< yB; i++)
@@ -183,9 +183,9 @@ void im2colContrastNormBias(const cv::Mat_<float>& input, const int width, const
 			float mean = sum / (float)(width * height);
 
 			float sum_sq = 0;
-
+			const unsigned int num_items = width*height + 1;
 			// Working out the sum squared and subtracting the mean
-			for (size_t x = 1; x < width*height + 1; ++x)
+			for (unsigned int x = 1; x < num_items; ++x)
 			{
 				float in = Mo[x] - mean;
 				Mo[x] = in;
@@ -203,7 +203,7 @@ void im2colContrastNormBias(const cv::Mat_<float>& input, const int width, const
 			// Flip multiplication to division for speed
 			norm = 1.0 / norm;
 
-			for (size_t x = 1; x < width*height + 1; ++x)
+			for (unsigned int x = 1; x < num_items; ++x)
 			{
 				Mo[x] *= norm;
 			}

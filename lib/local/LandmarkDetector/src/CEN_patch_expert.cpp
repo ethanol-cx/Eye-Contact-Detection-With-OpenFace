@@ -298,17 +298,17 @@ void CEN_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat
 }
 
 // Perform im2col, while at the same time doing contrast normalization and adding a bias term (also skip every other region)
-void im2colBiasSparseContrastNorm(const cv::Mat_<float>& input, const int width, const int height, cv::Mat_<float>& output)
+void im2colBiasSparseContrastNorm(const cv::Mat_<float>& input, const unsigned int width, const unsigned int height, cv::Mat_<float>& output)
 {
-	const int m = input.rows;
-	const int n = input.cols;
+	const unsigned int m = input.rows;
+	const unsigned int n = input.cols;
 
 	// determine how many blocks there will be with a sliding window of width x height in the input
-	const int yB = m - height + 1;
-	const int xB = n - width + 1;
+	const unsigned int yB = m - height + 1;
+	const unsigned int xB = n - width + 1;
 
 	// As we will be skipping half of the outputs
-	const int out_size = (yB*xB - 1) / 2;
+	const unsigned int out_size = (yB*xB - 1) / 2;
 
 	// Allocate the output size
 	if (output.rows != out_size && output.cols != width * height + 1)
@@ -317,11 +317,11 @@ void im2colBiasSparseContrastNorm(const cv::Mat_<float>& input, const int width,
 	}
 
 	// Iterate over the blocks, skipping every second block
-	int rowIdx = 0;
-	int skipCounter = 0;
-	for (int j = 0; j< xB; j++)
+	unsigned int rowIdx = 0;
+	unsigned int skipCounter = 0;
+	for (unsigned int j = 0; j< xB; j++)
 	{
-		for (int i = 0; i< yB; i++)
+		for (unsigned int i = 0; i< yB; i++)
 		{
 			// Skip every second row
 			skipCounter++;
@@ -351,9 +351,9 @@ void im2colBiasSparseContrastNorm(const cv::Mat_<float>& input, const int width,
 			float mean = sum / (float)(width * height);
 
 			float sum_sq = 0;
-
+			const unsigned int num_items = width*height + 1;
 			// Working out the sum squared and subtracting the mean
-			for (size_t x = 1; x < width*height+1; ++x)
+			for (unsigned int x = 1; x < num_items; ++x)
 			{
 				float in = Mo[x] - mean;
 				Mo[x] = in;
@@ -371,7 +371,7 @@ void im2colBiasSparseContrastNorm(const cv::Mat_<float>& input, const int width,
 			// Flip multiplication to division for speed
 			norm = 1.0 / norm;
 
-			for (size_t x = 1; x < width*height + 1; ++x)
+			for (unsigned int x = 1; x < num_items; ++x)
 			{
 				Mo[x] *= norm;
 			}
