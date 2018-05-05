@@ -374,7 +374,7 @@ int Patch_experts::GetViewIdx(const cv::Vec6f& params_global, int scale) const
 
 
 //===========================================================================
-void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<string> intensity_ccnf_expert_locations, vector<string> intensity_cen_expert_locations, string early_term_loc)
+bool Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<string> intensity_ccnf_expert_locations, vector<string> intensity_cen_expert_locations, string early_term_loc)
 {
 
 	// initialise the SVR intensity patch expert parameters
@@ -390,7 +390,11 @@ void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 	{		
 		string location = intensity_svr_expert_locations[scale];
 		cout << "Reading the intensity SVR patch experts from: " << location << "....";
-		Read_SVR_patch_experts(location,  centers[scale], visibilities[scale], svr_expert_intensity[scale], patch_scaling[scale]);
+		bool success_read = Read_SVR_patch_experts(location,  centers[scale], visibilities[scale], svr_expert_intensity[scale], patch_scaling[scale]);
+		if (!success_read)
+		{
+			return false;
+		}
 	}
 
 	// Initialise and read CCNF patch experts (currently only intensity based), 
@@ -409,7 +413,12 @@ void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 	{		
 		string location = intensity_ccnf_expert_locations[scale];
 		cout << "Reading the intensity CCNF patch experts from: " << location << "....";
-		Read_CCNF_patch_experts(location,  centers[scale], visibilities[scale], ccnf_expert_intensity[scale], patch_scaling[scale]);
+		bool success_read = Read_CCNF_patch_experts(location,  centers[scale], visibilities[scale], ccnf_expert_intensity[scale], patch_scaling[scale]);
+
+		if (!success_read)
+		{
+			return false;
+		}
 
 		if (scale == 0)
 		{
@@ -433,7 +442,11 @@ void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 	{
 		string location = intensity_cen_expert_locations[scale];
 		cout << "Reading the intensity CEN patch experts from: " << location << "....";
-		Read_CEN_patch_experts(location, centers[scale], visibilities[scale], cen_expert_intensity[scale], patch_scaling[scale]);
+		bool success_read = Read_CEN_patch_experts(location, centers[scale], visibilities[scale], cen_expert_intensity[scale], patch_scaling[scale]);
+		if (!success_read)
+		{
+			return false;
+		}
 
 		if (scale == 0)
 		{
@@ -447,6 +460,11 @@ void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 	if (!early_term_loc.empty())
 	{
 		ifstream earlyTermFile(early_term_loc.c_str(), ios_base::in);
+
+		if (!earlyTermFile.is_open())
+		{
+			return false;
+		}
 
 		// Reading in weights/biases/cutoffs
 		for (int i = 0; i < centers[0].size(); ++i)
@@ -470,10 +488,10 @@ void Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 			early_term_cutoffs.push_back(cutoff);
 		}
 	}
-
+	return true;
 }
 //======================= Reading the SVR patch experts =========================================//
-void Patch_experts::Read_SVR_patch_experts(string expert_location, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<Multi_SVR_patch_expert> >& patches, double& scale)
+bool Patch_experts::Read_SVR_patch_experts(string expert_location, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<Multi_SVR_patch_expert> >& patches, double& scale)
 {
 
 	ifstream patchesFile(expert_location.c_str(), ios_base::in);
@@ -532,15 +550,17 @@ void Patch_experts::Read_SVR_patch_experts(string expert_location, std::vector<c
 		}
 	
 		cout << "Done" << endl;
+		return true;
 	}
 	else
 	{
 		cout << "Can't find/open the patches file" << endl;
+		return false;
 	}
 }
 
 //======================= Reading the CCNF patch experts =========================================//
-void Patch_experts::Read_CCNF_patch_experts(string patchesFileLocation, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<CCNF_patch_expert> >& patches, double& patchScaling)
+bool Patch_experts::Read_CCNF_patch_experts(string patchesFileLocation, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<CCNF_patch_expert> >& patches, double& patchScaling)
 {
 
 	ifstream patchesFile(patchesFileLocation.c_str(), ios::in | ios::binary);
@@ -613,15 +633,17 @@ void Patch_experts::Read_CCNF_patch_experts(string patchesFileLocation, std::vec
 			}
 		}
 		cout << "Done" << endl;
+		return true;
 	}
 	else
 	{
 		cout << "Can't find/open the patches file" << endl;
+		return false;
 	}
 }
 
 //======================= Reading the CEN patch experts =========================================//
-void Patch_experts::Read_CEN_patch_experts(string expert_location, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<CEN_patch_expert> >& patches, double& scale)
+bool Patch_experts::Read_CEN_patch_experts(string expert_location, std::vector<cv::Vec3d>& centers, std::vector<cv::Mat_<int> >& visibility, std::vector<std::vector<CEN_patch_expert> >& patches, double& scale)
 {
 
 	ifstream patchesFile(expert_location.c_str(), ios::in | ios::binary);
@@ -670,9 +692,11 @@ void Patch_experts::Read_CEN_patch_experts(string expert_location, std::vector<c
 			}
 		}
 		cout << "Done" << endl;
+		return true;
 	}
 	else
 	{
-		cout << "Can't find/open the patches file" << endl;
+		cout << "Could not find CEN patch experts, for instructions of how to download them, see https://github.com/TadasBaltrusaitis/OpenFace/wiki/Model-download \n" << endl;
+		return false;
 	}
 }

@@ -695,10 +695,14 @@ void PDM::CalcParams(cv::Vec6f& out_params_global, cv::Mat_<float>& out_params_l
 
 }
 
-void PDM::Read(string location)
+bool PDM::Read(string location)
 {
-  	
+
 	ifstream pdmLoc(location, ios_base::in);
+	if (!pdmLoc.is_open())
+	{
+		return false;
+	}
 
 	LandmarkDetector::SkipComments(pdmLoc);
 
@@ -720,4 +724,6 @@ void PDM::Read(string location)
 	cv::Mat_<double> eigen_values_d;
 	LandmarkDetector::ReadMat(pdmLoc, eigen_values_d);
 	eigen_values_d.convertTo(eigen_values, CV_32F);
+
+	return true;
 }

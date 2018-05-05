@@ -61,12 +61,19 @@ using namespace LandmarkDetector;
 CLNF::CLNF()
 {
 	FaceModelParameters parameters;
+
+	// A successful read wil set this to true
+	loaded_successfully = false;
+
 	this->Read(parameters.model_location);
 }
 
 // Constructor from a model file
 CLNF::CLNF(string fname)
 {
+	// A successful read wil set this to true
+	loaded_successfully = false;
+
 	this->Read(fname);
 }
 
@@ -74,7 +81,7 @@ CLNF::CLNF(string fname)
 CLNF::CLNF(const CLNF& other): pdm(other.pdm), params_local(other.params_local.clone()), params_global(other.params_global), detected_landmarks(other.detected_landmarks.clone()),
 	landmark_likelihoods(other.landmark_likelihoods.clone()), patch_experts(other.patch_experts), landmark_validator(other.landmark_validator), haar_face_detector_location(other.haar_face_detector_location),
 	mtcnn_face_detector_location(other.mtcnn_face_detector_location), hierarchical_mapping(other.hierarchical_mapping), hierarchical_models(other.hierarchical_models), hierarchical_model_names(other.hierarchical_model_names),
-	hierarchical_params(other.hierarchical_params), eye_model(other.eye_model), face_detector_MTCNN(other.face_detector_MTCNN), preference_det(other.preference_det)
+	hierarchical_params(other.hierarchical_params), eye_model(other.eye_model), face_detector_MTCNN(other.face_detector_MTCNN), preference_det(other.preference_det), loaded_successfully(other.loaded_successfully)
 {
 	this->detection_success = other.detection_success;
 	this->tracking_initialised = other.tracking_initialised;
@@ -158,6 +165,8 @@ CLNF & CLNF::operator= (const CLNF& other)
 
 		mtcnn_face_detector_location = other.mtcnn_face_detector_location;
 		face_detector_MTCNN = other.face_detector_MTCNN;
+
+		loaded_successfully = other.loaded_successfully;
 	}
 
 	return *this;
@@ -199,6 +208,8 @@ CLNF::CLNF(const CLNF&& other)
 
 	this->preference_det = other.preference_det;
 
+	this->loaded_successfully = other.loaded_successfully;
+
 }
 
 // Assignment operator for rvalues
@@ -237,11 +248,13 @@ CLNF & CLNF::operator= (const CLNF&& other)
 
 	this->preference_det = other.preference_det;
 
+	this->loaded_successfully = other.loaded_successfully;
+
 	return *this;
 }
 
 
-void CLNF::Read_CLNF(string clnf_location)
+bool CLNF::Read_CLNF(string clnf_location)
 {
 	// Location of modules
 	ifstream locations(clnf_location.c_str(), ios_base::in);
@@ -250,7 +263,7 @@ void CLNF::Read_CLNF(string clnf_location)
 	{
 		cout << "Couldn't open the CLNF model file aborting" << endl;
 		cout.flush();
-		return;
+		return false;
 	}
 
 	string line;
@@ -294,7 +307,12 @@ void CLNF::Read_CLNF(string clnf_location)
 		if (module.compare("PDM") == 0) 
 		{            
 			cout << "Reading the PDM module from: " << location << "....";
-			pdm.Read(location);
+			bool read_success = pdm.Read(location);
+
+			if (!read_success)
+			{
+				return false;
+			}
 
 			cout << "Done" << endl;
 		}
@@ -302,6 +320,11 @@ void CLNF::Read_CLNF(string clnf_location)
 		{       
 			cout << "Reading the Triangulations module from: " << location << "....";
 			ifstream triangulationFile(location.c_str(), ios_base::in);
+
+			if(!triangulationFile.is_open())
+			{
+				return false;
+			}
 
 			LandmarkDetector::SkipComments(triangulationFile);
 
@@ -337,8 +360,15 @@ void CLNF::Read_CLNF(string clnf_location)
 	} 
   
 	// Initialise the patch experts
-	patch_experts.Read(intensity_expert_locations, ccnf_expert_locations, cen_expert_locations, early_term_loc);
+	bool read_success = patch_experts.Read(intensity_expert_locations, ccnf_expert_locations, cen_expert_locations, early_term_loc);
 
+	if(!read_success)
+	{
+		return false;
+	}
+
+	return true;
+	
 }
 
 void CLNF::Read(string main_location)
@@ -350,6 +380,7 @@ void CLNF::Read(string main_location)
 	if(!locations.is_open())
 	{
 		cout << "Couldn't open the model file, aborting" << endl;
+		loaded_successfully = false;
 		return;
 	}
 	string line;
@@ -389,7 +420,13 @@ void CLNF::Read(string main_location)
 			cout << "Reading the landmark detector module from: " << location << endl;
 
 			// The CLNF module includes the PDM and the patch experts
-			Read_CLNF(location);
+			bool read_success = Read_CLNF(location);
+
+			if(!read_success)
+			{
+				loaded_successfully = false;
+				return;
+			}
 		}
 		else if(module.compare("LandmarkDetector_part") == 0)
 		{
@@ -411,6 +448,12 @@ void CLNF::Read(string main_location)
 			this->hierarchical_mapping.push_back(mappings);
 
 			CLNF part_model(location);
+
+			if (!part_model.loaded_successfully)
+			{
+				loaded_successfully = false;
+				return;
+			}
 
 			this->hierarchical_models.push_back(part_model);
 
@@ -545,6 +588,8 @@ void CLNF::Read(string main_location)
 
 	preference_det.x = -1;
 	preference_det.y = -1;
+
+	loaded_successfully = true;
 
 }
 

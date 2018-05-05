@@ -139,6 +139,9 @@ public:
 	// Tracking which view was used last
 	int view_used;
 
+	// See if the model was read in correctly
+	bool loaded_successfully;
+
 	// A default constructor
 	CLNF();
 
@@ -181,11 +184,11 @@ public:
 
 	// Reading the model in
 	void Read(string name);
-
-	// Helper reading function
-	void Read_CLNF(string clnf_location);
 	
 private:
+
+	// Helper reading function
+	bool Read_CLNF(string clnf_location);
 
 	// the speedup of RLMS using precalculated KDE responses (described in Saragih 2011 RLMS paper)
 	map<int, cv::Mat_<float> >		kde_resp_precalc;

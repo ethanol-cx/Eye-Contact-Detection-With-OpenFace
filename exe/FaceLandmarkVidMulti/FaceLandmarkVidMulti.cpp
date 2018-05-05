@@ -139,6 +139,12 @@ int main(int argc, char **argv)
 
 	LandmarkDetector::CLNF face_model(det_parameters[0].model_location);
 
+	if (!face_model.loaded_successfully)
+	{
+		cout << "ERROR: Could not load the landmark detector" << endl;
+		return 1;
+	}
+
 	// Loading the face detectors
 	face_model.face_detector_HAAR.load(det_parameters[0].haar_face_detector_location);
 	face_model.haar_face_detector_location = det_parameters[0].haar_face_detector_location;

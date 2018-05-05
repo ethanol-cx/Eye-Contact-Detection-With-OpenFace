@@ -117,6 +117,12 @@ int main(int argc, char **argv)
 	// Always track gaze in feature extraction
 	LandmarkDetector::CLNF face_model(det_parameters.model_location);
 
+	if (!face_model.loaded_successfully)
+	{
+		cout << "ERROR: Could not load the landmark detector" << endl;
+		return 1;
+	}
+
 	// Load facial feature extractor and AU analyser
 	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
 	FaceAnalysis::FaceAnalyser face_analyser(face_analysis_params);

@@ -109,6 +109,13 @@ int main(int argc, char **argv)
 	// The modules that are being used for tracking
 	cout << "Loading the model" << endl;
 	LandmarkDetector::CLNF face_model(det_parameters.model_location);
+
+	if (!face_model.loaded_successfully)
+	{
+		cout << "ERROR: Could not load the landmark detector" << endl;
+		return 1;
+	}
+
 	cout << "Model loaded" << endl;
 
 	// Load facial feature extractor and AU analyser (make sure it is static)
