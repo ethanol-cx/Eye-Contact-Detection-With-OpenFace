@@ -83,8 +83,8 @@ namespace Utilities
 		if (t1 < -1) t1 = -1.0f;
 
 		float yaw = asin(t1);
-		float pitch = atan2(2.0 * (q0*q1 - q2*q3), q0*q0 - q1*q1 - q2*q2 + q3*q3);
-		float roll = atan2(2.0 * (q0*q3 - q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3);
+		float pitch = atan2(2.0f * (q0*q1 - q2*q3), q0*q0 - q1*q1 - q2*q2 + q3*q3);
+		float roll = atan2(2.0f * (q0*q3 - q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3);
 
 		return cv::Vec3f(pitch, yaw, roll);
 	}

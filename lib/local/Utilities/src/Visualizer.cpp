@@ -247,7 +247,7 @@ void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::stri
 		for (size_t idx = 0; idx < au_occurences.size(); idx++)
 		{
 			au_names.insert(au_occurences[idx].first);
-			occurences_map[au_occurences[idx].first] = au_occurences[idx].second;
+			occurences_map[au_occurences[idx].first] = au_occurences[idx].second > 0;
 		}
 
 		const int AU_TRACKBAR_LENGTH = 400;
