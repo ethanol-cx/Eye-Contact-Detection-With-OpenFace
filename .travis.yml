@@ -80,4 +80,4 @@ script:
   - cmake -D CMAKE_BUILD_TYPE=RELEASE CMAKE_CXX_FLAGS="-std=c++11" -D CMAKE_EXE_LINKER_FLAGS="-std=c++11" .. 
   - make
   - ../build/bin/FaceLandmarkImg -inroot ../samples -f sample1.jpg -out_dir data -of sample1.txt -multi_view 1 -wild -q
-  - ../build/bin/FeatureExtraction -f "../samples/2015-10-15-15-14.avi" -out_dir output -q
+  - ../build/bin/FeatureExtraction -fdir "../samples/image_sequence" -out_dir output -q
