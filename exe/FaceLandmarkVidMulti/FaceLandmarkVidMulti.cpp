@@ -44,15 +44,6 @@
 #include <GazeEstimation.h>
 #include <FaceAnalyser.h>
 
-#include <fstream>
-#include <sstream>
-
-// OpenCV includes
-#include <opencv2/videoio/videoio.hpp>  // Video write
-#include <opencv2/videoio/videoio_c.h>  // Video write
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
 #define INFO_STREAM( stream ) \
 std::cout << stream << std::endl
 

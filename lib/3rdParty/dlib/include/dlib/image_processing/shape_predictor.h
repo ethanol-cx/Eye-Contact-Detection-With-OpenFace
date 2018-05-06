@@ -707,7 +707,7 @@ namespace dlib
         {
             using namespace impl;
             std::deque<std::pair<unsigned long, unsigned long> > parts;
-            parts.push_back(std::make_pair(0, samples.size()));
+			parts.push_back(std::make_pair((unsigned long)0, (unsigned long)samples.size()));
 
             impl::regression_tree tree;
 

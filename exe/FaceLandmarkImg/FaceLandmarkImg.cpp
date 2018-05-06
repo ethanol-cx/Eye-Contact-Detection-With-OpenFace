@@ -33,21 +33,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // FaceLandmarkImg.cpp : Defines the entry point for the console application for detecting landmarks in images.
 
-#include "LandmarkCoreIncludes.h"
-
-// System includes
-#include <fstream>
-
-// OpenCV includes
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-
-// Boost includes
-#include <filesystem.hpp>
-#include <filesystem/fstream.hpp>
-
 #include <dlib/image_processing/frontal_face_detector.h>
+
+#include "LandmarkCoreIncludes.h"
 
 #include <tbb/tbb.h>
 

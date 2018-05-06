@@ -37,22 +37,9 @@
 #include "LandmarkCoreIncludes.h"
 #include "GazeEstimation.h"
 
-#include <fstream>
-#include <sstream>
-
-// OpenCV includes
-#include <opencv2/videoio/videoio.hpp>  // Video write
-#include <opencv2/videoio/videoio_c.h>  // Video write
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
 #include <SequenceCapture.h>
 #include <Visualizer.h>
 #include <VisualizationUtils.h>
-
-// Boost includes
-#include <filesystem.hpp>
-#include <filesystem/fstream.hpp>
 
 #define INFO_STREAM( stream ) \
 std::cout << stream << std::endl

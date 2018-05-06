@@ -84,26 +84,26 @@ Visualizer::Visualizer(std::vector<std::string> arguments)
 	{
 		if (arguments[i].compare("-verbose") == 0)
 		{
-			vis_track = true;
-			vis_align = true;
-			vis_hog = true;
-			vis_aus = true;
+			this->vis_track = true;
+			this->vis_align = true;
+			this->vis_hog = true;
+			this->vis_aus = true;
 		}
 		else if (arguments[i].compare("-vis-align") == 0)
 		{
-			vis_align = true;
+			this->vis_align = true;
 		}
 		else if (arguments[i].compare("-vis-hog") == 0)
 		{
-			vis_hog = true;
+			this->vis_hog = true;
 		}
 		else if (arguments[i].compare("-vis-track") == 0)
 		{
-			vis_track = true;
+			this->vis_track = true;
 		}
 		else if (arguments[i].compare("-vis-aus") == 0)
 		{
-			vis_aus = true;
+			this->vis_aus = true;
 		}
 	}
 
