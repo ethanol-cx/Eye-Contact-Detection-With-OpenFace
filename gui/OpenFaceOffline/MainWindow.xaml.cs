@@ -40,7 +40,6 @@ using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Media.Imaging;
 using System.Windows.Controls;
-using System.Windows.Interactivity;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
 // Internal libraries
