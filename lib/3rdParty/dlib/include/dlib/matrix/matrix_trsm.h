@@ -10,6 +10,7 @@ namespace dlib
     namespace blas_bindings
     {
 
+	#ifndef CBLAS_H
         extern "C"
         {
             void cblas_strsm(const enum CBLAS_ORDER Order, const enum CBLAS_SIDE Side,
@@ -26,6 +27,7 @@ namespace dlib
         }
 
     // ------------------------------------------------------------------------------------
+	#endif // if not CBLAS_H
 
 /*  Purpose */
 /*  ======= */
