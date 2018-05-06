@@ -6,7 +6,7 @@ Create_data_train.m and Create_data_test.m
 The data generation code requires you to have the patch expert training data (Menpo, Multi-PIE and 300W data, not included) for positive examples, and inriaperson dataset for negative samples (not included as well). 
 
 To train Convolutional Neural Network based face landmark validation model use:
-train_CNN_model.m
+Train_face_checker_cnn.m
 
 This will produce trained/face_checker_cnn_*.mat and trained/face_checker_cnn_*.txt files that can be used in C++ and matlab versions of OpenFace for face validation. Old versions can also be found in trained folder (they are simpler CNN models trained on smaller datasets).
 

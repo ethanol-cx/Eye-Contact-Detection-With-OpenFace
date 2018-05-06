@@ -48,6 +48,7 @@ using CppInterop;
 using CppInterop.LandmarkDetector;
 using System.Windows.Threading;
 using GazeAnalyser_Interop;
+using FaceDetectorInterop;
 
 using ZeroMQ;
 using System.Drawing;
@@ -112,7 +113,7 @@ namespace HeadPoseLive
 
         System.IO.StreamWriter recording_success_file = null;
 
-        ConcurrentQueue<Tuple<RawImage, bool, List<double>>> recording_objects;
+        ConcurrentQueue<Tuple<RawImage, bool, List<float>>> recording_objects;
 
         // For broadcasting the results
         ZeroMQ.ZContext zero_mq_context;
@@ -282,9 +283,9 @@ namespace HeadPoseLive
 
         }
 
-        private bool ProcessFrame(CLNF landmark_detector, GazeAnalyserManaged gaze_analyser, FaceModelParameters model_params, RawImage frame, RawImage grayscale_frame, double fx, double fy, double cx, double cy)
+        private bool ProcessFrame(CLNF landmark_detector, GazeAnalyserManaged gaze_analyser, FaceModelParameters model_params, RawImage frame, RawImage grayscale_frame, float fx, float fy, float cx, float cy)
         {
-            bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(grayscale_frame, model_params);
+            bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(frame, model_params, grayscale_frame);
             gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, fx, fy, cx, cy);
             return detection_succeeding;
 
@@ -320,7 +321,7 @@ namespace HeadPoseLive
 
             while (recording)
             {
-                Tuple<RawImage, bool, List<double>> recording_object;
+                Tuple<RawImage, bool, List<float>> recording_object;
                 if (recording_objects.TryDequeue(out recording_object))
                 {
 
@@ -369,7 +370,17 @@ namespace HeadPoseLive
             Thread.CurrentThread.IsBackground = true;
 
             String root = AppDomain.CurrentDomain.BaseDirectory;
-            FaceModelParameters model_params = new FaceModelParameters(root, false);
+            FaceModelParameters model_params = new FaceModelParameters(root, true, false, false);
+
+            // Initialize the face detector
+            FaceDetector face_detector = new FaceDetector(model_params.GetHaarLocation(), model_params.GetMTCNNLocation());
+
+            // If MTCNN model not available, use HOG
+            if (!face_detector.IsMTCNNLoaded())
+            {
+                model_params.SetFaceDetector(false, true, false);
+            }
+
             CLNF face_model = new CLNF(model_params);
             GazeAnalyserManaged gaze_analyser = new GazeAnalyserManaged();
 
@@ -404,24 +415,25 @@ namespace HeadPoseLive
                     if (recording)
                     {
                         // Add objects to recording queues
-                        List<double> pose = new List<double>();
+                        List<float> pose = new List<float>();
                         face_model.GetPose(pose, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
                         RawImage image = new RawImage(frame);
-                        recording_objects.Enqueue(new Tuple<RawImage, bool, List<double>>(image, detectionSucceeding, pose));
+                        recording_objects.Enqueue(new Tuple<RawImage, bool, List<float>>(image, detectionSucceeding, pose));
 
                     }
                 }
 
                 List<Tuple<System.Windows.Point, System.Windows.Point>> lines = null;
-                List<Tuple<double, double>> eye_landmarks = null;
+                List<Tuple<float, float>> eye_landmarks = null;
                 List<System.Windows.Point> landmarks = new List<System.Windows.Point>();
                 List<Tuple<System.Windows.Point, System.Windows.Point>> gaze_lines = null;
-                Tuple<double, double> gaze_angle = new Tuple<double, double>(0, 0);
+                Tuple<float, float> gaze_angle = new Tuple<float, float>(0, 0);
+                var visibilities = face_model.GetVisibilities();
                 double scale = face_model.GetRigidParams()[0];
 
                 if (detectionSucceeding)
                 {
-                    List<Tuple<double, double>> landmarks_doubles = face_model.CalculateVisibleLandmarks();
+                    List<Tuple<float, float>> landmarks_doubles = face_model.CalculateAllLandmarks();
 
                     foreach (var p in landmarks_doubles)
                         landmarks.Add(new System.Windows.Point(p.Item1, p.Item2));
@@ -448,7 +460,7 @@ namespace HeadPoseLive
                         if (latest_img == null)
                             latest_img = frame.CreateWriteableBitmap();
 
-                        List<double> pose = new List<double>();
+                        List<float> pose = new List<float>();
                         face_model.GetPose(pose, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
                         int yaw = (int)(pose[4] * 180 / Math.PI + 0.5);
@@ -516,22 +528,17 @@ namespace HeadPoseLive
                             confidence = 1;
 
                         frame.UpdateWriteableBitmap(latest_img);
+                        webcam_img.Clear();
 
                         webcam_img.Source = latest_img;
-                        webcam_img.Confidence = confidence;
+                        webcam_img.Confidence.Add(confidence);
                         webcam_img.FPS = processing_fps.GetFPS();
-                        if (!detectionSucceeding)
+                        if(detectionSucceeding)
                         {
-                            webcam_img.OverlayLines.Clear();
-                            webcam_img.OverlayPoints.Clear();
-                            webcam_img.OverlayEyePoints.Clear();
-                            webcam_img.GazeLines.Clear();
-                        }
-                        else
-                        {
-                            webcam_img.OverlayLines = lines;
-                            webcam_img.OverlayPoints = landmarks;
-                            webcam_img.FaceScale = scale;
+                            webcam_img.OverlayLines.Add(lines);
+                            webcam_img.OverlayPoints.Add(landmarks);
+                            webcam_img.OverlayPointsVisibility.Add(visibilities);
+                            webcam_img.FaceScale.Add(scale);
 
                             List<System.Windows.Point> eye_landmark_points = new List<System.Windows.Point>();
                             foreach (var p in eye_landmarks)
@@ -540,8 +547,8 @@ namespace HeadPoseLive
                             }
 
 
-                            webcam_img.OverlayEyePoints = eye_landmark_points;
-                            webcam_img.GazeLines = gaze_lines;
+                            webcam_img.OverlayEyePoints.Add(eye_landmark_points);
+                            webcam_img.GazeLines.Add(gaze_lines);
 
                             // Publish the information for other applications
                             String str_head_pose = String.Format("{0}:{1:F2}, {2:F2}, {3:F2}, {4:F2}, {5:F2}, {6:F2}", "HeadPose", pose[0], pose[1], pose[2],
@@ -580,7 +587,7 @@ namespace HeadPoseLive
                 CompleteButton.IsEnabled = false;
                 PauseButton.IsEnabled = false;
 
-                recording_objects = new ConcurrentQueue<Tuple<RawImage, bool, List<double>>>();
+                recording_objects = new ConcurrentQueue<Tuple<RawImage, bool, List<float>>>();
 
                 recording = true;
 

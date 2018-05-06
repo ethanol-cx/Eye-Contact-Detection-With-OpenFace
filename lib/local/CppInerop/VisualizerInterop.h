@@ -59,34 +59,34 @@ namespace UtilitiesOF {
 			m_visualizer = new Utilities::Visualizer(vis_track, vis_hog, vis_aligned, vis_aus);
 		}
 
-		void SetObservationGaze(System::Tuple<double, double, double>^ gaze_direction0, System::Tuple<double, double, double>^ gaze_direction1,
-			List<System::Tuple<double, double>^>^ landmarks_2D, List<System::Tuple<double, double, double>^>^ landmarks_3D,
+		void SetObservationGaze(System::Tuple<float, float, float>^ gaze_direction0, System::Tuple<float, float, float>^ gaze_direction1,
+			List<System::Tuple<float, float>^>^ landmarks_2D, List<System::Tuple<float, float, float>^>^ landmarks_3D,
 			double confidence)
 		{
 			cv::Point3f gaze_direction0_cv(gaze_direction0->Item1, gaze_direction0->Item2, gaze_direction0->Item3);
 			cv::Point3f gaze_direction1_cv(gaze_direction1->Item1, gaze_direction1->Item2, gaze_direction1->Item3);
 
 			// Construct an OpenCV matrix from the landmarks
-			std::vector<cv::Point2d> landmarks_2D_cv;
+			std::vector<cv::Point2f> landmarks_2D_cv;
 			for (int i = 0; i < landmarks_2D->Count; ++i)
 			{
-				landmarks_2D_cv.push_back(cv::Point2d(landmarks_2D[i]->Item1, landmarks_2D[i]->Item2));
+				landmarks_2D_cv.push_back(cv::Point2f(landmarks_2D[i]->Item1, landmarks_2D[i]->Item2));
 			}
 
 			// Construct an OpenCV matrix from the landmarks
-			std::vector<cv::Point3d> landmarks_3D_cv;
+			std::vector<cv::Point3f> landmarks_3D_cv;
 			for (int i = 0; i < landmarks_3D->Count; ++i)
 			{
-				landmarks_3D_cv.push_back(cv::Point3d(landmarks_3D[i]->Item1, landmarks_3D[i]->Item2, landmarks_3D[i]->Item3));
+				landmarks_3D_cv.push_back(cv::Point3f(landmarks_3D[i]->Item1, landmarks_3D[i]->Item2, landmarks_3D[i]->Item3));
 			}
 
 			m_visualizer->SetObservationGaze(gaze_direction0_cv, gaze_direction1_cv, landmarks_2D_cv, landmarks_3D_cv, confidence);
 		}
 
 		// Setting the observations
-		void SetObservationPose(List<double>^ pose, double confidence)
+		void SetObservationPose(List<float>^ pose, double confidence)
 		{
-			cv::Vec6d pose_vec(pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
+			cv::Vec6f pose_vec(pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
 			m_visualizer->SetObservationPose(pose_vec, confidence);
 		}
 
@@ -100,14 +100,14 @@ namespace UtilitiesOF {
 			m_visualizer->SetObservationHOG(observation_HOG->Mat, num_cols, num_rows);
 		}
 
-		void SetObservationLandmarks(List<System::Tuple<double, double>^>^ landmarks_2D, double confidence, List<bool>^ visibilities)
+		void SetObservationLandmarks(List<System::Tuple<float, float>^>^ landmarks_2D, double confidence, List<bool>^ visibilities)
 		{
 			// Construct an OpenCV matrix from the landmarks
-			cv::Mat_<double> landmarks_2D_mat(landmarks_2D->Count * 2, 1, 0.0);
+			cv::Mat_<float> landmarks_2D_mat(landmarks_2D->Count * 2, 1, 0.0);
 			for (int i = 0; i < landmarks_2D->Count; ++i)
 			{
-				landmarks_2D_mat.at<double>(i, 0) = landmarks_2D[i]->Item1;
-				landmarks_2D_mat.at<double>(i + landmarks_2D->Count, 0) = landmarks_2D[i]->Item2;
+				landmarks_2D_mat.at<float>(i, 0) = landmarks_2D[i]->Item1;
+				landmarks_2D_mat.at<float>(i + landmarks_2D->Count, 0) = landmarks_2D[i]->Item2;
 			}
 
 			// Construct an OpenCV matrix from the landmarks
@@ -127,7 +127,7 @@ namespace UtilitiesOF {
 			m_visualizer->SetObservationLandmarks(landmarks_2D_mat, confidence, visibilities_cv);
 		}
 
-		void SetObservationLandmarks(List<System::Tuple<double, double>^>^ landmarks_2D, double confidence)
+		void SetObservationLandmarks(List<System::Tuple<float, float>^>^ landmarks_2D, double confidence)
 		{
 			SetObservationLandmarks(landmarks_2D, confidence, gcnew List<bool>());
 		}

@@ -85,18 +85,32 @@ namespace CppInterop {
 		public:
 
 			// Initialise the parameters
-			FaceModelParameters(System::String^ root, bool demo)
+			FaceModelParameters(System::String^ root, bool ceclm, bool clnf, bool clm)
 			{
 				std::string root_std = msclr::interop::marshal_as<std::string>(root);
 				vector<std::string> args;
 				args.push_back(root_std);
 
+				std::string model_loc = "model/main_ceclm_general.txt";
+				if (ceclm)
+				{
+					model_loc = "model/main_ceclm_general.txt";
+				}
+				else if(clnf)
+				{
+					model_loc = "model/main_clnf_general.txt";
+				}
+				else if (clm)
+				{
+					model_loc = "model/main_clm_general.txt";
+
+				}
+
+				args.push_back("-mloc");
+				args.push_back(model_loc);
+
 				params = new ::LandmarkDetector::FaceModelParameters(args);
 
-				if(demo)
-				{
-					params->model_location = "model/main_clnf_demos.txt";
-				}
 
 			}
 
@@ -110,7 +124,7 @@ namespace CppInterop {
 				params->window_sizes_small[0] = 0;
 				params->window_sizes_small[1] = 9;
 				params->window_sizes_small[2] = 7;
-				params->window_sizes_small[3] = 5;
+				params->window_sizes_small[3] = 0;
 
 				// Just for initialisation
 				params->window_sizes_init.at(0) = 11;
@@ -127,7 +141,55 @@ namespace CppInterop {
 				params->sigma = 1.5;
 				params->reg_factor = 25;
 				params->weight_factor = 0;
-			}			
+
+				// Parameter optimizations for CE-CLM
+				if (params->curr_landmark_detector == ::LandmarkDetector::FaceModelParameters::CECLM_DETECTOR)
+				{
+					params->sigma = 1.5f * params->sigma;
+					params->reg_factor = 0.9f * params->reg_factor;
+				}
+			}
+
+			bool IsCECLM()
+			{
+				return params->curr_landmark_detector == ::LandmarkDetector::FaceModelParameters::CECLM_DETECTOR;
+			}
+
+			bool IsCLNF()
+			{
+				return params->curr_landmark_detector == ::LandmarkDetector::FaceModelParameters::CLNF_DETECTOR;
+			}
+
+			bool IsCLM()
+			{
+				return params->curr_landmark_detector == ::LandmarkDetector::FaceModelParameters::CLM_DETECTOR;
+			}
+
+			System::String^ GetMTCNNLocation()
+			{
+				return gcnew System::String(params->mtcnn_face_detector_location.c_str());
+			}
+
+			System::String^ GetHaarLocation()
+			{
+				return gcnew System::String(params->haar_face_detector_location.c_str());
+			}
+
+			void SetFaceDetector(bool haar, bool hog, bool cnn)
+			{
+				if (cnn)
+				{
+					params->curr_face_detector = params->MTCNN_DETECTOR;
+				}
+				else if (hog)
+				{
+					params->curr_face_detector = params->HOG_SVM_DETECTOR;
+				}
+				else if (haar)
+				{
+					params->curr_face_detector = params->HAAR_DETECTOR;
+				}
+			}
 
 			void optimiseForImages()
 			{
@@ -135,7 +197,7 @@ namespace CppInterop {
 				params->window_sizes_init[0] = 15;
 				params->window_sizes_init[1] = 13; 
 				params->window_sizes_init[2] = 11; 
-				params->window_sizes_init[3] = 9;
+				params->window_sizes_init[3] = 11;
 
 				params->multi_view = true;
 
@@ -143,15 +205,28 @@ namespace CppInterop {
 				params->reg_factor = 35;
 				params->weight_factor = 2.5;
 				params->num_optimisation_iteration = 10;
+
+				// Parameter optimizations for CE-CLM
+				if (params->curr_landmark_detector == ::LandmarkDetector::FaceModelParameters::MTCNN_DETECTOR)
+				{
+					params->sigma = 1.5f * params->sigma;
+					params->reg_factor = 0.9f * params->reg_factor;
+				}
+
 			}			
 
 			::LandmarkDetector::FaceModelParameters* getParams() {
 				return params;
 			}
 
-			~FaceModelParameters()
+			!FaceModelParameters()
 			{
 				delete params;
+			}
+
+			~FaceModelParameters()
+			{
+				this->!FaceModelParameters();
 			}
 
 		};
@@ -171,12 +246,24 @@ namespace CppInterop {
 			CLNF(FaceModelParameters^ params)
 			{				
 				clnf = new ::LandmarkDetector::CLNF(params->getParams()->model_location);
+
 			}
 			
-			~CLNF()
+			!CLNF()
 			{
 				delete clnf;
 			}
+
+			~CLNF()
+			{
+				this->!CLNF();
+			}
+
+			bool isLoaded()
+			{
+				return clnf->loaded_successfully;
+			}
+
 
 			::LandmarkDetector::CLNF* getCLNF() {
 				return clnf;
@@ -190,26 +277,29 @@ namespace CppInterop {
 				clnf->Reset(x, y);
 			}
 
+			bool HasEyeModel() {
+				return clnf->eye_model;
+			}
 
 			double GetConfidence()
 			{
 				return clnf->detection_certainty;
 			}
 
-			bool DetectLandmarksInVideo(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {
-				return ::LandmarkDetector::DetectLandmarksInVideo(image->Mat, *clnf, *modelParams->getParams());
+			bool DetectLandmarksInVideo(OpenCVWrappers::RawImage^ rgb_image, FaceModelParameters^ modelParams, OpenCVWrappers::RawImage^ gray_image) {
+				return ::LandmarkDetector::DetectLandmarksInVideo(rgb_image->Mat, *clnf, *modelParams->getParams(), gray_image->Mat);
 			}
 
-			bool DetectFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, FaceModelParameters^ modelParams) {
-				return ::LandmarkDetector::DetectLandmarksInImage(image->Mat, *clnf, *modelParams->getParams());
+			bool DetectFaceLandmarksInImage(OpenCVWrappers::RawImage^ rgb_image, FaceModelParameters^ modelParams, OpenCVWrappers::RawImage^ gray_image) {
+				return ::LandmarkDetector::DetectLandmarksInImage(rgb_image->Mat, *clnf, *modelParams->getParams(), gray_image->Mat);
 			}
 			
-			bool DetectFaceLandmarksInImage(OpenCVWrappers::RawImage^ image, Rect^ bounding_box, FaceModelParameters^ modelParams) {
-				cv::Rect_<double> bbox(bounding_box->Left, bounding_box->Top, bounding_box->Width, bounding_box->Height);
-				return ::LandmarkDetector::DetectLandmarksInImage(image->Mat, bbox, *clnf, *modelParams->getParams());
+			bool DetectFaceLandmarksInImage(OpenCVWrappers::RawImage^ rgb_image, Rect^ bounding_box, FaceModelParameters^ modelParams, OpenCVWrappers::RawImage^ gray_image) {
+				cv::Rect_<float> bbox(bounding_box->Left, bounding_box->Top, bounding_box->Width, bounding_box->Height);
+				return ::LandmarkDetector::DetectLandmarksInImage(rgb_image->Mat, bbox, *clnf, *modelParams->getParams(), gray_image->Mat);
 			}
 
-			void GetPoseWRTCamera(List<double>^ pose, double fx, double fy, double cx, double cy) {
+			void GetPoseWRTCamera(List<float>^ pose, float fx, float fy, float cx, float cy) {
 				auto pose_vec = ::LandmarkDetector::GetPoseWRTCamera(*clnf, fx, fy, cx, cy);
 				pose->Clear();
 				for(int i = 0; i < 6; ++i)
@@ -218,7 +308,7 @@ namespace CppInterop {
 				}
 			}
 
-			void GetPose(List<double>^ pose, double fx, double fy, double cx, double cy) {
+			void GetPose(List<float>^ pose, float fx, float fy, float cx, float cy) {
 				auto pose_vec = ::LandmarkDetector::GetPose(*clnf, fx, fy, cx, cy);
 				pose->Clear();
 				for(int i = 0; i < 6; ++i)
@@ -240,70 +330,70 @@ namespace CppInterop {
 				return visibilities;
 			}
 
-			List<System::Tuple<double,double>^>^ CalculateVisibleLandmarks() {
-				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateVisibleLandmarks(*clnf);
+			List<System::Tuple<float,float>^>^ CalculateVisibleLandmarks() {
+				vector<cv::Point2f> vecLandmarks = ::LandmarkDetector::CalculateVisibleLandmarks(*clnf);
 				
-				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double,double>^>();
-				for(cv::Point2d p : vecLandmarks) {
-					landmarks->Add(gcnew System::Tuple<double,double>(p.x, p.y));
+				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<float, float>^>();
+				for(cv::Point2f p : vecLandmarks) {
+					landmarks->Add(gcnew System::Tuple<float, float>(p.x, p.y));
 				}
 
 				return landmarks;
 			}
 
-			List<System::Tuple<double, double>^>^ CalculateAllLandmarks() {
-				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateAllLandmarks(*clnf);
+			List<System::Tuple<float, float>^>^ CalculateAllLandmarks() {
+				vector<cv::Point2f> vecLandmarks = ::LandmarkDetector::CalculateAllLandmarks(*clnf);
 
-				auto landmarks = gcnew List<System::Tuple<double, double>^>();
-				for (cv::Point2d p : vecLandmarks) {
-					landmarks->Add(gcnew System::Tuple<double, double>(p.x, p.y));
+				auto landmarks = gcnew List<System::Tuple<float, float>^>();
+				for (cv::Point2f p : vecLandmarks) {
+					landmarks->Add(gcnew System::Tuple<float, float>(p.x, p.y));
 				}
 
 				return landmarks;
 			}
 
-			List<System::Tuple<double, double>^>^ CalculateAllEyeLandmarks() {
-				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateAllEyeLandmarks(*clnf);
+			List<System::Tuple<float, float>^>^ CalculateAllEyeLandmarks() {
+				vector<cv::Point2f> vecLandmarks = ::LandmarkDetector::CalculateAllEyeLandmarks(*clnf);
 
-				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double, double>^>();
-				for (cv::Point2d p : vecLandmarks) {
-					landmarks->Add(gcnew System::Tuple<double, double>(p.x, p.y));
+				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<float, float>^>();
+				for (cv::Point2f p : vecLandmarks) {
+					landmarks->Add(gcnew System::Tuple<float, float>(p.x, p.y));
 				}
 
 				return landmarks;
 			}
 
-			List<System::Tuple<double, double, double>^>^ CalculateAllEyeLandmarks3D(double fx, double fy, double cx, double cy) {
-				vector<cv::Point3d> vecLandmarks = ::LandmarkDetector::Calculate3DEyeLandmarks(*clnf, fx, fy, cx, cy);
+			List<System::Tuple<float, float, float>^>^ CalculateAllEyeLandmarks3D(float fx, float fy, float cx, float cy) {
+				vector<cv::Point3f> vecLandmarks = ::LandmarkDetector::Calculate3DEyeLandmarks(*clnf, fx, fy, cx, cy);
 
-				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double, double, double>^>();
-				for (cv::Point3d p : vecLandmarks) {
-					landmarks->Add(gcnew System::Tuple<double, double, double>(p.x, p.y, p.z));
+				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<float, float, float>^>();
+				for (cv::Point3f p : vecLandmarks) {
+					landmarks->Add(gcnew System::Tuple<float, float, float>(p.x, p.y, p.z));
 				}
 
 				return landmarks;
 			}
 
-			List<System::Tuple<double, double>^>^ CalculateVisibleEyeLandmarks() {
-				vector<cv::Point2d> vecLandmarks = ::LandmarkDetector::CalculateVisibleEyeLandmarks(*clnf);
+			List<System::Tuple<float, float>^>^ CalculateVisibleEyeLandmarks() {
+				vector<cv::Point2f> vecLandmarks = ::LandmarkDetector::CalculateVisibleEyeLandmarks(*clnf);
 
-				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<double, double>^>();
-				for (cv::Point2d p : vecLandmarks) {
-					landmarks->Add(gcnew System::Tuple<double, double>(p.x, p.y));
+				auto landmarks = gcnew System::Collections::Generic::List<System::Tuple<float, float>^>();
+				for (cv::Point2f p : vecLandmarks) {
+					landmarks->Add(gcnew System::Tuple<float, float>(p.x, p.y));
 				}
 
 				return landmarks;
 			}
 
-			List<System::Tuple<double, double, double>^>^ Calculate3DLandmarks(double fx, double fy, double cx, double cy) {
+			List<System::Tuple<float, float, float>^>^ Calculate3DLandmarks(float fx, float fy, float cx, float cy) {
 				
-				cv::Mat_<double> shape3D = clnf->GetShape(fx, fy, cx, cy);
+				cv::Mat_<float> shape3D = clnf->GetShape(fx, fy, cx, cy);
 				
-				auto landmarks_3D = gcnew List<System::Tuple<double, double, double>^>();
+				auto landmarks_3D = gcnew List<System::Tuple<float, float, float>^>();
 				
 				for(int i = 0; i < shape3D.cols; ++i) 
 				{
-					landmarks_3D->Add(gcnew System::Tuple<double, double, double>(shape3D.at<double>(0, i), shape3D.at<double>(1, i), shape3D.at<double>(2, i)));
+					landmarks_3D->Add(gcnew System::Tuple<float, float, float>(shape3D.at<float>(0, i), shape3D.at<float>(1, i), shape3D.at<float>(2, i)));
 				}
 
 				return landmarks_3D;
@@ -311,13 +401,13 @@ namespace CppInterop {
 
 			List<System::Tuple<System::Windows::Point, System::Windows::Point>^>^ CalculateBox(float fx, float fy, float cx, float cy) {
 
-				cv::Vec6d pose = ::LandmarkDetector::GetPose(*clnf, fx,fy, cx, cy);
+				cv::Vec6f pose = ::LandmarkDetector::GetPose(*clnf, fx,fy, cx, cy);
 
-				vector<pair<cv::Point2d, cv::Point2d>> vecLines = ::Utilities::CalculateBox(pose, fx, fy, cx, cy);
+				vector<pair<cv::Point2f, cv::Point2f>> vecLines = ::Utilities::CalculateBox(pose, fx, fy, cx, cy);
 
 				auto lines = gcnew List<System::Tuple<System::Windows::Point,System::Windows::Point>^>();
 
-				for(pair<cv::Point2d, cv::Point2d> line : vecLines) {
+				for(pair<cv::Point2f, cv::Point2f> line : vecLines) {
 					lines->Add(gcnew System::Tuple<System::Windows::Point, System::Windows::Point>(System::Windows::Point(line.first.x, line.first.y), System::Windows::Point(line.second.x, line.second.y)));
 				}
 
@@ -335,22 +425,22 @@ namespace CppInterop {
 			}
 
 			// Getting the non-rigid shape parameters describing the facial expression
-			List<double>^ GetNonRigidParams()
+			List<float>^ GetNonRigidParams()
 			{
-				auto non_rigid_params = gcnew List<double>();
+				auto non_rigid_params = gcnew List<float>();
 
 				for (int i = 0; i < clnf->params_local.rows; ++i)
 				{
-					non_rigid_params->Add(clnf->params_local.at<double>(i));
+					non_rigid_params->Add(clnf->params_local.at<float>(i));
 				}
 
 				return non_rigid_params;
 			}
 
 			// Getting the rigid shape parameters describing face scale rotation and translation (scale,rotx,roty,rotz,tx,ty)
-			List<double>^ GetRigidParams()
+			List<float>^ GetRigidParams()
 			{
-				auto rigid_params = gcnew List<double>();
+				auto rigid_params = gcnew List<float>();
 
 				for (size_t i = 0; i < 6; ++i)
 				{
@@ -360,7 +450,7 @@ namespace CppInterop {
 			}
 
 			// Rigid params followed by non-rigid ones
-			List<double>^ GetParams()
+			List<float>^ GetParams()
 			{
 				auto all_params = GetRigidParams();
 				all_params->AddRange(GetNonRigidParams());

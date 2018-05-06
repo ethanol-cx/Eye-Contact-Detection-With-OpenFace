@@ -14,7 +14,7 @@ svm_combined/AU_20_dynamic.dat AU20
 svm_combined/AU_23_static.dat AU23
 svm_combined/AU_25_dynamic.dat AU25
 svm_combined/AU_26_dynamic.dat AU26
-svm_combined/AU_28_static.dat AU28
+svm_combined/AU_28_dynamic.dat AU28
 svm_combined/AU_45_dynamic.dat AU45
 svr_combined/AU_1_dynamic_intensity_comb.dat AU01
 svr_combined/AU_2_dynamic_intensity_comb.dat AU02

@@ -74,7 +74,7 @@ namespace LandmarkDetector
 {
 //===========================================================================
 //
-// Checking if landmark detection was successful using an SVR regressor
+// Checking if landmark detection was successful using a CNN
 // Using multiple validators trained add different views
 // The regressor outputs 1 for ideal alignment and 0 for worst alignment
 //===========================================================================
@@ -83,9 +83,6 @@ class DetectionValidator
 		
 public:    
 	
-	// What type of validator we're using - 0 - linear svr, 1 - feed forward neural net, 2 - convolutional neural net, 3 - new version of convolutional neural net
-	int validator_type;
-
 	// The orientations of each of the landmark detection validator
 	vector<cv::Vec3d> orientations;
 
@@ -93,49 +90,25 @@ public:
 	vector<PAW>     paws;
 
 	//==========================================
-	// Linear SVR
-
-	// SVR biases
-	vector<double>  bs;
-
-	// SVR weights
-	vector<cv::Mat_<double> > ws;
-	
-	//==========================================
-	// Neural Network
-
-	// Neural net weights
-	vector<vector<cv::Mat_<double> > > ws_nn;
-
-	// What type of activation or output functions are used
-	// 0 - sigmoid, 1 - tanh_opt, 2 - ReLU
-	vector<int> activation_fun;
-	vector<int> output_fun;
-
-	//==========================================
 	// Convolutional Neural Network
 
 	// CNN layers for each view
-	// view -> layer -> input maps -> kernels
+	// view -> layer
 	vector<vector<vector<vector<cv::Mat_<float> > > > > cnn_convolutional_layers;
-	// Bit ugly with so much nesting, but oh well
-	vector<vector<vector<vector<pair<int, cv::Mat_<double> > > > > > cnn_convolutional_layers_dft;
-	vector<vector<vector<float > > > cnn_convolutional_layers_bias;
+	vector<vector<cv::Mat_<float> > > cnn_convolutional_layers_weights;
+	vector<vector<cv::Mat_<float> > > cnn_convolutional_layers_im2col_precomp;
+
 	vector< vector<int> > cnn_subsampling_layers;
 	vector< vector<cv::Mat_<float> > > cnn_fully_connected_layers_weights;
-	vector< vector<float > > cnn_fully_connected_layers_bias;
-	// OLD CNN: 0 - convolutional, 1 - subsampling, 2 - fully connected
+	vector< vector<cv::Mat_<float>  > > cnn_fully_connected_layers_biases;
 	// NEW CNN: 0 - convolutional, 1 - max pooling (2x2 stride 2), 2 - fully connected, 3 - relu, 4 - sigmoid
 	vector<vector<int> > cnn_layer_types;
 	
-	// Extra params for the new CNN
-	vector< vector<cv::Mat_<float>  > > cnn_fully_connected_layers_biases;
-
 	//==========================================
 
 	// Normalisation for face validation
-	vector<cv::Mat_<double> > mean_images;
-	vector<cv::Mat_<double> > standard_deviations;
+	vector<cv::Mat_<float> > mean_images;
+	vector<cv::Mat_<float> > standard_deviations;
 
 	// Default constructor
 	DetectionValidator(){;}
@@ -144,7 +117,7 @@ public:
 	DetectionValidator(const DetectionValidator& other);
 
 	// Given an image, orientation and detected landmarks output the result of the appropriate regressor
-	double Check(const cv::Vec3d& orientation, const cv::Mat_<uchar>& intensity_img, cv::Mat_<double>& detected_landmarks);
+	float Check(const cv::Vec3d& orientation, const cv::Mat_<uchar>& intensity_img, cv::Mat_<float>& detected_landmarks);
 
 	// Reading in the model
 	void Read(string location);
@@ -156,23 +129,11 @@ private:
 
 	// The actual regressor application on the image
 
-	// Support Vector Regression (linear kernel)
-	double CheckSVR(const cv::Mat_<double>& warped_img, int view_id);
-
-	// Feed-forward Neural Network
-	double CheckNN(const cv::Mat_<double>& warped_img, int view_id);
-
 	// Convolutional Neural Network
-	double CheckCNN_tbb(const cv::Mat_<double>& warped_img, int view_id);
-
-	// Convolutional Neural Network
-	double CheckCNN(const cv::Mat_<double>& warped_img, int view_id);
-
-	// Convolutional Neural Network
-	double CheckCNN_old(const cv::Mat_<double>& warped_img, int view_id);
+	double CheckCNN(const cv::Mat_<float>& warped_img, int view_id);
 
 	// A normalisation helper
-	void NormaliseWarpedToVector(const cv::Mat_<double>& warped_img, cv::Mat_<double>& feature_vec, int view_id);
+	void NormaliseWarpedToVector(const cv::Mat_<float>& warped_img, cv::Mat_<float>& feature_vec, int view_id);
 
 };
 

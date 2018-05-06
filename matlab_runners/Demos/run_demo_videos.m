@@ -11,7 +11,10 @@ end
 in_files = dir('../../samples/*.wmv');
 in_files = cat(1, in_files, dir('../../samples/*.avi'));
 
-model = 'model/main_clnf_general.txt'; % Trained on in the wild and multi-pie data (a CLNF model)
+model = 'model/main_ceclm_general.txt'; % Trained on in the wild, menpo and multi-pie data (a CE-CLM model)
+
+% Uncomment the below models if you want to try them
+%model = 'model/main_clnf_general.txt'; % Trained on in the wild and multi-pie data (a CLNF model)
 
 % Uncomment the below models if you want to try them
 %model = 'model/main_clnf_wild.txt'; % Trained on in-the-wild data only

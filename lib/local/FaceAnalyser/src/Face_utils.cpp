@@ -114,7 +114,7 @@ namespace FaceAnalysis
 	}
 
 	// Aligning a face to a common reference frame
-	void AlignFace(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const PDM& pdm, bool rigid, float sim_scale, int out_width, int out_height)
+	void AlignFace(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const LandmarkDetector::PDM& pdm, bool rigid, float sim_scale, int out_width, int out_height)
 	{
 		// Will warp to scaled mean shape
 		cv::Mat_<float> similarity_normalised_shape = pdm.mean_shape * sim_scale;
@@ -153,7 +153,7 @@ namespace FaceAnalysis
 	}
 
 	// Aligning a face to a common reference frame
-	void AlignFaceMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid, float sim_scale, int out_width, int out_height)
+	void AlignFaceMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const LandmarkDetector::PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid, float sim_scale, int out_width, int out_height)
 	{
 		// Will warp to scaled mean shape
 		cv::Mat_<float> similarity_normalised_shape = pdm.mean_shape * sim_scale;
@@ -215,7 +215,7 @@ namespace FaceAnalysis
 
 		destination_landmarks = cv::Mat(destination_landmarks.t()).reshape(1, 1).t();
 
-		FaceAnalysis::PAW paw(destination_landmarks, triangulation, 0, 0, aligned_face.cols-1, aligned_face.rows-1);
+		LandmarkDetector::PAW paw(destination_landmarks, triangulation, 0, 0, aligned_face.cols-1, aligned_face.rows-1);
 		
 		// Mask each of the channels (a bit of a roundabout way, but OpenCV 3.1 in debug mode doesn't seem to be able to handle a more direct way using split and merge)
 		vector<cv::Mat> aligned_face_channels(aligned_face.channels());
@@ -414,52 +414,6 @@ namespace FaceAnalysis
 		return A;
 
 	}
-
-
-	//===========================================================================
-	// Visualisation functions, TODO rem
-	//===========================================================================
-	void Project(cv::Mat_<float>& dest, const cv::Mat_<float>& mesh, float fx, float fy, float cx, float cy)
-	{
-		dest = cv::Mat_<float>(mesh.rows, 2, 0.0);
-
-		int num_points = mesh.rows;
-
-		float X, Y, Z;
-
-
-		cv::Mat_<float>::const_iterator mData = mesh.begin();
-		cv::Mat_<float>::iterator projected = dest.begin();
-
-		for (int i = 0; i < num_points; i++)
-		{
-			// Get the points
-			X = *(mData++);
-			Y = *(mData++);
-			Z = *(mData++);
-
-			float x;
-			float y;
-
-			// if depth is 0 the projection is different
-			if (Z != 0)
-			{
-				x = ((X * fx / Z) + cx);
-				y = ((Y * fy / Z) + cy);
-			}
-			else
-			{
-				x = X;
-				y = Y;
-			}
-
-			// Project and store in dest matrix
-			(*projected++) = x;
-			(*projected++) = y;
-		}
-
-	}
-
 
 	//============================================================================
 	// Matrix reading functionality

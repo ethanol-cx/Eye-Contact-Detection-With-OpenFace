@@ -119,14 +119,14 @@ public:
 		face_analyser->PostprocessOutputFile(msclr::interop::marshal_as<std::string>(file));
 	}
 
-	void AddNextFrame(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks, bool success, bool online) {
+	void AddNextFrame(OpenCVWrappers::RawImage^ frame, List<System::Tuple<float, float>^>^ landmarks, bool success, bool online) {
 			
 		// Construct an OpenCV matric from the landmarks
-		cv::Mat_<double> landmarks_mat(landmarks->Count * 2, 1, 0.0);
+		cv::Mat_<float> landmarks_mat(landmarks->Count * 2, 1, 0.0);
 		for (int i = 0; i < landmarks->Count; ++i)
 		{
-			landmarks_mat.at<double>(i, 0) = landmarks[i]->Item1;
-			landmarks_mat.at<double>(i + landmarks->Count, 0) = landmarks[i]->Item2;
+			landmarks_mat.at<float>(i, 0) = landmarks[i]->Item1;
+			landmarks_mat.at<float>(i + landmarks->Count, 0) = landmarks[i]->Item2;
 		}
 
 		//(captured_image, face_model.detected_landmarks, face_model.detection_success, sequence_reader.time_stamp, sequence_reader.IsWebcam());
@@ -135,7 +135,7 @@ public:
 
 		cv::Mat_<double> hog_d;
 		face_analyser->GetLatestHOG(hog_d, *num_rows, *num_cols);
-		hog_d.convertTo(*hog_features, CV_64F);
+		hog_d.convertTo(*hog_features, CV_32F);
 		
 		face_analyser->GetLatestAlignedFace(*aligned_face);
 				
@@ -143,15 +143,15 @@ public:
 	
 	// Predicting AUs from a single image
     System::Tuple<Dictionary<System::String^, double>^, Dictionary<System::String^, double>^>^
-		PredictStaticAUsAndComputeFeatures(OpenCVWrappers::RawImage^ frame, List<System::Tuple<double, double>^>^ landmarks)
+		PredictStaticAUsAndComputeFeatures(OpenCVWrappers::RawImage^ frame, List<System::Tuple<float, float>^>^ landmarks)
 	{
 		
 		// Construct an OpenCV matric from the landmarks
-		cv::Mat_<double> landmarks_mat(landmarks->Count * 2, 1, 0.0);
+		cv::Mat_<float> landmarks_mat(landmarks->Count * 2, 1, 0.0);
 		for (int i = 0; i < landmarks->Count; ++i)
 		{
-			landmarks_mat.at<double>(i, 0) = landmarks[i]->Item1;
-			landmarks_mat.at<double>(i + landmarks->Count, 0) = landmarks[i]->Item2;
+			landmarks_mat.at<float>(i, 0) = landmarks[i]->Item1;
+			landmarks_mat.at<float>(i + landmarks->Count, 0) = landmarks[i]->Item2;
 		}
 
 		face_analyser->PredictStaticAUsAndComputeFeatures(frame->Mat, landmarks_mat);
@@ -275,6 +275,7 @@ public:
 	// May be called multiple times.
 	!FaceAnalyserManaged()
 	{
+		// TODO check for null pointers
 		delete hog_features;
 		delete aligned_face;
 		delete num_cols;

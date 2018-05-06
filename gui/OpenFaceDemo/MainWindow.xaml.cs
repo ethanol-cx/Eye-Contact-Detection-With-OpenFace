@@ -50,6 +50,7 @@ using OpenFaceOffline;
 using OpenCVWrappers;
 using CppInterop.LandmarkDetector;
 using FaceAnalyser_Interop;
+using FaceDetectorInterop;
 using GazeAnalyser_Interop;
 using UtilitiesOF;
 
@@ -100,8 +101,9 @@ namespace OpenFaceDemo
 
         // For tracking
         FaceModelParameters face_model_params;
-        CLNF landmark_detector;
+
         FaceAnalyserManaged face_analyser;
+        CLNF landmark_detector;
         GazeAnalyserManaged gaze_analyser;
 
         public MainWindow()
@@ -115,7 +117,18 @@ namespace OpenFaceDemo
             String root = AppDomain.CurrentDomain.BaseDirectory;
 
             // TODO, create a demo version of parameters
-            face_model_params = new FaceModelParameters(root, false); 
+            face_model_params = new FaceModelParameters(root, true, false, false);
+            face_model_params.optimiseForVideo();
+
+            // Initialize the face detector
+            FaceDetector face_detector = new FaceDetector(face_model_params.GetHaarLocation(), face_model_params.GetMTCNNLocation());
+
+            // If MTCNN model not available, use HOG
+            if (!face_detector.IsMTCNNLoaded())
+            {
+                face_model_params.SetFaceDetector(false, true, false);
+            }
+
             landmark_detector = new CLNF(face_model_params);
             face_analyser = new FaceAnalyserManaged(root, true, 112, true);
             gaze_analyser = new GazeAnalyserManaged();
@@ -194,7 +207,7 @@ namespace OpenFaceDemo
 
             landmark_detector.Reset();
             face_analyser.Reset();
-            
+
             int frame_id = 0;
 
             double old_gaze_x = 0;
@@ -217,9 +230,8 @@ namespace OpenFaceDemo
                 lastFrameTime = CurrentTime;
                 processing_fps.AddFrame();
 
-                bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(gray_frame, face_model_params);
-
-                // The face analysis step (only done if recording AUs, HOGs or video)
+                // The face analysis step
+                bool detection_succeeding = landmark_detector.DetectLandmarksInVideo(frame, face_model_params, gray_frame);
                 face_analyser.AddNextFrame(frame, landmark_detector.CalculateAllLandmarks(), detection_succeeding, true);
                 gaze_analyser.AddNextFrame(landmark_detector, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
@@ -230,21 +242,23 @@ namespace OpenFaceDemo
                 else if (confidence > 1)
                     confidence = 1;
 
-                List<double> pose = new List<double>();
+                List<float> pose = new List<float>();
 
                 landmark_detector.GetPose(pose, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
 
-                List<double> non_rigid_params = landmark_detector.GetNonRigidParams();
-                double scale = landmark_detector.GetRigidParams()[0];
+                List<float> non_rigid_params = landmark_detector.GetNonRigidParams();
+                float scale = landmark_detector.GetRigidParams()[0];
 
                 double time_stamp = (DateTime.Now - (DateTime)startTime).TotalMilliseconds;
 
                 
                 List<Tuple<Point, Point>> lines = null;
-                List<Tuple<double, double>> landmarks = null;
-                List<Tuple<double, double>> eye_landmarks = null;
+                List<Tuple<float, float>> landmarks = null;
+                List<Tuple<float, float>> eye_landmarks = null;
                 List<Tuple<Point, Point>> gaze_lines = null;
-                Tuple<double, double> gaze_angle = gaze_analyser.GetGazeAngle();
+                List<bool> visibilities = null;
+ 
+                Tuple<float, float> gaze_angle = gaze_analyser.GetGazeAngle();
 
                 if (detection_succeeding)
                 {
@@ -252,6 +266,7 @@ namespace OpenFaceDemo
                     eye_landmarks = landmark_detector.CalculateVisibleEyeLandmarks();
                     lines = landmark_detector.CalculateBox(reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
                     gaze_lines = gaze_analyser.CalculateGazeLines(reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+                    visibilities = landmark_detector.GetVisibilities();
                 }
 
                 // Visualisation
@@ -259,8 +274,8 @@ namespace OpenFaceDemo
                 {
 
                     var au_regs = face_analyser.GetCurrentAUsReg();
-                    if(au_regs.Count > 0)
-                    { 
+                    if (au_regs.Count > 0)
+                    {
                         double smile = (au_regs["AU12"] + au_regs["AU06"] + au_regs["AU25"]) / 13.0;
                         double frown = (au_regs["AU15"] + au_regs["AU17"]) / 12.0;
 
@@ -325,19 +340,19 @@ namespace OpenFaceDemo
                     frame.UpdateWriteableBitmap(latest_img);
 
                     video.Source = latest_img;
-                    video.Confidence = confidence;
+                    
                     video.FPS = processing_fps.GetFPS();
 
-                    if (!detection_succeeding)
+                    // First clear the old results
+                    video.Clear();
+
+                    video.Confidence.Add(confidence);
+
+                    if(detection_succeeding)
                     {
-                        video.OverlayLines.Clear();
-                        video.OverlayPoints.Clear();
-                        video.OverlayEyePoints.Clear();
-                        video.GazeLines.Clear();
-                    }
-                    else
-                    {
-                        video.OverlayLines = lines;
+                        video.FaceScale.Add(scale);
+
+                        video.OverlayLines.Add(lines);
 
                         List<Point> landmark_points = new List<Point>();
                         foreach (var p in landmarks)
@@ -351,27 +366,32 @@ namespace OpenFaceDemo
                             eye_landmark_points.Add(new Point(p.Item1, p.Item2));
                         }
 
+                        video.OverlayPoints.Add(landmark_points);
+                        video.OverlayEyePoints.Add(eye_landmark_points);
+                        video.OverlayPointsVisibility.Add(visibilities);
+                        video.OverlayEyePoints.Add(eye_landmark_points);
 
-                        video.OverlayPoints = landmark_points;
-                        video.OverlayEyePoints = eye_landmark_points;
-                        video.GazeLines = gaze_lines;
+                        video.GazeLines.Add(gaze_lines);
                     }
 
                 }));
 
                 if (reset)
                 {
+                    // TODO add
                     if (resetPoint.HasValue)
                     {
-                        landmark_detector.Reset(resetPoint.Value.X, resetPoint.Value.Y);
+                        //landmark_detector.Reset(resetPoint.Value.X, resetPoint.Value.Y);
                         resetPoint = null;
                     }
                     else
                     {
-                        landmark_detector.Reset();
+                        // TODO add
+                        //landmark_detector.Reset();
                     }
 
-                    face_analyser.Reset();
+                    // TODO add
+                    //face_analyser.Reset();
                     reset = false;
 
                     Dispatcher.Invoke(DispatcherPriority.Render, new TimeSpan(0, 0, 0, 0, 200), (Action)(() =>
@@ -446,6 +466,7 @@ namespace OpenFaceDemo
                 processing_thread.Join();
                                 
             }
+            
             if (face_analyser != null)
                 face_analyser.Dispose();
             if(landmark_detector != null)

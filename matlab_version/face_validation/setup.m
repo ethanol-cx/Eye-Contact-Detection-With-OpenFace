@@ -1,8 +1,8 @@
 function setup(varargin)
 
-run vlfeat-0.9.20/toolbox/vl_setup ;
-run D:\soft\matconvnet-master\matconvnet-master\matlab/vl_setupnn ;
-addpath D:\soft\matconvnet-master\matconvnet-master\examples ;
+%run vlfeat-0.9.20/toolbox/vl_setup ;
+run C:\matconvnet\matconvnet-1.0-beta25\matlab/vl_setupnn ;
+addpath C:\matconvnet\matconvnet-1.0-beta25\examples ;
 
 opts.useGpu = false ;
 opts.verbose = false ;

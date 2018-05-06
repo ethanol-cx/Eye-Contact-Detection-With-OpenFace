@@ -95,6 +95,30 @@ foreach(file ${files})
 	install(FILES ${file} DESTINATION ${CMAKE_CONFIG_DIR}/model/patch_experts)
 endforeach()
 
+file(GLOB files "lib/local/LandmarkDetector/model/mtcnn_detector/*.txt")
+foreach(file ${files})
+	if (MSVC)
+		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/Debug/model/mtcnn_detector)
+		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/Release/model/mtcnn_detector)
+	else(MSVC)
+		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/model/mtcnn_detector)
+	endif(MSVC)
+
+	install(FILES ${file} DESTINATION ${CMAKE_CONFIG_DIR}/model/mtcnn_detector)
+endforeach()
+
+file(GLOB files "lib/local/LandmarkDetector/model/mtcnn_detector/*.dat")
+foreach(file ${files})
+	if (MSVC)
+		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/Debug/model/mtcnn_detector)
+		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/Release/model/mtcnn_detector)
+	else(MSVC)
+		file(COPY ${file} DESTINATION ${CMAKE_BINARY_DIR}/bin/model/mtcnn_detector)
+	endif(MSVC)
+
+	install(FILES ${file} DESTINATION ${CMAKE_CONFIG_DIR}/model/mtcnn_detector)
+endforeach()
+
 file(GLOB files "lib/local/LandmarkDetector/model/pdms/*.txt")
 foreach(file ${files})
 	if (MSVC)
@@ -189,7 +213,7 @@ add_subdirectory(lib/3rdParty/dlib)
 add_subdirectory(lib/local/LandmarkDetector)
 # Facial Expression analysis library
 add_subdirectory(lib/local/FaceAnalyser)
-# Gaze library
+# Gaze estimation library
 add_subdirectory(lib/local/GazeAnalyser)
 # Utilities library
 add_subdirectory(lib/local/Utilities)

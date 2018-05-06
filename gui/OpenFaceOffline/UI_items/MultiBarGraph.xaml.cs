@@ -89,7 +89,7 @@ namespace OpenFaceOffline
             graphs = new List<BarGraph>();
         }
 
-        public void Update(List<double> data)
+        public void Update(List<float> data)
         {
             // Create new bars if necessary
             if (num_bars != data.Count)

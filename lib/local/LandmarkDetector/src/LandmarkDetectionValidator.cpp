@@ -79,38 +79,15 @@
 #endif
 // Local includes
 #include "LandmarkDetectorUtils.h"
+#include "CNN_utils.h"
 
 using namespace LandmarkDetector;
 
 // Copy constructor
-DetectionValidator::DetectionValidator(const DetectionValidator& other) : orientations(other.orientations), bs(other.bs), paws(other.paws),
-cnn_subsampling_layers(other.cnn_subsampling_layers), cnn_layer_types(other.cnn_layer_types), cnn_fully_connected_layers_bias(other.cnn_fully_connected_layers_bias),
-cnn_convolutional_layers_bias(other.cnn_convolutional_layers_bias), cnn_convolutional_layers_dft(other.cnn_convolutional_layers_dft)
+DetectionValidator::DetectionValidator(const DetectionValidator& other) : orientations(other.orientations), paws(other.paws),
+cnn_subsampling_layers(other.cnn_subsampling_layers), cnn_layer_types(other.cnn_layer_types), cnn_convolutional_layers_im2col_precomp(other.cnn_convolutional_layers_im2col_precomp),
+cnn_convolutional_layers_weights(other.cnn_convolutional_layers_weights)
 {
-
-	this->validator_type = other.validator_type;
-
-	this->activation_fun = other.activation_fun;
-	this->output_fun = other.output_fun;
-
-	this->ws.resize(other.ws.size());
-	for (size_t i = 0; i < other.ws.size(); ++i)
-	{
-		// Make sure the matrix is copied.
-		this->ws[i] = other.ws[i].clone();
-	}
-
-	this->ws_nn.resize(other.ws_nn.size());
-	for (size_t i = 0; i < other.ws_nn.size(); ++i)
-	{
-		this->ws_nn[i].resize(other.ws_nn[i].size());
-
-		for (size_t k = 0; k < other.ws_nn[i].size(); ++k)
-		{
-			// Make sure the matrix is copied.
-			this->ws_nn[i][k] = other.ws_nn[i][k].clone();
-		}
-	}
 
 	this->cnn_convolutional_layers.resize(other.cnn_convolutional_layers.size());
 	for (size_t v = 0; v < other.cnn_convolutional_layers.size(); ++v)
@@ -186,8 +163,14 @@ void DetectionValidator::Read(string location)
 		detection_validator_stream.seekg (0, ios::beg);
 
 		// Read validator type
+		int validator_type;
 		detection_validator_stream.read ((char*)&validator_type, 4);
-		
+
+		if (validator_type != 3)
+		{
+			cout << "ERROR: Using old face validator, no longer supported" << endl;
+		}
+
 		// Read the number of views (orientations) within the validator
 		int n;
 		detection_validator_stream.read ((char*)&n, 4);
@@ -208,39 +191,12 @@ void DetectionValidator::Read(string location)
 		// Initialise the piece-wise affine warps, biases and weights
 		paws.resize(n);
 
-		if( validator_type == 0)
-		{
-			// Reading in SVRs
-			bs.resize(n);
-			ws.resize(n);
-		}
-		else if(validator_type == 1)
-		{
-			// Reading in NNs
-			ws_nn.resize(n);
-
-			activation_fun.resize(n);
-			output_fun.resize(n);
-		}
-		else if(validator_type == 2)
-		{
-			cnn_convolutional_layers.resize(n);
-			cnn_convolutional_layers_dft.resize(n);
-			cnn_subsampling_layers.resize(n);
-			cnn_fully_connected_layers_weights.resize(n);
-			cnn_layer_types.resize(n);
-			cnn_fully_connected_layers_bias.resize(n);
-			cnn_convolutional_layers_bias.resize(n);
-		}			
-		else if (validator_type == 3)
-		{
-			cnn_convolutional_layers.resize(n);
-			cnn_convolutional_layers_dft.resize(n);
-			cnn_fully_connected_layers_weights.resize(n);
-			cnn_layer_types.resize(n);
-			cnn_fully_connected_layers_biases.resize(n);
-			cnn_convolutional_layers_bias.resize(n);
-		}
+		cnn_convolutional_layers_weights.resize(n);
+		cnn_convolutional_layers_im2col_precomp.resize(n);
+		cnn_convolutional_layers.resize(n);
+		cnn_fully_connected_layers_weights.resize(n);
+		cnn_layer_types.resize(n);
+		cnn_fully_connected_layers_biases.resize(n);
 
 		// Initialise the normalisation terms
 		mean_images.resize(n);
@@ -251,126 +207,19 @@ void DetectionValidator::Read(string location)
 		{
 
 			// Read in the mean images
-			LandmarkDetector::ReadMatBin(detection_validator_stream, mean_images[i]);
+			cv::Mat_<double> mean_img;
+			LandmarkDetector::ReadMatBin(detection_validator_stream, mean_img);
+			mean_img.convertTo(mean_images[i], CV_32F);
 			mean_images[i] = mean_images[i].t();
-	
-			LandmarkDetector::ReadMatBin(detection_validator_stream, standard_deviations[i]);
+
+			cv::Mat_<double> std_dev;
+			LandmarkDetector::ReadMatBin(detection_validator_stream, std_dev);
+			std_dev.convertTo(standard_deviations[i], CV_32F);
+
 			standard_deviations[i] = standard_deviations[i].t();
 
 			// Model specifics
-			if(validator_type == 0)
-			{
-				// Reading in the biases and weights
-				detection_validator_stream.read ((char*)&bs[i], 8);
-				LandmarkDetector::ReadMatBin(detection_validator_stream, ws[i]);
-	
-			}
-			else if(validator_type == 1)
-			{
-				
-				// Reading in the number of layers in the neural net
-				int num_depth_layers;
-				detection_validator_stream.read ((char*)&num_depth_layers, 4);
-				
-				// Reading in activation and output function types
-				detection_validator_stream.read ((char*)&activation_fun[i], 4);
-				detection_validator_stream.read ((char*)&output_fun[i], 4);
-
-				ws_nn[i].resize(num_depth_layers);
-				for(int layer = 0; layer < num_depth_layers; layer++)
-				{
-					LandmarkDetector::ReadMatBin(detection_validator_stream, ws_nn[i][layer]);
-
-					// Transpose for efficiency during multiplication
-					ws_nn[i][layer] = ws_nn[i][layer].t();
-				}
-			}
-			else if(validator_type == 2)
-			{
-				// Reading in CNNs
-
-				int network_depth;
-				detection_validator_stream.read ((char*)&network_depth, 4);
-	
-				cnn_layer_types[i].resize(network_depth);
-
-				for(int layer = 0; layer < network_depth; ++layer)
-				{
-
-					int layer_type;
-					detection_validator_stream.read ((char*)&layer_type, 4);
-					cnn_layer_types[i][layer] = layer_type;
-
-					// convolutional
-					if(layer_type == 0)
-					{
-
-						// Read the number of input maps
-						int num_in_maps;
-						detection_validator_stream.read ((char*)&num_in_maps, 4);
-
-						// Read the number of kernels for each input map
-						int num_kernels;
-						detection_validator_stream.read ((char*)&num_kernels, 4);
-
-						vector<vector<cv::Mat_<float> > > kernels;
-						vector<vector<pair<int, cv::Mat_<double> > > > kernel_dfts;
-
-						kernels.resize(num_in_maps);
-						kernel_dfts.resize(num_in_maps);
-
-						vector<float> biases;
-						for (int k = 0; k < num_kernels; ++k)
-						{
-							float bias;
-							detection_validator_stream.read ((char*)&bias, 4);						
-							biases.push_back(bias);
-						}
-
-						cnn_convolutional_layers_bias[i].push_back(biases);
-
-						// For every input map
-						for (int in = 0; in < num_in_maps; ++in)
-						{
-							kernels[in].resize(num_kernels);
-							kernel_dfts[in].resize(num_kernels);
-
-							// For every kernel on that input map
-							for (int k = 0; k < num_kernels; ++k)
-							{
-								ReadMatBin(detection_validator_stream, kernels[in][k]);				
-								
-								// Flip the kernel in order to do convolution and not correlation
-								cv::flip(kernels[in][k], kernels[in][k], -1);
-							}
-						}
-
-						cnn_convolutional_layers[i].push_back(kernels);
-						cnn_convolutional_layers_dft[i].push_back(kernel_dfts);
-					}
-					else if(layer_type == 1)
-					{
-						// Subsampling layer
-
-						int scale;
-						detection_validator_stream.read ((char*)&scale, 4);
-
-						cnn_subsampling_layers[i].push_back(scale);
-					}
-					else if(layer_type == 2)
-					{
-						float bias;
-						detection_validator_stream.read ((char*)&bias, 4);
-						cnn_fully_connected_layers_bias[i].push_back(bias);
-
-						// Fully connected layer
-						cv::Mat_<float> weights;
-						ReadMatBin(detection_validator_stream, weights);
-						cnn_fully_connected_layers_weights[i].push_back(weights);
-					}
-				}
-			}
-			else if (validator_type == 3)
+			if (validator_type == 3)
 			{
 				int network_depth;
 				detection_validator_stream.read((char*)&network_depth, 4);
@@ -397,10 +246,8 @@ void DetectionValidator::Read(string location)
 						detection_validator_stream.read((char*)&num_kernels, 4);
 
 						vector<vector<cv::Mat_<float> > > kernels;
-						vector<vector<pair<int, cv::Mat_<double> > > > kernel_dfts;
 
 						kernels.resize(num_in_maps);
-						kernel_dfts.resize(num_in_maps);
 
 						vector<float> biases;
 						for (int k = 0; k < num_kernels; ++k)
@@ -410,13 +257,10 @@ void DetectionValidator::Read(string location)
 							biases.push_back(bias);
 						}
 
-						cnn_convolutional_layers_bias[i].push_back(biases);
-
 						// For every input map
 						for (int in = 0; in < num_in_maps; ++in)
 						{
 							kernels[in].resize(num_kernels);
-							kernel_dfts[in].resize(num_kernels);
 
 							// For every kernel on that input map
 							for (int k = 0; k < num_kernels; ++k)
@@ -427,7 +271,46 @@ void DetectionValidator::Read(string location)
 						}
 
 						cnn_convolutional_layers[i].push_back(kernels);
-						cnn_convolutional_layers_dft[i].push_back(kernel_dfts);
+
+						// Rearrange the kernels for faster inference with FFT
+						vector<vector<cv::Mat_<float> > > kernels_rearr;
+						kernels_rearr.resize(num_kernels);
+
+						// Fill up the rearranged layer
+						for (int k = 0; k < num_kernels; ++k)
+						{
+							for (int in = 0; in < num_in_maps; ++in)
+							{
+								kernels_rearr[k].push_back(kernels[in][k]);
+							}
+						}
+
+						// Rearrange the flattened kernels into weight matrices for direct convolution computation
+						cv::Mat_<float> weight_matrix(num_in_maps * kernels_rearr[0][0].rows * kernels_rearr[0][0].cols, num_kernels);
+						for (size_t k = 0; k < num_kernels; ++k)
+						{
+							for (size_t i = 0; i < num_in_maps; ++i)
+							{
+								// Flatten the kernel
+								cv::Mat_<float> k_flat = kernels_rearr[k][i].t();
+								k_flat = k_flat.reshape(0, 1).t();
+								k_flat.copyTo(weight_matrix(cv::Rect(k, i * kernels_rearr[0][0].rows * kernels_rearr[0][0].cols, 1, kernels_rearr[0][0].rows * kernels_rearr[0][0].cols)));
+							}
+						}
+
+						// Transpose the weight matrix for more convenient computation
+						weight_matrix = weight_matrix.t();
+
+						// Add a bias term to the weight matrix for efficiency
+						cv::Mat_<float> W(weight_matrix.rows, weight_matrix.cols + 1, 1.0);
+						for (size_t k = 0; k < weight_matrix.rows; ++k)
+						{
+							W.at<float>(k, weight_matrix.cols) = biases[k];
+						}
+						weight_matrix.copyTo(W(cv::Rect(0, 0, weight_matrix.cols, weight_matrix.rows)));
+
+						cnn_convolutional_layers_weights[i].push_back(W.t());
+						cnn_convolutional_layers_im2col_precomp[i].push_back(cv::Mat_<float>());
 					}
 					else if (layer_type == 2)
 					{
@@ -455,354 +338,55 @@ void DetectionValidator::Read(string location)
 
 //===========================================================================
 // Check if the fitting actually succeeded
-double DetectionValidator::Check(const cv::Vec3d& orientation, const cv::Mat_<uchar>& intensity_img, cv::Mat_<double>& detected_landmarks)
+float DetectionValidator::Check(const cv::Vec3d& orientation, const cv::Mat_<uchar>& intensity_img, cv::Mat_<float>& detected_landmarks)
 {
 
 	int id = GetViewId(orientation);
 	
 	// The warped (cropped) image, corresponding to a face lying withing the detected lanmarks
-	cv::Mat_<double> warped;
+	cv::Mat_<float> warped;
 	
-	// the piece-wise affine image
-	cv::Mat_<double> intensity_img_double;
-	intensity_img.convertTo(intensity_img_double, CV_64F);
+	// First only use the ROI of the image of interest
+	cv::Mat_<float> detected_landmarks_local = detected_landmarks.clone();
 
-	paws[id].Warp(intensity_img_double, warped, detected_landmarks);	
+	float min_x_f, max_x_f, min_y_f, max_y_f;
+	ExtractBoundingBox(detected_landmarks_local, min_x_f, max_x_f, min_y_f, max_y_f);
+
+	cv::Mat_<float> xs = detected_landmarks_local(cv::Rect(0, 0, 1, detected_landmarks.rows / 2));
+	cv::Mat_<float> ys = detected_landmarks_local(cv::Rect(0, detected_landmarks.rows / 2, 1, detected_landmarks.rows / 2));
+
+	// Picking the ROI (some extra space for bilinear interpolation)
+	int min_x = (int)(min_x_f - 3.0f);
+	int max_x = (int)(max_x_f + 3.0f);
+	int min_y = (int)(min_y_f - 3.0f);
+	int max_y = (int)(max_y_f + 3.0f);
+
+	if (min_x < 0) min_x = 0;
+	if (min_y < 0) min_y = 0;
+	if (max_x > intensity_img.cols - 1) max_x = intensity_img.cols - 1;
+	if (max_y > intensity_img.rows - 1) max_y = intensity_img.rows - 1;
+	xs = xs - min_x;
+	ys = ys - min_y;
+
+	cv::Mat_<float> intensity_img_float_local;
+	intensity_img(cv::Rect(min_x, min_y, max_x - min_x, max_y - min_y)).convertTo(intensity_img_float_local, CV_32F);
 	
-	double dec;
-	if(validator_type == 0)
-	{
-		dec = CheckSVR(warped, id);
-	}
-	else if(validator_type == 1)
-	{
-		dec = CheckNN(warped, id);
-	}
-	else if(validator_type == 2)
-	{
-		dec = CheckCNN_old(warped, id);
-	}
-	else if (validator_type == 3)
-	{
-		// On some machines the non-TBB version may be faster
-		//dec = CheckCNN(warped, id);
-		dec = CheckCNN_tbb(warped, id);
-	}
+	// the piece-wise affine image warping
+	paws[id].Warp(intensity_img_float_local, warped, detected_landmarks_local);
+
+	// The actual validation step
+	double dec = CheckCNN(warped, id);
 
 	// Convert it to a more interpretable signal (0 low confidence, 1 high confidence)
-	dec = 0.5 * (1 - dec);
+	dec = 0.5 * (1.0 - dec);
 
-	return dec;
+	return (float)dec;
 }
 
-double DetectionValidator::CheckNN(const cv::Mat_<double>& warped_img, int view_id)
-{
-	cv::Mat_<double> feature_vec;
-	NormaliseWarpedToVector(warped_img, feature_vec, view_id);
-	feature_vec = feature_vec.t();
-			
-	for(size_t layer = 0; layer < ws_nn[view_id].size(); ++layer)
-	{
-		// Add a bias term
-		cv::hconcat(cv::Mat_<double>(1,1, 1.0), feature_vec, feature_vec);
-		
-		// Apply the weights
-		feature_vec = feature_vec * ws_nn[view_id][layer];
-
-		// Activation or output
-		int fun_type;
-		if(layer != ws_nn[view_id].size() - 1)
-		{
-			fun_type = activation_fun[view_id];
-		}
-		else
-		{
-			fun_type = output_fun[view_id];
-		}
-
-		if(fun_type == 0)
-		{
-			cv::exp(-feature_vec, feature_vec);
-			feature_vec = 1.0 /(1.0 + feature_vec);		
-		}
-		else if(fun_type == 1)
-		{
-			cv::MatIterator_<double> q1 = feature_vec.begin(); // respone for each pixel
-			cv::MatIterator_<double> q2 = feature_vec.end();
-
-			// the logistic function (sigmoid) applied to the response
-			while(q1 != q2)
-			{
-				*q1 = 1.7159 * tanh((2.0/3.0) * (*q1));
-				q1++;
-			}
-		}
-		// TODO ReLU
-
-	}
-
-	// Turn it to -1, 1 range
-	double dec = (feature_vec.at<double>(0) - 0.5) * 2;
-
-	return dec;
-
-}
-
-double DetectionValidator::CheckSVR(const cv::Mat_<double>& warped_img, int view_id)
+double DetectionValidator::CheckCNN(const cv::Mat_<float>& warped_img, int view_id)
 {
 
-	cv::Mat_<double> feature_vec;
-	NormaliseWarpedToVector(warped_img, feature_vec, view_id);
-		
-
-	double dec = (ws[view_id].dot(feature_vec.t()) + bs[view_id]);
-
-	return dec;
-
-}
-
-// Convolutional Neural Network
-double DetectionValidator::CheckCNN_old(const cv::Mat_<double>& warped_img, int view_id)
-{
-
-	cv::Mat_<double> feature_vec;
-	NormaliseWarpedToVector(warped_img, feature_vec, view_id);
-	
-	// Create a normalised image from the crop vector
-	cv::Mat_<float> img(warped_img.size(), 0.0);
-	img = img.t();
-
-	cv::Mat mask = paws[view_id].pixel_mask.t();
-	cv::MatIterator_<uchar>  mask_it = mask.begin<uchar>();
-	
-	cv::MatIterator_<double> feature_it = feature_vec.begin();
-	cv::MatIterator_<float> img_it = img.begin();		
-
-	int wInt = img.cols;
-	int hInt = img.rows;
-
-	for(int i=0; i < wInt; ++i)
-	{
-		for(int j=0; j < hInt; ++j, ++mask_it, ++img_it)
-		{
-			// if is within mask
-			if(*mask_it)
-			{
-				// assign the feature to image if it is within the mask
-				*img_it = (float)*feature_it++;
-			}
-		}
-	}
-	img = img.t();
-	
-	int cnn_layer = 0;
-	int subsample_layer = 0;
-	int fully_connected_layer = 0;
-
-	vector<cv::Mat_<float> > input_maps;
-	input_maps.push_back(img);
-	
-	vector<cv::Mat_<float> > outputs;
-
-	for(size_t layer = 0; layer < cnn_layer_types[view_id].size(); ++layer)
-	{
-		// Determine layer type
-		int layer_type = cnn_layer_types[view_id][layer];
-		
-		
-		// Convolutional layer
-		if(layer_type == 0)
-		{
-			vector<cv::Mat_<float> > outputs_kern;
-			for(size_t in = 0; in < input_maps.size(); ++in)
-			{
-				cv::Mat_<float> input_image = input_maps[in];
-
-				// Useful precomputed data placeholders for quick correlation (convolution)
-				cv::Mat_<double> input_image_dft;
-				cv::Mat integral_image;
-				cv::Mat integral_image_sq;
-
-				for(size_t k = 0; k < cnn_convolutional_layers[view_id][cnn_layer][in].size(); ++k)
-				{
-					cv::Mat_<float> kernel = cnn_convolutional_layers[view_id][cnn_layer][in][k];
-										
-					// The convolution (with precomputation)
-					cv::Mat_<float> output;
-					if(cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].second.empty())
-					{
-						std::map<int, cv::Mat_<double> > precomputed_dft;
-						
-						LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
-						
-						cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].first = precomputed_dft.begin()->first;
-						cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].second = precomputed_dft.begin()->second;
-					}
-					else
-					{
-						std::map<int, cv::Mat_<double> > precomputed_dft;
-						precomputed_dft[cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].first] = cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].second;
-						LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel,  precomputed_dft, output, CV_TM_CCORR);						
-					}
-
-					// Combining the maps
-					if(in == 0)
-					{
-						outputs_kern.push_back(output);
-					}
-					else
-					{
-						outputs_kern[k] = outputs_kern[k] + output;
-					}
-
-				}
-								
-			}
-			
-			outputs.clear();
-			for(size_t k = 0; k < cnn_convolutional_layers[view_id][cnn_layer][0].size(); ++k)
-			{
-				// Apply the sigmoid
-				cv::exp(-outputs_kern[k] - cnn_convolutional_layers_bias[view_id][cnn_layer][k], outputs_kern[k]);
-				outputs_kern[k] = 1.0 /(1.0 + outputs_kern[k]);	
-
-				outputs.push_back(outputs_kern[k]);
-
-			}			
-
-			cnn_layer++;
-		}				
-		if(layer_type == 1)
-		{
-			// Subsampling layer
-			int scale = cnn_subsampling_layers[view_id][subsample_layer];
-			
-			cv::Mat kx = cv::Mat::ones(2, 1, CV_32F)*1.0f/scale;
-			cv::Mat ky = cv::Mat::ones(1, 2, CV_32F)*1.0f/scale;
-
-			vector<cv::Mat_<float>> outputs_sub;
-			for(size_t in = 0; in < input_maps.size(); ++in)
-			{
-
-				cv::Mat_<float> conv_out;
-
-				cv::sepFilter2D(input_maps[in], conv_out, CV_32F, kx, ky);
-				conv_out = conv_out(cv::Rect(1, 1, conv_out.cols - 1, conv_out.rows - 1));
-
-				int res_rows = conv_out.rows / scale;
-				int res_cols = conv_out.cols / scale;
-
-				if(conv_out.rows % scale != 0)
-				{
-					res_rows++;
-				}
-				if(conv_out.cols % scale != 0)
-				{
-					res_cols++;
-				}
-
-				cv::Mat_<float> sub_out(res_rows, res_cols);
-				for(int w = 0; w < conv_out.cols; w+=scale)
-				{
-					for(int h=0; h < conv_out.rows; h+=scale)
-					{
-						sub_out.at<float>(h/scale, w/scale) = conv_out(h, w);
-					}
-				}
-				outputs_sub.push_back(sub_out);
-			}
-			outputs = outputs_sub;
-			subsample_layer++;
-
-		}
-		if(layer_type == 2)
-		{
-			// Concatenate all the maps
-			cv::Mat_<float> input_concat = input_maps[0].t();
-			input_concat = input_concat.reshape(0, 1);
-
-			for(size_t in = 1; in < input_maps.size(); ++in)
-			{
-				cv::Mat_<float> add = input_maps[in].t();
-				add = add.reshape(0,1);
-				cv::hconcat(input_concat, add, input_concat);
-			}
-						
-			input_concat = input_concat * cnn_fully_connected_layers_weights[view_id][fully_connected_layer].t();
-
-			cv::exp(-input_concat - cnn_fully_connected_layers_bias[view_id][fully_connected_layer], input_concat);
-			input_concat = 1.0 /(1.0 + input_concat);		
-
-			outputs.clear();
-			outputs.push_back(input_concat);
-
-			fully_connected_layer++;
-		}
-		// Max pooling layer
-		if (layer_type == 3)
-		{
-
-			vector<cv::Mat_<float>> outputs_sub;
-
-			// Iterate over pool height and width, all the stride is 2x2 and no padding is used
-			int stride_x = 2;
-			int stride_y = 2;
-
-			int pool_x = 2;
-			int pool_y = 2;
-
-			for (size_t in = 0; in < input_maps.size(); ++in)
-			{
-				int out_x = input_maps[in].cols / stride_x;
-				int out_y = input_maps[in].rows / stride_y;
-
-				cv::Mat_<float> sub_out(out_y, out_x, 0.0);
-				cv::Mat_<float> in_map = input_maps[in];
-
-				for (int x = 0; x < input_maps[in].cols; x+= stride_x)
-				{
-					for (int y = 0; y < input_maps[in].rows; y+= stride_y) 
-					{
-						float curr_max = -FLT_MAX;
-						for (int x_in = x; x_in < x+pool_x; ++x_in) 
-						{
-							for (int y_in = y; y_in < y + pool_y; ++y_in)
-							{
-								float curr_val = in_map.at<float>(y_in, x_in);
-								if (curr_val > curr_max)
-								{
-									curr_max = curr_val;
-								}
-							}
-						}
-						int x_in_out = x / stride_x;
-						int y_in_out = y / stride_y;
-						sub_out.at<float>(y_in_out, x_in_out) = curr_max;
-					}
-				}
-
-				outputs_sub.push_back(sub_out);
-			}
-			outputs = outputs_sub;
-			subsample_layer++;
-		}
-
-		// Set the outputs of this layer to inputs of the next
-		input_maps = outputs;
-
-	}
-	
-	// Turn it to -1, 1 range
-	double dec = (outputs[0].at<float>(0) - 0.5) * 2.0;
-
-	return dec;
-}
-
-// Convolutional Neural Network
-double DetectionValidator::CheckCNN_tbb(const cv::Mat_<double>& warped_img, int view_id)
-{
-
-	cv::Mat_<double> feature_vec;
+	cv::Mat_<float> feature_vec;
 	NormaliseWarpedToVector(warped_img, feature_vec, view_id);
 
 	// Create a normalised image from the crop vector
@@ -812,7 +396,7 @@ double DetectionValidator::CheckCNN_tbb(const cv::Mat_<double>& warped_img, int 
 	cv::Mat mask = paws[view_id].pixel_mask.t();
 	cv::MatIterator_<uchar>  mask_it = mask.begin<uchar>();
 
-	cv::MatIterator_<double> feature_it = feature_vec.begin();
+	cv::MatIterator_<float> feature_it = feature_vec.begin();
 	cv::MatIterator_<float> img_it = img.begin();
 
 	int wInt = img.cols;
@@ -848,158 +432,19 @@ double DetectionValidator::CheckCNN_tbb(const cv::Mat_<double>& warped_img, int 
 		// Convolutional layer
 		if (layer_type == 0)
 		{
-			outputs.clear();
-			// Pre-allocate the output feature maps
-			outputs.resize(cnn_convolutional_layers[view_id][cnn_layer][0].size());
-			for (size_t in = 0; in < input_maps.size(); ++in)
-			{
-				cv::Mat_<float> input_image = input_maps[in];
 
-				// Useful precomputed data placeholders for quick correlation (convolution)
-				cv::Mat_<double> input_image_dft;
-				cv::Mat integral_image;
-				cv::Mat integral_image_sq;
+			convolution_direct_blas_nts(outputs, input_maps, cnn_convolutional_layers_weights[view_id][cnn_layer], cnn_convolutional_layers[view_id][cnn_layer][0][0].rows, cnn_convolutional_layers[view_id][cnn_layer][0][0].cols, cnn_convolutional_layers_im2col_precomp[view_id][cnn_layer]);
 
-				// To adapt for TBB, perform the first convolution in a non TBB way so that dft, and integral images are computed
-				cv::Mat_<float> kernel = cnn_convolutional_layers[view_id][cnn_layer][in][0];
-
-				// The convolution (with precomputation)
-				cv::Mat_<float> output;
-				if (cnn_convolutional_layers_dft[view_id][cnn_layer][in][0].second.empty()) // This will only be needed during the first pass
-				{
-					std::map<int, cv::Mat_<double> > precomputed_dft;
-
-					LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
-
-					cnn_convolutional_layers_dft[view_id][cnn_layer][in][0].first = precomputed_dft.begin()->first;
-					cnn_convolutional_layers_dft[view_id][cnn_layer][in][0].second = precomputed_dft.begin()->second;
-				}
-				else
-				{
-					std::map<int, cv::Mat_<double> > precomputed_dft;
-					precomputed_dft[cnn_convolutional_layers_dft[view_id][cnn_layer][in][0].first] = cnn_convolutional_layers_dft[view_id][cnn_layer][in][0].second;
-					LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
-				}
-
-				// Combining the maps
-				if (in == 0)
-				{
-					outputs[0] = output;
-				}
-				else
-				{
-					outputs[0] = outputs[0] + output;
-				}
-
-
-				// TBB pass for the remaining kernels, empirically helps with layers with more kernels
-				tbb::parallel_for(1, (int)cnn_convolutional_layers[view_id][cnn_layer][in].size(), [&](int k) {
-				{
-					cv::Mat_<float> kernel = cnn_convolutional_layers[view_id][cnn_layer][in][k];
-
-					// The convolution (with precomputation)
-					cv::Mat_<float> output;
-					if (cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].second.empty()) // This will only be needed during the first pass
-					{
-						std::map<int, cv::Mat_<double> > precomputed_dft;
-
-						LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
-
-						cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].first = precomputed_dft.begin()->first;
-						cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].second = precomputed_dft.begin()->second;
-					}
-					else
-					{
-						std::map<int, cv::Mat_<double> > precomputed_dft;
-						precomputed_dft[cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].first] = cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].second;
-						LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
-					}
-
-					// Combining the maps
-					if (in == 0)
-					{
-						outputs[k] = output;
-					}
-					else
-					{
-						outputs[k] = outputs[k] + output;
-					}
-				}
-				});
-				
-			}
-
-			for (size_t k = 0; k < cnn_convolutional_layers[view_id][cnn_layer][0].size(); ++k)
-			{
-				outputs[k] = outputs[k] + cnn_convolutional_layers_bias[view_id][cnn_layer][k];
-			}
 			cnn_layer++;
 		}
 		if (layer_type == 1)
 		{
-			vector<cv::Mat_<float>> outputs_sub;
-
-			// Iterate over pool height and width, all the stride is 2x2 and no padding is used
-			int stride_x = 2;
-			int stride_y = 2;
-
-			int pool_x = 2;
-			int pool_y = 2;
-
-			for (size_t in = 0; in < input_maps.size(); ++in)
-			{
-				int out_x = input_maps[in].cols / stride_x;
-				int out_y = input_maps[in].rows / stride_y;
-
-				cv::Mat_<float> sub_out(out_y, out_x, 0.0);
-				cv::Mat_<float> in_map = input_maps[in];
-
-				for (int x = 0; x < input_maps[in].cols; x += stride_x)
-				{
-					for (int y = 0; y < input_maps[in].rows; y += stride_y)
-					{
-						float curr_max = -FLT_MAX;
-						for (int x_in = x; x_in < x + pool_x; ++x_in)
-						{
-							for (int y_in = y; y_in < y + pool_y; ++y_in)
-							{
-								float curr_val = in_map.at<float>(y_in, x_in);
-								if (curr_val > curr_max)
-								{
-									curr_max = curr_val;
-								}
-							}
-						}
-						int x_in_out = x / stride_x;
-						int y_in_out = y / stride_y;
-						sub_out.at<float>(y_in_out, x_in_out) = curr_max;
-					}
-				}
-
-				outputs_sub.push_back(sub_out);
-
-			}
-			outputs = outputs_sub;
+			max_pooling(outputs, input_maps, 2, 2, 2, 2);
 		}
 		if (layer_type == 2)
 		{
-			// Concatenate all the maps
-			cv::Mat_<float> input_concat = input_maps[0].t();
-			input_concat = input_concat.reshape(0, 1);
 
-			for (size_t in = 1; in < input_maps.size(); ++in)
-			{
-				cv::Mat_<float> add = input_maps[in].t();
-				add = add.reshape(0, 1);
-				cv::hconcat(input_concat, add, input_concat);
-			}
-
-			input_concat = input_concat * cnn_fully_connected_layers_weights[view_id][fully_connected_layer];
-			input_concat = input_concat + cnn_fully_connected_layers_biases[view_id][fully_connected_layer].t();
-
-			outputs.clear();
-			outputs.push_back(input_concat);
-
+			fully_connected(outputs, input_maps, cnn_fully_connected_layers_weights[view_id][fully_connected_layer].t(), cnn_fully_connected_layers_biases[view_id][fully_connected_layer]);
 			fully_connected_layer++;
 		}
 		if (layer_type == 3) // ReLU
@@ -1046,232 +491,15 @@ double DetectionValidator::CheckCNN_tbb(const cv::Mat_<double>& warped_img, int 
 	return unquantized;
 }
 
-// Convolutional Neural Network
-double DetectionValidator::CheckCNN(const cv::Mat_<double>& warped_img, int view_id)
+void DetectionValidator::NormaliseWarpedToVector(const cv::Mat_<float>& warped_img, cv::Mat_<float>& feature_vec, int view_id)
 {
-	
-	cv::Mat_<double> feature_vec;
-	NormaliseWarpedToVector(warped_img, feature_vec, view_id);
-
-	// Create a normalised image from the crop vector
-	cv::Mat_<float> img(warped_img.size(), 0.0);
-	img = img.t();
-
-	cv::Mat mask = paws[view_id].pixel_mask.t();
-	cv::MatIterator_<uchar>  mask_it = mask.begin<uchar>();
-
-	cv::MatIterator_<double> feature_it = feature_vec.begin();
-	cv::MatIterator_<float> img_it = img.begin();
-
-	int wInt = img.cols;
-	int hInt = img.rows;
-
-	for (int i = 0; i < wInt; ++i)
-	{
-		for (int j = 0; j < hInt; ++j, ++mask_it, ++img_it)
-		{
-			// if is within mask
-			if (*mask_it)
-			{
-				// assign the feature to image if it is within the mask
-				*img_it = (float)*feature_it++;
-			}
-		}
-	}
-	img = img.t();
-
-	int cnn_layer = 0;
-	int fully_connected_layer = 0;
-
-	vector<cv::Mat_<float> > input_maps;
-	input_maps.push_back(img);
-
-	vector<cv::Mat_<float> > outputs;
-
-	for (size_t layer = 0; layer < cnn_layer_types[view_id].size(); ++layer)
-	{
-		// Determine layer type
-		int layer_type = cnn_layer_types[view_id][layer];
-
-		// Convolutional layer
-		if (layer_type == 0)
-		{
-			outputs.clear();
-			for (size_t in = 0; in < input_maps.size(); ++in)
-			{
-				cv::Mat_<float> input_image = input_maps[in];
-
-				// Useful precomputed data placeholders for quick correlation (convolution)
-				cv::Mat_<double> input_image_dft;
-				cv::Mat integral_image;
-				cv::Mat integral_image_sq;
-
-				// TODO can TBB-ify this
-				for (size_t k = 0; k < cnn_convolutional_layers[view_id][cnn_layer][in].size(); ++k)
-				{
-					cv::Mat_<float> kernel = cnn_convolutional_layers[view_id][cnn_layer][in][k];
-
-					// The convolution (with precomputation)
-					cv::Mat_<float> output;
-					if (cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].second.empty())
-					{
-						std::map<int, cv::Mat_<double> > precomputed_dft;
-
-						LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
-
-						cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].first = precomputed_dft.begin()->first;
-						cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].second = precomputed_dft.begin()->second;
-					}
-					else
-					{
-						std::map<int, cv::Mat_<double> > precomputed_dft;
-						precomputed_dft[cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].first] = cnn_convolutional_layers_dft[view_id][cnn_layer][in][k].second;
-						LandmarkDetector::matchTemplate_m(input_image, input_image_dft, integral_image, integral_image_sq, kernel, precomputed_dft, output, CV_TM_CCORR);
-					}
-
-					// Combining the maps
-					if (in == 0)
-					{
-						outputs.push_back(output);
-					}
-					else
-					{
-						outputs[k] = outputs[k] + output;
-					}
-
-				}
-
-			}
-
-			for (size_t k = 0; k < cnn_convolutional_layers[view_id][cnn_layer][0].size(); ++k)
-			{
-				outputs[k] = outputs[k] + cnn_convolutional_layers_bias[view_id][cnn_layer][k];
-			}
-			cnn_layer++;
-		}
-		if (layer_type == 1)
-		{
-			vector<cv::Mat_<float>> outputs_sub;
-
-			// Iterate over pool height and width, all the stride is 2x2 and no padding is used
-			int stride_x = 2;
-			int stride_y = 2;
-
-			int pool_x = 2;
-			int pool_y = 2;
-
-			for (size_t in = 0; in < input_maps.size(); ++in)
-			{
-				int out_x = input_maps[in].cols / stride_x;
-				int out_y = input_maps[in].rows / stride_y;
-
-				cv::Mat_<float> sub_out(out_y, out_x, 0.0);
-				cv::Mat_<float> in_map = input_maps[in];
-
-				for (int x = 0; x < input_maps[in].cols; x += stride_x)
-				{
-					for (int y = 0; y < input_maps[in].rows; y += stride_y)
-					{
-						float curr_max = -FLT_MAX;
-						for (int x_in = x; x_in < x + pool_x; ++x_in)
-						{
-							for (int y_in = y; y_in < y + pool_y; ++y_in)
-							{
-								float curr_val = in_map.at<float>(y_in, x_in);
-								if (curr_val > curr_max)
-								{
-									curr_max = curr_val;
-								}
-							}
-						}
-						int x_in_out = x / stride_x;
-						int y_in_out = y / stride_y;
-						sub_out.at<float>(y_in_out, x_in_out) = curr_max;
-					}
-				}
-
-				outputs_sub.push_back(sub_out);
-
-			}
-			outputs = outputs_sub;
-		}
-		if (layer_type == 2)
-		{
-			// Concatenate all the maps
-			cv::Mat_<float> input_concat = input_maps[0].t();
-			input_concat = input_concat.reshape(0, 1);
-
-			for (size_t in = 1; in < input_maps.size(); ++in)
-			{
-				cv::Mat_<float> add = input_maps[in].t();
-				add = add.reshape(0, 1);
-				cv::hconcat(input_concat, add, input_concat);
-			}
-
-			input_concat = input_concat * cnn_fully_connected_layers_weights[view_id][fully_connected_layer];
-			input_concat = input_concat + cnn_fully_connected_layers_biases[view_id][fully_connected_layer].t();
-
-			outputs.clear();
-			outputs.push_back(input_concat);
-
-			fully_connected_layer++;
-		}
-		if (layer_type == 3) // ReLU
-		{
-			outputs.clear();
-			for (size_t k = 0; k < input_maps.size(); ++k)
-			{
-				// Apply the ReLU
-				cv::threshold(input_maps[k], input_maps[k], 0, 0, cv::THRESH_TOZERO);
-				outputs.push_back(input_maps[k]);
-
-			}
-		}
-		if (layer_type == 4)
-		{
-			outputs.clear();
-			for (size_t k = 0; k < input_maps.size(); ++k)
-			{
-				// Apply the sigmoid
-				cv::exp(-input_maps[k], input_maps[k]);
-				input_maps[k] = 1.0 / (1.0 + input_maps[k]);
-
-				outputs.push_back(input_maps[k]);
-
-			}
-		}
-		// Set the outputs of this layer to inputs of the next
-		input_maps = outputs;
-
-	}
-
-	// First turn to the 0-3 range
-	double max_val = 0;
-	cv::Point max_loc;
-	cv::minMaxLoc(outputs[0].t(), 0, &max_val, 0, &max_loc);
-	int max_idx = max_loc.y;
-	double max = 3;
-	double min = 0;
-	double bins = (double)outputs[0].cols;
-	// Unquantizing the softmax layer to continuous value
-	double step_size = (max - min) / bins; // This should be saved somewhere
-	double unquantized = min + step_size / 2.0 + max_idx * step_size;
-
-	// Turn it to -1, 1 range
-	double dec = (unquantized - 1.5) / 1.5;
-
-	return dec;
-}
-
-void DetectionValidator::NormaliseWarpedToVector(const cv::Mat_<double>& warped_img, cv::Mat_<double>& feature_vec, int view_id)
-{
-	cv::Mat_<double> warped_t = warped_img.t();
+	cv::Mat_<float> warped_t = warped_img.t();
 	
 	// the vector to be filled with paw values
-	cv::MatIterator_<double> vp;	
-	cv::MatIterator_<double>  cp;
+	cv::MatIterator_<float> vp;	
+	cv::MatIterator_<float>  cp;
 
-	cv::Mat_<double> vec(paws[view_id].number_of_pixels,1);
+	cv::Mat_<float> vec(paws[view_id].number_of_pixels,1);
 	vp = vec.begin();
 
 	cp = warped_t.begin();		

@@ -1065,7 +1065,7 @@ void FaceAnalyser::Read(std::string model_loc)
 		else if (module.compare("PDM") == 0)
 		{
 			cout << "Reading the PDM from: " << location;
-			pdm = PDM();
+			pdm = LandmarkDetector::PDM();
 			pdm.Read(location);
 			cout << "... Done" << endl;
 		}
@@ -1224,27 +1224,27 @@ void FaceAnalyser::ReadRegressor(std::string fname, const vector<string>& au_nam
 {
 	ifstream regressor_stream(fname.c_str(), ios::in | ios::binary);
 
-	if(regressor_stream.is_open())
+	if (regressor_stream.is_open())
 	{
 		// First read the input type
 		int regressor_type;
 		regressor_stream.read((char*)&regressor_type, 4);
-	
-		if(regressor_type == SVR_appearance_static_linear)
+
+		if (regressor_type == SVR_appearance_static_linear)
 		{
-			AU_SVR_static_appearance_lin_regressors.Read(regressor_stream, au_names);		
+			AU_SVR_static_appearance_lin_regressors.Read(regressor_stream, au_names);
 		}
-		else if(regressor_type == SVR_appearance_dynamic_linear)
+		else if (regressor_type == SVR_appearance_dynamic_linear)
 		{
-			AU_SVR_dynamic_appearance_lin_regressors.Read(regressor_stream, au_names);		
+			AU_SVR_dynamic_appearance_lin_regressors.Read(regressor_stream, au_names);
 		}
-		else if(regressor_type == SVM_linear_stat)
+		else if (regressor_type == SVM_linear_stat)
 		{
-			AU_SVM_static_appearance_lin.Read(regressor_stream, au_names);		
+			AU_SVM_static_appearance_lin.Read(regressor_stream, au_names);
 		}
-		else if(regressor_type == SVM_linear_dyn)
+		else if (regressor_type == SVM_linear_dyn)
 		{
-			AU_SVM_dynamic_appearance_lin.Read(regressor_stream, au_names);		
+			AU_SVM_dynamic_appearance_lin.Read(regressor_stream, au_names);
 		}
 	}
 }

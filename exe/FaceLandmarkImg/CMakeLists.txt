@@ -16,6 +16,6 @@ target_link_libraries(FaceLandmarkImg GazeAnalyser)
 target_link_libraries(FaceLandmarkImg Utilities)
 target_link_libraries(FaceLandmarkImg dlib)
 
-target_link_libraries(FaceLandmarkImg ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES}  ${BLAS_LIBRARIES})
+target_link_libraries(FaceLandmarkImg ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES} ${BLAS_LIBRARIES})
 
 install (TARGETS FaceLandmarkImg DESTINATION bin)

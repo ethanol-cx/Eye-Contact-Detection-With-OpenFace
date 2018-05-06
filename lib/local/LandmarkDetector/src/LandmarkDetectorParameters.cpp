@@ -58,6 +58,7 @@ FaceModelParameters::FaceModelParameters()
 	// initialise the default values
 	init();
 	check_model_path();
+
 }
 
 FaceModelParameters::FaceModelParameters(vector<string> &arguments)
@@ -87,7 +88,7 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 		if (arguments[i].compare("-fdloc") ==0)
 		{
 			string face_detector_loc = arguments[i + 1];
-			face_detector_location = face_detector_loc;
+			haar_face_detector_location = face_detector_loc;
 			curr_face_detector = HAAR_DETECTOR;
 			valid[i] = false;
 			valid[i + 1] = false;
@@ -160,7 +161,7 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 		{
 			// For in the wild fitting these parameters are suitable
 			window_sizes_init = vector<int>(4);
-			window_sizes_init[0] = 15; window_sizes_init[1] = 13; window_sizes_init[2] = 11; window_sizes_init[3] = 9;
+			window_sizes_init[0] = 15; window_sizes_init[1] = 13; window_sizes_init[2] = 11; window_sizes_init[3] = 11;
 
 			sigma = 1.25;
 			reg_factor = 35;
@@ -170,8 +171,10 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 			valid[i] = false;
 
 			// For in-the-wild images use an in-the wild detector				
-			curr_face_detector = HOG_SVM_DETECTOR;
+			curr_face_detector = MTCNN_DETECTOR;
 
+			// Use multi-view hypotheses if in-the-wild setting
+			multi_view = true;
 		}
 	}
 
@@ -183,6 +186,82 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 		}
 	}
 
+
+	// Make sure model_location is valid
+	// First check working directory, then the executable's directory, then the config path set by the build process.
+	boost::filesystem::path config_path = boost::filesystem::path(CONFIG_DIR);
+	boost::filesystem::path model_path = boost::filesystem::path(model_location);
+	if (boost::filesystem::exists(model_path))
+	{
+		model_location = model_path.string();
+	}
+	else if (boost::filesystem::exists(root/model_path))
+	{
+		model_location = (root/model_path).string();
+	}
+	else if (boost::filesystem::exists(config_path/model_path))
+	{
+		model_location = (config_path/model_path).string();
+	}
+	else
+	{
+		std::cout << "Could not find the landmark detection model to load" << std::endl;
+	}
+
+	if (model_path.stem().string().compare("main_ceclm_general") == 0)
+	{
+		curr_landmark_detector = CECLM_DETECTOR;
+		sigma = 1.5f * sigma;
+		reg_factor = 0.9f * reg_factor;
+	}
+	else if (model_path.stem().string().compare("main_clnf_general") == 0)
+	{
+		curr_landmark_detector = CLNF_DETECTOR;
+	}
+	else if (model_path.stem().string().compare("main_clm_general") == 0)
+	{
+		curr_landmark_detector = CLM_DETECTOR;
+	}
+
+	// Make sure face detector location is valid
+	// First check working directory, then the executable's directory, then the config path set by the build process.
+	model_path = boost::filesystem::path(haar_face_detector_location);
+	if (boost::filesystem::exists(model_path))
+	{
+		haar_face_detector_location = model_path.string();
+	}
+	else if (boost::filesystem::exists(root / model_path))
+	{
+		haar_face_detector_location = (root / model_path).string();
+	}
+	else if (boost::filesystem::exists(config_path / model_path))
+	{
+		haar_face_detector_location = (config_path / model_path).string();
+	}
+	else
+	{
+		std::cout << "Could not find the HAAR face detector location" << std::endl;
+	}
+
+	// Make sure face detector location is valid
+	// First check working directory, then the executable's directory, then the config path set by the build process.
+	model_path = boost::filesystem::path(mtcnn_face_detector_location);
+	if (boost::filesystem::exists(model_path))
+	{
+		mtcnn_face_detector_location = model_path.string();
+	}
+	else if (boost::filesystem::exists(root / model_path))
+	{
+		mtcnn_face_detector_location = (root / model_path).string();
+	}
+	else if (boost::filesystem::exists(config_path / model_path))
+	{
+		mtcnn_face_detector_location = (config_path / model_path).string();
+	}
+	else
+	{
+		std::cout << "Could not find the MTCNN face detector location" << std::endl;
+	}
 	check_model_path(root.string());
 }
 
@@ -198,13 +277,13 @@ void FaceModelParameters::check_model_path(const std::string& root)
 	{
 		model_location = model_path.string();
 	}
-	else if (boost::filesystem::exists(root_path/model_path))
+	else if (boost::filesystem::exists(root_path / model_path))
 	{
-		model_location = (root_path/model_path).string();
+		model_location = (root_path / model_path).string();
 	}
-	else if (boost::filesystem::exists(config_path/model_path))
+	else if (boost::filesystem::exists(config_path / model_path))
 	{
-		model_location = (config_path/model_path).string();
+		model_location = (config_path / model_path).string();
 	}
 	else
 	{
@@ -234,7 +313,7 @@ void FaceModelParameters::init()
 	window_sizes_small[0] = 0;
 	window_sizes_small[1] = 9;
 	window_sizes_small[2] = 7;
-	window_sizes_small[3] = 5;
+	window_sizes_small[3] = 0;
 
 	// Just for initialisation
 	window_sizes_init.at(0) = 11;
@@ -242,32 +321,34 @@ void FaceModelParameters::init()
 	window_sizes_init.at(2) = 7;
 	window_sizes_init.at(3) = 5;
 
-	face_template_scale = 0.3;
+	face_template_scale = 0.3f;
 	// Off by default (as it might lead to some slight inaccuracies in slowly moving faces)
 	use_face_template = false;
 
 	// For first frame use the initialisation
 	window_sizes_current = window_sizes_init;
 
-	model_location = "model/main_clnf_general.txt";
+	model_location = "model/main_ceclm_general.txt";
+	curr_landmark_detector = CECLM_DETECTOR;
 
-	sigma = 1.5;
-	reg_factor = 25;
-	weight_factor = 0; // By default do not use NU-RLMS for videos as it does not work as well for them
+	sigma = 1.5f;
+	reg_factor = 25.0f;
+	weight_factor = 0.0f; // By default do not use NU-RLMS for videos as it does not work as well for them
 
-	validation_boundary = 0.725;
+	validation_boundary = 0.725f;
 
 	limit_pose = true;
 	multi_view = false;
 
-	reinit_video_every = 4;
+	reinit_video_every = 2;
 
 	// Face detection
-	face_detector_location = "classifiers/haarcascade_frontalface_alt.xml";
+	haar_face_detector_location = "classifiers/haarcascade_frontalface_alt.xml";
+	mtcnn_face_detector_location = "model/mtcnn_detector/MTCNN_detector.txt";
 	quiet_mode = false;
 
-	// By default use HOG SVM
-	curr_face_detector = HOG_SVM_DETECTOR;
+	// By default use MTCNN
+	curr_face_detector = MTCNN_DETECTOR;
 
 }
 
