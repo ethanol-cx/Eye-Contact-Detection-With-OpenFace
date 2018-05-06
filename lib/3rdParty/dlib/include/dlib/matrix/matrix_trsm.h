@@ -9,6 +9,7 @@ namespace dlib
 {
     namespace blas_bindings
     {
+	#ifndef __VECLIB__
 	#ifdef DLIB_USE_BLAS
 	#ifndef CBLAS_H
         extern "C"
@@ -29,6 +30,7 @@ namespace dlib
     // ------------------------------------------------------------------------------------
 	#endif // if not CBLAS_H
 	#endif // if DLIB_USE_BLAS
+	#endif // if __VECLIB__
 /*  Purpose */
 /*  ======= */
 
