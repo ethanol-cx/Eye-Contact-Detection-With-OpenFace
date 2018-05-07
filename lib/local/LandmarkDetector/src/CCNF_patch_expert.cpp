@@ -455,8 +455,8 @@ void CCNF_patch_expert::ResponseOpenBlas(const cv::Mat_<float> &area_of_interest
 	// Perform matrix multiplication in OpenBLAS (fortran call)
 	float alpha1 = 1.0;
 	float beta1 = 0.0;
-	char *not = "N";
-	sgemm_(not, not, &normalized_input.cols, &weight_matrix.rows, &weight_matrix.cols, &alpha1, (float*)normalized_input.data, &normalized_input.cols, (float*)weight_matrix.data, &weight_matrix.cols, &beta1, (float*)neuron_resp_full.data, &normalized_input.cols);
+	char *nT = "N";
+	sgemm_(nT, nT, &normalized_input.cols, &weight_matrix.rows, &weight_matrix.cols, &alpha1, (float*)normalized_input.data, &normalized_input.cols, (float*)weight_matrix.data, &weight_matrix.cols, &beta1, (float*)neuron_resp_full.data, &normalized_input.cols);
 
 	// Above is a faster version of this
 	//cv::Mat_<float> neuron_resp_full = this->weight_matrix * normalized_input;
@@ -500,8 +500,8 @@ void CCNF_patch_expert::ResponseOpenBlas(const cv::Mat_<float> &area_of_interest
 	// Perform matrix multiplication in OpenBLAS (fortran call)
 	alpha1 = 1.0;
 	beta1 = 0.0;
-	not = "N";
-	sgemm_(not, not, &resp_vec_f.cols, &Sigmas[s_to_use].rows, &Sigmas[s_to_use].cols, &alpha1, (float*)resp_vec_f.data, &resp_vec_f.cols, (float*)Sigmas[s_to_use].data, &Sigmas[s_to_use].cols, &beta1, (float*)out.data, &resp_vec_f.cols);
+	nT = "N";
+	sgemm_(nT, nT, &resp_vec_f.cols, &Sigmas[s_to_use].rows, &Sigmas[s_to_use].cols, &alpha1, (float*)resp_vec_f.data, &resp_vec_f.cols, (float*)Sigmas[s_to_use].data, &Sigmas[s_to_use].cols, &beta1, (float*)out.data, &resp_vec_f.cols);
 
 	// Above is a faster version of this
 	//cv::Mat out = Sigmas[s_to_use] * resp_vec_f;

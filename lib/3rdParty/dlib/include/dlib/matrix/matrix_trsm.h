@@ -9,10 +9,7 @@ namespace dlib
 {
     namespace blas_bindings
     {
-	#ifndef __VECLIB__
-	#ifdef DLIB_USE_BLAS
-	#ifndef CBLAS_H
-        extern "C"
+       extern "C"
         {
             void cblas_strsm(const enum CBLAS_ORDER Order, const enum CBLAS_SIDE Side,
                              const enum CBLAS_UPLO Uplo, const enum CBLAS_TRANSPOSE TransA,
@@ -28,9 +25,6 @@ namespace dlib
         }
 
     // ------------------------------------------------------------------------------------
-	#endif // if not CBLAS_H
-	#endif // if DLIB_USE_BLAS
-	#endif // if __VECLIB__
 /*  Purpose */
 /*  ======= */
 
