@@ -77,7 +77,7 @@
 using namespace LandmarkDetector;
 
 // Copy constructor		
-CEN_patch_expert::CEN_patch_expert(const CEN_patch_expert& other) : confidence(other.confidence), width(other.width), height(other.height)
+CEN_patch_expert::CEN_patch_expert(const CEN_patch_expert& other) : confidence(other.confidence), width_support(other.width_support), height_support(other.height_support)
 {
 
 	// Copy the layer weights in a deep way
@@ -106,8 +106,8 @@ void CEN_patch_expert::Read(ifstream &stream)
 
 	// the number of neurons for this patch
 	int num_layers;
-	stream.read((char*)&width, 4);
-	stream.read((char*)&height, 4);
+	stream.read((char*)&width_support, 4);
+	stream.read((char*)&height_support, 4);
 	stream.read((char*)&num_layers, 4);
 
 	if (num_layers == 0)
@@ -221,11 +221,11 @@ void im2colBias(const cv::Mat_<float>& input, int width, int height, cv::Mat_<fl
 void CEN_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response)
 {
 
-	int response_height = area_of_interest.rows - height + 1;
-	int response_width = area_of_interest.cols - width + 1;
+	int response_height = area_of_interest.rows - height_support + 1;
+	int response_width = area_of_interest.cols - width_support + 1;
 	
 	cv::Mat_<float> input_col;
-	im2colBias(area_of_interest, width, height, input_col);
+	im2colBias(area_of_interest, width_support, height_support, input_col);
 
 	// Mean and standard deviation normalization
 	contrastNorm(input_col, response);
@@ -246,8 +246,7 @@ void CEN_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat
 		// Perform matrix multiplication in OpenBLAS (fortran call)
 		float alpha1 = 1.0;
 		float beta1 = 0.0;
-		char *nT = "N";
-		sgemm_(nT, nT, &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
+		sgemm_("N", "N", &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
 
 		// The above is a faster version of this, by calling the fortran version directly
 		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, resp.cols, weight.rows, weight.cols, 1, m1, resp.cols, m2, weight.cols, 0.0, m3, resp.cols);
@@ -507,11 +506,11 @@ void LandmarkDetector::interpolationMatrix(cv::Mat_<float>& mapMatrix, int respo
 void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc)
 {
 
-	int response_height = area_of_interest.rows - height + 1;
-	int response_width = area_of_interest.cols - width + 1;
+	int response_height = area_of_interest.rows - height_support + 1;
+	int response_width = area_of_interest.cols - width_support + 1;
 
 	// Extract im2col but in a sparse way and contrast normalize
-	im2colBiasSparseContrastNorm(area_of_interest, width, height, im2col_prealloc);
+	im2colBiasSparseContrastNorm(area_of_interest, width_support, height_support, im2col_prealloc);
 	response = im2col_prealloc.t();
 
 	for (size_t layer = 0; layer < activation_function.size(); ++layer)
@@ -529,8 +528,7 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 		// Perform matrix multiplication in OpenBLAS (fortran call)
 		float alpha1 = 1.0;
 		float beta1 = 0.0;
-		char *nT = "N";
-		sgemm_(nT, nT, &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
+		sgemm_("N", "N", &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
 
 		// The above is a faster version of this, by calling the fortran version directly
 		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, resp.cols, weight.rows, weight.cols, 1, m1, resp.cols, m2, weight.cols, 0.0, m3, resp.cols);
@@ -585,13 +583,13 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc)
 {
 
-	int response_height = area_of_interest.rows - height + 1;
-	int response_width = area_of_interest.cols - width + 1;
+	int response_height = area_of_interest.rows - height_support + 1;
+	int response_width = area_of_interest.cols - width_support + 1;
 
 	cv::flip(area_of_interest, area_of_interest, 1);
 
 	// Extract im2col but in a sparse way and contrast normalize
-	im2colBiasSparseContrastNorm(area_of_interest, width, height, im2col_prealloc);
+	im2colBiasSparseContrastNorm(area_of_interest, width_support, height_support, im2col_prealloc);
 
 	response = im2col_prealloc.t();
 
@@ -610,8 +608,7 @@ void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_inte
 		// Perform matrix multiplication in OpenBLAS (fortran call)
 		float alpha1 = 1.0;
 		float beta1 = 0.0;
-		char *nT = "N";
-		sgemm_(nT, nT, &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
+		sgemm_("N", "N", &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
 
 		// The above is a faster version of this, by calling the fortran version directly
 		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, resp.cols, weight.rows, weight.cols, 1, m1, resp.cols, m2, weight.cols, 0.0, m3, resp.cols);
@@ -665,14 +662,14 @@ void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_inte
 
 void CEN_patch_expert::ResponseSparse_mirror_joint(const cv::Mat_<float> &area_of_interest_left, const cv::Mat_<float> &area_of_interest_right, cv::Mat_<float> &response_left, cv::Mat_<float> &response_right, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc_left, cv::Mat_<float>& im2col_prealloc_right)
 {
-	int response_height = area_of_interest_left.rows - height + 1;
-	int response_width = area_of_interest_left.cols - width + 1;
+	int response_height = area_of_interest_left.rows - height_support + 1;
+	int response_width = area_of_interest_left.cols - width_support + 1;
 
 	cv::flip(area_of_interest_right, area_of_interest_right, 1);
 
 	// Extract im2col but in a sparse way and contrast normalize
-	im2colBiasSparseContrastNorm(area_of_interest_left, width, height, im2col_prealloc_left);
-	im2colBiasSparseContrastNorm(area_of_interest_right, width, height, im2col_prealloc_right);
+	im2colBiasSparseContrastNorm(area_of_interest_left, width_support, height_support, im2col_prealloc_left);
+	im2colBiasSparseContrastNorm(area_of_interest_right, width_support, height_support, im2col_prealloc_right);
 
 	cv::Mat_<float> response;
 	cv::vconcat(im2col_prealloc_left, im2col_prealloc_right, response);
@@ -695,8 +692,7 @@ void CEN_patch_expert::ResponseSparse_mirror_joint(const cv::Mat_<float> &area_o
 		// Perform matrix multiplication in OpenBLAS (fortran call)
 		float alpha1 = 1.0;
 		float beta1 = 0.0;
-		char *nT = "N";
-		sgemm_(nT, nT, &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
+		sgemm_("N", "N", &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
 
 		// The above is a faster version of this, by calling the fortran version directly
 		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, resp.cols, weight.rows, weight.cols, 1, m1, resp.cols, m2, weight.cols, 0.0, m3, resp.cols);

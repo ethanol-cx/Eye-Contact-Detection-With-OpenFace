@@ -162,9 +162,12 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 
 	sim_img_to_ref = AlignShapesWithScale_f(image_shape_2D, reference_shape_2D);
 	sim_ref_to_img = sim_img_to_ref.inv(cv::DECOMP_LU);
-
+	
 	float a1 = sim_ref_to_img(0, 0);
 	float b1 = -sim_ref_to_img(0, 1);
+
+	cv::Mat_<float> gray_image_flt;
+	grayscale_image.convertTo(gray_image_flt, CV_32F);
 
 	bool use_ccnf = !this->ccnf_expert_intensity.empty();
 	bool use_cen = !this->cen_expert_intensity.empty();
@@ -230,8 +233,8 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 
 		if (use_cen)
 		{
-			area_of_interest_width = window_size + cen_expert_intensity[scale][view_id][ind].width - 1;
-			area_of_interest_height = window_size + cen_expert_intensity[scale][view_id][ind].height - 1;
+			area_of_interest_width = window_size + cen_expert_intensity[scale][view_id][ind].width_support - 1;
+			area_of_interest_height = window_size + cen_expert_intensity[scale][view_id][ind].height_support - 1;
 		}
 		else if (use_ccnf)
 		{
@@ -245,17 +248,13 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 		}
 
 		// scale and rotate to mean shape to reference frame
-		cv::Mat sim = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<float>(ind, 0), b1, a1, landmark_locations.at<float>(ind + n, 0));
+		cv::Mat sim = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<float>(ind, 0) - a1 * (area_of_interest_width - 1.0f) / 2.0f + b1 * (area_of_interest_width - 1.0f) / 2.0f, b1, a1, landmark_locations.at<float>(ind + n, 0) - a1 * (area_of_interest_width - 1.0f) / 2.0f - b1 * (area_of_interest_width - 1.0f) / 2.0f);
 
 		// Extract the region of interest around the current landmark location
-		cv::Mat_<float> area_of_interest(area_of_interest_height, area_of_interest_width);
+		cv::Mat_<float> area_of_interest(area_of_interest_height, area_of_interest_width, 0.0f);
 
-		// Using C style openCV as it does what we need
-		CvMat area_of_interest_o = area_of_interest;
-		CvMat sim_o = sim;
-		IplImage im_o = grayscale_image;
-		cvGetQuadrangleSubPix(&im_o, &area_of_interest_o, &sim_o);
-
+		cv::warpAffine(gray_image_flt, area_of_interest, sim, area_of_interest.size(), cv::WARP_INVERSE_MAP + CV_INTER_LINEAR);
+		
 
 		// Get intensity response either from the SVR, CCNF, or CEN patch experts (prefer CEN as they are the most accurate so far)
 		if (!cen_expert_intensity.empty())
@@ -281,15 +280,14 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 					{
 
 						// Grab mirrored area of interest
-						cv::Mat sim_r = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<float>(mirror_id, 0), b1, a1, landmark_locations.at<float>(mirror_id + n, 0));
+
+						// scale and rotate to mean shape to reference frame
+						cv::Mat sim_r = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<float>(mirror_id, 0) - a1 * (area_of_interest_width - 1.0f) / 2.0f + b1 * (area_of_interest_width - 1.0f) / 2.0f, b1, a1, landmark_locations.at<float>(mirror_id + n, 0) - a1 * (area_of_interest_width - 1.0f) / 2.0f - b1 * (area_of_interest_width - 1.0f) / 2.0f);
 
 						// Extract the region of interest around the current landmark location
-						cv::Mat_<float> area_of_interest_r(area_of_interest_height, area_of_interest_width);
-						// Using C style openCV as it does what we need
-						CvMat area_of_interest_o_r = area_of_interest_r;
-						CvMat sim_o_r = sim_r;
-						IplImage im_o_r = grayscale_image;
-						cvGetQuadrangleSubPix(&im_o_r, &area_of_interest_o_r, &sim_o_r);
+						cv::Mat_<float> area_of_interest_r(area_of_interest_height, area_of_interest_width, 0.0f);
+
+						cv::warpAffine(gray_image_flt, area_of_interest_r, sim_r, area_of_interest_r.size(), cv::WARP_INVERSE_MAP + CV_INTER_LINEAR);
 
 						cv::Mat_<float> prealloc_mat_right = preallocated_im2col[mirror_id][im2col_size];
 

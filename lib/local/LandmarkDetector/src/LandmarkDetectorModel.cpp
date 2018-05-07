@@ -1115,8 +1115,7 @@ float CLNF::NU_RLMS(cv::Vec6f& final_global, cv::Mat_<float>& final_local, const
 		// Perform matrix multiplication in OpenBLAS (fortran call)
 		float alpha1 = 1.0;
 		float beta1 = 1.0;
-		char *nT = "N";
-		sgemm_(nT, nT, &J.cols, &J_w_t.rows, &J_w_t.cols, &alpha1, (float*)J.data, &J.cols, (float*)J_w_t.data, &J_w_t.cols, &beta1, (float*)Hessian.data, &J.cols);
+		sgemm_("N", "N", &J.cols, &J_w_t.rows, &J_w_t.cols, &alpha1, (float*)J.data, &J.cols, (float*)J_w_t.data, &J_w_t.cols, &beta1, (float*)Hessian.data, &J.cols);
 
 		// Above is a fast (but ugly) version of 
 		// cv::Mat_<float> Hessian = J_w_t * J + regTerm;

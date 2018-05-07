@@ -145,7 +145,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;CPPINEROP_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>./;$(SolutionDir)lib\local\LandmarkDetector\include;$(SolutionDir)lib\local\FaceAnalyser\include;$(SolutionDir)lib\local\GazeAnalyser\include;$(SolutionDir)lib\local\Utilities\include;$(SolutionDir)lib\3rdParty\CameraEnumerator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -166,7 +166,7 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;CPPINEROP_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>./;$(SolutionDir)lib\local\LandmarkDetector\include;$(SolutionDir)lib\local\FaceAnalyser\include;$(SolutionDir)lib\local\GazeAnalyser\include;$(SolutionDir)lib\local\Utilities\include;$(SolutionDir)lib\3rdParty\CameraEnumerator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -762,7 +762,8 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<float> >& o_regions, const 
 	rectify(proposal_boxes_all);
 
 	// Creating proposal images from previous step detections
-	vector<bool> above_thresh(proposal_boxes_all.size());
+	vector<bool> above_thresh;
+	above_thresh.resize(proposal_boxes_all.size(), false);
 	//tbb::parallel_for(0, (int)proposal_boxes_all.size(), [&](int k) {
 	for (size_t k = 0; k < proposal_boxes_all.size(); ++k) 
 	{

@@ -53,8 +53,8 @@ namespace LandmarkDetector
 	public:
 
 		// Width and height of the patch expert support area
-		int width;
-		int height;
+		int width_support;
+		int height_support;
 
 		// Neural weights
 		std::vector<cv::Mat_<float>> biases;

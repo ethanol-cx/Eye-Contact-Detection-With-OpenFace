@@ -429,8 +429,7 @@ namespace LandmarkDetector
 		// Get the rotation
 		cv::Matx22f R = AlignShapesKabsch2D_f(src_mean_normed, dst_mean_normed);
 
-		cv::Matx22f	A;
-		cv::Mat(s * R).copyTo(A);
+		cv::Matx22f	A = s * R;
 
 		cv::Mat_<float> aligned = (cv::Mat(cv::Mat(A) * src.t())).t();
 		cv::Mat_<float> offset = dst - aligned;

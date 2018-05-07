@@ -148,7 +148,7 @@ xcopy /I /E /Y /D "$(SolutionDir)lib\3rdParty\OpenCV3.4\classifiers" "$(OutDir)c
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OpenMPSupport>false</OpenMPSupport>
       <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>
@@ -173,7 +173,7 @@ xcopy /I /E /Y /D "$(SolutionDir)lib\3rdParty\OpenCV3.4\classifiers" "$(OutDir)c
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OpenMPSupport>false</OpenMPSupport>
       <AdditionalOptions>/Zm300 %(AdditionalOptions)</AdditionalOptions>

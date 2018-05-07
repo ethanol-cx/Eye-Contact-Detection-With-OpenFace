@@ -563,8 +563,7 @@ namespace LandmarkDetector
 		float alpha = 1.0f;
 		float beta = 0.0f;
 		// Call fortran directly (faster)
-		char *nT = "N";
-		sgemm_(nT, nT, &m2_cols, &num_rows, &pre_alloc_im2col.cols, &alpha, m2, &m2_cols, m1, &pre_alloc_im2col.cols, &beta, m3, &m2_cols);
+		sgemm_("N", "N", &m2_cols, &num_rows, &pre_alloc_im2col.cols, &alpha, m2, &m2_cols, m1, &pre_alloc_im2col.cols, &beta, m3, &m2_cols);
 
 		// Above is equivalent to out = pre_alloc_im2col * weight_matrix;
 		

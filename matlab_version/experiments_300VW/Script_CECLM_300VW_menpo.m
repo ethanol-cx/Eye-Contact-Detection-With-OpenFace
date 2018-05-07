@@ -2,11 +2,13 @@ clear;
 addpath(genpath('../'));
 
 output_dir = './CECLM_res_menpo/';
-
+if(~exist(output_dir, 'dir'))
+    mkdir(output_dir)
+end 
 %% select database and load bb initializations
-db_root = 'D:\Datasets\300VW_Dataset_2015_12_14\300VW_Dataset_2015_12_14/';
+db_root = 'E:\datasets\300VW\300VW_Dataset_2015_12_14/';
 bb_root = './300VW_dets_mtcnn/';
-extra_dir = 'D:\Datasets\300VW_Dataset_2015_12_14\extra';
+extra_dir = 'E:\datasets\300VW\300VW_Dataset_2015_12_14\extra';
 [ vid_locs, bboxes, gts_all, invalid_frames ] = CollectTestData(db_root, bb_root, extra_dir);
 
 %% loading the patch experts and the PDM

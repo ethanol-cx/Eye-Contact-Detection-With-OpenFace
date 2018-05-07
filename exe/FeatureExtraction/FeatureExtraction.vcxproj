@@ -149,7 +149,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\lib\local\FaceAnalyser\include;$(SolutionDir)\lib\local\LandmarkDetector\include;$(SolutionDir)\lib\local\GazeAnalyser\include;$(SolutionDir)\lib\local\Utilities\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMPSupport>false</OpenMPSupport>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -172,7 +172,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\lib\local\FaceAnalyser\include;$(SolutionDir)\lib\local\LandmarkDetector\include;$(SolutionDir)\lib\local\GazeAnalyser\include;$(SolutionDir)\lib\local\Utilities\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMPSupport>false</OpenMPSupport>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
