@@ -81,3 +81,4 @@ script:
   - make
   - ../build/bin/FaceLandmarkImg -inroot ../samples -f sample1.jpg -out_dir data -of sample1.txt -multi_view 1 -wild -q
   - ../build/bin/FeatureExtraction -fdir "../samples/image_sequence" -out_dir output -q
+  - ../build/bin/FaceLandmarkVidMulti -fdir ../samples/image_sequence -q -mloc model/main_clnf_general.txt
