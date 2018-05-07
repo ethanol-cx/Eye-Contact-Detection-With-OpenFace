@@ -146,16 +146,16 @@ void CEN_patch_expert::Read(ifstream &stream)
 void contrastNorm(const cv::Mat_<float>& input, cv::Mat_<float>& output)
 {
 
-	int num_cols = input.cols;
+	const unsigned int num_cols = input.cols;
 
-	int num_rows = input.rows;
+	const unsigned int num_rows = input.rows;
 
 	output = input.clone();
 
 	cv::MatConstIterator_<float> p = input.begin();
 
 	// Compute row wise
-	for (size_t y = 0; y < num_rows; ++y)
+	for (unsigned int y = 0; y < num_rows; ++y)
 	{
 		
 		cv::Scalar mean_s = cv::mean(input(cv::Rect(1,y,num_cols-1, 1)));
@@ -164,7 +164,7 @@ void contrastNorm(const cv::Mat_<float>& input, cv::Mat_<float>& output)
 		p++;
 
 		float sum_sq = 0;
-		for (size_t x = 1; x < num_cols; ++x)
+		for (unsigned int x = 1; x < num_cols; ++x)
 		{
 			float curr = *p++;
 			sum_sq += (curr - mean) * (curr - mean);
@@ -175,7 +175,7 @@ void contrastNorm(const cv::Mat_<float>& input, cv::Mat_<float>& output)
 		if (norm == 0)
 			norm = 1;
 
-		for (size_t x = 1; x < num_cols; ++x)
+		for (unsigned int x = 1; x < num_cols; ++x)
 		{
 			output.at<float>(y, x) = (output.at<float>(y, x) - mean) / norm;
 		}
@@ -184,15 +184,15 @@ void contrastNorm(const cv::Mat_<float>& input, cv::Mat_<float>& output)
 
 }
 
-void im2colBias(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
+void im2colBias(const cv::Mat_<float>& input, const unsigned int width, const unsigned int height, cv::Mat_<float>& output)
 {
 
-	int m = input.rows;
-	int n = input.cols;
+	const unsigned int m = input.rows;
+	const unsigned int n = input.cols;
 
 	// determine how many blocks there will be with a sliding window of width x height in the input
-	int yB = m - height + 1;
-	int xB = n - width + 1;
+	const unsigned int yB = m - height + 1;
+	const unsigned int xB = n - width + 1;
 
 	// Allocate the output size
 	if(output.rows != xB*yB && output.cols != width * height + 1)
@@ -201,16 +201,16 @@ void im2colBias(const cv::Mat_<float>& input, int width, int height, cv::Mat_<fl
 	}
 
 	// Iterate over the blocks
-	for (int j = 0; j< xB; j++)
+	for (unsigned int j = 0; j< xB; j++)
 	{
-		for (int i = 0; i< yB; i++)
+		for (unsigned int i = 0; i< yB; i++)
 		{
-			int rowIdx = i + j*yB;
+			unsigned int rowIdx = i + j*yB;
 
 			for (unsigned int yy = 0; yy < height; ++yy)
 				for (unsigned int xx = 0; xx < width; ++xx)
 				{
-					int colIdx = xx*height + yy;
+					unsigned int colIdx = xx*height + yy;
 					output.at<float>(rowIdx, colIdx + 1) = input.at<float>(i + yy, j + xx);
 				}
 		}
@@ -381,18 +381,18 @@ void im2colBiasSparseContrastNorm(const cv::Mat_<float>& input, const unsigned i
 	}
 }
 
-void im2colBiasSparse(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
+void im2colBiasSparse(const cv::Mat_<float>& input, const unsigned int width, const unsigned int height, cv::Mat_<float>& output)
 {
 
-	int m = input.rows;
-	int n = input.cols;
+	const unsigned int m = input.rows;
+	const unsigned int n = input.cols;
 
 	// determine how many blocks there will be with a sliding window of width x height in the input
-	int yB = m - height + 1;
-	int xB = n - width + 1;
+	const unsigned int yB = m - height + 1;
+	const unsigned int xB = n - width + 1;
 
 	// As we will be skipping half of the outputs
-	int out_size = (yB*xB - 1) / 2;
+	const unsigned int out_size = (yB*xB - 1) / 2;
 
 	// Allocate the output size
 	if (output.rows != out_size && output.cols != width * height + 1)
@@ -401,11 +401,11 @@ void im2colBiasSparse(const cv::Mat_<float>& input, int width, int height, cv::M
 	}
 
 	// Iterate over the blocks, skipping every second block
-	int rowIdx = 0;
-	int skipCounter = 0;
-	for (int j = 0; j< xB; j++)
+	unsigned int rowIdx = 0;
+	unsigned int skipCounter = 0;
+	for (unsigned int j = 0; j< xB; j++)
 	{
-		for (int i = 0; i< yB; i++)
+		for (unsigned int i = 0; i< yB; i++)
 		{
 			// Skip every second row
 			skipCounter++;
@@ -418,7 +418,7 @@ void im2colBiasSparse(const cv::Mat_<float>& input, int width, int height, cv::M
 			{
 				for (unsigned int xx = 0; xx < width; ++xx)
 				{
-					int colIdx = xx*height + yy;
+					unsigned int colIdx = xx*height + yy;
 					output.at<float>(rowIdx, colIdx + 1) = input.at<float>(i + yy, j + xx);
 				}
 			}
@@ -506,8 +506,8 @@ void LandmarkDetector::interpolationMatrix(cv::Mat_<float>& mapMatrix, int respo
 void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc)
 {
 
-	int response_height = area_of_interest.rows - height_support + 1;
-	int response_width = area_of_interest.cols - width_support + 1;
+	const unsigned int response_height = area_of_interest.rows - height_support + 1;
+	const unsigned int response_width = area_of_interest.cols - width_support + 1;
 
 	// Extract im2col but in a sparse way and contrast normalize
 	im2colBiasSparseContrastNorm(area_of_interest, width_support, height_support, im2col_prealloc);
@@ -537,13 +537,13 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 		response = resp_blas;
 
 		float* data = (float*)response.data;
-		size_t height = response.rows;
-		size_t width = response.cols;
+		const unsigned height = response.rows;
+		const unsigned width = response.cols;
 		float* data_b = (float*)biases[layer].data;
-		for (size_t y = 0; y < height; ++y)
+		for (unsigned int y = 0; y < height; ++y)
 		{
 			float bias = data_b[y];
-			for (size_t x = 0; x < width; ++x)
+			for (unsigned int x = 0; x < width; ++x)
 			{
 				float in = *data + bias;
 				*data++ = in;
@@ -554,12 +554,12 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 		if (activation_function[layer] == 0) // Sigmoid
 		{
 
-			size_t resp_size = response.rows * response.cols;
+			const unsigned int resp_size = response.rows * response.cols;
 
 			// Iterate over the data directly
 			float* data = (float*)response.data;
 
-			for (size_t counter = 0; counter < resp_size; ++counter)
+			for (unsigned int counter = 0; counter < resp_size; ++counter)
 			{
 				float in = *data;
 				*data++ = 1.0 / (1.0 + exp(-(in)));
@@ -583,8 +583,8 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc)
 {
 
-	int response_height = area_of_interest.rows - height_support + 1;
-	int response_width = area_of_interest.cols - width_support + 1;
+	const unsigned int response_height = area_of_interest.rows - height_support + 1;
+	const unsigned int response_width = area_of_interest.cols - width_support + 1;
 
 	cv::flip(area_of_interest, area_of_interest, 1);
 
@@ -617,13 +617,13 @@ void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_inte
 		response = resp_blas;
 
 		float* data = (float*)response.data;
-		size_t height = response.rows;
-		size_t width = response.cols;
+		const unsigned int height = response.rows;
+		const unsigned int width = response.cols;
 		float* data_b = (float*)biases[layer].data;
-		for (size_t y = 0; y < height; ++y)
+		for (unsigned int y = 0; y < height; ++y)
 		{
 			float bias = data_b[y];
-			for (size_t x = 0; x < width; ++x)
+			for (unsigned int x = 0; x < width; ++x)
 			{
 				float in = *data + bias;
 				*data++ = in;
@@ -634,12 +634,12 @@ void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_inte
 		if (activation_function[layer] == 0) // Sigmoid
 		{
 
-			size_t resp_size = response.rows * response.cols;
+			const unsigned int resp_size = response.rows * response.cols;
 
 			// Iterate over the data directly
 			float* data = (float*)response.data;
 
-			for (size_t counter = 0; counter < resp_size; ++counter)
+			for (unsigned int counter = 0; counter < resp_size; ++counter)
 			{
 				float in = *data;
 				*data++ = 1.0 / (1.0 + exp(-(in)));
@@ -662,8 +662,8 @@ void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_inte
 
 void CEN_patch_expert::ResponseSparse_mirror_joint(const cv::Mat_<float> &area_of_interest_left, const cv::Mat_<float> &area_of_interest_right, cv::Mat_<float> &response_left, cv::Mat_<float> &response_right, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc_left, cv::Mat_<float>& im2col_prealloc_right)
 {
-	int response_height = area_of_interest_left.rows - height_support + 1;
-	int response_width = area_of_interest_left.cols - width_support + 1;
+	const unsigned int response_height = area_of_interest_left.rows - height_support + 1;
+	const unsigned int response_width = area_of_interest_left.cols - width_support + 1;
 
 	cv::flip(area_of_interest_right, area_of_interest_right, 1);
 
@@ -701,13 +701,13 @@ void CEN_patch_expert::ResponseSparse_mirror_joint(const cv::Mat_<float> &area_o
 		response = resp_blas;
 
 		float* data = (float*)response.data;
-		size_t height = response.rows;
-		size_t width = response.cols;
+		const unsigned int height = response.rows;
+		const unsigned int width = response.cols;
 		float* data_b = (float*)biases[layer].data;
-		for (size_t y = 0; y < height; ++y)
+		for (unsigned int y = 0; y < height; ++y)
 		{
 			float bias = data_b[y];
-			for (size_t x = 0; x < width; ++x)
+			for (unsigned int x = 0; x < width; ++x)
 			{
 				float in = *data + bias;
 				*data++ = in;
