@@ -91,7 +91,7 @@ void CEN_patch_expert::Read(ifstream &stream)
 {
 
 	// Setting up OpenBLAS
-	goto_set_num_threads(1);
+	//goto_set_num_threads(1);
 	openblas_set_num_threads(1);
 
 	// Sanity check
