@@ -35,7 +35,6 @@
 
 // OpenBLAS
 #include <cblas.h>
-#include <f77blas.h>
 
 // dlib
 #include <dlib/image_processing/frontal_face_detector.h>
