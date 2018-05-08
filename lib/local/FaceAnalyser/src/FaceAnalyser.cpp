@@ -242,7 +242,7 @@ int GetViewId(const vector<cv::Vec3d> orientations_all, const cv::Vec3d& orienta
 		if(i == 0 || d < dbest)
 		{
 			dbest = d;
-			id = i;
+			id = (int) i;
 		}
 	}
 	return id;

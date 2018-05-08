@@ -50,18 +50,18 @@ namespace LandmarkDetector
 
 		if (input_output_maps.size() > 1)
 		{
-			int h = input_output_maps[0].rows;
-			int w = input_output_maps[0].cols;
-			size_t size_in = h * w;
+			unsigned int h = input_output_maps[0].rows;
+			unsigned int w = input_output_maps[0].cols;
+			unsigned int size_in = h * w;
 
-			for (size_t k = 0; k < input_output_maps.size(); ++k)
+			for (int k = 0; k < (int) input_output_maps.size(); ++k)
 			{
 				// Apply the PReLU
 				auto iter = input_output_maps[k].begin();
 
 				float neg_mult = prelu_weights.at<float>(k);
 
-				for (size_t i = 0; i < size_in; ++i)
+				for (unsigned int i = 0; i < size_in; ++i)
 				{
 					float in_val = *iter;
 
@@ -76,7 +76,7 @@ namespace LandmarkDetector
 
 			int w = input_output_maps[0].cols;
 
-			for (size_t k = 0; k < prelu_weights.rows; ++k)
+			for (int k = 0; k < prelu_weights.rows; ++k)
 			{
 				auto iter = input_output_maps[0].row(k).begin();
 				float neg_mult = prelu_weights.at<float>(k);
@@ -107,9 +107,9 @@ namespace LandmarkDetector
 		{
 			// Concatenate all the maps
 			cv::Size orig_size = input_maps[0].size();
-			cv::Mat_<float> input_concat(input_maps.size(), input_maps[0].cols * input_maps[0].rows);
+			cv::Mat_<float> input_concat((int)input_maps.size(), input_maps[0].cols * input_maps[0].rows);
 
-			for (size_t in = 0; in < input_maps.size(); ++in)
+			for (int in = 0; in < input_maps.size(); ++in)
 			{
 				cv::Mat_<float> add = input_maps[in];
 
@@ -128,14 +128,14 @@ namespace LandmarkDetector
 			{
 				input_concat = weights * input_concat;
 				// Add biases
-				for (size_t k = 0; k < biases.rows; ++k)
+				for (int k = 0; k < biases.rows; ++k)
 				{
 					input_concat.row(k) = input_concat.row(k) + biases.at<float>(k);
 				}
 
 				outputs.clear();
 				// Resize and add as output
-				for (size_t k = 0; k < biases.rows; ++k)
+				for (int k = 0; k < biases.rows; ++k)
 				{
 					cv::Mat_<float> reshaped = input_concat.row(k).clone();
 					reshaped = reshaped.reshape(1, orig_size.height);
@@ -172,8 +172,8 @@ namespace LandmarkDetector
 		for (size_t in = 0; in < input_maps.size(); ++in)
 		{
 			// Help with rounding up a bit, to match caffe style output
-			int out_x = round((float)(input_maps[in].cols - kernel_size_x) / (float)stride_x) + 1;
-			int out_y = round((float)(input_maps[in].rows - kernel_size_y) / (float)stride_y) + 1;
+			int out_x = (int)round((float)(input_maps[in].cols - kernel_size_x) / (float)stride_x) + 1;
+			int out_y = (int)round((float)(input_maps[in].rows - kernel_size_y) / (float)stride_y) + 1;
 
 			cv::Mat_<float> sub_out(out_y, out_x, 0.0);
 			cv::Mat_<float> in_map = input_maps[in];
@@ -360,15 +360,15 @@ namespace LandmarkDetector
 		}
 	}
 
-	void im2col_t(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
+	void im2col_t(const cv::Mat_<float>& input, const unsigned int width, const unsigned int height, cv::Mat_<float>& output)
 	{
 
-		int m = input.cols;
-		int n = input.rows;
+		const unsigned int m = input.cols;
+		const unsigned int n = input.rows;
 
 		// determine how many blocks there will be with a sliding window of width x height in the input
-		int yB = m - height + 1;
-		int xB = n - width + 1;
+		const unsigned int yB = m - height + 1;
+		const unsigned int xB = n - width + 1;
 
 		// Allocate the output size
 		if (output.rows != width * height || output.cols != xB*yB)
@@ -377,10 +377,10 @@ namespace LandmarkDetector
 		}
 
 		// Iterate over the whole image
-		for (int i = 0; i< yB; i++)
+		for (unsigned int i = 0; i< yB; i++)
 		{
-			int rowIdx = i;
-			for (int j = 0; j< xB; j++)
+			unsigned int rowIdx = i;
+			for (unsigned int j = 0; j< xB; j++)
 			{
 				//int rowIdx = i; +j*yB;
 				// iterate over the blocks within the image
@@ -390,7 +390,7 @@ namespace LandmarkDetector
 					const float* Mi = input.ptr<float>(j + yy);
 					for (unsigned int xx = 0; xx < width; ++xx)
 					{
-						int colIdx = xx*height + yy;
+						unsigned int colIdx = xx*height + yy;
 
 						output.at<float>(colIdx, rowIdx) = Mi[i + xx];
 					}
@@ -413,10 +413,10 @@ namespace LandmarkDetector
 		int yB = height_in - height_k + 1;
 		int xB = width_n - width_k + 1;
 
-		cv::Mat_<float> input_matrix(input_maps.size() * height_k * width_k + 1.0, yB * xB, 1.0f);
+		cv::Mat_<float> input_matrix((int)input_maps.size() * height_k * width_k + 1, yB * xB, 1.0f);
 
 		// Comibine im2col accross channels to prepare for matrix multiplication
-		for (size_t i = 0; i < input_maps.size(); ++i)
+		for (int i = 0; i < (int)input_maps.size(); ++i)
 		{
 			cv::Mat_<float> tmp = input_matrix(cv::Rect(0, i * height_k * width_k, yB * xB, height_k * width_k));
 			im2col_t(input_maps[i], width_k, height_k, tmp);
@@ -431,22 +431,22 @@ namespace LandmarkDetector
 		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, input_matrix.cols, weight_matrix.rows, weight_matrix.cols, 1, m2, input_matrix.cols, m1, weight_matrix.cols, 0.0, m3, input_matrix.cols);
 
 		// Move back to vectors and reshape accordingly (also add the bias)
-		for (size_t k = 0; k < out.rows; ++k)
+		for (int k = 0; k < out.rows; ++k)
 		{
 			outputs.push_back(out.row(k).reshape(1, yB));
 		}
 
 	}
 
-	void im2col(const cv::Mat_<float>& input, int width, int height, cv::Mat_<float>& output)
+	void im2col(const cv::Mat_<float>& input, const unsigned int width, const unsigned int height, cv::Mat_<float>& output)
 	{
 	
-		int m = input.rows;
-		int n = input.cols;
+		const unsigned int m = input.rows;
+		const unsigned int n = input.cols;
 	
 		// determine how many blocks there will be with a sliding window of width x height in the input
-		int yB = m - height + 1;
-		int xB = n - width + 1;
+		const unsigned int yB = m - height + 1;
+		const unsigned int xB = n - width + 1;
 	
 		// Allocate the output size
 		if (output.cols != width * height || output.rows != xB*yB)
@@ -455,10 +455,10 @@ namespace LandmarkDetector
 		}
 	
 		// Iterate over the whole image
-		for (int i = 0; i< yB; i++)
+		for (unsigned int i = 0; i< yB; i++)
 		{
-			int rowIdx = i*xB;
-			for (int j = 0; j< xB; j++)
+			unsigned int rowIdx = i*xB;
+			for (unsigned int j = 0; j< xB; j++)
 			{
 	
 				float* Mo = output.ptr<float>(rowIdx);
@@ -471,7 +471,7 @@ namespace LandmarkDetector
 	
 					for (unsigned int xx = 0; xx < width; ++xx)
 					{
-						int colIdx = xx*height + yy;
+						unsigned int colIdx = xx*height + yy;
 						//output.at<float>(rowIdx, colIdx) = Mi[j + xx]; //input.at<float>(i + yy, j + xx);
 						Mo[colIdx] = Mi[j + xx];
 					}
@@ -482,31 +482,31 @@ namespace LandmarkDetector
 		}
 	}
 
-	void im2col_multimap(const vector<cv::Mat_<float> >& inputs, int width, int height, cv::Mat_<float>& output)
+	void im2col_multimap(const vector<cv::Mat_<float> >& inputs, const unsigned int width, const unsigned int height, cv::Mat_<float>& output)
 	{
 	
-		int m = inputs[0].rows;
-		int n = inputs[0].cols;
+		const unsigned int m = inputs[0].rows;
+		const unsigned int n = inputs[0].cols;
 	
 		// determine how many blocks there will be with a sliding window of width x height in the input
-		int yB = m - height + 1;
-		int xB = n - width + 1;
+		const unsigned int yB = m - height + 1;
+		const unsigned int xB = n - width + 1;
 	
 		int stride = height * width;
 	
-		size_t num_maps = inputs.size();
+		unsigned int num_maps = (unsigned int)inputs.size();
 	
 		// Allocate the output size
-		if (output.cols != width * height * inputs.size() + 1 || output.rows < xB*yB)
+		if (output.cols != width * height * inputs.size() + 1 || (unsigned int) output.rows < xB*yB)
 		{
 			output = cv::Mat::ones(xB*yB, width * height * num_maps + 1, CV_32F);
 		}
 	
 		// Iterate over the whole image
-		for (int i = 0; i< yB; i++)
+		for (unsigned int i = 0; i< yB; i++)
 		{
-			int rowIdx = i*xB;
-			for (int j = 0; j< xB; j++)
+			unsigned int rowIdx = i*xB;
+			for (unsigned int j = 0; j< xB; j++)
 			{
 	
 				float* Mo = output.ptr<float>(rowIdx);
@@ -523,7 +523,7 @@ namespace LandmarkDetector
 	
 						for (unsigned int xx = 0; xx < width; ++xx)
 						{
-							int colIdx = xx*height + yy + in_maps * stride;
+							unsigned int colIdx = xx*height + yy + in_maps * stride;
 							//output.at<float>(rowIdx, colIdx) = Mi[j + xx]; //input.at<float>(i + yy, j + xx);
 							Mo[colIdx] = Mi[j + xx];
 						}
@@ -570,7 +570,7 @@ namespace LandmarkDetector
 		out = out.t();
 
 		// Move back to vectors and reshape accordingly
-		for (size_t k = 0; k < out.rows; ++k)
+		for (int k = 0; k < out.rows; ++k)
 		{
 			outputs.push_back(out.row(k).reshape(1, yB));
 		}

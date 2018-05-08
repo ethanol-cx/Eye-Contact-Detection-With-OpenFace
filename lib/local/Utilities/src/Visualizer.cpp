@@ -256,7 +256,7 @@ void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::stri
 		const int MARGIN_X = 185;
 		const int MARGIN_Y = 10;
 
-		const int nb_aus = au_names.size();
+		const int nb_aus = (int) au_names.size();
 
 		// Do not reinitialize
 		if (action_units_image.empty())
@@ -299,14 +299,14 @@ void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::stri
 		}
 
 		// then, build the graph
-		size_t idx = 0;
+		unsigned int idx = 0;
 		for (auto& au : aus)
 		{
 			std::string name = au.first;
 			bool present = au.second.first;
 			double intensity = au.second.second;
 
-			auto offset = MARGIN_Y + idx * (AU_TRACKBAR_HEIGHT + 10);
+			int offset = MARGIN_Y + idx * (AU_TRACKBAR_HEIGHT + 10);
 			std::ostringstream au_i;
 			au_i << std::setprecision(2) << std::setw(4) << std::fixed << intensity;
 			cv::putText(action_units_image, name, cv::Point(10, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(present ? 0 : 200, 0, 0), 1, CV_AA);
@@ -316,7 +316,7 @@ void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::stri
 			{
 				cv::putText(action_units_image, au_i.str(), cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 100, 0), 1, CV_AA);
 				cv::rectangle(action_units_image, cv::Point(MARGIN_X, offset),
-					cv::Point(MARGIN_X + AU_TRACKBAR_LENGTH * intensity / 5, offset + AU_TRACKBAR_HEIGHT),
+					cv::Point((int)(MARGIN_X + AU_TRACKBAR_LENGTH * intensity / 5.0), offset + AU_TRACKBAR_HEIGHT),
 					cv::Scalar(128, 128, 128),
 					CV_FILLED);
 			}

@@ -157,9 +157,9 @@ void im2colContrastNormBias(const cv::Mat_<float>& input, const unsigned int wid
 
 	// Iterate over the blocks
 	unsigned int rowIdx = 0;
-	for (int j = 0; j< xB; j++)
+	for (unsigned int j = 0; j< xB; j++)
 	{
-		for (int i = 0; i< yB; i++)
+		for (unsigned int i = 0; i< yB; i++)
 		{
 
 			float* Mo = output.ptr<float>(rowIdx);
@@ -171,7 +171,7 @@ void im2colContrastNormBias(const cv::Mat_<float>& input, const unsigned int wid
 				const float* Mi = input.ptr<float>(i + yy);
 				for (unsigned int xx = 0; xx < width; ++xx)
 				{
-					int colIdx = xx*height + yy;
+					unsigned int colIdx = xx*height + yy;
 					float in = Mi[j + xx];
 					sum += in;
 
