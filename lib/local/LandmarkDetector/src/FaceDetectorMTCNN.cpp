@@ -88,10 +88,6 @@
 // CNN includes
 #include "CNN_utils.h"
 
-// OpenBLAS
-#include <cblas.h>
-#include <f77blas.h>
-
 using namespace LandmarkDetector;
 
 // Constructor from model file location

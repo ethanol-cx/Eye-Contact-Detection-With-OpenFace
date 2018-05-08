@@ -67,10 +67,6 @@
 // Local includes
 #include "LandmarkDetectorUtils.h"
 
-// OpenBLAS
-#include <cblas.h>
-#include <f77blas.h>
-
 // For exponential
 #include <math.h> 
 

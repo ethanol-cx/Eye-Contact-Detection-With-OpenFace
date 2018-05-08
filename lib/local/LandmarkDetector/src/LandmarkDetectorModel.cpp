@@ -43,10 +43,6 @@
 // TBB includes
 #include <tbb/tbb.h>
 
-// OpenBLAS
-#include <cblas.h>
-#include <f77blas.h>
-
 // Local includes
 #include <LandmarkDetectorUtils.h>
 #include <RotationHelpers.h>
