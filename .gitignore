@@ -85,7 +85,6 @@ matlab_runners/Feature Point Experiments/300VW_experiment/
 gui/OpenFaceOffline/obj/
 gui/OpenFaceDemo/obj/
 exe/FeatureExtraction/processed/
-matlab_runners/
 exe/FaceLandmarkVidMulti/processed/
 lib/3rdParty/CameraEnumerator/Release/
 lib/local/CppInerop/Release/
