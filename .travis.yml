@@ -59,6 +59,7 @@ before_install:
       brew install tbb;
       brew tap homebrew/science;
       brew install opencv3;
+      brew install openblas;
       brew upgrade boost;
     fi
   

@@ -41,7 +41,6 @@
 
 // OpenBLAS
 #include <cblas.h>
-#include <f77blas.h>
 
 // dlib dependencies for face detection
 #include <dlib/image_processing/frontal_face_detector.h>
