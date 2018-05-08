@@ -23,13 +23,13 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-// dlib dependencies for face detection
-#include <dlib/image_processing/frontal_face_detector.h>
-#include <dlib/opencv.h>
-
 // OpenBLAS
 #include <cblas.h>
 #include <f77blas.h>
+
+// dlib dependencies for face detection
+#include <dlib/image_processing/frontal_face_detector.h>
+#include <dlib/opencv.h>
 
 // C++ stuff
 #include <stdio.h>

@@ -1,5 +1,8 @@
 include_directories(${BOOST_INCLUDE_DIR})
 
+#OpenBlas library
+include_directories(../../3rdParty/OpenBLAS/include)
+
 SET(SOURCE
     src/ImageCapture.cpp
 	src/RecorderCSV.cpp
