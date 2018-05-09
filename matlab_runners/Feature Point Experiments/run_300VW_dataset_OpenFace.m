@@ -13,6 +13,8 @@ elseif(exist('E:\datasets\300VW\300VW_Dataset_2015_12_14', 'file'))
     database_root = 'E:\datasets\300VW\300VW_Dataset_2015_12_14';
 elseif(exist('/multicomp/datasets/300VW_Dataset_2015_12_14/', 'file'))
     database_root = '/multicomp/datasets/300VW_Dataset_2015_12_14/';
+elseif(exist('/media/tadas/2EBEA130BEA0F20F/datasets/300VW/300VW_Dataset_2015_12_14', 'file'))
+    database_root = '/media/tadas/2EBEA130BEA0F20F/datasets/300VW/300VW_Dataset_2015_12_14';
 else
     fprintf('Could not find the dataset');
     return;
@@ -26,7 +28,7 @@ in_dirs = cat(2, cat_1, cat_2, cat_3);
 %% Running CE-CLM models
 output = '300VW_experiment/ceclm';
 
-command_shared = sprintf('%s -2Dfp -tracked -out_dir "%s" -verbose ', executable, output);
+command_shared = sprintf('%s -2Dfp -tracked -out_dir "%s" ', executable, output);
 
 parfor i=1:numel(in_dirs)
     name = num2str(in_dirs(i));

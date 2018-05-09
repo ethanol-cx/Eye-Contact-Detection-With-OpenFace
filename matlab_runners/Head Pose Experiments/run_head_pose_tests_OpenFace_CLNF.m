@@ -10,8 +10,6 @@ elseif(exist(['F:/Dropbox/Dropbox/AAM/test data/'], 'file'))
     database_root = 'F:/Dropbox/Dropbox/AAM/test data/';
 elseif(exist(['F:/Dropbox/AAM/test data/'], 'file'))
     database_root = 'F:/Dropbox/AAM/test data/';
-else    
-    database_root = '/multicomp/datasets/head_pose_dbs/';
 elseif(exist('/media/tadas/5E08AE0D08ADE3ED/Dropbox/AAM/test data', 'file'))
     database_root = '/media/tadas/5E08AE0D08ADE3ED/Dropbox/AAM/test data';
 end
