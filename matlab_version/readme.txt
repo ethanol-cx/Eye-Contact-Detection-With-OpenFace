@@ -23,13 +23,11 @@ Copyright can be found in the copyright.txt
 ./experiments_300VW - These are provided for recreation of experiments on 300VW dataset
 ./experiments_300W - These are provided for recreation of some of the experiments described in the papers on 300W dataset
 ./experiments_JANUS - These are provided for recreation of some of the experiments described in the papers on IJB-FL dataset 
-./experiments_JANUS - These are provided for recreation of some of the experiments described in the papers on the menpo dataset (both cross and within data)
+./experiments_menpo - These are provided for recreation of some of the experiments described in the papers on the menpo dataset (both cross and within data)
 
 //======================= Utilities ===================//
-./face_detection - Provides utilities for face detection, possible choices between four detectors: MTCNN (requires MatConvNet for speed), Matlab inbuilt one, Zhu and Ramanan, and Yu et al.
-    ./face_detection_yu - The face detector from Xiang Yu, more details in ./face_detection_yu/README.txt. Only tested on windows machines
-    ./face_detection_zhu - The face detector from Zhu and Ramanan, might need to compile it using ./face_detection_yu/face-release1.0-basic/compile.m
-    ./mtcnn - The most recent and accurate model, MTCNN face detector based on the paper "Joint Face Detection and Alignment using Multi-task Cascaded Convolutional Neural Networks" by Zhang et al.
+./face_detection - Provides utilities for face detection, possible choices between two detectors: MTCNN (requires MatConvNet for speed), and Matlab inbuilt one
+    ./mtcnn - a recent and accurate face detector, MTCNN face detector based on the paper "Joint Face Detection and Alignment using Multi-task Cascaded Convolutional Neural Networks" by Zhang et al.
 ./face_validation - A module for validating face detections (training and inference), it is used for tracking in videos so as to know when reinitialisation is needed
 ./PDM_helpers - utility functions that deal with PDM fitting, Jacobians and other shape manipulations
 	
@@ -41,4 +39,4 @@ Results that you should expect on running the code on the publicly available dat
 
 --------------------------------------- Final remarks -----------------------------------------------------------------------------	
 
-I did my best to make sure that the code runs out of the box but there are always issues and I would be grateful for your understanding that this is research code. However, if you encounter any probles please contact me at Tadas.Baltrusaitis@cl.cam.ac.uk for any bug reports/questions/suggestions. 
+I did my best to make sure that the code runs out of the box but there are always issues and I would be grateful for your understanding that this is research code. However, if you encounter any problems please raise an issue on github.
