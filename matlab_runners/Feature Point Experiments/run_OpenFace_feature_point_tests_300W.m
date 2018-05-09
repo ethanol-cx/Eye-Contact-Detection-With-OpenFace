@@ -11,8 +11,11 @@ elseif(exist('F:/Dropbox/AAM/test data/', 'file'))
     database_root = 'F:/Dropbox/AAM/test data/';
 elseif(exist('D:\Datasets\300W/', 'file'))
     database_root = 'D:\Datasets\300W/';
+elseif(exist('/media/tadas/5E08AE0D08ADE3ED/Dropbox/AAM/test data/', 'file'))
+    database_root = '/media/tadas/5E08AE0D08ADE3ED/Dropbox/AAM/test data/';
 else
-    database_root = '/multicomp/datasets/300-W/';
+    fprintf('Dataset not found')
+    return;
 end
 
 %% Run using CE-CLM model
