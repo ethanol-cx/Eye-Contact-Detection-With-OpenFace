@@ -13,7 +13,6 @@ compiler:
 
 os:
   - linux  
-  - osx
   
 before_install:
 
