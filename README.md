@@ -11,7 +11,7 @@ Over the past few years, there has been an increased interest in automatic facia
 
 OpenFace is an implementation of a number of research papers from the Multicomp group, Language Technologies Institute at the Carnegie Mellon University and Rainbow Group, Computer Laboratory, University of Cambridge. The founder of the project and main developer is Tadas Baltrušaitis.
 
-Special thanks goes to Louis-Philippe Morency and his MultiComp Lab at Carnegie Mellon University for help in writing and testing the code, and Erroll Wood for the gaze estimation work.
+Special thanks goes to Louis-Philippe Morency and his MultiComp Lab at Carnegie Mellon University for help in writing and testing the code, Erroll Wood for the gaze estimation work, and Amir Zadeh and Yao Chong Lim on work on the CE-CLM model.
 
 ## WIKI
 **For instructions of how to install/compile/use the project please see [WIKI](https://github.com/TadasBaltrusaitis/OpenFace/wiki)**
@@ -76,7 +76,7 @@ in *Facial Expression Recognition and Analysis Challenge*,
 
 # Commercial license
 
-For inquiries about the commercial licensing of the OpenFace toolkit please visit TODO
+For inquiries about the commercial licensing of the OpenFace toolkit please visit https://www.flintbox.com/public/project/50632/ 
 
 # Final remarks
 
