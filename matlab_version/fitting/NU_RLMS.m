@@ -154,7 +154,7 @@ if(nargout >= 4)
             vys = (-jjs+dy).^2;
 
             % Calculate the kde per patch
-            vs = patchResponses{i}.*exp(-0.5*(vxs + vys)/clmParams.sigmaMeanShift);
+            vs = patchResponses{i}.*exp(-0.5*(vxs + vys)/(clmParams.sigmaMeanShift*clmParams.sigmaMeanShift));
 
             kde_est = sum(vs(:));
             landmark_lhoods(i) = kde_est;

@@ -69,7 +69,7 @@ public:
 	void OptimizeForVideos();
 	void OptimizeForImages();
 
-	double getAlignMask() const { return sim_align_face_mask; }
+	bool getAlignMask() const { return sim_align_face_mask; }
 	double getSimScaleOut() const { return sim_scale_out; }
 	int getSimSizeOut() const { return sim_size_out; }
 	bool getDynamic() const { return dynamic; }

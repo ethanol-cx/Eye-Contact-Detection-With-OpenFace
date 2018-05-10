@@ -31,15 +31,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <sstream>
-#include <iomanip>
-#include <map>
-#include <set>
-
 #include "Visualizer.h"
 #include "VisualizationUtils.h"
 #include "RotationHelpers.h"
 #include "ImageManipulationHelpers.h"
+
+#include <sstream>
+#include <iomanip>
+#include <map>
+#include <set>
 
 // For drawing on images
 #include <opencv2/imgproc.hpp>
@@ -51,24 +51,24 @@ const int draw_shiftbits = 4;
 const int draw_multiplier = 1 << 4;
 
 const std::map<std::string, std::string> AUS_DESCRIPTION = {
-        {"AU01", "Inner Brow Raiser   "}, 
-        {"AU02", "Outer Brow Raiser   "}, 
-        {"AU04", "Brow Lowerer        "}, 
-        {"AU05", "Upper Lid Raiser    "}, 
-        {"AU06", "Cheek Raiser        "}, 
-        {"AU07", "Lid Tightener       "}, 
-        {"AU09", "Nose Wrinkler       "}, 
-        {"AU10", "Upper Lip Raiser    "}, 
-        {"AU12", "Lip Corner Puller   "}, 
-        {"AU14", "Dimpler             "}, 
-        {"AU15", "Lip Corner Depressor"}, 
-        {"AU17", "Chin Raiser         "}, 
-        {"AU20", "Lip stretcher       "}, 
-        {"AU23", "Lip Tightener       "}, 
-        {"AU25", "Lips part           "}, 
-        {"AU26", "Jaw Drop            "}, 
-        {"AU28", "Lip Suck            "}, 
-        {"AU45", "Blink               "}, 
+	{ "AU01", "Inner Brow Raiser   " },
+	{ "AU02", "Outer Brow Raiser   " },
+	{ "AU04", "Brow Lowerer        " },
+	{ "AU05", "Upper Lid Raiser    " },
+	{ "AU06", "Cheek Raiser        " },
+	{ "AU07", "Lid Tightener       " },
+	{ "AU09", "Nose Wrinkler       " },
+	{ "AU10", "Upper Lip Raiser    " },
+	{ "AU12", "Lip Corner Puller   " },
+	{ "AU14", "Dimpler             " },
+	{ "AU15", "Lip Corner Depressor" },
+	{ "AU17", "Chin Raiser         " },
+	{ "AU20", "Lip stretcher       " },
+	{ "AU23", "Lip Tightener       " },
+	{ "AU25", "Lips part           " },
+	{ "AU26", "Jaw Drop            " },
+	{ "AU28", "Lip Suck            " },
+	{ "AU45", "Blink               " },
 
 };
 
@@ -84,26 +84,26 @@ Visualizer::Visualizer(std::vector<std::string> arguments)
 	{
 		if (arguments[i].compare("-verbose") == 0)
 		{
-			vis_track = true;
-			vis_align = true;
-			vis_hog = true;
-			vis_aus = true;
+			this->vis_track = true;
+			this->vis_align = true;
+			this->vis_hog = true;
+			this->vis_aus = true;
 		}
 		else if (arguments[i].compare("-vis-align") == 0)
 		{
-			vis_align = true;
+			this->vis_align = true;
 		}
 		else if (arguments[i].compare("-vis-hog") == 0)
 		{
-			vis_hog = true;
+			this->vis_hog = true;
 		}
 		else if (arguments[i].compare("-vis-track") == 0)
 		{
-			vis_track = true;
+			this->vis_track = true;
 		}
 		else if (arguments[i].compare("-vis-aus") == 0)
 		{
-			vis_aus = true;
+			this->vis_aus = true;
 		}
 	}
 
@@ -116,8 +116,6 @@ Visualizer::Visualizer(bool vis_track, bool vis_hog, bool vis_align, bool vis_au
 	this->vis_align = vis_align;
 	this->vis_aus = vis_aus;
 }
-
-
 
 // Setting the image on which to draw
 void Visualizer::SetImage(const cv::Mat& canvas, float fx, float fy, float cx, float cy)
@@ -169,7 +167,7 @@ void Visualizer::SetObservationHOG(const cv::Mat_<double>& hog_descriptor, int n
 }
 
 
-void Visualizer::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, double confidence, const cv::Mat_<int>& visibilities)
+void Visualizer::SetObservationLandmarks(const cv::Mat_<float>& landmarks_2D, double confidence, const cv::Mat_<int>& visibilities)
 {
 
 	if(confidence > visualisation_boundary)
@@ -182,7 +180,7 @@ void Visualizer::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, d
 		{
 			if (visibilities.empty() || visibilities.at<int>(i))
 			{
-				cv::Point featurePoint(cvRound(landmarks_2D.at<double>(i) * (double)draw_multiplier), cvRound(landmarks_2D.at<double>(i + n) * (double)draw_multiplier));
+				cv::Point featurePoint(cvRound(landmarks_2D.at<float>(i) * (float)draw_multiplier), cvRound(landmarks_2D.at<float>(i + n) * (float)draw_multiplier));
 
 				// A rough heuristic for drawn point size
 				int thickness = (int)std::ceil(3.0* ((double)captured_image.cols) / 640.0);
@@ -195,7 +193,7 @@ void Visualizer::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, d
 			else
 			{
 				// Draw a fainter point if the landmark is self occluded
-				cv::Point featurePoint(cvRound(landmarks_2D.at<double>(i) * (double)draw_multiplier), cvRound(landmarks_2D.at<double>(i + n) * (double)draw_multiplier));
+				cv::Point featurePoint(cvRound(landmarks_2D.at<float>(i) * (double)draw_multiplier), cvRound(landmarks_2D.at<float>(i + n) * (double)draw_multiplier));
 
 				// A rough heuristic for drawn point size
 				int thickness = (int)std::ceil(2.5* ((double)captured_image.cols) / 640.0);
@@ -209,10 +207,8 @@ void Visualizer::SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, d
 	}
 }
 
-void Visualizer::SetObservationPose(const cv::Vec6d& pose, double confidence)
+void Visualizer::SetObservationPose(const cv::Vec6f& pose, double confidence)
 {
-
-
 
 	// Only draw if the reliability is reasonable, the value is slightly ad-hoc
 	if (confidence > visualisation_boundary)
@@ -235,7 +231,7 @@ void Visualizer::SetObservationPose(const cv::Vec6d& pose, double confidence)
 void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::string, double> >& au_intensities,
 	const std::vector<std::pair<std::string, double> >& au_occurences)
 {
-	if(au_intensities.size() > 0 || au_occurences.size() > 0)
+	if (au_intensities.size() > 0 || au_occurences.size() > 0)
 	{
 
 		std::set<std::string> au_names;
@@ -251,21 +247,21 @@ void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::stri
 		for (size_t idx = 0; idx < au_occurences.size(); idx++)
 		{
 			au_names.insert(au_occurences[idx].first);
-			occurences_map[au_occurences[idx].first] = au_occurences[idx].second;
+			occurences_map[au_occurences[idx].first] = au_occurences[idx].second > 0;
 		}
-		
+
 		const int AU_TRACKBAR_LENGTH = 400;
 		const int AU_TRACKBAR_HEIGHT = 10;
 
 		const int MARGIN_X = 185;
 		const int MARGIN_Y = 10;
 
-		const int nb_aus = au_names.size();
+		const int nb_aus = (int) au_names.size();
 
 		// Do not reinitialize
-		if(action_units_image.empty())
+		if (action_units_image.empty())
 		{
-			action_units_image = cv::Mat(nb_aus * (AU_TRACKBAR_HEIGHT + 10) + MARGIN_Y * 2, AU_TRACKBAR_LENGTH + MARGIN_X, CV_8UC3, cv::Scalar(255,255,255));
+			action_units_image = cv::Mat(nb_aus * (AU_TRACKBAR_HEIGHT + 10) + MARGIN_Y * 2, AU_TRACKBAR_LENGTH + MARGIN_X, CV_8UC3, cv::Scalar(255, 255, 255));
 		}
 		else
 		{
@@ -303,28 +299,28 @@ void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::stri
 		}
 
 		// then, build the graph
-		size_t idx = 0;
-		for (auto& au : aus) 
+		unsigned int idx = 0;
+		for (auto& au : aus)
 		{
 			std::string name = au.first;
 			bool present = au.second.first;
 			double intensity = au.second.second;
 
-			auto offset = MARGIN_Y + idx * (AU_TRACKBAR_HEIGHT + 10);
+			int offset = MARGIN_Y + idx * (AU_TRACKBAR_HEIGHT + 10);
 			std::ostringstream au_i;
 			au_i << std::setprecision(2) << std::setw(4) << std::fixed << intensity;
 			cv::putText(action_units_image, name, cv::Point(10, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(present ? 0 : 200, 0, 0), 1, CV_AA);
 			cv::putText(action_units_image, AUS_DESCRIPTION.at(name), cv::Point(55, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, CV_AA);
 
-			if(present) 
+			if (present)
 			{
 				cv::putText(action_units_image, au_i.str(), cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 100, 0), 1, CV_AA);
 				cv::rectangle(action_units_image, cv::Point(MARGIN_X, offset),
-												cv::Point(MARGIN_X + AU_TRACKBAR_LENGTH * intensity/5, offset + AU_TRACKBAR_HEIGHT),
-												cv::Scalar(128,128,128),
-												CV_FILLED);
+					cv::Point((int)(MARGIN_X + AU_TRACKBAR_LENGTH * intensity / 5.0), offset + AU_TRACKBAR_HEIGHT),
+					cv::Scalar(128, 128, 128),
+					CV_FILLED);
 			}
-			else 
+			else
 			{
 				cv::putText(action_units_image, "0.00", cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, CV_AA);
 			}
@@ -333,8 +329,9 @@ void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::stri
 	}
 }
 
+
 // Eye gaze infomration drawing, first of eye landmarks then of gaze
-void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv::Point3f& gaze_direction1, const std::vector<cv::Point2d>& eye_landmarks2d, const std::vector<cv::Point3d>& eye_landmarks3d, double confidence)
+void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv::Point3f& gaze_direction1, const std::vector<cv::Point2f>& eye_landmarks2d, const std::vector<cv::Point3f>& eye_landmarks3d, double confidence)
 {
 	if(confidence > visualisation_boundary)
 	{
@@ -373,11 +370,11 @@ void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv
 			}
 
 			// Now draw the gaze lines themselves
-			cv::Mat cameraMat = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
+			cv::Mat cameraMat = (cv::Mat_<float>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
 
 			// Grabbing the pupil location, to draw eye gaze need to know where the pupil is
-			cv::Point3d pupil_left(0, 0, 0);
-			cv::Point3d pupil_right(0, 0, 0);
+			cv::Point3f pupil_left(0, 0, 0);
+			cv::Point3f pupil_right(0, 0, 0);
 			for (size_t i = 0; i < 8; ++i)
 			{
 				pupil_left = pupil_left + eye_landmarks3d[i];
@@ -386,24 +383,24 @@ void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv
 			pupil_left = pupil_left / 8;
 			pupil_right = pupil_right / 8;
 
-			std::vector<cv::Point3d> points_left;
-			points_left.push_back(cv::Point3d(pupil_left));
-			points_left.push_back(cv::Point3d(pupil_left + cv::Point3d(gaze_direction0)*50.0));
+			std::vector<cv::Point3f> points_left;
+			points_left.push_back(cv::Point3f(pupil_left));
+			points_left.push_back(cv::Point3f(pupil_left) + cv::Point3f(gaze_direction0)*50.0);
 
-			std::vector<cv::Point3d> points_right;
-			points_right.push_back(cv::Point3d(pupil_right));
-			points_right.push_back(cv::Point3d(pupil_right + cv::Point3d(gaze_direction1)*50.0));
+			std::vector<cv::Point3f> points_right;
+			points_right.push_back(cv::Point3f(pupil_right));
+			points_right.push_back(cv::Point3f(pupil_right) + cv::Point3f(gaze_direction1)*50.0);
 
-			cv::Mat_<double> proj_points;
-			cv::Mat_<double> mesh_0 = (cv::Mat_<double>(2, 3) << points_left[0].x, points_left[0].y, points_left[0].z, points_left[1].x, points_left[1].y, points_left[1].z);
+			cv::Mat_<float> proj_points;
+			cv::Mat_<float> mesh_0 = (cv::Mat_<float>(2, 3) << points_left[0].x, points_left[0].y, points_left[0].z, points_left[1].x, points_left[1].y, points_left[1].z);
 			Project(proj_points, mesh_0, fx, fy, cx, cy);
-			cv::line(captured_image, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier)),
-				cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
+			cv::line(captured_image, cv::Point(cvRound(proj_points.at<float>(0, 0) * (float)draw_multiplier), cvRound(proj_points.at<float>(0, 1) * (float)draw_multiplier)),
+				cv::Point(cvRound(proj_points.at<float>(1, 0) * (float)draw_multiplier), cvRound(proj_points.at<float>(1, 1) * (float)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
 
-			cv::Mat_<double> mesh_1 = (cv::Mat_<double>(2, 3) << points_right[0].x, points_right[0].y, points_right[0].z, points_right[1].x, points_right[1].y, points_right[1].z);
+			cv::Mat_<float> mesh_1 = (cv::Mat_<float>(2, 3) << points_right[0].x, points_right[0].y, points_right[0].z, points_right[1].x, points_right[1].y, points_right[1].z);
 			Project(proj_points, mesh_1, fx, fy, cx, cy);
-			cv::line(captured_image, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier)),
-				cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
+			cv::line(captured_image, cv::Point(cvRound(proj_points.at<float>(0, 0) * (float)draw_multiplier), cvRound(proj_points.at<float>(0, 1) * (float)draw_multiplier)),
+				cv::Point(cvRound(proj_points.at<float>(1, 0) * (float)draw_multiplier), cvRound(proj_points.at<float>(1, 1) * (float)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
 
 		}
 	}

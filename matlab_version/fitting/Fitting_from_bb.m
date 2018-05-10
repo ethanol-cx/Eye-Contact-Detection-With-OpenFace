@@ -65,6 +65,12 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
     
     clmParams_old = clmParams;
     
+    % In case there are no iterations initialize thes to empty
+    view = GetView(patchExperts(scale).centers, global_params(2:4));  
+    final_lhood = 0;
+    [shape2D] = GetShapeOrtho(M, PDM.V, local_params, global_params);
+    landmark_lhoods = zeros(size(shape2D,1),1);
+    
     % multi iteration refinement using NU-RLMS in each one
     for i=1:clmParams.numPatchIters
       
@@ -136,7 +142,15 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
             responses = PatchResponseSVM_multi_modal( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale).normalisationOptionsCol, clmParams, clmParams.window_size(i,:));
         elseif(strcmp(patchExperts(scale).type, 'CCNF'))                        
             responses = PatchResponseCCNF( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
+        elseif(strcmp(patchExperts(scale).type, 'CEN'))                        
+            
+            % responses_o = PatchResponseCEN( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), patchExperts(scale), clmParams.window_size(i,:));
+            
+            % A faster (and very slightly less accurate) version of patch
+            % response computation
+            responses = PatchResponseCEN_sparse( patches, patchExperts(scale).patch_experts(view,:), visibilities(view,:), clmParams.window_size(i,:), patchExperts(scale).normalisationOptionsCol.patchSize);
         end
+        
         
         % If a depth image is provided compute patch experts around it as
         % well (unless it's the final iteration)
@@ -203,13 +217,13 @@ function [ shape2D, global_params, local_params, final_lhood, landmark_lhoods, v
         % deal with the fact that params might be different for different
         % scales
         if(numel(clmParams_old.regFactor) > 1)
-            clmParams.regFactor = clmParams_old.regFactor(i);
+            clmParams.regFactor = clmParams_old.regFactor(scale);
         end
         if(numel(clmParams_old.sigmaMeanShift) > 1)
-            clmParams.sigmaMeanShift = clmParams_old.sigmaMeanShift(i);
+            clmParams.sigmaMeanShift = clmParams_old.sigmaMeanShift(scale);
         end
         if(numel(clmParams_old.tikhonov_factor) > 1)
-            clmParams.tikhonov_factor = clmParams_old.tikhonov_factor(i);
+            clmParams.tikhonov_factor = clmParams_old.tikhonov_factor(scale);
         end
         
         % The actual NU-RLMS step

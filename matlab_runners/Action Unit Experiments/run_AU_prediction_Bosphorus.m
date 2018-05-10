@@ -54,18 +54,20 @@ end
 labels_pred = zeros(size(labels_gt));
 for i=1:numel(filenames)
 
-    % Will need to read the relevant AUs only
-    all_params  = dlmread([out_loc, filenames{i}, '.csv'], ',', 1, 0);
-    
-    % if multiple faces detected just take the first row
-    aus_pred = all_params(1, aus_det_id);
-    
-    for k=1:numel(aus_det)
-        if(sum(aus_Bosph == aus_det(k))>0)
-            labels_pred(i, aus_Bosph == aus_det(k)) = aus_pred(k);
-        end
-    end
+    % Only if face was detected in the image, if not the AUs will be 0
+    if(exist([out_loc, filenames{i}, '.csv'], 'file'))
+        % Will need to read the relevant AUs only
+        all_params  = dlmread([out_loc, filenames{i}, '.csv'], ',', 1, 0);
 
+        % if multiple faces detected just take the first row
+        aus_pred = all_params(1, aus_det_id);
+
+        for k=1:numel(aus_det)
+            if(sum(aus_Bosph == aus_det(k))>0)
+                labels_pred(i, aus_Bosph == aus_det(k)) = aus_pred(k);
+            end
+        end        
+    end
 end
 
 %%
@@ -106,19 +108,20 @@ end
 %%
 labels_pred = zeros(size(labels_gt));
 for i=1:numel(filenames)
+    % Only if face was detected in the image, if not the AUs will be 0
+    if(exist([out_loc, filenames{i}, '.csv'], 'file'))        
+        % Will need to read the relevant AUs only
+        all_params  = dlmread([out_loc, filenames{i}, '.csv'], ',', 1, 0);
 
-    % Will need to read the relevant AUs only
-    all_params  = dlmread([out_loc, filenames{i}, '.csv'], ',', 1, 0);
-    
-    % if multiple faces detected just take the first row
-    aus_pred = all_params(1, aus_det_id);
-    
-    for k=1:numel(aus_det)
-        if(sum(aus_Bosph == aus_det(k))>0)
-            labels_pred(i, aus_Bosph == aus_det(k)) = aus_pred(k);
+        % if multiple faces detected just take the first row
+        aus_pred = all_params(1, aus_det_id);
+
+        for k=1:numel(aus_det)
+            if(sum(aus_Bosph == aus_det(k))>0)
+                labels_pred(i, aus_Bosph == aus_det(k)) = aus_pred(k);
+            end
         end
     end
-
 end
 
 %%

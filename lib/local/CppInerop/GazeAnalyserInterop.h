@@ -85,7 +85,7 @@ namespace GazeAnalyser_Interop {
 		// Absolute gaze direction
 		cv::Point3f* gazeDirection0;
 		cv::Point3f* gazeDirection1;
-		cv::Vec2d* gazeAngle;
+		cv::Vec2f* gazeAngle;
 
 		cv::Point3f* pupil_left;
 		cv::Point3f* pupil_right;
@@ -95,20 +95,20 @@ namespace GazeAnalyser_Interop {
 		{
 			gazeDirection0 = new cv::Point3f();
 			gazeDirection1 = new cv::Point3f();
-			gazeAngle = new cv::Vec2d();
+			gazeAngle = new cv::Vec2f();
 
 			pupil_left = new cv::Point3f();
 			pupil_right = new cv::Point3f();
 		}
 
-		void AddNextFrame(CppInterop::LandmarkDetector::CLNF^ clnf, bool success, double fx, double fy, double cx, double cy) {
+		void AddNextFrame(CppInterop::LandmarkDetector::CLNF^ clnf, bool success, float fx, float fy, float cx, float cy) {
 
 			// After the AUs have been detected do some gaze estimation as well
 			GazeAnalysis::EstimateGaze(*clnf->getCLNF(), *gazeDirection0, fx, fy, cx, cy, true);
 			GazeAnalysis::EstimateGaze(*clnf->getCLNF(), *gazeDirection1, fx, fy, cx, cy, false);
 
 			// Estimate the gaze angle WRT to head pose here
-			System::Collections::Generic::List<double>^ pose_list = gcnew System::Collections::Generic::List<double>();
+			System::Collections::Generic::List<float>^ pose_list = gcnew System::Collections::Generic::List<float>();
 
 			*gazeAngle = GazeAnalysis::GetGazeAngle(*gazeDirection0, *gazeDirection1);
 
@@ -127,35 +127,33 @@ namespace GazeAnalyser_Interop {
 				}
 			}
 
-			cv::Mat_<double> eyeLdmks3d_left = clnf->getCLNF()->hierarchical_models[part_left].GetShape(fx, fy, cx, cy);
+			cv::Mat_<float> eyeLdmks3d_left = clnf->getCLNF()->hierarchical_models[part_left].GetShape(fx, fy, cx, cy);
 			cv::Point3f pupil_left_h = GazeAnalysis::GetPupilPosition(eyeLdmks3d_left);
 			pupil_left->x = pupil_left_h.x; pupil_left->y = pupil_left_h.y; pupil_left->z = pupil_left_h.z;
 
-			cv::Mat_<double> eyeLdmks3d_right = clnf->getCLNF()->hierarchical_models[part_right].GetShape(fx, fy, cx, cy);
+			cv::Mat_<float> eyeLdmks3d_right = clnf->getCLNF()->hierarchical_models[part_right].GetShape(fx, fy, cx, cy);
 			cv::Point3f pupil_right_h = GazeAnalysis::GetPupilPosition(eyeLdmks3d_right);
 			pupil_right->x = pupil_right_h.x; pupil_right->y = pupil_right_h.y; pupil_right->z = pupil_right_h.z;
 		}
 
-		System::Tuple<System::Tuple<double, double, double>^, System::Tuple<double, double, double>^>^ GetGazeCamera()
+		System::Tuple<System::Tuple<float, float, float>^, System::Tuple<float, float, float>^>^ GetGazeCamera()
 		{
 
-			auto gaze0 = gcnew System::Tuple<double, double, double>(gazeDirection0->x, gazeDirection0->y, gazeDirection0->z);
-			auto gaze1 = gcnew System::Tuple<double, double, double>(gazeDirection1->x, gazeDirection1->y, gazeDirection1->z);
+			auto gaze0 = gcnew System::Tuple<float, float, float>(gazeDirection0->x, gazeDirection0->y, gazeDirection0->z);
+			auto gaze1 = gcnew System::Tuple<float, float, float>(gazeDirection1->x, gazeDirection1->y, gazeDirection1->z);
 
-			return gcnew System::Tuple<System::Tuple<double, double, double>^, System::Tuple<double, double, double>^>(gaze0, gaze1);
+			return gcnew System::Tuple<System::Tuple<float, float, float>^, System::Tuple<float, float, float>^>(gaze0, gaze1);
 
 		}
 
-		System::Tuple<double, double>^ GetGazeAngle()
+		System::Tuple<float, float>^ GetGazeAngle()
 		{
-			auto gaze_angle = gcnew System::Tuple<double, double>((*gazeAngle)[0], (*gazeAngle)[1]);
+			auto gaze_angle = gcnew System::Tuple<float, float>((*gazeAngle)[0], (*gazeAngle)[1]);
 			return gaze_angle;
 
 		}
 		System::Collections::Generic::List<System::Tuple<System::Windows::Point, System::Windows::Point>^>^ CalculateGazeLines(float fx, float fy, float cx, float cy)
 		{
-
-			cv::Mat_<double> cameraMat = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
 
 			vector<cv::Point3f> points_left;
 			points_left.push_back(cv::Point3f(*pupil_left));
@@ -166,21 +164,21 @@ namespace GazeAnalyser_Interop {
 			points_right.push_back(cv::Point3f(*pupil_right + *gazeDirection1 * 40.0));
 
 			// Perform manual projection of points
-			vector<cv::Point2d> imagePoints_left;
+			vector<cv::Point2f> imagePoints_left;
 			for (int i = 0; i < points_left.size(); ++i)
 			{
-				double x = points_left[i].x * fx / points_left[i].z + cx;
-				double y = points_left[i].y * fy / points_left[i].z + cy;
-				imagePoints_left.push_back(cv::Point2d(x, y));
+				float x = points_left[i].x * fx / points_left[i].z + cx;
+				float y = points_left[i].y * fy / points_left[i].z + cy;
+				imagePoints_left.push_back(cv::Point2f(x, y));
 
 			}
 
-			vector<cv::Point2d> imagePoints_right;
+			vector<cv::Point2f> imagePoints_right;
 			for (int i = 0; i < points_right.size(); ++i)
 			{
-				double x = points_right[i].x * fx / points_right[i].z + cx;
-				double y = points_right[i].y * fy / points_right[i].z + cy;
-				imagePoints_right.push_back(cv::Point2d(x, y));
+				float x = points_right[i].x * fx / points_right[i].z + cx;
+				float y = points_right[i].y * fy / points_right[i].z + cy;
+				imagePoints_right.push_back(cv::Point2f(x, y));
 
 			}
 

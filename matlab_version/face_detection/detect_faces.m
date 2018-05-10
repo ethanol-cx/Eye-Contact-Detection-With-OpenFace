@@ -2,16 +2,15 @@ function [ bboxes, shapes ] = detect_faces( image, types )
 %DETECT_FACES Detecting faces in a given image using one of the three detectors
 % INPUT:
 %   image - the image to detect the faces on
-%   type  - cell array of the face detectors to use: 'zhu', 'yu', 'cascade'
+%   type  - cell array of the face detectors to use: 'cascade', 'mtcnn'
 % OUTPUT:
-%   bboxes - a set of bounding boxes describing the detected faces 4 x
-%   num_faces, the format is [min_x; min_y; max_x; max_y];
+%   bboxes - a set of bounding boxes describing the detected faces num_faces x
+%   4, the format is [min_x; min_y; max_x; max_y];
 %   shapes - if the face detector detects landmarks as well, output them
 %   n_points x 2 x num_faces
 
-    use_zhu = any(strcmp('zhu', types));
-    use_yu = any(strcmp('yu', types));
     use_cascade = any(strcmp('cascade', types));
+    use_mtcnn = any(strcmp('mtcnn', types));
     
     % Start with fastest one
     shapes = [];
@@ -43,19 +42,22 @@ function [ bboxes, shapes ] = detect_faces( image, types )
                 bboxes(3,:) = bboxes(1,:) + bboxes(3,:);
                 bboxes(4,:) = bboxes(2,:) + bboxes(4,:);
             end
+            bboxes = bboxes';
         else
             fprintf('Vision toolbox not present in Matlab, it is necessary for Cascade face detection\n');
         end
     end
     
-    if(use_yu && isempty(bboxes))
-        od = cd('../face_detection/face_detection_yu/');
-        [bboxes, shapes] = Detect_tree_based_yu_multi(image);
+    if(use_mtcnn && isempty(bboxes))
+        od = cd('../face_detection/mtcnn/');
+
+        if(~exist('PNet_mlab.mat', 'file'))
+            fprintf('WARNING: Could not find MTCNN model files, they are needed for face detection. Use Matlab cascade detector if they are not available\n');
+            return;
+        end
+        
+        [bboxes, shapes] = detect_face_mtcnn(image);
         cd(od);        
-    end
-    
-    if(use_zhu && isempty(bboxes)) 
-        [bboxes, shapes] = Detect_tree_based_zhu(image);
     end
     
 end

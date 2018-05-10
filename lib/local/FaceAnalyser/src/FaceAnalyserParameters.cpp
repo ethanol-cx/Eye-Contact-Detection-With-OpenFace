@@ -149,7 +149,7 @@ FaceAnalyserParameters::FaceAnalyserParameters(vector<string> &arguments):root()
 	}
 	else
 	{
-		std::cout << "Could not find the AU detection model to load" << std::endl;
+		std::cout << "Could not find the face analysis module to load" << std::endl;
 	}
 }
 
@@ -194,8 +194,14 @@ void FaceAnalyserParameters::setAlignedOutput(int output_size, double scale, boo
 {
 	this->sim_size_out = output_size;
 	// If we set the size but not the scale, adapt the scale to the right size
-	if (scale ==-1) this->sim_scale_out = sim_size_out * (0.7 / 112.0);
-	else this->sim_scale_out = sim_scale_out;
+	if (scale == -1)
+	{
+		this->sim_scale_out = sim_size_out * (0.7 / 112.0);
+	}
+	else
+	{
+		this->sim_scale_out = scale;
+	}
 
 	this->sim_align_face_mask = masked;
 
@@ -256,7 +262,7 @@ void FaceAnalyserParameters::OptimizeForImages()
 	}
 	else
 	{
-		std::cout << "Could not find the face analysis module to load" << std::endl;
+		std::cout << "Could not find the AU detection model to load" << std::endl;
 	}
 }
 

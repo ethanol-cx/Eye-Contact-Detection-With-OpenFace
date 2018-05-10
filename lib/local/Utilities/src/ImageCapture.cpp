@@ -251,7 +251,7 @@ bool ImageCapture::OpenDirectory(std::string directory, std::string bbox_directo
 				{
 					std::ifstream in_bbox(bbox_file.string().c_str(), std::ios_base::in);
 
-					std::vector<cv::Rect_<double> > bboxes_image;
+					std::vector<cv::Rect_<float> > bboxes_image;
 
 					// Keep reading bounding boxes from a file, stop if empty line or 
 					while (!in_bbox.eof())
@@ -264,10 +264,10 @@ bool ImageCapture::OpenDirectory(std::string directory, std::string bbox_directo
 
 						std::stringstream ss(bbox_string);
 
-						double min_x, min_y, max_x, max_y;
+						float min_x, min_y, max_x, max_y;
 
 						ss >> min_x >> min_y >> max_x >> max_y;
-						bboxes_image.push_back(cv::Rect_<double>(min_x, min_y, max_x - min_x, max_y - min_y));
+						bboxes_image.push_back(cv::Rect_<float>(min_x, min_y, max_x - min_x, max_y - min_y));
 					}
 					in_bbox.close();
 
@@ -400,7 +400,7 @@ cv::Mat ImageCapture::GetNextImage()
 	return latest_frame;
 }
 
-std::vector<cv::Rect_<double> > ImageCapture::GetBoundingBoxes()
+std::vector<cv::Rect_<float> > ImageCapture::GetBoundingBoxes()
 {
 	if (!bounding_boxes.empty())
 	{
@@ -408,7 +408,7 @@ std::vector<cv::Rect_<double> > ImageCapture::GetBoundingBoxes()
 	}
 	else
 	{
-		return std::vector<cv::Rect_<double> >();
+		return std::vector<cv::Rect_<float> >();
 	}
 }
 

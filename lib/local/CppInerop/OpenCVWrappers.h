@@ -181,7 +181,7 @@ namespace OpenCVWrappers {
 
 			int get()
 			{
-				return mat->step;
+				return (int) mat->step;
 			}
 		}
 

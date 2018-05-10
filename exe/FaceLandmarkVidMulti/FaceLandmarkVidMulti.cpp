@@ -44,15 +44,6 @@
 #include <GazeEstimation.h>
 #include <FaceAnalyser.h>
 
-#include <fstream>
-#include <sstream>
-
-// OpenCV includes
-#include <opencv2/videoio/videoio.hpp>  // Video write
-#include <opencv2/videoio/videoio_c.h>  // Video write
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
 #define INFO_STREAM( stream ) \
 std::cout << stream << std::endl
 
@@ -62,10 +53,10 @@ std::cout << "Warning: " << stream << std::endl
 #define ERROR_STREAM( stream ) \
 std::cout << "Error: " << stream << std::endl
 
-static void printErrorAndAbort( const std::string & error )
+static void printErrorAndAbort(const std::string & error)
 {
-    std::cout << error << std::endl;
-    abort();
+	std::cout << error << std::endl;
+	abort();
 }
 
 #define FATAL_STREAM( stream ) \
@@ -78,30 +69,30 @@ vector<string> get_arguments(int argc, char **argv)
 
 	vector<string> arguments;
 
-	for(int i = 0; i < argc; ++i)
+	for (int i = 0; i < argc; ++i)
 	{
 		arguments.push_back(string(argv[i]));
 	}
 	return arguments;
 }
 
-void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<double> >& face_detections)
+void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<float> >& face_detections)
 {
 
 	// Go over the model and eliminate detections that are not informative (there already is a tracker there)
-	for(size_t model = 0; model < clnf_models.size(); ++model)
+	for (size_t model = 0; model < clnf_models.size(); ++model)
 	{
 
 		// See if the detections intersect
-		cv::Rect_<double> model_rect = clnf_models[model].GetBoundingBox();
-		
-		for(int detection = face_detections.size()-1; detection >=0; --detection)
+		cv::Rect_<float> model_rect = clnf_models[model].GetBoundingBox();
+
+		for (int detection = face_detections.size() - 1; detection >= 0; --detection)
 		{
 			double intersection_area = (model_rect & face_detections[detection]).area();
 			double union_area = model_rect.area() + face_detections[detection].area() - 2 * intersection_area;
 
 			// If the model is already tracking what we're detecting ignore the detection, this is determined by amount of overlap
-			if( intersection_area/union_area > 0.5)
+			if (intersection_area / union_area > 0.5)
 			{
 				face_detections.erase(face_detections.begin() + detection);
 			}
@@ -109,7 +100,7 @@ void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, 
 	}
 }
 
-int main (int argc, char **argv)
+int main(int argc, char **argv)
 {
 
 	vector<string> arguments = get_arguments(argc, argv);
@@ -126,11 +117,11 @@ int main (int argc, char **argv)
 	// This is so that the model would not try re-initialising itself
 	det_params.reinit_video_every = -1;
 
-	det_params.curr_face_detector = LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR;
+	det_params.curr_face_detector = LandmarkDetector::FaceModelParameters::MTCNN_DETECTOR;
 
 	vector<LandmarkDetector::FaceModelParameters> det_parameters;
 	det_parameters.push_back(det_params);
-	
+
 	// The modules that are being used for tracking
 	vector<LandmarkDetector::CLNF> face_models;
 	vector<bool> active_models;
@@ -138,9 +129,26 @@ int main (int argc, char **argv)
 	int num_faces_max = 4;
 
 	LandmarkDetector::CLNF face_model(det_parameters[0].model_location);
-	face_model.face_detector_HAAR.load(det_parameters[0].face_detector_location);
-	face_model.face_detector_location = det_parameters[0].face_detector_location;
-	
+
+	if (!face_model.loaded_successfully)
+	{
+		cout << "ERROR: Could not load the landmark detector" << endl;
+		return 1;
+	}
+
+	// Loading the face detectors
+	face_model.face_detector_HAAR.load(det_parameters[0].haar_face_detector_location);
+	face_model.haar_face_detector_location = det_parameters[0].haar_face_detector_location;
+	face_model.face_detector_MTCNN.Read(det_parameters[0].mtcnn_face_detector_location);
+	face_model.mtcnn_face_detector_location = det_parameters[0].mtcnn_face_detector_location;
+
+	// If can't find MTCNN face detector, default to HOG one
+	if (det_parameters[0].curr_face_detector == LandmarkDetector::FaceModelParameters::MTCNN_DETECTOR && face_model.face_detector_MTCNN.empty())
+	{
+		cout << "INFO: defaulting to HOG-SVM face detector" << endl;
+		det_parameters[0].curr_face_detector = LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR;
+	}
+
 	face_models.reserve(num_faces_max);
 
 	face_models.push_back(face_model);
@@ -152,7 +160,7 @@ int main (int argc, char **argv)
 		active_models.push_back(false);
 		det_parameters.push_back(det_params);
 	}
-	
+
 	// Load facial feature extractor and AU analyser (make sure it is static, as we don't reidentify faces)
 	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
 	face_analysis_params.OptimizeForImages();
@@ -180,28 +188,27 @@ int main (int argc, char **argv)
 
 	int sequence_number = 0;
 
-	while(true) // this is not a for loop as we might also be reading from a webcam
+	while (true) // this is not a for loop as we might also be reading from a webcam
 	{
-
 		// The sequence reader chooses what to open based on command line arguments provided
 		if (!sequence_reader.Open(arguments))
 			break;
 
 		INFO_STREAM("Device or file opened");
 
-		cv::Mat captured_image = sequence_reader.GetNextFrame();
+		cv::Mat rgb_image = sequence_reader.GetNextFrame();
 
 		int frame_count = 0;
 
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.IsWebcam(),
 			sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, sequence_reader.fps);
+
 		if (!face_model.eye_model)
 		{
 			recording_params.setOutputGaze(false);
 		}
 
 		Utilities::RecorderOpenFace open_face_rec(sequence_reader.name, recording_params, arguments);
-
 
 		if (sequence_reader.IsWebcam())
 		{
@@ -214,36 +221,40 @@ int main (int argc, char **argv)
 			INFO_STREAM("WARNING: using a AU detection in multiple face mode, it might not be as accurate and is experimental");
 		}
 
-
-		INFO_STREAM( "Starting tracking");
-		while(!captured_image.empty())
-		{		
+		INFO_STREAM("Starting tracking");
+		while (!rgb_image.empty())
+		{
 
 			// Reading the images
 			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
-		
-			vector<cv::Rect_<double> > face_detections;
+
+			vector<cv::Rect_<float> > face_detections;
 
 			bool all_models_active = true;
-			for(unsigned int model = 0; model < face_models.size(); ++model)
+			for (unsigned int model = 0; model < face_models.size(); ++model)
 			{
-				if(!active_models[model])
+				if (!active_models[model])
 				{
 					all_models_active = false;
 				}
 			}
-						
+
 			// Get the detections (every 8th frame and when there are free models available for tracking)
-			if(frame_count % 8 == 0 && !all_models_active)
-			{				
-				if(det_parameters[0].curr_face_detector == LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR)
+			if (frame_count % 8 == 0 && !all_models_active)
+			{
+				if (det_parameters[0].curr_face_detector == LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR)
 				{
-					vector<double> confidences;
+					vector<float> confidences;
 					LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, face_models[0].face_detector_HOG, confidences);
+				}
+				else if (det_parameters[0].curr_face_detector == LandmarkDetector::FaceModelParameters::HAAR_DETECTOR)
+				{
+					LandmarkDetector::DetectFaces(face_detections, grayscale_image, face_models[0].face_detector_HAAR);
 				}
 				else
 				{
-					LandmarkDetector::DetectFaces(face_detections, grayscale_image, face_models[0].face_detector_HAAR);
+					vector<float> confidences;
+					LandmarkDetector::DetectFacesMTCNN(face_detections, rgb_image, face_models[0].face_detector_MTCNN, confidences);
 				}
 
 			}
@@ -254,35 +265,35 @@ int main (int argc, char **argv)
 			vector<tbb::atomic<bool> > face_detections_used(face_detections.size());
 
 			// Go through every model and update the tracking
-			tbb::parallel_for(0, (int)face_models.size(), [&](int model){
-			//for(unsigned int model = 0; model < clnf_models.size(); ++model)
-			//{
+			//tbb::parallel_for(0, (int)face_models.size(), [&](int model) {
+			for (unsigned int model = 0; model < face_models.size(); ++model)
+			{
 
 				bool detection_success = false;
 
 				// If the current model has failed more than 4 times in a row, remove it
-				if(face_models[model].failures_in_a_row > 4)
-				{				
+				if (face_models[model].failures_in_a_row > 4)
+				{
 					active_models[model] = false;
 					face_models[model].Reset();
 				}
 
 				// If the model is inactive reactivate it with new detections
-				if(!active_models[model])
+				if (!active_models[model])
 				{
-					
-					for(size_t detection_ind = 0; detection_ind < face_detections.size(); ++detection_ind)
+
+					for (size_t detection_ind = 0; detection_ind < face_detections.size(); ++detection_ind)
 					{
 						// if it was not taken by another tracker take it (if it is false swap it to true and enter detection, this makes it parallel safe)
-						if(face_detections_used[detection_ind].compare_and_swap(true, false) == false)
+						if (face_detections_used[detection_ind].compare_and_swap(true, false) == false)
 						{
-					
+
 							// Reinitialise the model
 							face_models[model].Reset();
 
 							// This ensures that a wider window is used for the initial landmark localisation
 							face_models[model].detection_success = false;
-							detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_detections[detection_ind], face_models[model], det_parameters[model]);
+							detection_success = LandmarkDetector::DetectLandmarksInVideo(rgb_image, face_detections[detection_ind], face_models[model], det_parameters[model], grayscale_image);
 
 							// This activates the model
 							active_models[model] = true;
@@ -296,20 +307,21 @@ int main (int argc, char **argv)
 				else
 				{
 					// The actual facial landmark detection / tracking
-					detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_models[model], det_parameters[model]);
+					detection_success = LandmarkDetector::DetectLandmarksInVideo(rgb_image, face_models[model], det_parameters[model], grayscale_image);
 				}
-			});
-								
+			}
+			//});
+
 			// Keeping track of FPS
 			fps_tracker.AddFrame();
 
-			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+			visualizer.SetImage(rgb_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 
 			// Go through every model and detect eye gaze, record results and visualise the results
-			for(size_t model = 0; model < face_models.size(); ++model)
+			for (size_t model = 0; model < face_models.size(); ++model)
 			{
-				// Visualising the results
-				if(active_models[model])
+				// Visualising and recording the results
+				if (active_models[model])
 				{
 
 					// Estimate head pose and eye gaze				
@@ -332,7 +344,7 @@ int main (int argc, char **argv)
 					// Perform AU detection and HOG feature extraction, as this can be expensive only compute it if needed by output or visualization
 					if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualizer.vis_align || visualizer.vis_hog)
 					{
-						face_analyser.PredictStaticAUsAndComputeFeatures(captured_image, face_models[model].detected_landmarks);
+						face_analyser.PredictStaticAUsAndComputeFeatures(rgb_image, face_models[model].detected_landmarks);
 						face_analyser.GetLatestAlignedFace(sim_warped_img);
 						face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 					}
@@ -347,7 +359,6 @@ int main (int argc, char **argv)
 
 					// Output features
 					open_face_rec.SetObservationHOG(face_models[model].detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
-					open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
 					open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
 					open_face_rec.SetObservationLandmarks(face_models[model].detected_landmarks, face_models[model].GetShape(sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy),
 						face_models[model].params_global, face_models[model].params_local, face_models[model].detection_certainty, face_models[model].detection_success);
@@ -359,25 +370,29 @@ int main (int argc, char **argv)
 					open_face_rec.SetObservationFrameNumber(sequence_reader.GetFrameNumber());
 					open_face_rec.WriteObservation();
 
-
 				}
 			}
+
 			visualizer.SetFps(fps_tracker.GetFPS());
+
+			// Record frame
+			open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
+			open_face_rec.WriteObservationTracked();
 
 			// show visualization and detect key presses
 			char character_press = visualizer.ShowObservation();
-			
+
 			// restart the trackers
-			if(character_press == 'r')
+			if (character_press == 'r')
 			{
-				for(size_t i=0; i < face_models.size(); ++i)
+				for (size_t i = 0; i < face_models.size(); ++i)
 				{
 					face_models[i].Reset();
 					active_models[i] = false;
 				}
 			}
 			// quit the application
-			else if(character_press=='q')
+			else if (character_press == 'q')
 			{
 				return 0;
 			}
@@ -386,18 +401,20 @@ int main (int argc, char **argv)
 			frame_count++;
 
 			// Grabbing the next frame in the sequence
-			captured_image = sequence_reader.GetNextFrame();
+			rgb_image = sequence_reader.GetNextFrame();
 
 		}
-		
+
 		frame_count = 0;
 
 		// Reset the model, for the next video
-		for(size_t model=0; model < face_models.size(); ++model)
+		for (size_t model = 0; model < face_models.size(); ++model)
 		{
 			face_models[model].Reset();
 			active_models[model] = false;
 		}
+
+		sequence_reader.Close();
 
 		sequence_number++;
 

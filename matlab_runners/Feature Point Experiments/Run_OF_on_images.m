@@ -124,7 +124,7 @@ if(size(shapes,2) == 66 && size(labels,2) == 68)
 end
 
 % Center the pixel, and convert to OCV format
-labels = labels - 1.5;
+labels = labels - 2.0;
 
 err_outline = compute_error(labels, shapes);
 

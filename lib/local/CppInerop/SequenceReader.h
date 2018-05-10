@@ -151,12 +151,31 @@ namespace UtilitiesOF {
 
 			if (m_rgb_frame == nullptr)
 			{
-				m_rgb_frame = gcnew OpenCVWrappers::RawImage(next_image.size().width, next_image.size().width, CV_8UC3);
+				m_rgb_frame = gcnew OpenCVWrappers::RawImage(next_image.size().width, next_image.size().height, CV_8UC3);
 			}
 
 			next_image.copyTo(m_rgb_frame->Mat);
 
 			return m_rgb_frame;
+		}
+
+		OpenCVWrappers::RawImage^ GetCurrentFrameGray() {
+
+			cv::Mat_<uchar> next_gray_image = m_sequence_capture->GetGrayFrame();
+
+			if (m_gray_frame == nullptr)
+			{
+				m_gray_frame = gcnew OpenCVWrappers::RawImage(next_gray_image.size().width, next_gray_image.size().height, CV_8U);
+			}
+
+			next_gray_image.copyTo(m_gray_frame->Mat);
+			
+			return m_gray_frame;
+		}
+
+		int GetFrameNumber()
+		{
+			return m_sequence_capture->GetFrameNumber();
 		}
 
 		double GetTimestamp()
@@ -208,20 +227,6 @@ namespace UtilitiesOF {
 		double GetFPS()
 		{
 			return m_sequence_capture->fps;
-		}
-
-		OpenCVWrappers::RawImage^ GetCurrentFrameGray() {
-
-			cv::Mat next_gray_image = m_sequence_capture->GetGrayFrame();
-
-			if (m_gray_frame == nullptr)
-			{
-				m_gray_frame = gcnew OpenCVWrappers::RawImage(next_gray_image.size().width, next_gray_image.size().width, CV_8UC3);
-			}
-
-			next_gray_image.copyTo(m_gray_frame->Mat);
-
-			return m_gray_frame;
 		}
 
 		void Close() {

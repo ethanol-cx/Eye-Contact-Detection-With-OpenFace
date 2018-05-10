@@ -17,11 +17,6 @@ else
     fprintf('MPII gaze dataset not found\n');
 end
 
-output_loc = './gaze_estimates_MPII/';
-if(~exist(output_loc, 'dir'))
-    mkdir(output_loc);
-end
-
 output = './mpii_out/';
 
 %% Perform actual gaze predictions

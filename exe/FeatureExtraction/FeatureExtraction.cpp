@@ -35,21 +35,6 @@
 
 // FeatureExtraction.cpp : Defines the entry point for the feature extraction console application.
 
-// System includes
-#include <fstream>
-#include <sstream>
-
-// OpenCV includes
-#include <opencv2/videoio/videoio.hpp>  // Video write
-#include <opencv2/videoio/videoio_c.h>  // Video write
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-// Boost includes
-#include <filesystem.hpp>
-#include <filesystem/fstream.hpp>
-#include <boost/algorithm/string.hpp>
-
 // Local includes
 #include "LandmarkCoreIncludes.h"
 
@@ -75,9 +60,9 @@ std::cout << "Warning: " << stream << std::endl
 #define ERROR_STREAM( stream ) \
 std::cout << "Error: " << stream << std::endl
 
-static void printErrorAndAbort( const std::string & error )
+static void printErrorAndAbort(const std::string & error)
 {
-    std::cout << error << std::endl;
+	std::cout << error << std::endl;
 }
 
 #define FATAL_STREAM( stream ) \
@@ -91,14 +76,14 @@ vector<string> get_arguments(int argc, char **argv)
 	vector<string> arguments;
 
 	// First argument is reserved for the name of the executable
-	for(int i = 0; i < argc; ++i)
+	for (int i = 0; i < argc; ++i)
 	{
 		arguments.push_back(string(argv[i]));
 	}
 	return arguments;
 }
 
-int main (int argc, char **argv)
+int main(int argc, char **argv)
 {
 
 	vector<string> arguments = get_arguments(argc, argv);
@@ -116,6 +101,12 @@ int main (int argc, char **argv)
 	LandmarkDetector::FaceModelParameters det_parameters(arguments);
 	// Always track gaze in feature extraction
 	LandmarkDetector::CLNF face_model(det_parameters.model_location);
+
+	if (!face_model.loaded_successfully)
+	{
+		cout << "ERROR: Could not load the landmark detector" << endl;
+		return 1;
+	}
 
 	// Load facial feature extractor and AU analyser
 	FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
@@ -144,11 +135,11 @@ int main (int argc, char **argv)
 	{
 
 		// The sequence reader chooses what to open based on command line arguments provided
-		if(!sequence_reader.Open(arguments))
+		if (!sequence_reader.Open(arguments))
 			break;
 
 		INFO_STREAM("Device or file opened");
-		
+
 		if (sequence_reader.IsWebcam())
 		{
 			INFO_STREAM("WARNING: using a webcam in feature extraction, Action Unit predictions will not be as accurate in real-time webcam mode");
@@ -157,7 +148,7 @@ int main (int argc, char **argv)
 		}
 
 		cv::Mat captured_image;
-		
+
 		Utilities::RecorderOpenFaceParameters recording_params(arguments, true, sequence_reader.IsWebcam(),
 			sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, sequence_reader.fps);
 		if (!face_model.eye_model)
@@ -182,7 +173,7 @@ int main (int argc, char **argv)
 			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
 			// The actual facial landmark detection / tracking
-			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
+			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_model, det_parameters, grayscale_image);
 
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, 0); cv::Point3f gazeDirection1(0, 0, 0); cv::Vec2d gazeAngle(0, 0);
@@ -235,7 +226,7 @@ int main (int argc, char **argv)
 			open_face_rec.SetObservationHOG(detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
 			open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
 			open_face_rec.SetObservationActionUnits(face_analyser.GetCurrentAUsReg(), face_analyser.GetCurrentAUsClass());
-			open_face_rec.SetObservationLandmarks(face_model.detected_landmarks, face_model.GetShape(sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), 
+			open_face_rec.SetObservationLandmarks(face_model.detected_landmarks, face_model.GetShape(sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy),
 				face_model.params_global, face_model.params_local, face_model.detection_certainty, detection_success);
 			open_face_rec.SetObservationPose(pose_estimate);
 			open_face_rec.SetObservationGaze(gazeDirection0, gazeDirection1, gazeAngle, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy));
@@ -244,9 +235,10 @@ int main (int argc, char **argv)
 			open_face_rec.SetObservationFrameNumber(sequence_reader.GetFrameNumber());
 			open_face_rec.SetObservationFaceAlign(sim_warped_img);
 			open_face_rec.WriteObservation();
-			
+			open_face_rec.WriteObservationTracked();
+
 			// Reporting progress
-			if(sequence_reader.GetProgress() >= reported_completion / 10.0)
+			if (sequence_reader.GetProgress() >= reported_completion / 10.0)
 			{
 				cout << reported_completion * 10 << "% ";
 				if (reported_completion == 10)
@@ -260,8 +252,9 @@ int main (int argc, char **argv)
 			captured_image = sequence_reader.GetNextFrame();
 
 		}
-		
+
 		open_face_rec.Close();
+		sequence_reader.Close();
 
 		if (recording_params.outputAUs())
 		{

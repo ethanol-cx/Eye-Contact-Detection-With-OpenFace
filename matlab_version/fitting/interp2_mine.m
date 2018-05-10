@@ -49,7 +49,7 @@ function zi = interp2_mine(varargin)
 %   Copyright 1984-2011 The MathWorks, Inc.
 %   $Revision: 5.33.4.24 $  $Date: 2011/05/17 02:32:27 $
 
-error(nargchk(1,7,nargin,'struct')); % allowing for an ExtrapVal
+% error(nargchk(1,7,nargin,'struct')); % allowing for an ExtrapVal
 
 bypass = false;
 uniform = true;

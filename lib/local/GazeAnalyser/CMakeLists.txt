@@ -1,5 +1,6 @@
 #TBB library
 include_directories(${TBB_ROOT_DIR}/include)
+
 include_directories(${BLAS_ROOT_DIR})
 
 include_directories(${BOOST_INCLUDE_DIR})
@@ -22,9 +23,9 @@ SET(HEADERS
 )
 
 include_directories(./include)
-include_directories(${GAZEANALYSER_SOURCE_DIR}/include)
+include_directories(${GazeAnalyser_SOURCE_DIR}/include)
 
-add_library( GazeAnalyser ${SOURCE} ${HEADERS})
+add_library( GazeAnalyser ${SOURCE} ${HEADERS} )
 
 install (TARGETS GazeAnalyser DESTINATION lib)
 install (FILES ${HEADERS} DESTINATION include/OpenFace)

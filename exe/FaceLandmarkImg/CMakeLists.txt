@@ -1,6 +1,9 @@
 #TBB library
 include_directories(${TBB_ROOT_DIR}/include)
 
+#OpenBlas library
+include_directories(../../lib/3rdParty/OpenBLAS/include)
+
 # Local libraries
 include_directories(${LandmarkDetector_SOURCE_DIR}/include)
 	
@@ -16,6 +19,6 @@ target_link_libraries(FaceLandmarkImg GazeAnalyser)
 target_link_libraries(FaceLandmarkImg Utilities)
 target_link_libraries(FaceLandmarkImg dlib)
 
-target_link_libraries(FaceLandmarkImg ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES}  ${BLAS_LIBRARIES})
+target_link_libraries(FaceLandmarkImg ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES} ${BLAS_LIBRARIES})
 
 install (TARGETS FaceLandmarkImg DESTINATION bin)

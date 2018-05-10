@@ -1,7 +1,7 @@
 addpath('../../matlab_runners/Demos');
 
-root1 = "C:\Users\Tadas Baltrusaitis\Documents\OpenFace-GUI\x64\Release\processed";
-root2 = "C:\Users\Tadas Baltrusaitis\Documents\OpenFace\x64\Release\processed";
+root1 = "C:\Users\Tadas Baltrusaitis\Documents\OpenFace-CECLM_clean\exe\FeatureExtraction\processed";
+root2 = "C:\Users\Tadas Baltrusaitis\Documents\OpenFace-CECLM_clean\x64\Release\processed";
 
 gui_files = dir(sprintf('%s/*.csv', root1));
 
@@ -17,7 +17,7 @@ for i = 1:numel(gui_files)
         feat_gui = table_gui{:,var_names(v)};
         feat_console = table_console{:,var_names(v)};
         feat_diff = norm(abs(feat_gui - feat_console));
-        if(feat_diff > 0.1)
+        if(feat_diff > 0.0001)
             fprintf('%s error - %.3f\n', var_names{v}, feat_diff);
         end    
     end
@@ -28,13 +28,13 @@ for i = 1:numel(gui_files)
     [hog_console, valid_console] = Read_HOG_file(sprintf('%s/%s.hog', root2, name));
 
     feat_diff = norm(abs(hog_gui(:) - hog_console(:)));
-    if(feat_diff > 0.1)
-        fprintf('%s error - %.3f\n', var_names{v}, feat_diff);
+    if(feat_diff > 0.0001)
+        fprintf('HOG error - %.3f\n', feat_diff);
     end
     
     feat_diff = norm(abs(valid_gui - valid_console));
-    if(feat_diff > 0.1)
-        fprintf('%s error - %.3f\n', var_names{v}, feat_diff);
+    if(feat_diff > 0.0001)
+        fprintf('Valid error - %.3f\n', feat_diff);
     end   
     
     % Compare the simalign ones
@@ -46,7 +46,7 @@ for i = 1:numel(gui_files)
         console_align = imread(sprintf('%s/%s_aligned/%s', root2, name, console_aligns(j).name));
         feat_diff = norm(abs(double(gui_align(:)) - double(console_align(:))));
         if(feat_diff > 0.1)
-            fprintf('%s error - %.3f\n', var_names{v}, feat_diff);
+            fprintf('Aligned error - %.3f\n', feat_diff);
         end   
     
     end
