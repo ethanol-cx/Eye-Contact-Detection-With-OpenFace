@@ -39,14 +39,6 @@ assert(median(clnf_error_66_cat_3) < 0.049);
 
 cd('../');
 
-%% AUs
-cd('Action Unit Experiments');
-
-run_AU_prediction_DISFA
-assert(mean(au_res) > 0.73);
-
-cd('../');
-
 %% Gaze
 cd('Gaze Experiments');
 extract_mpii_gaze_test

@@ -122,25 +122,6 @@ for j = 1:size(xs,1)
     drawnow
 end
 
-%% Demonstrate AUs
-au_reg_inds = cellfun(@(x) ~isempty(x) && x==5, strfind(column_names, '_r'));
-
-aus = all_params(valid_frames, au_reg_inds);
-figure
-plot(time_stamps, aus);
-title('Facial Action Units (intensity)');
-xlabel('Time (s)');
-ylabel('Intensity');
-ylim([0,6]);
-
-au_class_inds = cellfun(@(x) ~isempty(x) && x==5, strfind(column_names, '_c'));
-
-aus = all_params(valid_frames, au_class_inds);
-figure
-plot(time_stamps, aus);
-title('Facial Action Units (presense)');
-xlabel('Time (s)');
-ylim([0,2]);
 %% Demo pose
 pose_inds = cellfun(@(x) ~isempty(x) && x==1, strfind(column_names, 'pose_'));
 
