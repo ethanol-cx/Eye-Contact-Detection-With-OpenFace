@@ -214,7 +214,7 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 		sigma = 1.5f * sigma;
 		reg_factor = 0.9f * reg_factor;
 	}
-	else if (model_path.stem().string().compare("main_clnf_general") == 0)
+	else if (model_path.stem().string().compare("main_clnf_general") == 0 || model_path.stem().string().compare("main_clnf_multi_pie") == 0)
 	{
 		curr_landmark_detector = CLNF_DETECTOR;
 	}
@@ -328,7 +328,7 @@ void FaceModelParameters::init()
 	// For first frame use the initialisation
 	window_sizes_current = window_sizes_init;
 
-	model_location = "model/main_ceclm_general.txt";
+	model_location = "model/main_clnf_multi_pie.txt";
 	curr_landmark_detector = CECLM_DETECTOR;
 
 	sigma = 1.5f;

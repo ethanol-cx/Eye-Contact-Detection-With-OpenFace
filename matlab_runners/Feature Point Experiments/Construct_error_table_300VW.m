@@ -15,8 +15,8 @@ fprintf(file_out, 'CFSS\t%.2f\t%.2f\t%.2f\n', median(cfss_error_66_cat_1)*100, m
 fprintf(file_out, 'ICCR\t%.2f\t%.2f\t%.2f\n', median(iccr_error_66_cat_1)*100, median(iccr_error_66_cat_2)*100, median(iccr_error_66_cat_3)*100);
 fprintf(file_out, 'CFAN\t%.2f\t%.2f\t%.2f\n', median(cfan_error_66_cat_1)*100, median(cfan_error_66_cat_2)*100, median(cfan_error_66_cat_3)*100);
 fprintf(file_out, '------------------------------\n');
-fprintf(file_out, 'OpenFace CLNF\t%.2f\t%.2f\t%.2f\n', median(clnf_error_66_cat_1)*100, median(clnf_error_66_cat_2)*100, median(clnf_error_66_cat_3)*100);
-fprintf(file_out, 'OpenFace CE-CLM\t%.2f\t%.2f\t%.2f\n', median(ceclm_error_66_cat_1)*100, median(ceclm_error_66_cat_2)*100, median(ceclm_error_66_cat_3)*100);
+fprintf(file_out, 'OpenFace CLNF (multipie)\t%.2f\t%.2f\t%.2f\n', median(clnf_error_66_cat_1)*100, median(clnf_error_66_cat_2)*100, median(clnf_error_66_cat_3)*100);
+% fprintf(file_out, 'OpenFace CE-CLM\t%.2f\t%.2f\t%.2f\n', median(ceclm_error_66_cat_1)*100, median(ceclm_error_66_cat_2)*100, median(ceclm_error_66_cat_3)*100);
 fclose(file_out);
 
 file_out = fopen('results/300VW_49.txt', 'w');
@@ -30,6 +30,6 @@ fprintf(file_out, 'DRMF\t%.2f\t%.2f\t%.2f\n', median(drmf_error_49_cat_1)*100, m
 fprintf(file_out, 'PO-CR\t%.2f\t%.2f\t%.2f\n', median(pocr_error_49_cat_1)*100, median(pocr_error_49_cat_2)*100, median(pocr_error_49_cat_3)*100);
 fprintf(file_out, 'CFAN\t%.2f\t%.2f\t%.2f\n', median(cfan_error_49_cat_1)*100, median(cfan_error_49_cat_2)*100, median(cfan_error_49_cat_3)*100);
 fprintf(file_out, '------------------------------\n');
-fprintf(file_out, 'OpenFace CLNF\t%.2f\t%.2f\t%.2f\n', median(clnf_error_49_cat_1)*100, median(clnf_error_49_cat_2)*100, median(clnf_error_49_cat_3)*100);
-fprintf(file_out, 'OpenFace CE-CLM\t%.2f\t%.2f\t%.2f\n', median(ceclm_error_49_cat_1)*100, median(ceclm_error_49_cat_2)*100, median(ceclm_error_49_cat_3)*100);
+fprintf(file_out, 'OpenFace CLNF(multipie)\t%.2f\t%.2f\t%.2f\n', median(clnf_error_49_cat_1)*100, median(clnf_error_49_cat_2)*100, median(clnf_error_49_cat_3)*100);
+% fprintf(file_out, 'OpenFace CE-CLM\t%.2f\t%.2f\t%.2f\n', median(ceclm_error_49_cat_1)*100, median(ceclm_error_49_cat_2)*100, median(ceclm_error_49_cat_3)*100);
 fclose(file_out);
