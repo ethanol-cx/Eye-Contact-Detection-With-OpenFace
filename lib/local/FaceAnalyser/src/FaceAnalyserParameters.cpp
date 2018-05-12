@@ -121,11 +121,11 @@ FaceAnalyserParameters::FaceAnalyserParameters(vector<string> &arguments):root()
 
 	if (dynamic)
 	{
-		this->model_location = "AU_predictors/main_dynamic_svms.txt";
+		this->model_location = "AU_predictors/DISFA_dynamic_svms.txt";
 	}
 	else
 	{
-		this->model_location = "AU_predictors/main_static_svms.txt";
+		this->model_location = "AU_predictors/DISFA_static_svms.txt";
 	}
 
 	// If we set the size but not the scale, adapt the scale to the right size
@@ -162,7 +162,7 @@ void FaceAnalyserParameters::init()
 	this->sim_size_out = 112;
 	this->sim_align_face_mask = true;
 
-	this->model_location = "AU_predictors/main_dynamic_svms.txt";
+	this->model_location = "AU_predictors/DISFA_dynamic_svms.txt";
 
 	// Make sure model_location is valid
 	// First check working directory, then the executable's directory, then the config path set by the build process.
@@ -212,7 +212,7 @@ void FaceAnalyserParameters::OptimizeForVideos()
 	// Set the post-processing to true and load a dynamic model
 	dynamic = true;
 
-	this->model_location = "AU_predictors/main_dynamic_svms.txt";
+	this->model_location = "AU_predictors/DISFA_dynamic_svms.txt";
 
 	// Make sure model_location is valid
 	// First check working directory, then the executable's directory, then the config path set by the build process.
@@ -242,7 +242,7 @@ void FaceAnalyserParameters::OptimizeForImages()
 	// Set the post-processing to true and load a dynamic model
 	dynamic = false;
 
-	this->model_location = "AU_predictors/main_static_svms.txt";
+	this->model_location = "AU_predictors/DISFA_static_svms.txt";
 
 	// Make sure model_location is valid
 	// First check working directory, then the executable's directory, then the config path set by the build process.

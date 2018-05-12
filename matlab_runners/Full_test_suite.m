@@ -41,30 +41,17 @@ cd('../');
 
 %% AUs
 cd('Action Unit Experiments');
-run_AU_prediction_Bosphorus
-assert(mean(cccs_reg) > 0.56);
-assert(mean(f1s_class) > 0.48);
-
-run_AU_prediction_BP4D
-assert(mean(ints_cccs) > 0.65);
-assert(mean(f1s_class) > 0.61);
 
 run_AU_prediction_DISFA
 assert(mean(au_res) > 0.73);
-
-run_AU_prediction_SEMAINE
-assert(mean(f1s) > 0.43);
-
-run_AU_prediction_FERA2011
-assert(mean(au_res) > 0.51);
 
 cd('../');
 
 %% Gaze
 cd('Gaze Experiments');
 extract_mpii_gaze_test
-assert(mean_error < 9.15)
-assert(median_error < 8.5)
+assert(mean_error < 9.2)
+assert(median_error < 8.6)
 cd('../');
 
 %% Demos

@@ -90,3 +90,4 @@ lib/3rdParty/CameraEnumerator/Release/
 lib/local/CppInerop/Release/
 lib/local/Utilities/Release/
 matlab_runners/Demos/processed/
+exe/releases/OpenFace_*
