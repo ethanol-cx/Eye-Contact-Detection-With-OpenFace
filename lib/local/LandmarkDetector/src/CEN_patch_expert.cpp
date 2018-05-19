@@ -498,40 +498,33 @@ void LandmarkDetector::interpolationMatrix(cv::Mat_<float>& mapMatrix, int respo
 	}
 }
 
-//===========================================================================
-void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc)
+void CEN_patch_expert::ResponseInternal(cv::Mat_<float>& response)
 {
-
-	const unsigned int response_height = area_of_interest.rows - height_support + 1;
-	const unsigned int response_width = area_of_interest.cols - width_support + 1;
-
-	// Extract im2col but in a sparse way and contrast normalize
-	im2colBiasSparseContrastNorm(area_of_interest, width_support, height_support, im2col_prealloc);
-	response = im2col_prealloc.t();
-
 	for (size_t layer = 0; layer < activation_function.size(); ++layer)
 	{
 
-		// We are performing response = weights[layers] * response(t), but in OpenBLAS as that is significantly quicker than OpenCV		
+		// We are performing response = weights[layers] * response, but in OpenBLAS as that is significantly quicker than OpenCV		
 		cv::Mat_<float> resp = response;
 		float* m1 = (float*)resp.data;
-		cv::Mat_<float> weight = weights[layer];
-		float* m2 = (float*)weight.data;
+		float* m2 = (float*)weights[layer].data;
 
-		cv::Mat_<float> resp_blas(weight.rows, resp.cols);
+		cv::Mat_<float> resp_blas(weights[layer].rows, resp.cols);
 		float* m3 = (float*)resp_blas.data;
 
 		// Perform matrix multiplication in OpenBLAS (fortran call)
 		float alpha1 = 1.0;
 		float beta1 = 0.0;
-		sgemm_("N", "N", &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
+		sgemm_("N", "N", &resp.cols, &weights[layer].rows, &weights[layer].cols, &alpha1, m1, &resp.cols, m2, &weights[layer].cols, &beta1, m3, &resp.cols);
 
 		// The above is a faster version of this, by calling the fortran version directly
 		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, resp.cols, weight.rows, weight.cols, 1, m1, resp.cols, m2, weight.cols, 0.0, m3, resp.cols);
 
-		// Adding the bias (bit ugly, but the fastest way to do this)
 		response = resp_blas;
 
+		// Alternative is to multiply the responses directly using OpenCV (much slower)
+		//response = weights[layer] * response;
+
+		// Adding the bias (bit ugly, but the fastest way to do this), TODO can this bias be incorporated in the above?
 		float* data = (float*)response.data;
 		const unsigned height = response.rows;
 		const unsigned width = response.cols;
@@ -558,7 +551,7 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 			for (unsigned int counter = 0; counter < resp_size; ++counter)
 			{
 				float in = *data;
-				*data++ = 1.0 / (1.0 + exp(-(in)));
+				*data++ = 1.0f / (1.0f + exp(-(in)));
 			}
 
 		}
@@ -569,187 +562,78 @@ void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest, c
 
 	}
 
-	response = response * mapMatrix;
-	response = response.t();
-	response = response.reshape(1, response_height);
-	response = response.t();
 }
 
 //===========================================================================
-void CEN_patch_expert::ResponseSparse_mirror(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc)
+void CEN_patch_expert::ResponseSparse(const cv::Mat_<float> &area_of_interest_left, const cv::Mat_<float> &area_of_interest_right, cv::Mat_<float> &response_left, cv::Mat_<float> &response_right, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc_left, cv::Mat_<float>& im2col_prealloc_right)
 {
+	unsigned int response_height = 0;
 
-	const unsigned int response_height = area_of_interest.rows - height_support + 1;
-	const unsigned int response_width = area_of_interest.cols - width_support + 1;
+	const bool left_provided = !area_of_interest_left.empty();
+	const bool right_provided = !area_of_interest_right.empty();
 
-	cv::flip(area_of_interest, area_of_interest, 1);
-
-	// Extract im2col but in a sparse way and contrast normalize
-	im2colBiasSparseContrastNorm(area_of_interest, width_support, height_support, im2col_prealloc);
-
-	response = im2col_prealloc.t();
-
-	for (size_t layer = 0; layer < activation_function.size(); ++layer)
+	if(right_provided)
 	{
-
-		// We are performing response = weights[layers] * response, but in OpenBLAS as that is significantly quicker than OpenCV		
-		cv::Mat_<float> resp = response;
-		float* m1 = (float*)resp.data;
-		cv::Mat_<float> weight = weights[layer];
-		float* m2 = (float*)weight.data;
-
-		cv::Mat_<float> resp_blas(weight.rows, resp.cols);
-		float* m3 = (float*)resp_blas.data;
-
-		// Perform matrix multiplication in OpenBLAS (fortran call)
-		float alpha1 = 1.0;
-		float beta1 = 0.0;
-		sgemm_("N", "N", &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
-
-		// The above is a faster version of this, by calling the fortran version directly
-		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, resp.cols, weight.rows, weight.cols, 1, m1, resp.cols, m2, weight.cols, 0.0, m3, resp.cols);
-
-		// Adding the bias (bit ugly, but the fastest way to do this)
-		response = resp_blas;
-
-		float* data = (float*)response.data;
-		const unsigned int height = response.rows;
-		const unsigned int width = response.cols;
-		float* data_b = (float*)biases[layer].data;
-		for (unsigned int y = 0; y < height; ++y)
-		{
-			float bias = data_b[y];
-			for (unsigned int x = 0; x < width; ++x)
-			{
-				float in = *data + bias;
-				*data++ = in;
-			}
-		}
-
-		// Perform activation and add bias at the same time	
-		if (activation_function[layer] == 0) // Sigmoid
-		{
-
-			const unsigned int resp_size = response.rows * response.cols;
-
-			// Iterate over the data directly
-			float* data = (float*)response.data;
-
-			for (unsigned int counter = 0; counter < resp_size; ++counter)
-			{
-				float in = *data;
-				*data++ = 1.0 / (1.0 + exp(-(in)));
-			}
-
-		}
-		else if (activation_function[layer] == 2)// ReLU
-		{
-			cv::threshold(response, response, 0, 0, cv::THRESH_TOZERO);
-		}
-
+		cv::flip(area_of_interest_right, area_of_interest_right, 1);
+		response_height = area_of_interest_right.rows - height_support + 1;
+		im2colBiasSparseContrastNorm(area_of_interest_right, width_support, height_support, im2col_prealloc_right);
 	}
 
-	response = response * mapMatrix;
-	response = response.t();
-	response = response.reshape(1, response_height);
-	response = response.t();
-	cv::flip(response, response, 1);
-}
-
-void CEN_patch_expert::ResponseSparse_mirror_joint(const cv::Mat_<float> &area_of_interest_left, const cv::Mat_<float> &area_of_interest_right, cv::Mat_<float> &response_left, cv::Mat_<float> &response_right, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc_left, cv::Mat_<float>& im2col_prealloc_right)
-{
-	const unsigned int response_height = area_of_interest_left.rows - height_support + 1;
-	const unsigned int response_width = area_of_interest_left.cols - width_support + 1;
-
-	cv::flip(area_of_interest_right, area_of_interest_right, 1);
-
 	// Extract im2col but in a sparse way and contrast normalize
-	im2colBiasSparseContrastNorm(area_of_interest_left, width_support, height_support, im2col_prealloc_left);
-	im2colBiasSparseContrastNorm(area_of_interest_right, width_support, height_support, im2col_prealloc_right);
+	if(left_provided)
+	{
+		response_height = area_of_interest_left.rows - height_support + 1;
+		im2colBiasSparseContrastNorm(area_of_interest_left, width_support, height_support, im2col_prealloc_left);
+	}
 
 	cv::Mat_<float> response;
-	cv::vconcat(im2col_prealloc_left, im2col_prealloc_right, response);
-
-	response = response.t();
-
-	for (size_t layer = 0; layer < activation_function.size(); ++layer)
+	if(right_provided && left_provided)
 	{
-
-		// We are performing response = weights[layers] * response(t), but in OpenBLAS as that is significantly quicker than OpenCV		
-		cv::Mat_<float> resp = response;
-		float* m1 = (float*)resp.data;
-		cv::Mat_<float> weight = weights[layer];
-		float* m2 = (float*)weight.data;
-
-		// TODO, this could poss be pre-allocated based on biggest one
-		cv::Mat_<float> resp_blas(weight.rows, resp.cols);
-		float* m3 = (float*)resp_blas.data;
-
-		// Perform matrix multiplication in OpenBLAS (fortran call)
-		float alpha1 = 1.0;
-		float beta1 = 0.0;
-		sgemm_("N", "N", &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
-
-		// The above is a faster version of this, by calling the fortran version directly
-		//cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, resp.cols, weight.rows, weight.cols, 1, m1, resp.cols, m2, weight.cols, 0.0, m3, resp.cols);
-
-		// Adding the bias (bit ugly, but the fastest way to do this)
-		response = resp_blas;
-
-		float* data = (float*)response.data;
-		const unsigned int height = response.rows;
-		const unsigned int width = response.cols;
-		float* data_b = (float*)biases[layer].data;
-		for (unsigned int y = 0; y < height; ++y)
-		{
-			float bias = data_b[y];
-			for (unsigned int x = 0; x < width; ++x)
-			{
-				float in = *data + bias;
-				*data++ = in;
-			}
-		}
-
-		// Perform activation and add bias at the same time	
-		if (activation_function[layer] == 0) // Sigmoid
-		{
-
-			cv::exp(-response, response);
-			response = 1.0 / (1.0 + response);
-
-			// Iterate over the data directly
-			/*size_t resp_size = response.rows * response.cols;
-
-			float* data = (float*)response.data;
-
-			for (size_t counter = 0; counter < resp_size; ++counter)
-			{
-			float in = *data;
-			*data++ = 1.0 / (1.0 + std::exp(-(in)));
-			}*/
-
-		}
-		else if (activation_function[layer] == 2)// ReLU
-		{
-			cv::threshold(response, response, 0, 0, cv::THRESH_TOZERO);
-		}
-
+		cv::vconcat(im2col_prealloc_left, im2col_prealloc_right, response);
+		response = response.t();
+	}
+	else if (left_provided)
+	{
+		response = im2col_prealloc_left.t();
+	}
+	else if (right_provided)
+	{
+		response = im2col_prealloc_right.t();
 	}
 
-	response_left = response(cv::Rect(0, 0, response.cols / 2, 1));
-	response_right = response(cv::Rect(response.cols / 2, 0, response.cols / 2, 1));
+	ResponseInternal(response);
+	
+	if(left_provided && right_provided)
+	{
+		response_left = response(cv::Rect(0, 0, response.cols / 2, 1));
+		response_right = response(cv::Rect(response.cols / 2, 0, response.cols / 2, 1));
+	}
+	else if (left_provided)
+	{
+		response_left = response;
+	}
+	else if (right_provided)
+	{
+		response_right = response;
+	}
 
-	response_left = response_left * mapMatrix;
-	response_right = response_right * mapMatrix;
+	if(left_provided)
+	{
+		// TODO This could and should be gemm'ed
+		response_left = response_left * mapMatrix;
+		response_left = response_left.t();
+		response_left = response_left.reshape(1, response_height);
+		response_left = response_left.t();
+	}
 
-	response_left = response_left.t();
-	response_right = response_right.t();
+	if(right_provided)
+	{
+		// TODO This could and should be gemm'ed
+		response_right = response_right * mapMatrix;
+		response_right = response_right.t();
+		response_right = response_right.reshape(1, response_height);
+		response_right = response_right.t();
 
-	response_left = response_left.reshape(1, response_height);
-	response_left = response_left.t();
-
-	response_right = response_right.reshape(1, response_height);
-	response_right = response_right.t();
-
-	cv::flip(response_right, response_right, 1);
+		cv::flip(response_right, response_right, 1);
+	}
 }

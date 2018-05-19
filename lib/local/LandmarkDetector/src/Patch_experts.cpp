@@ -131,7 +131,7 @@ std::vector<int> Patch_experts::Collect_visible_landmarks(vector<vector<cv::Mat_
 // Additionally returns the transform from the image coordinates to the response coordinates (and vice versa).
 // The computation also requires the current landmark locations to compute response around, the PDM corresponding to the desired model, and the parameters describing its instance
 // Also need to provide the size of the area of interest and the desired scale of analysis
-void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, cv::Matx22f& sim_ref_to_img, cv::Matx22f& sim_img_to_ref, const cv::Mat_<uchar>& grayscale_image,
+void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, cv::Matx22f& sim_ref_to_img, cv::Matx22f& sim_img_to_ref, const cv::Mat_<float>& grayscale_image,
 	const PDM& pdm, const cv::Vec6f& params_global, const cv::Mat_<float>& params_local, int window_size, int scale)
 {
 
@@ -161,9 +161,6 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 	
 	float a1 = sim_ref_to_img(0, 0);
 	float b1 = -sim_ref_to_img(0, 1);
-
-	cv::Mat_<float> gray_image_flt;
-	grayscale_image.convertTo(gray_image_flt, CV_32F);
 
 	bool use_ccnf = !this->ccnf_expert_intensity.empty();
 	bool use_cen = !this->cen_expert_intensity.empty();
@@ -249,8 +246,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 		// Extract the region of interest around the current landmark location
 		cv::Mat_<float> area_of_interest(area_of_interest_height, area_of_interest_width, 0.0f);
 
-		cv::warpAffine(gray_image_flt, area_of_interest, sim, area_of_interest.size(), cv::WARP_INVERSE_MAP + CV_INTER_LINEAR);
-		
+		cv::warpAffine(grayscale_image, area_of_interest, sim, area_of_interest.size(), cv::WARP_INVERSE_MAP + CV_INTER_LINEAR);		
 
 		// Get intensity response either from the SVR, CCNF, or CEN patch experts (prefer CEN as they are the most accurate so far)
 		if (!cen_expert_intensity.empty())
@@ -270,7 +266,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 					int mirror_id = mirror_inds.at<int>(ind);
 					if (mirror_id == ind)
 					{
-						cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, patch_expert_responses[ind], interp_mat, prealloc_mat);
+						cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, cv::Mat_<float>(), patch_expert_responses[ind], cv::Mat_<float>(), interp_mat, prealloc_mat, cv::Mat_<float>());
 					}
 					else
 					{
@@ -283,11 +279,11 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 						// Extract the region of interest around the current landmark location
 						cv::Mat_<float> area_of_interest_r(area_of_interest_height, area_of_interest_width, 0.0f);
 
-						cv::warpAffine(gray_image_flt, area_of_interest_r, sim_r, area_of_interest_r.size(), cv::WARP_INVERSE_MAP + CV_INTER_LINEAR);
+						cv::warpAffine(grayscale_image, area_of_interest_r, sim_r, area_of_interest_r.size(), cv::WARP_INVERSE_MAP + CV_INTER_LINEAR);
 
 						cv::Mat_<float> prealloc_mat_right = preallocated_im2col[mirror_id][im2col_size];
 
-						cen_expert_intensity[scale][view_id][ind].ResponseSparse_mirror_joint(area_of_interest, area_of_interest_r, patch_expert_responses[ind], patch_expert_responses[mirror_id], interp_mat, prealloc_mat, prealloc_mat_right);
+						cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, area_of_interest_r, patch_expert_responses[ind], patch_expert_responses[mirror_id], interp_mat, prealloc_mat, prealloc_mat_right);
 
 						preallocated_im2col[mirror_id][im2col_size] = prealloc_mat_right;
 
@@ -299,13 +295,14 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				// For space and memory saving use a mirrored patch expert
 				if (!cen_expert_intensity[scale][view_id][ind].biases.empty())
 				{
-					cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, patch_expert_responses[ind], interp_mat, prealloc_mat);
+					cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, cv::Mat_<float>(), patch_expert_responses[ind], cv::Mat_<float>(), interp_mat, prealloc_mat, cv::Mat_<float>());
+					
 					// A slower, but slightly more accurate version
 					//cen_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
 				}
 				else
 				{
-					cen_expert_intensity[scale][mirror_views.at<int>(view_id)][mirror_inds.at<int>(ind)].ResponseSparse_mirror(area_of_interest, patch_expert_responses[ind], interp_mat, prealloc_mat);
+					cen_expert_intensity[scale][mirror_views.at<int>(view_id)][mirror_inds.at<int>(ind)].ResponseSparse(cv::Mat_<float>(), area_of_interest, cv::Mat_<float>(), patch_expert_responses[ind], interp_mat, cv::Mat_<float>(), prealloc_mat);
 				}
 			}
 

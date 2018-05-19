@@ -626,8 +626,12 @@ void CLNF::Reset(double x, double y)
 bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& params)
 {
 
+	// TODO this could be moved out
+	cv::Mat_<float> gray_image_flt;
+	image.convertTo(gray_image_flt, CV_32F);
+
 	// Fits from the current estimate of local and global parameters in the model
-	bool fit_success = Fit(image, params.window_sizes_current, params);
+	bool fit_success = Fit(gray_image_flt, params.window_sizes_current, params);
 
 	// Store the landmarks converged on in detected_landmarks
 	pdm.CalcShape2D(detected_landmarks, params_local, params_global);	
@@ -725,7 +729,7 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 }
 
 //=============================================================================
-bool CLNF::Fit(const cv::Mat_<uchar>& im, const std::vector<int>& window_sizes, const FaceModelParameters& parameters)
+bool CLNF::Fit(const cv::Mat_<float>& im, const std::vector<int>& window_sizes, const FaceModelParameters& parameters)
 {
 	// Making sure it is a single channel image
 	assert(im.channels() == 1);	

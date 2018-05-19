@@ -197,7 +197,7 @@ private:
 	map<int, cv::Mat_<float> >		kde_resp_precalc;
 
 	// The model fitting: patch response computation and optimisation steps
-    bool Fit(const cv::Mat_<uchar>& intensity_image, const std::vector<int>& window_sizes, const FaceModelParameters& parameters);
+    bool Fit(const cv::Mat_<float>& intensity_image, const std::vector<int>& window_sizes, const FaceModelParameters& parameters);
 
 	// Mean shift computation that uses precalculated kernel density estimators (the one actually used)
 	void NonVectorisedMeanShift_precalc_kde(cv::Mat_<float>& out_mean_shifts, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Mat_<float> &dxs, const cv::Mat_<float> &dys, int resp_size, float a, int scale, int view_id, map<int, cv::Mat_<float> >& mean_shifts);
