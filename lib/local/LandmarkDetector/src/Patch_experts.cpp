@@ -266,7 +266,8 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 					int mirror_id = mirror_inds.at<int>(ind);
 					if (mirror_id == ind)
 					{
-						cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, cv::Mat_<float>(), patch_expert_responses[ind], cv::Mat_<float>(), interp_mat, prealloc_mat, cv::Mat_<float>());
+						cv::Mat_<float> empty(0,0,0.0f);
+						cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, empty, patch_expert_responses[ind], empty, interp_mat, prealloc_mat, empty);
 					}
 					else
 					{
@@ -295,14 +296,16 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 				// For space and memory saving use a mirrored patch expert
 				if (!cen_expert_intensity[scale][view_id][ind].biases.empty())
 				{
-					cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, cv::Mat_<float>(), patch_expert_responses[ind], cv::Mat_<float>(), interp_mat, prealloc_mat, cv::Mat_<float>());
+					cv::Mat_<float> empty(0, 0, 0.0f);
+					cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, empty, patch_expert_responses[ind], empty, interp_mat, prealloc_mat, empty);
 					
 					// A slower, but slightly more accurate version
 					//cen_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
 				}
 				else
 				{
-					cen_expert_intensity[scale][mirror_views.at<int>(view_id)][mirror_inds.at<int>(ind)].ResponseSparse(cv::Mat_<float>(), area_of_interest, cv::Mat_<float>(), patch_expert_responses[ind], interp_mat, cv::Mat_<float>(), prealloc_mat);
+					cv::Mat_<float> empty(0, 0, 0.0f);
+					cen_expert_intensity[scale][mirror_views.at<int>(view_id)][mirror_inds.at<int>(ind)].ResponseSparse(empty, area_of_interest, empty, patch_expert_responses[ind], interp_mat, empty, prealloc_mat);
 				}
 			}
 
