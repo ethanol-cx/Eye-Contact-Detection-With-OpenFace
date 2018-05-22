@@ -72,15 +72,15 @@
 
 using namespace LandmarkDetector;
 
-// Copy constructor		
+// Copy constructor	(do not perform a deep copy of data as it is very large, also there is no real need to stor the copies
 CEN_patch_expert::CEN_patch_expert(const CEN_patch_expert& other) : confidence(other.confidence), width_support(other.width_support), height_support(other.height_support)
 {
 
 	// Copy the layer weights in a deep way
 	for (size_t i = 0; i < other.weights.size(); ++i)
 	{
-		this->weights.push_back(other.weights[i].clone());
-		this->biases.push_back(other.biases[i].clone());
+		this->weights.push_back(other.weights[i]);
+		this->biases.push_back(other.biases[i]);
 		this->activation_function.push_back(other.activation_function[i]);
 	}
 
