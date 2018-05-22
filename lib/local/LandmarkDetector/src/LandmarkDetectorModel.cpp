@@ -569,7 +569,7 @@ void CLNF::Read(string main_location)
 	detection_success = false;
 	tracking_initialised = false;
 	model_likelihood = -10; // very low
-	detection_certainty = 1; // very uncertain
+	detection_certainty = 0; // very uncertain
 
 	// Initialising default values for the rest of the variables
 
@@ -597,7 +597,7 @@ void CLNF::Reset()
 	detection_success = false;
 	tracking_initialised = false;
 	model_likelihood = -10;  // very low
-	detection_certainty = 1; // very uncertain
+	detection_certainty = 0; // very uncertain
 
 	// local parameters (shape)
 	params_local.setTo(0.0);
@@ -716,11 +716,11 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 		detection_success = fit_success;
 		if(fit_success)
 		{
-			detection_certainty = -1;
+			detection_certainty = 1;
 		}
 		else
 		{
-			detection_certainty = 1;
+			detection_certainty = 0;
 		}
 
 	}
