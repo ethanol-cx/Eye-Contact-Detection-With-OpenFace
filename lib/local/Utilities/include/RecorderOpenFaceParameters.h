@@ -56,7 +56,7 @@ namespace Utilities
 		RecorderOpenFaceParameters(std::vector<std::string> &arguments, bool sequence, bool is_from_webcam, float fx = -1, float fy = -1, float cx = -1, float cy = -1, double fps_vid_out = 30);
 		RecorderOpenFaceParameters(bool sequence, bool is_from_webcam, bool output_2D_landmarks, bool output_3D_landmarks,
 			bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze, bool output_hog, bool output_tracked,
-			bool output_aligned_faces, float fx = -1, float fy = -1, float cx = -1, float cy = -1, double fps_vid_out = 30);
+			bool output_aligned_faces, bool record_bad = true, float fx = -1, float fy = -1, float cx = -1, float cy = -1, double fps_vid_out = 30);
 
 		bool isSequence() const { return is_sequence; }
 		bool isFromWebcam() const { return is_from_webcam; }
@@ -71,6 +71,8 @@ namespace Utilities
 		bool outputAlignedFaces() const { return output_aligned_faces; }
 		std::string outputCodec() const { return output_codec; }
 		double outputFps() const { return fps_vid_out; }
+
+		bool outputBadAligned() const { return record_aligned_bad; }
 
 		float getFx() const { return fx; }
 		float getFy() const { return fy; }
@@ -98,6 +100,9 @@ namespace Utilities
 		bool output_tracked;
 		bool output_aligned_faces;
 		
+		// Should the algined faces be recorded even if the detection failed (blank images)
+		bool record_aligned_bad;
+
 		// Some video recording parameters
 		std::string output_codec;
 		double fps_vid_out;

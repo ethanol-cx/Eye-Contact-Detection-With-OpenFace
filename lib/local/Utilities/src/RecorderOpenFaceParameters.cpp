@@ -70,8 +70,14 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 	this->output_tracked = false;
 	this->output_aligned_faces = false;
 
+	this->record_aligned_bad = true;
+
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
+		if (arguments[i].compare("-nobadaligned") == 0)
+		{
+			this->record_aligned_bad = false;
+		}
 		if (arguments[i].compare("-simalign") == 0)
 		{
 			this->output_aligned_faces = true;
@@ -138,7 +144,7 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 
 RecorderOpenFaceParameters::RecorderOpenFaceParameters(bool sequence, bool is_from_webcam, bool output_2D_landmarks, bool output_3D_landmarks,
 	bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze, bool output_hog, bool output_tracked,
-	bool output_aligned_faces, float fx, float fy, float cx, float cy, double fps_vid_out)
+	bool output_aligned_faces, bool record_bad, float fx, float fy, float cx, float cy, double fps_vid_out)
 {
 	this->is_sequence = sequence;
 	this->is_from_webcam = is_from_webcam;

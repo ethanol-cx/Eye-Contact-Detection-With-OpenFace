@@ -153,6 +153,10 @@ namespace UtilitiesOF {
 			{
 				m_rgb_frame = gcnew OpenCVWrappers::RawImage(next_image.size().width, next_image.size().height, CV_8UC3);
 			}
+			else if (m_rgb_frame->Mat.size().width != next_image.size().width || m_rgb_frame->Mat.size().height != next_image.size().height)
+			{
+				m_rgb_frame = gcnew OpenCVWrappers::RawImage(next_image.size().width, next_image.size().height, CV_8UC3);
+			}
 
 			next_image.copyTo(m_rgb_frame->Mat);
 
@@ -164,6 +168,10 @@ namespace UtilitiesOF {
 			cv::Mat_<uchar> next_gray_image = m_sequence_capture->GetGrayFrame();
 
 			if (m_gray_frame == nullptr)
+			{
+				m_gray_frame = gcnew OpenCVWrappers::RawImage(next_gray_image.size().width, next_gray_image.size().height, CV_8U);
+			}
+			else if (m_gray_frame->Mat.size().width != next_gray_image.size().width || m_gray_frame->Mat.size().height != next_gray_image.size().height)
 			{
 				m_gray_frame = gcnew OpenCVWrappers::RawImage(next_gray_image.size().width, next_gray_image.size().height, CV_8U);
 			}
@@ -363,7 +371,6 @@ namespace UtilitiesOF {
 			{
 				// Thumbnail to help with camera selection
 				cv::Mat sample_img;
-				OpenCVWrappers::RawImage^ sample_img_managed = gcnew OpenCVWrappers::RawImage();
 
 				auto resolutions = gcnew List<System::Tuple<int, int>^>();
 
@@ -433,8 +440,8 @@ namespace UtilitiesOF {
 					camera_resolution_list[device_name_m] = resolutions;
 					WriteCameraListingToFile(camera_resolution_list, root_directory + "camera_list.xml");
 				}
-				sample_img.copyTo(sample_img_managed->Mat);
 
+				OpenCVWrappers::RawImage^ sample_img_managed = gcnew OpenCVWrappers::RawImage(sample_img);
 				managed_camera_list->Add(gcnew System::Tuple<int, System::String^, List<System::Tuple<int, int>^>^, OpenCVWrappers::RawImage^>(i, device_name_m, resolutions, sample_img_managed));
 			}
 

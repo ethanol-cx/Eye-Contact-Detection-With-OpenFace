@@ -78,14 +78,10 @@ namespace LandmarkDetector
 		// The actual response computation from intensity image
 		void Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
 
-		// Faster version of the response that only considers a subset of the area_of_interest
-		void ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc);
-
-		// To save memory use a mirrored version of the expert instead of storing the weights
-		void ResponseSparse_mirror(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc);
+		void ResponseInternal(cv::Mat_<float>& response);
 
 		// For frontal faces can apply mirrored and non-mirrored experts at the same time
-		void ResponseSparse_mirror_joint(const cv::Mat_<float> &area_of_interest_left, const cv::Mat_<float> &area_of_interest_right, cv::Mat_<float> &response_left, cv::Mat_<float> &response_right, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc_left, cv::Mat_<float>& im2col_prealloc_right);
+		void ResponseSparse(const cv::Mat_<float> &area_of_interest_left, const cv::Mat_<float> &area_of_interest_right, cv::Mat_<float> &response_left, cv::Mat_<float> &response_right, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc_left, cv::Mat_<float>& im2col_prealloc_right);
 
 	};
 
