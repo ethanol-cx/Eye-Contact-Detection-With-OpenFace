@@ -190,7 +190,7 @@ int main(int argc, char **argv)
 			cv::Mat_<double> hog_descriptor; int num_hog_rows = 0, num_hog_cols = 0;
 
 			// Perform AU detection and HOG feature extraction, as this can be expensive only compute it if needed by output or visualization
-			if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualizer.vis_align || visualizer.vis_hog)
+			if (recording_params.outputAlignedFaces() || recording_params.outputHOG() || recording_params.outputAUs() || visualizer.vis_align || visualizer.vis_hog || visualizer.vis_aus)
 			{
 				face_analyser.AddNextFrame(captured_image, face_model.detected_landmarks, face_model.detection_success, sequence_reader.time_stamp, sequence_reader.IsWebcam());
 				face_analyser.GetLatestAlignedFace(sim_warped_img);

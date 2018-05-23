@@ -1,5 +1,5 @@
 clear;
-version = '2.0.0';
+version = '2.0.1';
 
 out_x86 = sprintf('OpenFace_%s_win_x86', version);
 out_x64 = sprintf('OpenFace_%s_win_x64', version);
@@ -18,6 +18,12 @@ copyfile([in_x86, 'model'], [out_x86, '/model'])
 copyfile([in_x64, 'AU_predictors'], [out_x64, '/AU_predictors'])
 copyfile([in_x64, 'classifiers'], [out_x64, '/classifiers'])
 copyfile([in_x64, 'model'], [out_x64, '/model'])
+
+
+copyfile('readme.txt', out_x86);
+copyfile('download_models.ps1', out_x86);
+copyfile('readme.txt', out_x64);
+copyfile('download_models.ps1', out_x64);
 
 %% Copy libraries
 libs_x86 = dir([in_x86, '*.lib'])';

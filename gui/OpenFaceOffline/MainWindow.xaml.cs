@@ -268,6 +268,11 @@ namespace OpenFaceOffline
                 // Record an observation
                 RecordObservation(recorder, visualizer_of.GetVisImage(), 0, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), reader.GetTimestamp(), reader.GetFrameNumber());
 
+                if(RecordTracked)
+                { 
+                    recorder.WriteObservationTracked();
+                }
+
                 while (thread_running & thread_paused && skip_frames == 0)
                 {
                     Thread.Sleep(10);
@@ -398,6 +403,12 @@ namespace OpenFaceOffline
 
                 frame = new RawImage(reader.GetNextImage());
                 gray_frame = new RawImage(reader.GetCurrentFrameGray());
+
+                // Write out the tracked image
+                if(RecordTracked)
+                { 
+                    recorder.WriteObservationTracked();
+                }
 
                 // Do not cary state accross images
                 landmark_detector.Reset();

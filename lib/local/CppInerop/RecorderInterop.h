@@ -118,6 +118,11 @@ namespace UtilitiesOF {
 			m_recorder->WriteObservation();
 		}
 
+		void WriteObservationTracked()
+		{
+			m_recorder->WriteObservationTracked();
+		}
+
 		void SetObservationGaze(System::Tuple<float, float, float>^ gaze_direction0, System::Tuple<float, float, float>^ gaze_direction1, System::Tuple<float, float>^ gaze_angle,
 			List<System::Tuple<float, float>^>^ landmarks_2D, List<System::Tuple<float, float, float>^>^ landmarks_3D)
 		{

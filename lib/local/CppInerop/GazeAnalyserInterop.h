@@ -193,13 +193,30 @@ namespace GazeAnalyser_Interop {
 		// May be called multiple times.
 		!GazeAnalyserManaged()
 		{
+			if (gazeDirection0 != nullptr)
+			{
+				delete gazeDirection0;
+			}
 
-			delete gazeDirection0;
-			delete gazeDirection1;
-			delete gazeAngle;
+			if (gazeDirection1 != nullptr)
+			{
+				delete gazeDirection1;
+			}
 
-			delete pupil_left;
-			delete pupil_right;
+			if (gazeAngle != nullptr)
+			{
+				delete gazeAngle;
+			}
+
+			if (pupil_left != nullptr)
+			{
+				delete pupil_left;
+			}
+
+			if (pupil_right != nullptr)
+			{
+				delete pupil_right;
+			}
 
 		}
 
