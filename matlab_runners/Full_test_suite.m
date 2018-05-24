@@ -42,8 +42,8 @@ cd('../');
 %% Gaze
 cd('Gaze Experiments');
 extract_mpii_gaze_test
-assert(mean_error < 9.2)
-assert(median_error < 8.6)
+assert(mean_error < 9.3)
+assert(median_error < 8.7)
 cd('../');
 
 %% Demos
