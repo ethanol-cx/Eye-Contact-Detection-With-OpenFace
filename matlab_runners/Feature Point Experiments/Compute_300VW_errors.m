@@ -64,14 +64,14 @@ for i = 1:numel(files_pred)
     pred_landmarks_clnf(:,2,:) = ys';
     
     fps_all = dir([database_root, '/', name, '/annot/*.pts']);
-    gt_landmarks = zeros(size(pred_landmarks_ceclm));
+    gt_landmarks = zeros(size(pred_landmarks_clnf));
     for k = 1:size(fps_all)        
         gt_landmarks_frame = dlmread([database_root, '/', name, '/annot/', fps_all(k).name], ' ', 'A4..B71');
         gt_landmarks(:,:,k) = gt_landmarks_frame;
     end
     
-    if(size(pred_landmarks_ceclm,3) ~= size(fps_all) | size(pred_landmarks_clnf,3) ~= size(fps_all))
-        fprintf('something wrong at vid %s, fps - %d, ceclm size - %d, clnf size - %d\n', name, size(fps_all,1), size(pred_landmarks_ceclm,3), size(pred_landmarks_clnf,3));
+    if(size(pred_landmarks_clnf,3) ~= size(fps_all))
+        fprintf('something wrong at vid %s, fps - %d, clnf size - %d\n', name, size(fps_all,1), size(pred_landmarks_clnf,3));
     end
     
     % Remove unreliable frames
@@ -111,11 +111,11 @@ end
 
 % As ICCR uses only 66 landmarks adapt all the others to the same format
 gts_all_66 = gts_all([1:60,62:64,66:end],:,:);
-preds_all_ceclm_66 = preds_all_ceclm([1:60,62:64,66:end],:,:);
+%preds_all_ceclm_66 = preds_all_ceclm([1:60,62:64,66:end],:,:);
 preds_all_clnf_66 = preds_all_clnf([1:60,62:64,66:end],:,:);
 
 gts_all_49 = gts_all_66(18:end,:,:);
-preds_all_ceclm_49 = preds_all_ceclm_66(18:end,:,:);
+%preds_all_ceclm_49 = preds_all_ceclm_66(18:end,:,:);
 preds_all_clnf_49 = preds_all_clnf_66(18:end,:,:);
 
 % [ceclm_error_66_cat_1, err_pp_clnf] = compute_error( gts_all_66(:,:,cat_1_ids) - 1.0,  preds_all_ceclm_66(:,:,cat_1_ids));

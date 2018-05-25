@@ -125,6 +125,10 @@ namespace UtilitiesOF {
 			{
 				m_rgb_frame = gcnew OpenCVWrappers::RawImage(next_image.size().width, next_image.size().height, CV_8UC3);
 			}
+			else if (m_rgb_frame->Width != next_image.size().width || m_rgb_frame->Height != next_image.size().height)
+			{
+				m_rgb_frame = gcnew OpenCVWrappers::RawImage(next_image.size().width, next_image.size().height, CV_8UC3);
+			}
 
 			next_image.copyTo(m_rgb_frame->Mat);
 
@@ -177,6 +181,10 @@ namespace UtilitiesOF {
 			cv::Mat next_gray_image = m_image_capture->GetGrayFrame();
 
 			if (m_gray_frame == nullptr)
+			{
+				m_gray_frame = gcnew OpenCVWrappers::RawImage(next_gray_image.size().width, next_gray_image.size().height, CV_8UC1);
+			}
+			else if (m_gray_frame->Width != next_gray_image.size().width || m_gray_frame->Height != next_gray_image.size().height)
 			{
 				m_gray_frame = gcnew OpenCVWrappers::RawImage(next_gray_image.size().width, next_gray_image.size().height, CV_8UC1);
 			}

@@ -569,7 +569,7 @@ void CLNF::Read(string main_location)
 	detection_success = false;
 	tracking_initialised = false;
 	model_likelihood = -10; // very low
-	detection_certainty = 1; // very uncertain
+	detection_certainty = 0; // very uncertain
 
 	// Initialising default values for the rest of the variables
 
@@ -597,7 +597,7 @@ void CLNF::Reset()
 	detection_success = false;
 	tracking_initialised = false;
 	model_likelihood = -10;  // very low
-	detection_certainty = 1; // very uncertain
+	detection_certainty = 0; // very uncertain
 
 	// local parameters (shape)
 	params_local.setTo(0.0);
@@ -626,9 +626,13 @@ void CLNF::Reset(double x, double y)
 bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& params)
 {
 
-	// Fits from the current estimate of local and global parameters in the model
-	bool fit_success = Fit(image, params.window_sizes_current, params);
+	// TODO this could be moved out
+	cv::Mat_<float> gray_image_flt;
+	image.convertTo(gray_image_flt, CV_32F);
 
+	// Fits from the current estimate of local and global parameters in the model
+	bool fit_success = Fit(gray_image_flt, params.window_sizes_current, params);
+	
 	// Store the landmarks converged on in detected_landmarks
 	pdm.CalcShape2D(detected_landmarks, params_local, params_global);	
 
@@ -712,11 +716,11 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 		detection_success = fit_success;
 		if(fit_success)
 		{
-			detection_certainty = -1;
+			detection_certainty = 1;
 		}
 		else
 		{
-			detection_certainty = 1;
+			detection_certainty = 0;
 		}
 
 	}
@@ -725,7 +729,7 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 }
 
 //=============================================================================
-bool CLNF::Fit(const cv::Mat_<uchar>& im, const std::vector<int>& window_sizes, const FaceModelParameters& parameters)
+bool CLNF::Fit(const cv::Mat_<float>& im, const std::vector<int>& window_sizes, const FaceModelParameters& parameters)
 {
 	// Making sure it is a single channel image
 	assert(im.channels() == 1);	

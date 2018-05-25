@@ -419,8 +419,11 @@ void RecorderOpenFace::WriteObservation()
 
 		string out_file = aligned_output_directory + preferredSlash + string(name);
 
-		aligned_face_queue.push(std::pair<std::string, cv::Mat>(out_file, aligned_face));
-		
+		if(params.outputBadAligned() || landmark_detection_success)
+		{
+			aligned_face_queue.push(std::pair<std::string, cv::Mat>(out_file, aligned_face));
+		}
+
 		// Clear the image
 		aligned_face = cv::Mat();
 

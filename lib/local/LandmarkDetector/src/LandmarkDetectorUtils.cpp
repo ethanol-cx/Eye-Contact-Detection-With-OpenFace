@@ -524,7 +524,7 @@ namespace LandmarkDetector
 	vector<cv::Point2f> CalculateAllLandmarks(const cv::Mat_<float>& shape2D)
 	{
 
-		int n;
+		int n = 0;
 		vector<cv::Point2f> landmarks;
 
 		if (shape2D.cols == 2)
