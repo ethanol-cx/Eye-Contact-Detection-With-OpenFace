@@ -81,6 +81,6 @@ script:
   - make
   - export OMP_NUM_THREADS=1
   - export VECLIB_MAXIMUM_THREADS=1
-  - ../build/bin/FaceLandmarkImg -fdir ../samples -out_dir data -multi_view 1 -wild -q
+  - ../build/bin/FaceLandmarkImg -fdir ../samples -out_dir data -q
   - ../build/bin/FeatureExtraction -fdir "../samples/image_sequence" -out_dir output -q
   - ../build/bin/FaceLandmarkVid -fdir ../samples/image_sequence -q -mloc model/main_clnf_general.txt
