@@ -9,9 +9,15 @@ set(CMAKE_CONFIG_DIR etc/OpenFace)
 set(CONFIG_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_CONFIG_DIR}")
 add_definitions(-DCONFIG_DIR="${CONFIG_DIR}")
 
-find_package( BLAS REQUIRED )
-include_directories( ${BLAS_INCLUDE_DIRS} )
-LINK_DIRECTORIES(${BLAS_LIBRARY_DIRS})	
+if (APPLE)
+  find_package( OpenBLAS REQUIRED )
+  include_directories( ${OpenBLAS_INCLUDE_DIRS} )
+  LINK_DIRECTORIES(${OpenBLAS_LIBRARY_DIRS})
+else()
+  find_package( BLAS REQUIRED )
+  include_directories( ${BLAS_INCLUDE_DIRS} )
+  LINK_DIRECTORIES(${BLAS_LIBRARY_DIRS})
+endif()
 
 find_package( OpenCV 3.3 REQUIRED )
 

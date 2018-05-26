@@ -13,7 +13,8 @@ compiler:
 
 os:
   - linux  
-  
+  - osx
+
 before_install:
 
   # OpenCV dependencies and boost
