@@ -58,12 +58,12 @@ namespace UtilitiesOF {
 	public:
 		RecorderOpenFaceParameters(bool sequence, bool is_from_webcam, bool output_2D_landmarks, bool output_3D_landmarks,
 			bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze, bool output_hog, bool output_tracked,
-			bool output_aligned_faces, float fx, float fy, float cx, float cy, double fps_vid_out)
+			bool output_aligned_faces, bool record_bad_aligned, float fx, float fy, float cx, float cy, double fps_vid_out)
 		{
 
 			m_params = new Utilities::RecorderOpenFaceParameters(sequence, is_from_webcam, 
 				output_2D_landmarks, output_3D_landmarks, output_model_params, output_pose, output_AUs,
-				output_gaze, output_hog, output_tracked, output_aligned_faces, fx, fy, cx, cy, fps_vid_out);
+				output_gaze, output_hog, output_tracked, output_aligned_faces, record_bad_aligned, fx, fy, cx, cy, fps_vid_out);
 
 		}
 

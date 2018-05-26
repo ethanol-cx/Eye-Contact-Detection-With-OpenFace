@@ -438,6 +438,20 @@ if (BLA_VENDOR MATCHES "ACML" OR BLA_VENDOR STREQUAL "All")
  endif()
 endif () # ACML
 
+# Apple BLAS library?
+if (BLA_VENDOR STREQUAL "Apple" OR BLA_VENDOR STREQUAL "All")
+if(NOT BLAS_LIBRARIES)
+  check_fortran_libraries(
+  BLAS_LIBRARIES
+  BLAS
+  dgemm
+  ""
+  "Accelerate"
+  ""
+  )
+ endif()
+endif ()
+
 if (BLA_VENDOR STREQUAL "NAS" OR BLA_VENDOR STREQUAL "All")
  if ( NOT BLAS_LIBRARIES )
     check_fortran_libraries(
