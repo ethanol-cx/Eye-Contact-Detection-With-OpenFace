@@ -521,11 +521,8 @@ void RecorderOpenFace::Close()
 	recording = false;
 	
 	// Make sure the recording threads complete
-	cout << "Waiting for output threads to finish" << endl;
-	// Wait for the writing threads to finish
 	writing_threads.wait();	
 
-	cout << "Output threads done" << endl;
 	hog_recorder.Close();
 	csv_recorder.Close();
 	video_writer.release();
