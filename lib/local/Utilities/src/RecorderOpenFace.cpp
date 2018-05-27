@@ -292,12 +292,8 @@ void RecorderOpenFace::AlignedImageWritingTask()
 	{
 		std::pair<std::string, cv::Mat> tracked_data;
 
-		try {
-			aligned_face_queue.pop(tracked_data);
-			
-			// TODO rem
-			cout << "Writing output aligned face" << endl;
-
+		while (aligned_face_queue.try_pop(tracked_data))
+		{
 			bool write_success = cv::imwrite(tracked_data.first, tracked_data.second);
 
 			if (!write_success)
@@ -305,11 +301,7 @@ void RecorderOpenFace::AlignedImageWritingTask()
 				WARN_STREAM("Could not output similarity aligned image image");
 			}
 		}
-		catch (tbb::user_abort e1)
-		{
-			// This means the thread finished successfully
-			cout << "Aborting thread:" << e1.what() << endl;
-		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
 }
@@ -322,10 +314,8 @@ void RecorderOpenFace::VideoWritingTask()
 
 		std::pair<std::string, cv::Mat> tracked_data;
 
-		try {
-
-			vis_to_out_queue.pop(tracked_data);
-
+		while (vis_to_out_queue.try_pop(tracked_data))
+		{
 			if (params.isSequence())
 			{
 				if (video_writer.isOpened())
@@ -342,11 +332,7 @@ void RecorderOpenFace::VideoWritingTask()
 				}
 			}
 		}
-		catch (tbb::user_abort e1)
-		{
-			// This means the thread finished successfully
-			cout << "Aborting thread:" << e1.what() << endl;
-		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 	}
 
@@ -535,21 +521,6 @@ void RecorderOpenFace::Close()
 	recording = false;
 	
 	// Make sure the recording threads complete
-	while (!vis_to_out_queue.empty())
-	{
-		cout << "Waiting for tracked video/images to be written out: " <<  vis_to_out_queue.size() << " remaining" << endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
-	while (!aligned_face_queue.empty())
-	{
-		cout << "Waiting for aligned faces to be written out" << aligned_face_queue.size() << " remaining" << endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
-
-	// Free the waiting queues
-	vis_to_out_queue.abort();
-	aligned_face_queue.abort();
-
 	cout << "Waiting for output threads to finish" << endl;
 	// Wait for the writing threads to finish
 	writing_threads.wait();	
