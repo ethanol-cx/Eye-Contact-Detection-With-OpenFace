@@ -11,7 +11,7 @@ add_definitions(-DCONFIG_DIR="${CONFIG_DIR}")
 
 find_package( BLAS REQUIRED )
 include_directories( ${BLAS_INCLUDE_DIRS} )
-LINK_DIRECTORIES(${BLAS_LIBRARY_DIRS})	
+LINK_DIRECTORIES(${BLAS_LIBRARY_DIRS})
 
 find_package( OpenCV 3.3 REQUIRED )
 

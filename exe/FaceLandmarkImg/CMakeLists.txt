@@ -2,6 +2,7 @@
 include_directories(${TBB_ROOT_DIR}/include)
 
 #OpenBlas library
+include_directories(${BLAS_ROOT_DIR})
 include_directories(../../lib/3rdParty/OpenBLAS/include)
 
 # Local libraries
