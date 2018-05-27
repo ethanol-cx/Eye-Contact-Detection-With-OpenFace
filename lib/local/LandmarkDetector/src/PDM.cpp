@@ -460,6 +460,7 @@ void PDM::UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>&
 
 	// get the original rotation matrix	
 	cv::Vec3f eulerGlobal(params_global[1], params_global[2], params_global[3]);
+	
 	cv::Matx33f R1 = Utilities::Euler2RotationMatrix(eulerGlobal);
 
 	// construct R' = [1, -wz, wy
@@ -479,7 +480,17 @@ void PDM::UpdateModelParameters(const cv::Mat_<float>& delta_p, cv::Mat_<float>&
 
 	// Extract euler angle (through axis angle first to make sure it's legal)
 	cv::Vec3f axis_angle = Utilities::RotationMatrix2AxisAngle(R3);
+
 	cv::Vec3f euler = Utilities::AxisAngle2Euler(axis_angle);
+
+	// Temporary fix to numerical instability
+	if (isnan(euler[0]) || isnan(euler[1]) || isnan(euler[2]))
+	{
+		euler[0] = 0;
+		euler[1] = 0;
+		euler[2] = 0;
+
+	}
 
 	params_global[1] = euler[0];
 	params_global[2] = euler[1];
