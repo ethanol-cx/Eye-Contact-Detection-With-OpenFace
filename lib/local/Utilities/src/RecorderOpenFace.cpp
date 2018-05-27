@@ -294,6 +294,10 @@ void RecorderOpenFace::AlignedImageWritingTask()
 
 		try {
 			aligned_face_queue.pop(tracked_data);
+			
+			// TODO rem
+			cout << "Writing output aligned face" << endl;
+
 			bool write_success = cv::imwrite(tracked_data.first, tracked_data.second);
 
 			if (!write_success)
@@ -304,6 +308,7 @@ void RecorderOpenFace::AlignedImageWritingTask()
 		catch (tbb::user_abort e1)
 		{
 			// This means the thread finished successfully
+			cout << "Aborting thread:" << e1.what() << endl;
 		}
 	}
 
@@ -340,6 +345,7 @@ void RecorderOpenFace::VideoWritingTask()
 		catch (tbb::user_abort e1)
 		{
 			// This means the thread finished successfully
+			cout << "Aborting thread:" << e1.what() << endl;
 		}
 
 	}
@@ -531,12 +537,12 @@ void RecorderOpenFace::Close()
 	// Make sure the recording threads complete
 	while (!vis_to_out_queue.empty())
 	{
-		cout << "Waiting for tracked video/images to be written out" << endl;
+		cout << "Waiting for tracked video/images to be written out: " <<  vis_to_out_queue.size() << " remaining" << endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 	while (!aligned_face_queue.empty())
 	{
-		cout << "Waiting for aligned faces to be written out" << endl;
+		cout << "Waiting for aligned faces to be written out" << aligned_face_queue.size() << " remaining" << endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
