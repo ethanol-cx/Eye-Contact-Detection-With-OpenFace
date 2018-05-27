@@ -235,7 +235,7 @@ namespace OpenFaceOffline
             // Setup recording
             RecorderOpenFaceParameters rec_params = new RecorderOpenFaceParameters(true, reader.IsWebcam(),
                 Record2DLandmarks, Record3DLandmarks, RecordModelParameters, RecordPose, RecordAUs,
-                RecordGaze, RecordHOG, RecordTracked, RecordAligned,
+                RecordGaze, RecordHOG, RecordTracked, RecordAligned, false,
                 reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), reader.GetFPS());
 
             RecorderOpenFace recorder = new RecorderOpenFace(reader.GetName(), rec_params, record_root);
@@ -357,7 +357,7 @@ namespace OpenFaceOffline
                 // Setup recording
                 RecorderOpenFaceParameters rec_params = new RecorderOpenFaceParameters(false, false,
                     Record2DLandmarks, Record3DLandmarks, RecordModelParameters, RecordPose, RecordAUs,
-                    RecordGaze, RecordHOG, RecordTracked, RecordAligned,
+                    RecordGaze, RecordHOG, RecordTracked, RecordAligned, true,
                     reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), 0);
 
                 RecorderOpenFace recorder = new RecorderOpenFace(reader.GetName(), rec_params, record_root);

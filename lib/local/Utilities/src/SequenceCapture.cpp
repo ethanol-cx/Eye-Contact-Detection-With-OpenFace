@@ -359,6 +359,13 @@ bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 	image_files.clear();
 
 	boost::filesystem::path image_directory(directory);
+
+	if (!boost::filesystem::exists(image_directory))
+	{
+		std::cout << "Provided directory does not exist: " << directory << std::endl;
+		return false;
+	}
+
 	std::vector<boost::filesystem::path> file_in_directory;
 	copy(boost::filesystem::directory_iterator(image_directory), boost::filesystem::directory_iterator(), back_inserter(file_in_directory));
 

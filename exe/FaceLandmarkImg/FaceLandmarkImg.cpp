@@ -250,6 +250,8 @@ int main(int argc, char **argv)
 		open_face_rec.SetObservationVisualization(visualizer.GetVisImage());
 		open_face_rec.WriteObservationTracked();
 
+		open_face_rec.Close();
+
 		// Grabbing the next frame in the sequence
 		rgb_image = image_reader.GetNextImage();
 
