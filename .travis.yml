@@ -83,4 +83,4 @@ script:
   - export VECLIB_MAXIMUM_THREADS=1
   - ../build/bin/FaceLandmarkImg -f ../samples/sample1.jpg -f ../samples/sample3.jpg -out_dir data -multi_view 1 -wild -q
   - ../build/bin/FeatureExtraction -fdir "../samples/image_sequence" -out_dir output -q
-  - ../build/bin/FaceLandmarkVid -fdir ../samples/image_sequence -q -mloc model/main_clnf_general.txt
+  - ../build/bin/FaceLandmarkVidMulti -fdir ../samples/image_sequence -q -mloc model/main_clm_general.txt
