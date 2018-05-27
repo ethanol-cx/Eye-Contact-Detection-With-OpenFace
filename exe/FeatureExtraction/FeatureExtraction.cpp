@@ -253,8 +253,11 @@ int main(int argc, char **argv)
 
 		}
 
+		INFO_STREAM("Closing output recorder");
 		open_face_rec.Close();
+		INFO_STREAM("Closing input reader");
 		sequence_reader.Close();
+		INFO_STREAM("Closed successfully");
 
 		if (recording_params.outputAUs())
 		{

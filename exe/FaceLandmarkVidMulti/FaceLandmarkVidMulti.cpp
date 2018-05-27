@@ -187,7 +187,8 @@ int main(int argc, char **argv)
 	fps_tracker.AddFrame();
 
 	int sequence_number = 0;
-
+	
+	
 	while (true) // this is not a for loop as we might also be reading from a webcam
 	{
 		// The sequence reader chooses what to open based on command line arguments provided
@@ -220,6 +221,9 @@ int main(int argc, char **argv)
 		{
 			INFO_STREAM("WARNING: using a AU detection in multiple face mode, it might not be as accurate and is experimental");
 		}
+
+		// For reporting progress
+		double reported_completion = 0;
 
 		INFO_STREAM("Starting tracking");
 		while (!rgb_image.empty())
@@ -397,6 +401,17 @@ int main(int argc, char **argv)
 				return 0;
 			}
 
+			// Reporting progress
+			if (sequence_reader.GetProgress() >= reported_completion / 10.0)
+			{
+				cout << reported_completion * 10 << "% ";
+				if (reported_completion == 10)
+				{
+					cout << endl;
+				}
+				reported_completion = reported_completion + 1;
+			}
+
 			// Update the frame count
 			frame_count++;
 
@@ -414,7 +429,11 @@ int main(int argc, char **argv)
 			active_models[model] = false;
 		}
 
+		INFO_STREAM("Closing output recorder");
+		open_face_rec.Close();
+		INFO_STREAM("Closing input reader");
 		sequence_reader.Close();
+		INFO_STREAM("Closed successfully");
 
 		sequence_number++;
 
