@@ -21,7 +21,10 @@ end
 
 videos = dir([DISFA_dir, '*.avi']);
 
-output = 'out_DISFA/';
+output = './AU_predictions/out_DISFA/';
+if(~exist(output, 'file'))
+    mkdir(output);
+end
 
 %%
 for v = 1:numel(videos)
@@ -44,7 +47,7 @@ end
 % results but rather to show how to do AU prediction and how to interpret
 % the results
 Label_dir = [DISFA_dir, '/../ActionUnit_Labels/'];
-prediction_dir = 'out_DISFA/';
+prediction_dir = output;
 
 label_folders = dir([Label_dir, 'SN*']);
 

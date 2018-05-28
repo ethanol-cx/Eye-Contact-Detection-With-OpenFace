@@ -3,7 +3,10 @@ clear
 addpath(genpath('helpers/'));
 find_SEMAINE;
 
-out_loc = './out_SEMAINE/';
+out_loc = './AU_predictions/out_SEMAINE/';
+if(~exist(out_loc, 'file'))
+    mkdir(out_loc);
+end
 
 if(isunix)
     executable = '"../../build/bin/FeatureExtraction"';

@@ -2,7 +2,10 @@ clear
 
 find_BP4D;
 BP4D_dir = [BP4D_dir, '../BP4D-training/'];
-out_loc = './out_bp4d/';
+out_loc = './AU_predictions/out_bp4d/';
+if(~exist(out_loc, 'file'))
+    mkdir(out_loc);
+end
 
 %%
 if(isunix)
