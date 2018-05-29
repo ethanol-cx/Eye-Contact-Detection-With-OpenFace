@@ -82,8 +82,8 @@ script:
   - export OMP_NUM_THREADS=1
   - export VECLIB_MAXIMUM_THREADS=1
   - ../build/bin/FaceLandmarkImg -fdir ../samples -out_dir data -multi_view 1 -wild -q
-  - ../build/bin/FaceLandmarkImg -fdir ../samples/sample1.jpg -out_dir data -multi_view 1 -wild -q
+  - ../build/bin/FaceLandmarkImg -f ../samples/sample1.jpg -out_dir data -multi_view 1 -wild -q
   - ../build/bin/FeatureExtraction -fdir "../samples/image_sequence" -out_dir output -q
-  - ../build/bin/FeatureExtraction -f "../samples/2015-10-15-15-14.avi" -q
+  - ../build/bin/FeatureExtraction -f "../samples/2015-10-15-15-14.avi" -q -mloc model/main_clm_general.txt
   - ../build/bin/FaceLandmarkVidMulti -fdir ../samples/image_sequence -q -mloc model/main_clm_general.txt
   - ../build/bin/FaceLandmarkVidMulti -f ../samples/multi_face.avi -q -mloc model/main_clnf_general.txt
