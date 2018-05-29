@@ -413,7 +413,10 @@ void RecorderOpenFace::WriteObservation()
 
 		if(params.outputBadAligned() || landmark_detection_success)
 		{
-			aligned_face_queue.push(std::pair<std::string, cv::Mat>(out_file, aligned_face));
+			while (!aligned_face_queue.try_push(std::pair<std::string, cv::Mat>(out_file, aligned_face)))
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			}
 		}
 
 		// Clear the image
@@ -442,11 +445,18 @@ void RecorderOpenFace::WriteObservationTracked()
 
 		if (params.isSequence())
 		{
-			vis_to_out_queue.push(std::pair<std::string, cv::Mat>("", vis_to_out));
+			while (!vis_to_out_queue.try_push(std::pair<std::string, cv::Mat>("", vis_to_out)))
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			}
+
 		}
 		else
 		{
-			vis_to_out_queue.push(std::pair<std::string, cv::Mat>(media_filename, vis_to_out));
+			while (!vis_to_out_queue.try_push(std::pair<std::string, cv::Mat>(media_filename, vis_to_out)))
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			}
 		}
 		// Clear the output
 		vis_to_out = cv::Mat();
