@@ -487,6 +487,9 @@ void SequenceCapture::CaptureThread()
 		// Set the grayscale frame
 		ConvertToGrayscale_8bit(tmp_frame, tmp_gray_frame);
 
+		// TODO rem
+		std::cout << "Capture queue size inserting " << capture_queue.size() << std::endl;
+
 		capture_queue.push(std::make_tuple(timestamp_curr, tmp_frame, tmp_gray_frame));
 	}
 }
@@ -496,6 +499,10 @@ cv::Mat SequenceCapture::GetNextFrame()
 	if(!is_webcam)
 	{
 		std::tuple<double, cv::Mat, cv::Mat_<uchar> > data;
+
+		// TODO rem
+		std::cout << "Capture queue size getting " << capture_queue.size() << std::endl;
+
 		capture_queue.pop(data);
 		time_stamp = std::get<0>(data);
 		latest_frame = std::get<1>(data);
