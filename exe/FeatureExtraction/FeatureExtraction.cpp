@@ -230,6 +230,8 @@ int main(int argc, char **argv)
 			// detect key presses
 			char character_press = visualizer.ShowObservation();
 
+			cout << "Visualizer done" << endl;
+
 			// quit processing the current sequence (useful when in Webcam mode)
 			if (character_press == 'q')
 			{
@@ -250,6 +252,8 @@ int main(int argc, char **argv)
 			open_face_rec.SetObservationFaceAlign(sim_warped_img);
 			open_face_rec.WriteObservation();
 			open_face_rec.WriteObservationTracked();
+
+			cout << "Recording set done" << endl;
 
 			// Reporting progress
 			if (sequence_reader.GetProgress() >= reported_completion / 10.0)
