@@ -49,6 +49,9 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+// Threading includes
+#include <thread>
+
 namespace Utilities
 {
 
@@ -112,16 +115,6 @@ namespace Utilities
 		std::string GetCSVFile() { return csv_filename; }
 
 	private:
-
-		// Used to keep track if the recording is still going (for the writing threads)
-		bool recording;
-
-		// For keeping track of tasks
-		tbb::task_group writing_threads;
-
-		// A thread that will write video output, so that the rest of the application does not block on it
-		void VideoWritingTask();
-		void AlignedImageWritingTask();
 
 		// Blocking copy, assignment and move operators, as it does not make sense to save to the same location
 		RecorderOpenFace & operator= (const RecorderOpenFace& other);
@@ -187,6 +180,11 @@ namespace Utilities
 		const int ALIGNED_QUEUE_CAPACITY = 100;
 		cv::Mat aligned_face;
 		tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > aligned_face_queue;
+
+		std::thread video_writing_thread;
+		std::thread aligned_writing_thread;
+
+		bool closed = false;
 
 	};
 }

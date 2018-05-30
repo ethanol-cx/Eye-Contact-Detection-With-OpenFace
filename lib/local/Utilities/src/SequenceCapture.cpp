@@ -269,7 +269,6 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 
 	start_time = cv::getTickCount();
 	capturing = true;
-	//capture_threads.run([&] {CaptureThread(); });
 
 	return true;
 
