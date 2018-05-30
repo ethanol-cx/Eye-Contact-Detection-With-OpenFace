@@ -171,14 +171,9 @@ int main(int argc, char **argv)
 			// Converting to grayscale
 			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
-			// TODO rem
-			cout << "Frame grabbed" << endl;
 
 			// The actual facial landmark detection / tracking
 			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_model, det_parameters, grayscale_image);
-			
-			// TODO rem 
-			cout << "Landmarks detected" << endl;
 			
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, 0); cv::Point3f gazeDirection1(0, 0, 0); cv::Vec2d gazeAngle(0, 0);
@@ -201,10 +196,7 @@ int main(int argc, char **argv)
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 				face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			}
-
-			// TODO rem
-			cout << "AUs detected" << endl;
-
+			
 			// Work out the pose of the head from the tracked model
 			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 
@@ -223,9 +215,7 @@ int main(int argc, char **argv)
 
 			// detect key presses
 			char character_press = visualizer.ShowObservation();
-
-			cout << "Visualizer done" << endl;
-
+			
 			// quit processing the current sequence (useful when in Webcam mode)
 			if (character_press == 'q')
 			{
@@ -246,9 +236,7 @@ int main(int argc, char **argv)
 			open_face_rec.SetObservationFaceAlign(sim_warped_img);
 			open_face_rec.WriteObservation();
 			open_face_rec.WriteObservationTracked();
-
-			cout << "Recording set done" << endl;
-
+			
 			// Reporting progress
 			if (sequence_reader.GetProgress() >= reported_completion / 10.0)
 			{

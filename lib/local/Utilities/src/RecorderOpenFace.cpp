@@ -287,6 +287,7 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 
 void RecorderOpenFace::AlignedImageWritingTask()
 {
+	std::cout << "Aligned writing thread has started" << std::endl;
 
 	while (recording || !aligned_face_queue.empty())
 	{
@@ -310,6 +311,7 @@ void RecorderOpenFace::AlignedImageWritingTask()
 
 void RecorderOpenFace::VideoWritingTask()
 {
+	std::cout << "Video writing thread has started" << std::endl;
 
 	while(recording || !vis_to_out_queue.empty())
 	{
