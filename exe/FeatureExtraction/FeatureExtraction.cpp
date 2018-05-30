@@ -168,9 +168,6 @@ int main(int argc, char **argv)
 		INFO_STREAM("Starting tracking");
 		while (!captured_image.empty())
 		{
-			// TODO rem
-			cout << "Grabbing frame" << endl;
-
 			// Converting to grayscale
 			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
@@ -180,7 +177,7 @@ int main(int argc, char **argv)
 			// The actual facial landmark detection / tracking
 			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_model, det_parameters, grayscale_image);
 			
-			// TODO rem
+			// TODO rem 
 			cout << "Landmarks detected" << endl;
 			
 			// Gaze tracking, absolute gaze direction
@@ -192,10 +189,7 @@ int main(int argc, char **argv)
 				GazeAnalysis::EstimateGaze(face_model, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, false);
 				gazeAngle = GazeAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
 			}
-
-			// TODO rem
-			cout << "Gaze detected" << endl;
-
+			
 			// Do face alignment
 			cv::Mat sim_warped_img;
 			cv::Mat_<double> hog_descriptor; int num_hog_rows = 0, num_hog_cols = 0;
