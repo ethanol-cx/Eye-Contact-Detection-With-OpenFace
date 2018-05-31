@@ -81,7 +81,6 @@ void CreateDirectory(std::string output_path)
 
 void VideoWritingTask(tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > *writing_queue, bool is_sequence, cv::VideoWriter *video_writer)
 {
-	cout << "Video writing task started, queue capacity " << writing_queue->capacity() << endl;
 
 	std::pair<std::string, cv::Mat> tracked_data;
 
@@ -115,7 +114,6 @@ void VideoWritingTask(tbb::concurrent_bounded_queue<std::pair<std::string, cv::M
 
 void AlignedImageWritingTask(tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > *writing_queue)
 {
-	cout << "Aligned writing task started, queue capacity " << writing_queue->capacity() << endl;
 
 	std::pair<std::string, cv::Mat> tracked_data;
 
@@ -369,7 +367,7 @@ void RecorderOpenFace::WriteObservation()
 		if ((face_id == 0 && frame_number == 0) || (face_id == 0 && frame_number == 1))
 		{
 
-			int capacity = (1024 * 1024 * ALIGNED_QUEUE_CAPACITY) / (aligned_face.size().width *aligned_face.size().height * aligned_face.channels());
+			int capacity = (1024 * 1024 * ALIGNED_QUEUE_CAPACITY) / (aligned_face.size().width *aligned_face.size().height * aligned_face.channels()) + 1;
 			aligned_face_queue.set_capacity(capacity);
 
 			// Start the alignment output thread			
@@ -418,7 +416,7 @@ void RecorderOpenFace::WriteObservationTracked()
 		if ((!params.isSequence() && frame_number == 0) || (params.isSequence() && frame_number == 1))
 		{
 			// Set up the queue for video writing based on output size
-			int capacity = (1024 * 1024 * TRACKED_QUEUE_CAPACITY) / (vis_to_out.size().width * vis_to_out.size().height * vis_to_out.channels());
+			int capacity = (1024 * 1024 * TRACKED_QUEUE_CAPACITY) / (vis_to_out.size().width * vis_to_out.size().height * vis_to_out.channels()) + 1;
 			vis_to_out_queue.set_capacity(capacity);
 
 			// Initialize the video writer if it has not been opened yet
