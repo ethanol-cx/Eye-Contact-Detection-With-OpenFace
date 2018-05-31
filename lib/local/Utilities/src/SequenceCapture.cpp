@@ -285,7 +285,7 @@ void SequenceCapture::Close()
 
 	capture_threads.wait();
 	
-	// Empty the capture queue
+	// Empty the capture queue (in case a capture was cancelled and we still have frames in the queue)
 	capture_queue.clear();
 
 	// Release the capture objects
@@ -297,8 +297,7 @@ void SequenceCapture::Close()
 // Destructor that releases the capture
 SequenceCapture::~SequenceCapture()
 {
-	if (capture.isOpened())
-		capture.release();
+	Close();
 }
 
 bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, float cx, float cy)

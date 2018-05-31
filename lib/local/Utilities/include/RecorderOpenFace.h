@@ -49,9 +49,6 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-// Threading includes
-#include <thread>
-
 namespace Utilities
 {
 
@@ -181,9 +178,10 @@ namespace Utilities
 		cv::Mat aligned_face;
 		tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > aligned_face_queue;
 
-		std::thread video_writing_thread;
-		std::thread aligned_writing_thread;
+		// For keeping track of tasks
+		tbb::task_group writing_threads;
 
+		// TODO rem
 		bool closed = false;
 
 	};

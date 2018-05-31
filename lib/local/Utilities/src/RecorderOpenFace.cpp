@@ -48,7 +48,6 @@
 
 // For threading
 #include <chrono>
-#include <thread>
 
 using namespace boost::filesystem;
 
@@ -371,9 +370,8 @@ void RecorderOpenFace::WriteObservation()
 			int capacity = (1024 * 1024 * ALIGNED_QUEUE_CAPACITY) / (aligned_face.size().width *aligned_face.size().height * aligned_face.channels());
 			aligned_face_queue.set_capacity(capacity);
 
-			// Start the alignment output thread
-			aligned_writing_thread = std::thread(&AlignedImageWritingTask, &aligned_face_queue);
-
+			// Start the alignment output thread			
+			writing_threads.run([&] {AlignedImageWritingTask(&aligned_face_queue); });
 		}
 
 		char name[100];
@@ -434,7 +432,7 @@ void RecorderOpenFace::WriteObservationTracked()
 			}
 
 			// Start the video and tracked image writing thread
-			video_writing_thread = std::thread(&VideoWritingTask, &vis_to_out_queue, params.isSequence(), &video_writer);
+			writing_threads.run([&] {VideoWritingTask(&vis_to_out_queue, params.isSequence(), &video_writer); });
 
 		}
 
@@ -530,11 +528,7 @@ void RecorderOpenFace::Close()
 		aligned_face_queue.push(std::pair<string, cv::Mat>("", cv::Mat()));
 
 		// Make sure the recording threads complete
-		if (video_writing_thread.joinable())
-			video_writing_thread.join();
-
-		if (aligned_writing_thread.joinable())
-			aligned_writing_thread.join();
+		writing_threads.wait();
 
 		hog_recorder.Close();
 		csv_recorder.Close();
