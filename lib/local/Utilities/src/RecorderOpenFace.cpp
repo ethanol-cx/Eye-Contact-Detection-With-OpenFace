@@ -406,8 +406,12 @@ void RecorderOpenFace::WriteObservation()
 
 void RecorderOpenFace::WriteObservationTracked()
 {
+	cout << "WriteObservationTracked called" << endl;
+
 	if (params.outputTracked())
 	{
+		cout << "Track should be output" << endl;
+
 		// To support both video and image input
 		if ((!params.isSequence() && frame_number == 0) || (params.isSequence() && frame_number == 1))
 		{
@@ -435,6 +439,7 @@ void RecorderOpenFace::WriteObservationTracked()
 			}
 
 			// Start the video and tracked image writing thread
+			cout << "About to create a writing thread" << endl;
 			writing_threads.run([&] {VideoWritingTask(&vis_to_out_queue, params.isSequence(), &video_writer); });
 
 		}
