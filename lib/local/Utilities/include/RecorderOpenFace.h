@@ -49,6 +49,12 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#ifdef _WIN32 
+
+#else
+	#include <thread>
+#endif
+
 namespace Utilities
 {
 
@@ -178,11 +184,14 @@ namespace Utilities
 		cv::Mat aligned_face;
 		tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > aligned_face_queue;
 
+#ifdef _WIN32 
 		// For keeping track of tasks
 		tbb::task_group writing_threads;
+#else
+		std::thread video_writing_thread;
+		std::thread aligned_writing_thread;
+#endif
 
-		// TODO rem
-		bool closed = false;
 
 	};
 }
