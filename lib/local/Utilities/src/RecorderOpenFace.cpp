@@ -81,6 +81,7 @@ void CreateDirectory(std::string output_path)
 
 void VideoWritingTask(tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > *writing_queue, bool is_sequence, cv::VideoWriter *video_writer)
 {
+	cout << "Video writing task started, queue capacity " << writing_queue->capacity() << endl;
 
 	std::pair<std::string, cv::Mat> tracked_data;
 
@@ -114,6 +115,8 @@ void VideoWritingTask(tbb::concurrent_bounded_queue<std::pair<std::string, cv::M
 
 void AlignedImageWritingTask(tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > *writing_queue)
 {
+	cout << "Aligned writing task started, queue capacity " << writing_queue->capacity() << endl;
+
 	std::pair<std::string, cv::Mat> tracked_data;
 
 	while (true)
