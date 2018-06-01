@@ -3,7 +3,10 @@ clear
 addpath(genpath('helpers/'));
 find_FERA2011;
 
-out_loc = './out_fera/';
+out_loc = './AU_predictions/out_fera/';
+if(~exist(out_loc, 'file'))
+    mkdir(out_loc);
+end
 
 %%
 if(isunix)

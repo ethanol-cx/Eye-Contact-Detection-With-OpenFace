@@ -2,7 +2,7 @@ clear
 
 unbc_loc = 'D:/Datasets/UNBC/Images/';
 
-out_loc = './out_unbc/';
+out_loc = './AU_predictions/out_unbc/';
 
 if(~exist(out_loc, 'dir'))
     mkdir(out_loc);
