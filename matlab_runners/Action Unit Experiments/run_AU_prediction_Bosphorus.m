@@ -5,7 +5,10 @@ clear
 addpath('./helpers');
 
 find_Bosphorus;
-out_loc = './out_bosph/';
+out_loc = './AU_predictions/out_bosph/';
+if(~exist(out_loc, 'file'))
+    mkdir(out_loc);
+end
 
 %%
 if(isunix)

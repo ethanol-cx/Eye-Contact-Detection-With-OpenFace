@@ -13,22 +13,22 @@
 //       not limited to academic journal and conference publications, technical
 //       reports and manuals, must cite at least one of the following works:
 //
-//       OpenFace: an open source facial behavior analysis toolkit
-//       Tadas Baltrušaitis, Peter Robinson, and Louis-Philippe Morency
-//       in IEEE Winter Conference on Applications of Computer Vision, 2016  
+//       OpenFace 2.0: Facial Behavior Analysis Toolkit
+//       Tadas Baltrušaitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
+//       in IEEE International Conference on Automatic Face and Gesture Recognition, 2018  
+//
+//       Convolutional experts constrained local model for facial landmark detection.
+//       A. Zadeh, T. Baltrušaitis, and Louis-Philippe Morency,
+//       in Computer Vision and Pattern Recognition Workshops, 2017.    
 //
 //       Rendering of Eyes for Eye-Shape Registration and Gaze Estimation
 //       Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
 //       in IEEE International. Conference on Computer Vision (ICCV),  2015 
 //
-//       Cross-dataset learning and person-speci?c normalisation for automatic Action Unit detection
+//       Cross-dataset learning and person-specific normalisation for automatic Action Unit detection
 //       Tadas Baltrušaitis, Marwa Mahmoud, and Peter Robinson 
 //       in Facial Expression Recognition and Analysis Challenge, 
 //       IEEE International Conference on Automatic Face and Gesture Recognition, 2015 
-//
-//       Constrained Local Neural Fields for robust facial landmark detection in the wild.
-//       Tadas Baltrušaitis, Peter Robinson, and Louis-Philippe Morency. 
-//       in IEEE Int. Conference on Computer Vision Workshops, 300 Faces in-the-Wild Challenge, 2013.    
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -168,13 +168,13 @@ int main(int argc, char **argv)
 		INFO_STREAM("Starting tracking");
 		while (!captured_image.empty())
 		{
-
 			// Converting to grayscale
 			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
 
+
 			// The actual facial landmark detection / tracking
 			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_model, det_parameters, grayscale_image);
-
+			
 			// Gaze tracking, absolute gaze direction
 			cv::Point3f gazeDirection0(0, 0, 0); cv::Point3f gazeDirection1(0, 0, 0); cv::Vec2d gazeAngle(0, 0);
 
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
 				GazeAnalysis::EstimateGaze(face_model, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, false);
 				gazeAngle = GazeAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
 			}
-
+			
 			// Do face alignment
 			cv::Mat sim_warped_img;
 			cv::Mat_<double> hog_descriptor; int num_hog_rows = 0, num_hog_cols = 0;
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
 				face_analyser.GetLatestAlignedFace(sim_warped_img);
 				face_analyser.GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
 			}
-
+			
 			// Work out the pose of the head from the tracked model
 			cv::Vec6d pose_estimate = LandmarkDetector::GetPose(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
 
@@ -215,7 +215,7 @@ int main(int argc, char **argv)
 
 			// detect key presses
 			char character_press = visualizer.ShowObservation();
-
+			
 			// quit processing the current sequence (useful when in Webcam mode)
 			if (character_press == 'q')
 			{
@@ -236,7 +236,7 @@ int main(int argc, char **argv)
 			open_face_rec.SetObservationFaceAlign(sim_warped_img);
 			open_face_rec.WriteObservation();
 			open_face_rec.WriteObservationTracked();
-
+			
 			// Reporting progress
 			if (sequence_reader.GetProgress() >= reported_completion / 10.0)
 			{
