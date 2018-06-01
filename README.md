@@ -13,6 +13,10 @@ OpenFace is an implementation of a number of research papers from the Multicomp 
 
 Special thanks goes to Louis-Philippe Morency and his MultiComp Lab at Carnegie Mellon University for help in writing and testing the code, Erroll Wood for the gaze estimation work, and Amir Zadeh and Yao Chong Lim on work on the CE-CLM model.
 
+## Quickstart usage of OpenFace with Docker
+
+See: https://hub.docker.com/r/algebr/openface/ for quick start instructions
+
 ## WIKI
 
 **For instructions of how to install/compile/use the project please see [WIKI](https://github.com/TadasBaltrusaitis/OpenFace/wiki)**

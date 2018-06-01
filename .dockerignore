@@ -3,5 +3,6 @@ matlab_runners
 matlab_version
 python_scripts
 test-dump
+samples
 model_training
 gui

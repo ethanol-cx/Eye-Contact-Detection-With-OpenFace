@@ -19,8 +19,6 @@ COPY ./exe ${OPENFACE_DIR}/exe
 
 COPY ./lib ${OPENFACE_DIR}/lib
 
-COPY ./samples ${OPENFACE_DIR}/samples
-
 ADD https://www.dropbox.com/s/7na5qsjzz8yfoer/cen_patches_0.25_of.dat?dl=1 \
     ${OPENFACE_DIR}/lib/local/LandmarkDetector/model/patch_experts/cen_patches_0.25_of.dat
 
@@ -62,3 +60,4 @@ RUN cd ${OPENFACE_DIR} && mkdir -p build && cd build && \
     make -j4
 
 RUN ln /dev/null /dev/raw1394
+ENTRYPOINT ["/bin/bash"]
