@@ -12,22 +12,22 @@
 //       not limited to academic journal and conference publications, technical
 //       reports and manuals, must cite at least one of the following works:
 //
-//       OpenFace: an open source facial behavior analysis toolkit
-//       Tadas Baltrušaitis, Peter Robinson, and Louis-Philippe Morency
-//       in IEEE Winter Conference on Applications of Computer Vision, 2016  
+//       OpenFace 2.0: Facial Behavior Analysis Toolkit
+//       Tadas Baltrušaitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
+//       in IEEE International Conference on Automatic Face and Gesture Recognition, 2018  
+//
+//       Convolutional experts constrained local model for facial landmark detection.
+//       A. Zadeh, T. Baltrušaitis, and Louis-Philippe Morency,
+//       in Computer Vision and Pattern Recognition Workshops, 2017.    
 //
 //       Rendering of Eyes for Eye-Shape Registration and Gaze Estimation
 //       Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
 //       in IEEE International. Conference on Computer Vision (ICCV),  2015 
 //
-//       Cross-dataset learning and person-speci?c normalisation for automatic Action Unit detection
+//       Cross-dataset learning and person-specific normalisation for automatic Action Unit detection
 //       Tadas Baltrušaitis, Marwa Mahmoud, and Peter Robinson 
 //       in Facial Expression Recognition and Analysis Challenge, 
 //       IEEE International Conference on Automatic Face and Gesture Recognition, 2015 
-//
-//       Constrained Local Neural Fields for robust facial landmark detection in the wild.
-//       Tadas Baltrušaitis, Peter Robinson, and Louis-Philippe Morency. 
-//       in IEEE Int. Conference on Computer Vision Workshops, 300 Faces in-the-Wild Challenge, 2013.    
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +48,6 @@
 
 // For threading
 #include <chrono>
-#include <thread>
 
 using namespace boost::filesystem;
 
@@ -80,9 +79,63 @@ void CreateDirectory(std::string output_path)
 	}
 }
 
+void VideoWritingTask(tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > *writing_queue, bool is_sequence, cv::VideoWriter *video_writer)
+{
+
+	std::pair<std::string, cv::Mat> tracked_data;
+
+	while (true)
+	{
+		writing_queue->pop(tracked_data);
+
+		// Indicate that the thread should complete
+		if (tracked_data.second.empty())
+		{
+			break;
+		}
+
+		if (is_sequence)
+		{
+			if (video_writer->isOpened())
+			{
+				video_writer->write(tracked_data.second);
+			}
+		}
+		else
+		{
+			bool out_success = cv::imwrite(tracked_data.first, tracked_data.second);
+			if (!out_success)
+			{
+				WARN_STREAM("Could not output tracked image");
+			}
+		}		
+	}
+}
+
+void AlignedImageWritingTask(tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > *writing_queue)
+{
+
+	std::pair<std::string, cv::Mat> tracked_data;
+
+	while (true)
+	{
+		writing_queue->pop(tracked_data);
+
+		// Empty frame indicates termination
+		if (tracked_data.second.empty())
+			break;
+
+		bool write_success = cv::imwrite(tracked_data.first, tracked_data.second);
+
+		if (!write_success)
+		{
+			WARN_STREAM("Could not output similarity aligned image image");
+		}
+	}
+}
+
 void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 {
-	recording = true;
 
 	// Construct the directories required for the output
 	CreateDirectory(record_root);
@@ -148,9 +201,6 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 			metadata_file << "Output image:" << this->media_filename << endl;
 			this->media_filename = (path(record_root) / this->media_filename).string();
 		}
-		
-		// Start the video and image writing thread
-		writing_threads.run([&] {VideoWritingTask(); });
 	}
 
 	// Prepare image recording
@@ -159,14 +209,10 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 		aligned_output_directory = out_name + "_aligned";
 		metadata_file << "Output aligned directory:" << this->aligned_output_directory << endl;
 		this->aligned_output_directory = (path(record_root) / this->aligned_output_directory).string();
-		CreateDirectory(aligned_output_directory);
-		
-		// Start the video and image writing thread
-		writing_threads.run([&] {AlignedImageWritingTask(); });
+		CreateDirectory(aligned_output_directory);		
 	}
 
 	this->frame_number = 0;
-		
 }
 
 RecorderOpenFace::RecorderOpenFace(const std::string in_filename, const RecorderOpenFaceParameters& parameters, std::vector<std::string>& arguments):video_writer(), params(parameters)
@@ -260,80 +306,7 @@ void RecorderOpenFace::SetObservationVisualization(const cv::Mat &vis_track)
 {
 	if (params.outputTracked())
 	{
-		// Initialize the video writer if it has not been opened yet
-		if(params.isSequence() && !video_writer.isOpened())
-		{
-			std::string output_codec = params.outputCodec();
-			try
-			{
-				video_writer.open(media_filename, CV_FOURCC(output_codec[0], output_codec[1], output_codec[2], output_codec[3]), params.outputFps(), vis_track.size(), true);
-
-				if (!video_writer.isOpened())
-				{
-					WARN_STREAM("Could not open VideoWriter, OUTPUT FILE WILL NOT BE WRITTEN.");
-				}
-			}
-			catch (cv::Exception e)
-			{
-				WARN_STREAM("Could not open VideoWriter, OUTPUT FILE WILL NOT BE WRITTEN. Currently using codec " << output_codec << ", try using an other one (-oc option)");
-			}
-
-		}
 		vis_to_out = vis_track;
-
-	}
-
-}
-
-void RecorderOpenFace::AlignedImageWritingTask()
-{
-
-	while (recording || !aligned_face_queue.empty())
-	{
-		std::pair<std::string, cv::Mat> tracked_data;
-
-		while (aligned_face_queue.try_pop(tracked_data))
-		{
-			bool write_success = cv::imwrite(tracked_data.first, tracked_data.second);
-
-			if (!write_success)
-			{
-				WARN_STREAM("Could not output similarity aligned image image");
-			}
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
-
-}
-
-void RecorderOpenFace::VideoWritingTask()
-{
-
-	while(recording || !vis_to_out_queue.empty())
-	{
-
-		std::pair<std::string, cv::Mat> tracked_data;
-
-		while (vis_to_out_queue.try_pop(tracked_data))
-		{
-			if (params.isSequence())
-			{
-				if (video_writer.isOpened())
-				{
-					video_writer.write(tracked_data.second);
-				}
-			}
-			else
-			{
-				bool out_success = cv::imwrite(tracked_data.first, tracked_data.second);
-				if (!out_success)
-				{
-					WARN_STREAM("Could not output tracked image");
-				}
-			}
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
 	}
 
 }
@@ -390,10 +363,21 @@ void RecorderOpenFace::WriteObservation()
 	// Write aligned faces
 	if (params.outputAlignedFaces())
 	{
-		if (frame_number == 1)
+		// To support both video and image input
+		if ((face_id == 0 && frame_number == 0) || (face_id == 0 && frame_number == 1))
 		{
-			int capacity = (1024 * 1024 * ALIGNED_QUEUE_CAPACITY) / (aligned_face.size().width *aligned_face.size().height * aligned_face.channels());
+
+			int capacity = (1024 * 1024 * ALIGNED_QUEUE_CAPACITY) / (aligned_face.size().width *aligned_face.size().height * aligned_face.channels()) + 1;
 			aligned_face_queue.set_capacity(capacity);
+
+			// Start the alignment output thread			
+#ifdef _WIN32 
+			// For keeping track of tasks
+			writing_threads.run([&] {AlignedImageWritingTask(&aligned_face_queue); });
+#else
+			// Start the alignment output thread
+			aligned_writing_thread = std::thread(&AlignedImageWritingTask, &aligned_face_queue);
+#endif
 		}
 
 		char name[100];
@@ -425,14 +409,44 @@ void RecorderOpenFace::WriteObservation()
 
 void RecorderOpenFace::WriteObservationTracked()
 {
+
 	if (params.outputTracked())
 	{
-
-		if (frame_number == 1)
+		// To support both video and image input
+		if ((!params.isSequence() && frame_number == 0) || (params.isSequence() && frame_number == 1))
 		{
 			// Set up the queue for video writing based on output size
-			int capacity = (1024 * 1024 * TRACKED_QUEUE_CAPACITY) / (vis_to_out.size().width * vis_to_out.size().height * vis_to_out.channels());
+			int capacity = (1024 * 1024 * TRACKED_QUEUE_CAPACITY) / (vis_to_out.size().width * vis_to_out.size().height * vis_to_out.channels()) + 1;
 			vis_to_out_queue.set_capacity(capacity);
+
+			// Initialize the video writer if it has not been opened yet
+			if (params.isSequence())
+			{
+				std::string output_codec = params.outputCodec();
+				try
+				{
+					video_writer.open(media_filename, CV_FOURCC(output_codec[0], output_codec[1], output_codec[2], output_codec[3]), params.outputFps(), vis_to_out.size(), true);
+
+					if (!video_writer.isOpened())
+					{
+						WARN_STREAM("Could not open VideoWriter, OUTPUT FILE WILL NOT BE WRITTEN.");
+					}
+				}
+				catch (cv::Exception e)
+				{
+					WARN_STREAM("Could not open VideoWriter, OUTPUT FILE WILL NOT BE WRITTEN. Currently using codec " << output_codec << ", try using an other one (-oc option)");
+				}
+			}
+
+			// Start the video and tracked image writing thread
+#ifdef _WIN32 
+			// For keeping track of tasks
+			writing_threads.run([&] {VideoWritingTask(&vis_to_out_queue, params.isSequence(), &video_writer); });
+#else
+			video_writing_thread = std::thread(&VideoWritingTask, &vis_to_out_queue, params.isSequence(), &video_writer);
+#endif
+
+
 		}
 
 		if (vis_to_out.empty())
@@ -448,6 +462,7 @@ void RecorderOpenFace::WriteObservationTracked()
 		{
 			vis_to_out_queue.push(std::pair<std::string, cv::Mat>(media_filename, vis_to_out));
 		}
+
 		// Clear the output
 		vis_to_out = cv::Mat();
 	}
@@ -518,16 +533,25 @@ RecorderOpenFace::~RecorderOpenFace()
 
 void RecorderOpenFace::Close()
 {
-	recording = false;
-	
+	// Insert terminating frames to the queues
+	vis_to_out_queue.push(std::pair<string, cv::Mat>("", cv::Mat()));
+	aligned_face_queue.push(std::pair<string, cv::Mat>("", cv::Mat()));
+
 	// Make sure the recording threads complete
-	writing_threads.wait();	
+#ifdef _WIN32 
+	writing_threads.wait();
+#else
+	if (video_writing_thread.joinable())
+		video_writing_thread.join();
+	if (aligned_writing_thread.joinable())
+		aligned_writing_thread.join();
+#endif
+
 
 	hog_recorder.Close();
 	csv_recorder.Close();
 	video_writer.release();
 	metadata_file.close();
-
 }
 
 

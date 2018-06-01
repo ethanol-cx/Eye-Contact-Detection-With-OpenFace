@@ -49,6 +49,7 @@ exe/Recording/Release/
 lib/local/GazeAnalyser/Release/
 exe/FaceLandmarkImg/menpo_out/
 /Release/
+/Debug/
 matlab_runners/Demos/demo_img/
 matlab_runners/Demos/demo_vid/
 matlab_runners/Demos/output_features_seq/
@@ -93,3 +94,6 @@ matlab_runners/Demos/processed/
 exe/releases/OpenFace_*
 *.suo
 .vs/OpenFace/v15/
+/build/
+matlab_runners/Action Unit Experiments/AU_predictions/
+lib/local/Utilities/Debug/
