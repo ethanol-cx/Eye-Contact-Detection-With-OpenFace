@@ -25,35 +25,6 @@ Special thanks goes to Louis-Philippe Morency and his MultiComp Lab at Carnegie 
 for help in writing and testing the code, Erroll Wood for the gaze estimation work, and Amir Zadeh
 and Yao Chong Lim on work on the CE-CLM model.
 
-## Quickstart usage of OpenFace with Docker
-
-Do:
-
-```
-$ docker run -it --rm algebr/openface:latest
-```
-
-And this will open up a shell in a prebuilt OpenFace project.
-
-Then find its container ID:
-
-```
-$ docker ps
-CONTAINER ID        IMAGE                    COMMAND             CREATED              STATUS              PORTS               NAMES
-3a73fbce562e        algebr/openface:latest   "/bin/bash"         About a minute ago   Up About a minute                       musing_wiles
-```
-
-Then you can copy an image to the running container:
-
-```
-$ docker cp samples/sample1.jpg 3a73fbce562e:/home/openface-build
-```
-
-And in the first shell you can test it out:
-
-```
-$ build/bin/FaceLandmarkImg -f sample1.jpg
-```
 
 ## WIKI
 
