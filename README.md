@@ -3,19 +3,57 @@
 [![Build Status](https://travis-ci.org/TadasBaltrusaitis/OpenFace.svg?branch=master)](https://travis-ci.org/TadasBaltrusaitis/OpenFace)
 [![Build status](https://ci.appveyor.com/api/projects/status/8msiklxfbhlnsmxp/branch/master?svg=true)](https://ci.appveyor.com/project/TadasBaltrusaitis/openface/branch/master)
 
-Over the past few years, there has been an increased interest in automatic facial behavior analysis and understanding. We present OpenFace – a tool intended for computer vision and machine learning researchers, affective computing community and people interested in building interactive applications based on facial behavior analysis. OpenFace is the ﬁrst toolkit capable of facial landmark detection, head pose estimation, facial action unit recognition, and eye-gaze estimation with available source code for both running and training the models. The computer vision algorithms which represent the core of OpenFace demonstrate state-of-the-art results in all of the above mentioned tasks. Furthermore, our tool is capable of real-time performance and is able to run from a simple webcam without any specialist hardware.
+Over the past few years, there has been an increased interest in automatic facial behavior analysis
+and understanding. We present OpenFace – a tool intended for computer vision and machine learning
+researchers, affective computing community and people interested in building interactive
+applications based on facial behavior analysis. OpenFace is the ﬁrst toolkit capable of facial
+landmark detection, head pose estimation, facial action unit recognition, and eye-gaze estimation
+with available source code for both running and training the models. The computer vision algorithms
+which represent the core of OpenFace demonstrate state-of-the-art results in all of the above
+mentioned tasks. Furthermore, our tool is capable of real-time performance and is able to run from a
+simple webcam without any specialist hardware.
 
 ![Multicomp logo](https://github.com/TadasBaltrusaitis/OpenFace/blob/master/imgs/muticomp_logo_black.png)
 
 ![Rainbow logo](https://github.com/TadasBaltrusaitis/OpenFace/blob/master/imgs/rainbow-logo.gif)
 
-OpenFace is an implementation of a number of research papers from the Multicomp group, Language Technologies Institute at the Carnegie Mellon University and Rainbow Group, Computer Laboratory, University of Cambridge. The founder of the project and main developer is Tadas Baltrušaitis.
+OpenFace is an implementation of a number of research papers from the Multicomp group, Language
+Technologies Institute at the Carnegie Mellon University and Rainbow Group, Computer Laboratory,
+University of Cambridge. The founder of the project and main developer is Tadas Baltrušaitis.
 
-Special thanks goes to Louis-Philippe Morency and his MultiComp Lab at Carnegie Mellon University for help in writing and testing the code, Erroll Wood for the gaze estimation work, and Amir Zadeh and Yao Chong Lim on work on the CE-CLM model.
+Special thanks goes to Louis-Philippe Morency and his MultiComp Lab at Carnegie Mellon University
+for help in writing and testing the code, Erroll Wood for the gaze estimation work, and Amir Zadeh
+and Yao Chong Lim on work on the CE-CLM model.
 
 ## Quickstart usage of OpenFace with Docker
 
-See: https://hub.docker.com/r/algebr/openface/ for quick start instructions
+Do:
+
+```
+$ docker run -it --rm algebr/openface:latest
+```
+
+And this will open up a shell in a prebuilt OpenFace project.
+
+Then find its container ID:
+
+```
+$ docker ps
+CONTAINER ID        IMAGE                    COMMAND             CREATED              STATUS              PORTS               NAMES
+3a73fbce562e        algebr/openface:latest   "/bin/bash"         About a minute ago   Up About a minute                       musing_wiles
+```
+
+Then you can copy an image to the running container:
+
+```
+$ docker cp samples/sample1.jpg 3a73fbce562e:/home/openface-build
+```
+
+And in the first shell you can test it out:
+
+```
+$ build/bin/FaceLandmarkImg -f sample1.jpg
+```
 
 ## WIKI
 
