@@ -260,6 +260,19 @@ namespace dlib
             return !(*this == rect);
         }
 
+        inline bool operator< (const dlib::rectangle& b) const
+        { 
+            if      (left() < b.left()) return true;
+            else if (left() > b.left()) return false;
+            else if (top() < b.top()) return true;
+            else if (top() > b.top()) return false;
+            else if (right() < b.right()) return true;
+            else if (right() > b.right()) return false;
+            else if (bottom() < b.bottom()) return true;
+            else if (bottom() > b.bottom()) return false;
+            else                    return false;
+        }
+
     private:
         long l;
         long t;
@@ -452,6 +465,103 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    inline size_t nearest_rect (
+        const std::vector<rectangle>& rects,
+        const point& p
+    )
+    {
+        DLIB_ASSERT(rects.size() > 0);
+        size_t idx = 0;
+        double best_dist = std::numeric_limits<double>::infinity();
+
+        for (size_t i = 0; i < rects.size(); ++i)
+        {
+            if (rects[i].contains(p))
+            {
+                return i;
+            }
+            else
+            {
+                double dist = (nearest_point(rects[i],p)-p).length();
+                if (dist < best_dist)
+                {
+                    best_dist = dist;
+                    idx = i;
+                }
+            }
+        }
+        return idx;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline void clip_line_to_rectangle (
+        const rectangle& box,
+        point& p1,
+        point& p2
+    )
+    {
+        // Now clip the line segment so it is contained inside box.
+        if (p1.x() == p2.x())
+        {
+            if (!box.contains(p1))
+                p1.y() = box.top();
+            if (!box.contains(p2))
+                p2.y() = box.bottom();
+        }
+        else if (p1.y() == p2.y())
+        {
+            if (!box.contains(p1))
+                p1.x() = box.left();
+            if (!box.contains(p2))
+                p2.x() = box.right();
+        }
+        else
+        {
+            // We use these relations to find alpha values.  These values tell us
+            // how to generate points intersecting the rectangle boundaries.  We then
+            // test the resulting points for ones that are inside the rectangle and output
+            // those.
+            //box.left()  == alpha1*(p1.x()-p2.x()) + p2.x();
+            //box.right() == alpha2*(p1.x()-p2.x()) + p2.x();
+
+            const point d = p1-p2;
+            double alpha1 = (box.left()  -p2.x())/(double)d.x();
+            double alpha2 = (box.right() -p2.x())/(double)d.x();
+            double alpha3 = (box.top()   -p2.y())/(double)d.y();
+            double alpha4 = (box.bottom()-p2.y())/(double)d.y();
+
+            const point c1 = alpha1*d + p2;
+            const point c2 = alpha2*d + p2;
+            const point c3 = alpha3*d + p2;
+            const point c4 = alpha4*d + p2;
+
+            if (!box.contains(p1))
+                p1 = c1;
+            if (!box.contains(p2))
+                p2 = c2;
+            if (box.contains(c3))
+            {
+                if (!box.contains(p2))
+                    p2 = c3;
+                else if (!box.contains(p1))
+                    p1 = c3;
+            }
+            if (box.contains(c4))
+            {
+                if (!box.contains(p2))
+                    p2 = c4;
+                else if (!box.contains(p1))
+                    p1 = c4;
+            }
+        }
+
+        p1 = nearest_point(box, p1);
+        p2 = nearest_point(box, p2);
+    }
+
+// ----------------------------------------------------------------------------------------
+
     inline const rectangle centered_rect (
         const point& p,
         unsigned long width,
@@ -459,6 +569,21 @@ namespace dlib
     )
     {
         return centered_rect(p.x(),p.y(),width,height);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline std::vector<rectangle> centered_rects (
+        const std::vector<point>& pts,
+        unsigned long width,
+        unsigned long height
+    )
+    {
+        std::vector<rectangle> tmp;
+        tmp.reserve(pts.size());
+        for (auto& p : pts)
+            tmp.emplace_back(centered_rect(p, width, height));
+        return tmp;
     }
 
 // ----------------------------------------------------------------------------------------
@@ -605,6 +730,29 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    inline rectangle set_rect_area (
+        const rectangle& rect,
+        unsigned long area
+    )
+    {
+        DLIB_ASSERT(area > 0);
+
+        if (rect.area() == 0)
+        {
+            // In this case we will make the output rectangle a square with the requested
+            // area.
+            unsigned long scale = std::round(std::sqrt(area));
+            return centered_rect(rect, scale, scale);
+        }
+        else
+        {
+            double scale = std::sqrt(area/(double)rect.area());
+            return centered_rect(rect, (long)std::round(rect.width()*scale), (long)std::round(rect.height()*scale));
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
     inline rectangle set_aspect_ratio (
         const rectangle& rect,
         double ratio
@@ -671,29 +819,6 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-}
-
-namespace std
-{
-    /*!
-        Define std::less<rectangle> so that you can use rectangles in the associative containers.
-    !*/
-    template<>
-    struct less<dlib::rectangle> : public binary_function<dlib::rectangle ,dlib::rectangle,bool>
-    {
-        inline bool operator() (const dlib::rectangle& a, const dlib::rectangle& b) const
-        { 
-            if      (a.left() < b.left()) return true;
-            else if (a.left() > b.left()) return false;
-            else if (a.top() < b.top()) return true;
-            else if (a.top() > b.top()) return false;
-            else if (a.right() < b.right()) return true;
-            else if (a.right() > b.right()) return false;
-            else if (a.bottom() < b.bottom()) return true;
-            else if (a.bottom() > b.bottom()) return false;
-            else                    return false;
-        }
-    };
 }
 
 #endif // DLIB_RECTANGLe_

@@ -372,12 +372,12 @@ namespace dlib
         // This is a macro to help us add overloads for the matrix_assign_blas_helper template.  
         // Using this macro it is easy to add overloads for arbitrary matrix expressions.
 #define DLIB_ADD_BLAS_BINDING(src_expression)                                               \
-    template <typename T, typename L> struct BOOST_JOIN(blas,__LINE__)                      \
+    template <typename T, typename L> struct DLIB_BOOST_JOIN(blas,__LINE__)                      \
     { const static bool value = sizeof(yes_type) == sizeof(test<T,L>(src_expression)); };   \
                                                                                             \
     template < typename dest_exp, typename src_exp >                                       \
     struct matrix_assign_blas_helper<dest_exp, src_exp,                                    \
-    typename enable_if<BOOST_JOIN(blas,__LINE__)<src_exp,typename dest_exp::layout_type> >::type > {   \
+    typename enable_if<DLIB_BOOST_JOIN(blas,__LINE__)<src_exp,typename dest_exp::layout_type> >::type > {   \
         static void assign (                                                                \
             dest_exp& dest,                                                                \
             const src_exp& src,                                                             \
@@ -727,6 +727,29 @@ namespace dlib
     // ------------------------------------------------------------------------------------
 
         template <
+            typename T,
+            typename src_exp 
+            >
+        void matrix_assign_blas (
+            assignable_ptr_matrix<T>& dest,
+            const src_exp& src
+        )
+        {
+            if (src.aliases(mat(dest.ptr,dest.height,dest.width)))
+            {
+                matrix<T> temp(dest.nr(),dest.nc());
+                matrix_assign_blas_proxy(temp,src,1,false, false);
+                matrix_assign_default(dest,temp);
+            }
+            else
+            {
+                matrix_assign_blas_proxy(dest,src,1,false, false);
+            }
+        }
+            
+    // ------------------------------------------------------------------------------------
+
+        template <
             typename T, long NR, long NC, typename MM, typename L,
             typename src_exp 
             >
@@ -882,6 +905,25 @@ namespace dlib
                                 blas_bindings::has_matrix_multiply<src_exp>::value
     >::type matrix_assign_big (
         assignable_sub_matrix<T,NR,NC,MM,L>& dest,
+        const src_exp& src
+    )
+    {
+        blas_bindings::matrix_assign_blas(dest,src);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        typename src_exp 
+        >
+    inline typename enable_if_c<(is_same_type<T,float>::value ||
+                                is_same_type<T,double>::value ||
+                                is_same_type<T,std::complex<float> >::value ||
+                                is_same_type<T,std::complex<double> >::value) &&
+                                blas_bindings::has_matrix_multiply<src_exp>::value
+    >::type matrix_assign_big (
+        assignable_ptr_matrix<T>& dest,
         const src_exp& src
     )
     {

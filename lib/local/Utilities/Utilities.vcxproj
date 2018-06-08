@@ -181,11 +181,6 @@
     <ClInclude Include="include\VisualizationUtils.h" />
     <ClInclude Include="include\Visualizer.h" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\3rdParty\dlib\dlib.vcxproj">
-      <Project>{b47a5f12-2567-44e9-ae49-35763ec82149}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

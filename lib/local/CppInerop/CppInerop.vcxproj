@@ -194,9 +194,6 @@
     <ProjectReference Include="..\..\3rdParty\CameraEnumerator\CameraEnumerator.vcxproj">
       <Project>{50b7d4bf-e33b-41d0-aa89-76bba57bf5cc}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\3rdParty\dlib\dlib.vcxproj">
-      <Project>{b47a5f12-2567-44e9-ae49-35763ec82149}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\FaceAnalyser\FaceAnalyser.vcxproj">
       <Project>{0e7fc556-0e80-45ea-a876-dde4c2fedcd7}</Project>
     </ProjectReference>

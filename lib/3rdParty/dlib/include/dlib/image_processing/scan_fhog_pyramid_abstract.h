@@ -166,7 +166,7 @@ namespace dlib
                   pretty much do whatever you want in terms of feature extraction so long as the following
                   conditions are met:
                     - #hog.size() == get_num_planes()
-                    - Each image plane in of #hog has the same dimensions.
+                    - Each image plane in #hog has the same dimensions.
                     - for all valid i, r, and c:
                         - #hog[i][r][c] == a feature value describing the image content centered at the 
                           following pixel location in img: 
@@ -604,7 +604,7 @@ namespace dlib
             ensures
                 - This function allows you to determine the feature vector used for an
                   object detection output from detect().  Note that this vector is
-                  added to psi.  Note also that you must use get_full_object_detection() to
+                  added to psi.  Note also that you can use get_full_object_detection() to
                   convert a rectangle from detect() into the needed full_object_detection.
                 - The dimensionality of the vector added to psi is get_num_dimensions().  This
                   means that elements of psi after psi(get_num_dimensions()-1) are not modified.

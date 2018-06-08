@@ -193,6 +193,7 @@ namespace dlib
 
                 lapack::integer temp;
                 lapack::syevr('V','A','L',tempA,0,0,0,0,-1,temp,d,V,isupz);
+                return;
             }
 #endif
             // Tridiagonalize.
@@ -611,7 +612,7 @@ namespace dlib
 
                     type g = d(l);
                     type p = (d(l+1) - g) / (2.0 * e(l));
-                    type r = hypot(p,1.0);
+                    type r = hypot(p,(type)1.0);
                     if (p < 0) 
                     {
                         r = -r;

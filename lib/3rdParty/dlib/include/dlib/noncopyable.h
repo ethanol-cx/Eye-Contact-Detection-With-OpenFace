@@ -19,8 +19,8 @@ namespace dlib
         !*/
 
     protected:
-        noncopyable() {}
-        ~noncopyable() {}
+        noncopyable() = default;
+        ~noncopyable() = default;
     private:  // emphasize the following members are private
         noncopyable(const noncopyable&);
         const noncopyable& operator=(const noncopyable&);
@@ -29,3 +29,4 @@ namespace dlib
 }
 
 #endif  // DLIB_BOOST_NONCOPYABLE_HPP_INCLUDED
+

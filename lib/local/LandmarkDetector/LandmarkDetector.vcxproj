@@ -271,9 +271,6 @@ xcopy /I /E /Y /D "$(SolutionDir)lib\3rdParty\OpenCV3.4\classifiers" "$(OutDir)c
     <ClInclude Include="include\SVR_patch_expert.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\3rdParty\dlib\dlib.vcxproj">
-      <Project>{b47a5f12-2567-44e9-ae49-35763ec82149}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\Utilities\Utilities.vcxproj">
       <Project>{8e741ea2-9386-4cf2-815e-6f9b08991eac}</Project>
     </ProjectReference>

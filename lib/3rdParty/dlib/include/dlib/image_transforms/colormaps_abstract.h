@@ -37,6 +37,20 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
+    rgb_pixel colormap_heat (
+        double value,
+        double min_val,
+        double max_val
+    );
+    /*!
+        requires
+            - min_val <= max_val
+        ensures
+            - Maps value to a color.  In particular, we use a heatmap color scheme where
+              values <= min_val are black and larger values become more red, then yellow,
+              and then white as they approach max_val.
+    !*/
+
     template <
         typename image_type
         >
@@ -51,11 +65,9 @@ namespace dlib
               dlib/image_processing/generic_image.h, or something convertible to a matrix
               via mat().
         ensures
-            - Interprets img as a grayscale image and returns a new matrix
-              which represents a colored version of img.  In particular, the
-              colors will depict img using a heatmap where pixels with a
-              value <= min_val are black and larger pixel values become
-              more red, then yellow, and then white as they approach max_val.
+            - Interprets img as a grayscale image and returns a new matrix which represents
+              a colored version of img.  In particular, the colormap is defined by
+              out_color = colormap_heat(grayscale_pixel_value, min_val, max_val).
             - The returned matrix will have the same dimensions as img.
     !*/
 
@@ -79,6 +91,20 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
+    rgb_pixel colormap_jet (
+        double value,
+        double min_val,
+        double max_val
+    );
+    /*!
+        requires
+            - min_val <= max_val
+        ensures
+            - Maps value to a color.  In particular, we use a jet color scheme where 
+              values <= min_val are dark blue and larger values become light blue, then
+              yellow, and then finally red as they approach max_val.
+    !*/
+
     template <
         typename image_type
         >
@@ -94,10 +120,8 @@ namespace dlib
               via mat().
         ensures
             - Interprets img as a grayscale image and returns a new matrix which represents
-              a colored version of img.  In particular, the colors will depict img using a
-              jet color scheme where pixels with a value <= min_val are dark blue and
-              larger pixel values become light blue, then yellow, and then finally red as
-              they approach max_Val.
+              a colored version of img.  In particular, the colormap is defined by
+              out_color = colormap_jet(grayscale_pixel_value, min_val, max_val).
             - The returned matrix will have the same dimensions as img.
     !*/
 

@@ -75,6 +75,12 @@ namespace dlib
                 psi = true_psi;
             else
                 prob->get_truth_joint_feature_vector(sample_idx, psi);
+
+            if (is_matrix<feature_vector_type>::value)
+            {
+                DLIB_CASSERT((long)psi.size() == prob->get_num_dimensions(),
+                    "The dimensionality of your PSI vector doesn't match get_num_dimensions()");
+            }
         }
 
         void separation_oracle_cached (
@@ -128,6 +134,11 @@ namespace dlib
 
 
             prob->separation_oracle(sample_idx, current_solution, out_loss, out_psi);
+            if (is_matrix<feature_vector_type>::value)
+            {
+                DLIB_CASSERT((long)out_psi.size() == prob->get_num_dimensions(),
+                    "The dimensionality of your PSI vector doesn't match get_num_dimensions()");
+            }
 
             if (!cache_enabled)
                 return;
@@ -228,6 +239,7 @@ namespace dlib
             CONVENTION
                 - C == get_c()
                 - eps == get_epsilon()
+                - max_iterations == get_max_iterations()
                 - if (skip_cache) then
                     - we won't use the oracle cache when we need to evaluate the separation
                       oracle. Instead, we will directly call the user supplied separation_oracle().
@@ -248,6 +260,7 @@ namespace dlib
         ) :
             saved_current_risk_gap(0),
             eps(0.001),
+            max_iterations(10000),
             verbose(false),
             skip_cache(true),
             count_below_eps(0),
@@ -296,6 +309,16 @@ namespace dlib
 
         const scalar_type get_epsilon (
         ) const { return eps; }
+
+        unsigned long get_max_iterations (
+        ) const { return max_iterations; }
+
+        void set_max_iterations (
+            unsigned long max_iter
+        ) 
+        {
+            max_iterations = max_iter;
+        }
 
         void set_max_cache_size (
             unsigned long max_size
@@ -433,6 +456,9 @@ namespace dlib
                 }
                 cout << endl;
             }
+
+            if (num_iterations >= max_iterations)
+                return true;
 
             saved_current_risk_gap = current_risk_gap;
 
@@ -600,6 +626,7 @@ namespace dlib
         mutable scalar_type saved_current_risk_gap;
         mutable matrix_type psi_true;
         scalar_type eps;
+        unsigned long max_iterations;
         mutable bool verbose;
 
 

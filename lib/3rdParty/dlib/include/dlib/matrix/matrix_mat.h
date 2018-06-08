@@ -239,7 +239,10 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <typename T>
-    struct op_pointer_to_col_vect : does_not_alias 
+    struct op_pointer_to_mat;   
+
+    template <typename T>
+    struct op_pointer_to_col_vect   
     {
         op_pointer_to_col_vect(
             const T* ptr_,
@@ -261,6 +264,31 @@ namespace dlib
 
         long nr () const { return size; }
         long nc () const { return 1; }
+
+        template <typename U> bool aliases               ( const matrix_exp<U>& ) const { return false; }
+        template <typename U> bool destructively_aliases ( const matrix_exp<U>& ) const { return false; }
+
+        template <long num_rows, long num_cols, typename mem_manager, typename layout>
+        bool aliases (
+            const matrix_exp<matrix<T,num_rows,num_cols, mem_manager,layout> >& item
+        ) const 
+        { 
+            if (item.size() == 0)
+                return false;
+            else
+                return (ptr == &item(0,0)); 
+        }
+
+        inline bool aliases (
+            const matrix_exp<matrix_op<op_pointer_to_mat<T> > >& item
+        ) const;
+
+        bool aliases (
+            const matrix_exp<matrix_op<op_pointer_to_col_vect<T> > >& item
+        ) const
+        {
+            return item.ref().op.ptr == ptr;
+        }
     }; 
 
 // ----------------------------------------------------------------------------------------
@@ -273,9 +301,9 @@ namespace dlib
         long nr
     )
     {
-        DLIB_ASSERT(nr > 0 , 
+        DLIB_ASSERT(nr >= 0 , 
                     "\tconst matrix_exp mat(ptr, nr)"
-                    << "\n\t nr must be bigger than 0"
+                    << "\n\t nr must be >= 0"
                     << "\n\t nr: " << nr
         );
         typedef op_pointer_to_col_vect<T> op;
@@ -285,17 +313,25 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <typename T>
-    struct op_pointer_to_mat : does_not_alias 
+    struct op_pointer_to_mat  
     {
         op_pointer_to_mat(
             const T* ptr_,
             const long nr_,
             const long nc_ 
-        ) : ptr(ptr_), rows(nr_), cols(nc_){}
+        ) : ptr(ptr_), rows(nr_), cols(nc_), stride(nc_){}
+
+        op_pointer_to_mat(
+            const T* ptr_,
+            const long nr_,
+            const long nc_,
+            const long stride_
+        ) : ptr(ptr_), rows(nr_), cols(nc_), stride(stride_){}
 
         const T* ptr;
         const long rows;
         const long cols;
+        const long stride;
 
         const static long cost = 1;
         const static long NR = 0;
@@ -305,11 +341,70 @@ namespace dlib
         typedef default_memory_manager mem_manager_type;
         typedef row_major_layout layout_type;
 
-        const_ret_type apply (long r, long c) const { return ptr[r*cols + c]; }
+        const_ret_type apply (long r, long c) const { return ptr[r*stride + c]; }
 
         long nr () const { return rows; }
         long nc () const { return cols; }
+
+        template <typename U> bool aliases               ( const matrix_exp<U>& ) const { return false; }
+        template <typename U> bool destructively_aliases ( const matrix_exp<U>& ) const { return false; }
+
+        template <long num_rows, long num_cols, typename mem_manager, typename layout>
+        bool aliases (
+            const matrix_exp<matrix<T,num_rows,num_cols, mem_manager,layout> >& item
+        ) const 
+        { 
+            if (item.size() == 0)
+                return false;
+            else
+                return (ptr == &item(0,0)); 
+        }
+
+        bool aliases (
+            const matrix_exp<matrix_op<op_pointer_to_mat<T> > >& item
+        ) const
+        {
+            return item.ref().op.ptr == ptr;
+        }
+
+        bool aliases (
+            const matrix_exp<matrix_op<op_pointer_to_col_vect<T> > >& item
+        ) const
+        {
+            return item.ref().op.ptr == ptr;
+        }
     }; 
+
+    template <typename T>
+    bool op_pointer_to_col_vect<T>::
+    aliases (
+        const matrix_exp<matrix_op<op_pointer_to_mat<T> > >& item
+    ) const
+    {
+        return item.ref().op.ptr == ptr;
+    }
+
+    template <typename T, long NR, long NC, typename MM, typename L>
+    bool matrix<T,NR,NC,MM,L>::aliases (
+        const matrix_exp<matrix_op<op_pointer_to_mat<T> > >& item
+    ) const
+    {
+        if (size() != 0)
+            return item.ref().op.ptr == &data(0,0);
+        else
+            return false;
+    }
+
+    template <typename T, long NR, long NC, typename MM, typename L>
+    bool matrix<T,NR,NC,MM,L>::aliases (
+        const matrix_exp<matrix_op<op_pointer_to_col_vect<T> > >& item
+    ) const
+    {
+        if (size() != 0)
+            return item.ref().op.ptr == &data(0,0);
+        else
+            return false;
+    }
 
 // ----------------------------------------------------------------------------------------
 
@@ -322,14 +417,35 @@ namespace dlib
         long nc
     )
     {
-        DLIB_ASSERT(nr > 0 && nc > 0 , 
+        DLIB_ASSERT(nr >= 0 && nc >= 0 , 
                     "\tconst matrix_exp mat(ptr, nr, nc)"
-                    << "\n\t nr and nc must be bigger than 0"
+                    << "\n\t nr and nc must be >= 0"
                     << "\n\t nr: " << nr
                     << "\n\t nc: " << nc
         );
         typedef op_pointer_to_mat<T> op;
         return matrix_op<op>(op(ptr,nr,nc));
+    }
+
+    template <
+        typename T
+        >
+    const matrix_op<op_pointer_to_mat<T> > mat (
+        const T* ptr,
+        long nr,
+        long nc,
+        long stride
+    )
+    {
+        DLIB_ASSERT(nr >= 0 && nc >= 0 && stride > 0 , 
+                    "\tconst matrix_exp mat(ptr, nr, nc, stride)"
+                    << "\n\t nr and nc must be >= 0 while stride > 0"
+                    << "\n\t nr: " << nr
+                    << "\n\t nc: " << nc
+                    << "\n\t stride: " << stride
+        );
+        typedef op_pointer_to_mat<T> op;
+        return matrix_op<op>(op(ptr,nr,nc,stride));
     }
 
 // ----------------------------------------------------------------------------------------

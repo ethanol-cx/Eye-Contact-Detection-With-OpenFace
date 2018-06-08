@@ -11,6 +11,7 @@
 #include <iostream>
 #include "../matrix/matrix.h"
 #include <limits>
+#include <array>
 
 #if defined(_MSC_VER) && _MSC_VER < 1400
 // Despite my efforts to disabuse visual studio of its usual nonsense I can't find a 
@@ -341,6 +342,14 @@ namespace dlib
         ) const 
         { 
             return std::sqrt((double)(x()*x() + y()*y() + z()*z())); 
+        }
+
+        // ---------------------------------------
+
+        double length_squared(
+        ) const 
+        { 
+            return (double)(x()*x() + y()*y() + z()*z()); 
         }
 
         // ---------------------------------------
@@ -697,6 +706,13 @@ namespace dlib
 
         // ---------------------------------------
 
+        double length_squared(
+        ) const 
+        { 
+            return (double)(x()*x() + y()*y()); 
+        }
+
+        // ---------------------------------------
 
         typename vc_rebind<double,2>::type normalize (
         ) const 
@@ -1257,6 +1273,39 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     typedef vector<long,2> point;
+    typedef vector<double,2> dpoint;
+
+// ----------------------------------------------------------------------------------------
+
+    inline bool is_convex_quadrilateral (
+        const std::array<dpoint,4>& pts
+    )
+    {
+        auto orientation = [&](size_t i)
+        {
+            size_t a = (i+1)%4;
+            size_t b = (i+3)%4;
+            return (pts[a]-pts[i]).cross(pts[b]-pts[i]).z();
+        };
+
+        // If pts has any infinite points then this isn't a valid quadrilateral.
+        for (auto& p : pts)
+        {
+            if (p.x() == std::numeric_limits<double>::infinity())
+                return false;
+            if (p.y() == std::numeric_limits<double>::infinity())
+                return false;
+        }
+
+        double s0 = orientation(0); 
+        double s1 = orientation(1); 
+        double s2 = orientation(2); 
+        double s3 = orientation(3); 
+
+        // if all these things have the same sign then it's convex.
+        return (s0>0&&s1>0&&s2>0&&s3>0) || (s0<0&&s1<0&&s2<0&&s3<0);
+    }
+
 
 // ----------------------------------------------------------------------------------------
 
@@ -1268,8 +1317,11 @@ namespace std
         Define std::less<vector<T,3> > so that you can use vectors in the associative containers.
     !*/
     template<typename T>
-    struct less<dlib::vector<T,3> > : public binary_function<dlib::vector<T,3> ,dlib::vector<T,3> ,bool>
+    struct less<dlib::vector<T,3> >
     {
+        typedef dlib::vector<T, 3> first_argument_type;
+        typedef dlib::vector<T, 3> second_argument_type;
+        typedef bool result_type;
         inline bool operator() (const dlib::vector<T,3> & a, const dlib::vector<T,3> & b) const
         { 
             if      (a.x() < b.x()) return true;
@@ -1286,8 +1338,11 @@ namespace std
         Define std::less<vector<T,2> > so that you can use vector<T,2>s in the associative containers.
     !*/
     template<typename T>
-    struct less<dlib::vector<T,2> > : public binary_function<dlib::vector<T,2> ,dlib::vector<T,2> ,bool>
+    struct less<dlib::vector<T,2> >
     {
+        typedef dlib::vector<T, 2> first_argument_type;
+        typedef dlib::vector<T, 2> second_argument_type;
+        typedef bool result_type;
         inline bool operator() (const dlib::vector<T,2> & a, const dlib::vector<T,2> & b) const
         { 
             if      (a.x() < b.x()) return true;

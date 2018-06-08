@@ -3,20 +3,19 @@
 #ifndef DLIB_STRUCTURAL_SVM_DISTRIBUTeD_Hh_
 #define DLIB_STRUCTURAL_SVM_DISTRIBUTeD_Hh_
 
+#include <memory>
+#include <iostream>
+#include <vector>
 
 #include "structural_svm_distributed_abstract.h"
 #include "structural_svm_problem.h"
 #include "../bridge.h"
-#include "../smart_pointers.h"
 #include "../misc_api.h"
 #include "../statistics.h"
-
-
 #include "../threads.h"
 #include "../pipe.h"
 #include "../type_safe_union.h"
-#include <iostream>
-#include <vector>
+
 
 namespace dlib
 {
@@ -333,7 +332,7 @@ namespace dlib
         };
 
 
-        scoped_ptr<base> the_problem;
+        std::unique_ptr<base> the_problem;
     };
 
 // ----------------------------------------------------------------------------------------
@@ -345,6 +344,7 @@ namespace dlib
         svm_struct_controller_node (
         ) :
             eps(0.001),
+            max_iterations(10000),
             cache_based_eps(std::numeric_limits<double>::infinity()),
             verbose(false),
             C(1)
@@ -388,6 +388,16 @@ namespace dlib
 
         double get_epsilon (
         ) const { return eps; }
+
+        unsigned long get_max_iterations (
+        ) const { return max_iterations; }
+
+        void set_max_iterations (
+            unsigned long max_iter
+        ) 
+        {
+            max_iterations = max_iter;
+        }
 
         void be_verbose (
         ) 
@@ -515,6 +525,7 @@ namespace dlib
             problem_type<matrix_type> problem(nodes);
             problem.set_cache_based_epsilon(cache_based_eps);
             problem.set_epsilon(eps);
+            problem.set_max_iterations(max_iterations);
             if (verbose)
                 problem.be_verbose();
             problem.set_c(C);
@@ -666,14 +677,15 @@ namespace dlib
             typedef type_safe_union<impl::oracle_request<matrix_type> > tsu_out;
             typedef type_safe_union<impl::oracle_response<matrix_type>, long> tsu_in;
 
-            std::vector<shared_ptr<pipe<tsu_out> > > out_pipes;
+            std::vector<std::shared_ptr<pipe<tsu_out> > > out_pipes;
             mutable pipe<tsu_in> in;
-            std::vector<shared_ptr<bridge> > bridges;
+            std::vector<std::shared_ptr<bridge> > bridges;
             long num_dims;
         };
 
         std::vector<network_address> nodes;
         double eps;
+        unsigned long max_iterations;
         double cache_based_eps;
         bool verbose;
         double C;

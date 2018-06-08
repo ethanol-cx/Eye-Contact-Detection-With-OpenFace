@@ -967,7 +967,7 @@ namespace dlib
                       widgets in this group and the upper left corner of get_rect(). 
         !*/
 
-        unsigned long size (
+        size_t size (
         ) const;
         /*!
             ensures
@@ -1561,7 +1561,7 @@ namespace dlib
                 - the menu_item in this with the index idx has been disabled
         !*/
 
-        unsigned long size (
+        size_t size (
         ) const;
         /*!
             ensures
@@ -2061,8 +2061,8 @@ namespace dlib
                 - #height() == height_
                 - #top() == top()
                 - #left() == left()
-                - i.e. The location of the upper left corner of this button stays the
-                  same but its width and height are modified
+                - i.e. The location of the upper left corner of this widget stays the
+                  same but its width and height are modified.
         !*/
 
         long horizontal_scroll_pos (
