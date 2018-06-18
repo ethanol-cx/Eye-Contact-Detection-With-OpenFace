@@ -45,29 +45,16 @@
 
 // Include all the unmanaged things we need.
 
-#include <opencv2/core/core.hpp>
-#include "opencv2/objdetect.hpp"
-#include "opencv2/calib3d.hpp"
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-// Allows to overcome boost name clash stuff with C++ CLI
-#ifdef __cplusplus_cli
-#define generic __identifier(generic)
-#endif
+#include <opencv2/opencv.hpp>
 
 #include <OpenCVWrappers.h>
 
+#undef _M_CEE
 #include <LandmarkCoreIncludes.h>
-
 #include <Face_utils.h>
 #include <FaceAnalyser.h>
 #include <VisualizationUtils.h>
-
-#ifdef __cplusplus_cli
-#undef generic
-#endif
+#define _M_CEE
 
 using namespace System::Collections::Generic;
 

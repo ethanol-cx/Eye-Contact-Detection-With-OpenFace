@@ -39,12 +39,15 @@
 
 // Include all the unmanaged things we need.
 
-#include "RecorderOpenFace.h"
+#include <RecorderOpenFace.h>
+#include <OpenCVWrappers.h>
 
 #pragma managed
 
 #include <msclr\marshal.h>
 #include <msclr\marshal_cppstd.h>
+
+using namespace System::Collections::Generic;
 
 namespace UtilitiesOF {
 

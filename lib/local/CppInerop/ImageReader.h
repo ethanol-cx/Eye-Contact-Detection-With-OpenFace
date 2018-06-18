@@ -37,18 +37,13 @@
 
 // Include all the unmanaged things we need.
 
-#include <opencv2/core/core.hpp>
-#include "opencv2/objdetect.hpp"
-#include "opencv2/calib3d.hpp"
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
 #include <vector>
 #include <set>
 
 #include <OpenCVWrappers.h>
 
-#include "ImageCapture.h"
+#include <ImageCapture.h>
 
 #pragma managed
 

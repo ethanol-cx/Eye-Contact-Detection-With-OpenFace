@@ -32,13 +32,22 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// Allows to overcome boost name clash stuff with C++ CLI
+#ifdef __cplusplus_cli
+#define generic __identifier(generic)
+#endif
+
 // This is the main DLL file.
+#include "GazeAnalyserInterop.h"
 #include "LandmarkDetectorInterop.h"
 #include "FaceAnalyserInterop.h"
-#include "GazeAnalyserInterop.h"
 #include "OpenCVWrappers.h"
 #include "ImageReader.h"
 #include "FaceDetectorInterop.h"
 #include "RecorderInterop.h"
 #include "VisualizerInterop.h"
 #include "SequenceReader.h"
+
+#ifdef __cplusplus_cli
+#undef generic
+#endif

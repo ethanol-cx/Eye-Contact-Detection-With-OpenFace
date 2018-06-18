@@ -42,8 +42,8 @@
 
 #pragma unmanaged
 
-#include "cv.h"
-#include "highgui.h"
+#include <cv.h>
+#include <highgui.h>
 
 #include <opencv2/videoio/videoio.hpp>  // Video write
 #include <opencv2/videoio/videoio_c.h>  // Video write

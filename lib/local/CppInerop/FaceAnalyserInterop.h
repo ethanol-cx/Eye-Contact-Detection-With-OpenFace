@@ -46,17 +46,12 @@
 
 #pragma unmanaged
 
+#include <opencv2/opencv.hpp>
+
 // Allows to overcome boost name clash stuff with C++ CLI
 #ifdef __cplusplus_cli
 #define generic __identifier(generic)
 #endif
-
-#include <opencv2/core/core.hpp>
-#include "opencv2/objdetect.hpp"
-#include "opencv2/calib3d.hpp"
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
 
 #include <OpenCVWrappers.h>
 #include <Face_utils.h>
@@ -71,9 +66,9 @@
 #undef generic
 #endif
 
-using namespace System::Collections::Generic;
-
 #pragma managed
+
+using namespace System::Collections::Generic;
 
 namespace FaceAnalyser_Interop {
 

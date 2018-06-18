@@ -8,5 +8,6 @@
       <AdditionalLibraryDirectories>$(SolutionDir)lib\3rdParty\dlib\lib\$(PlatformTarget)\$(PlatformToolset)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>dlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
 </Project>

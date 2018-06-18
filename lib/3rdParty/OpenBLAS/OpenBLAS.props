@@ -11,10 +11,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)lib\3rdParty\OpenBLAS\lib\$(PlatformShortName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libopenblas.dll.a;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>
-      </Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
     <PreLinkEvent>
       <Command>xcopy /I /E /Y /D /C "$(SolutionDir)lib\3rdParty\OpenBlas\bin\$(PlatformShortName)" "$(OutDir)"</Command>
     </PreLinkEvent>

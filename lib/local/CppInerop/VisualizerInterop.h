@@ -37,7 +37,8 @@
 
 // Include all the unmanaged things we need.
 
-#include "Visualizer.h"
+#include <Visualizer.h>
+#include <OpenCVWrappers.h>
 
 #pragma managed
 

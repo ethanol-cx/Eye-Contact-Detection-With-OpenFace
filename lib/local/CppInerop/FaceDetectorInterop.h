@@ -38,32 +38,19 @@
 #pragma once
 
 // Include all the unmanaged things we need.
+#pragma unmanaged
 
-#include <opencv2/core/core.hpp>
-#include "opencv2/objdetect.hpp"
-#include "opencv2/calib3d.hpp"
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-// Allows to overcome boost name clash stuff with C++ CLI
-#ifdef __cplusplus_cli
-#define generic __identifier(generic)
-#endif
-
+#undef _M_CEE
+#include <opencv2/opencv.hpp>
 #include <OpenCVWrappers.h>
-
 #include <LandmarkCoreIncludes.h>
-
-#ifdef __cplusplus_cli
-#undef generic
-#endif
-
-using namespace System::Collections::Generic;
+#define _M_CEE
 
 #pragma managed
+
 #include <msclr\marshal.h>
 #include <msclr\marshal_cppstd.h>
+using namespace System::Collections::Generic;
 
 namespace FaceDetectorInterop {
 

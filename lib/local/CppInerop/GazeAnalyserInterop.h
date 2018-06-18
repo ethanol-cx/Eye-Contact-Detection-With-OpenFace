@@ -47,29 +47,11 @@
 
 #pragma unmanaged
 
-#include <opencv2/core/core.hpp>
-#include "opencv2/objdetect.hpp"
-#include "opencv2/calib3d.hpp"
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-// Allows to overcome boost name clash stuff with C++ CLI
-#ifdef __cplusplus_cli
-#define generic __identifier(generic)
-#endif
+#include <opencv2/opencv.hpp>
 
 #include <OpenCVWrappers.h>
 #include <LandmarkDetectorInterop.h>
 #include <GazeEstimation.h>
-
-// Boost stuff
-#include <filesystem.hpp>
-#include <filesystem/fstream.hpp>
-
-#ifdef __cplusplus_cli
-#undef generic
-#endif
 
 #pragma managed
 
