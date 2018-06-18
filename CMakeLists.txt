@@ -203,11 +203,8 @@ else()
 	INCLUDE_DIRECTORIES(${BOOST_INCLUDE_DIR})
 endif()
 
-# dlib
-include_directories(lib/3rdParty/dlib/include)
-
 # dlib library
-add_subdirectory(lib/3rdParty/dlib)
+add_subdirectory(lib/3rdParty/dlib dlib)
 
 # LandmarkDetector library
 add_subdirectory(lib/local/LandmarkDetector)

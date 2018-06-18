@@ -1,7 +1,9 @@
 #TBB library
 include_directories(${TBB_ROOT_DIR}/include)
+include_directories(${BLAS_ROOT_DIR})
 
 include_directories(${BOOST_INCLUDE_DIR})
+include_directories(${DLIB_INCLUDE_DIR})
 
 #OpenBlas library
 include_directories(../../3rdParty/OpenBLAS/include)

@@ -1,7 +1,9 @@
 include_directories(${BOOST_INCLUDE_DIR})
+include_directories(${DLIB_INCLUDE_DIR})
 
 #OpenBlas library
 include_directories(../../3rdParty/OpenBLAS/include)
+
 
 SET(SOURCE
     src/ImageCapture.cpp
