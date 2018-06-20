@@ -206,7 +206,7 @@ endif()
 # dlib library, allow specifying own or use the included one
 if(NOT DEFINED ${DLIB_INCLUDE_DIR})
 	set(DLIB_INCLUDE_DIR lib/3rdParty/dlib)
-	set(DLIB_LIBRARY dlib.lib)
+	set(DLIB_LIBRARY ${CMAKE_BINARY_DIR}/lib/3rdParty/dlib/dlib/libdlib.a)
 	add_subdirectory(lib/3rdParty/dlib)	
 endif()
 
