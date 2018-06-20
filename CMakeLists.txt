@@ -207,8 +207,10 @@ endif()
 if(NOT DEFINED ${DLIB_INCLUDE_DIR})
 	set(DLIB_INCLUDE_DIR lib/3rdParty/dlib)
 	set(DLIB_LIBRARY dlib.lib)
-	add_subdirectory(lib/3rdParty/dlib)
+	add_subdirectory(lib/3rdParty/dlib)	
 endif()
+
+include_directories(${DLIB_INCLUDE_DIR})
 
 MESSAGE("DLIB information:") 
 MESSAGE("  DLIB_INCLUDE_DIR: ${DLIB_INCLUDE_DIR}") 
