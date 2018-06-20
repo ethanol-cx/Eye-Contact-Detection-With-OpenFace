@@ -204,7 +204,10 @@ else()
 endif()
 
 # dlib library
-add_subdirectory(lib/3rdParty/dlib dlib)
+add_subdirectory(lib/3rdParty/dlib)
+MESSAGE("DLIB information:") 
+MESSAGE("  DLIB_INCLUDE_DIR: ${DLIB_INCLUDE_DIR}") 
+MESSAGE("  Boost_LIBRARIES: ${DLIB_LIBRARY}") 
 
 # LandmarkDetector library
 add_subdirectory(lib/local/LandmarkDetector)
