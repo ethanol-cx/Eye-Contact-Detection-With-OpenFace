@@ -46,7 +46,7 @@
 // For exponential
 #include <math.h> 
 
-#include <cblas.h>
+#include <openblas/cblas.h>
 
 using namespace LandmarkDetector;
 

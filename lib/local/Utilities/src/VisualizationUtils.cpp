@@ -35,7 +35,7 @@
 #include "RotationHelpers.h"
 
 // OpenBLAS
-#include <f77blas.h>
+#include <openblas/f77blas.h>
 
 // For FHOG visualisation
 #include <dlib/opencv.h>

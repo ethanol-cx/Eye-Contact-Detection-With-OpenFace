@@ -43,7 +43,7 @@
 // Local includes
 #include "LandmarkDetectorUtils.h"
 
-#include <cblas.h>
+#include <openblas/cblas.h>
 
 using namespace LandmarkDetector;
 
