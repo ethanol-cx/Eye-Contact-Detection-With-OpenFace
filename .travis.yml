@@ -29,12 +29,12 @@ before_install:
       tar xf dlib-19.13.tar.bz2;
       cd dlib-19.13;
       mkdir build;
-      cd build
-      cmake ..
-      cmake --build . --config Release
-      sudo make install
-      sudo ldconfig
-      cd ../..
+      cd build;
+      cmake ..;
+      cmake --build . --config Release;
+      sudo make install;
+      sudo ldconfig;
+      cd ../..;
       wget https://github.com/opencv/opencv/archive/3.4.0.zip;
       unzip -qq 3.4.0.zip;
       cd opencv-3.4.0;
@@ -68,7 +68,7 @@ before_install:
       brew update;
       brew install tbb;
       brew tap homebrew/science;
-      brew install homebrew/science/openblas
+      brew install homebrew/science/openblas;
       brew install dlib;
       brew install opencv3;
       brew upgrade boost;
