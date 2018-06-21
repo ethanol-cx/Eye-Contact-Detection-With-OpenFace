@@ -879,3 +879,5 @@ if (COMMAND pybind11_add_module)
 endif()
 
 add_library(dlib::dlib ALIAS dlib)
+
+install (TARGETS dlib EXPORT OpenFaceTargets LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)

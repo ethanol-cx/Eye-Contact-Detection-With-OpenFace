@@ -35,4 +35,3 @@ if(NOT has_parent)
 endif()
 add_subdirectory(dlib)
 
-install (TARGETS dlib EXPORT OpenFaceTargets LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
