@@ -67,8 +67,9 @@ before_install:
   - if [ ${TRAVIS_OS_NAME} = osx ]; then  
       brew update;
       brew install tbb;
-      brew install dlib;
       brew tap homebrew/science;
+      brew install homebrew/science/openblas
+      brew install dlib;
       brew install opencv3;
       brew upgrade boost;
     fi
