@@ -17,7 +17,7 @@ os:
 
 before_install:
 
-  # OpenCV dependencies and boost
+  # OpenCV dependencies, dlib and boost
   - if [ ${TRAVIS_OS_NAME} = linux ]; then  
       sudo apt-get update;
       sudo apt-get install libopenblas-dev;
@@ -25,6 +25,16 @@ before_install:
       sudo apt-get install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev checkinstall;
       sudo apt-get install cmake;
       sudo apt-get install libboost-all-dev;
+      wget http://dlib.net/files/dlib-19.13.tar.bz2;
+      tar xvf dlib-19.13.tar.bz2;
+      cd dlib-19.6/;
+      mkdir build;
+      cd build
+      cmake ..
+      cmake --build . --config Release
+      sudo make install
+      sudo ldconfig
+      cd ../..
       wget https://github.com/opencv/opencv/archive/3.4.0.zip;
       unzip -qq 3.4.0.zip;
       cd opencv-3.4.0;
@@ -57,6 +67,7 @@ before_install:
   - if [ ${TRAVIS_OS_NAME} = osx ]; then  
       brew update;
       brew install tbb;
+      brew install dlib;
       brew tap homebrew/science;
       brew install opencv3;
       brew upgrade boost;
