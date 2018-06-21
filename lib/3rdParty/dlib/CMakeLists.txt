@@ -34,3 +34,5 @@ if(NOT has_parent)
    set(DLIB_IN_PROJECT_BUILD false)
 endif()
 add_subdirectory(dlib)
+
+install (TARGETS dlib EXPORT OpenFaceTargets LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
