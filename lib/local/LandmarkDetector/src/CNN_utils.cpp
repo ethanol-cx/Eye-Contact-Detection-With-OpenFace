@@ -35,6 +35,8 @@
 
 #include "CNN_utils.h"
 
+#include <cblas.h>
+
 using namespace std;
 
 namespace LandmarkDetector

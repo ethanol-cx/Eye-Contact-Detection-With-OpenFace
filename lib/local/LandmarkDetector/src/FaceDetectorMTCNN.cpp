@@ -64,6 +64,8 @@
 // CNN includes
 #include "CNN_utils.h"
 
+#include <cblas.h>
+
 using namespace LandmarkDetector;
 
 // Constructor from model file location

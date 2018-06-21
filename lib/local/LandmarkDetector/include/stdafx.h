@@ -24,7 +24,6 @@
 #include <opencv2/highgui/highgui.hpp>
 
 // OpenBLAS
-#include <cblas.h>
 #include <f77blas.h>
 
 // dlib dependencies for face detection

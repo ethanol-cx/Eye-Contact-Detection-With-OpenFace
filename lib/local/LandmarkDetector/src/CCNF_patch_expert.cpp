@@ -43,6 +43,8 @@
 // Local includes
 #include "LandmarkDetectorUtils.h"
 
+#include <cblas.h>
+
 using namespace LandmarkDetector;
 
 // Copy constructors of neuron and patch expert

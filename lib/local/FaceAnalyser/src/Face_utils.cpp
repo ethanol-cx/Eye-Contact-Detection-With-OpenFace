@@ -40,7 +40,6 @@
 #include <opencv2/calib3d.hpp>
 
 // OpenBLAS
-#include <cblas.h>
 #include <f77blas.h>
 
 // For FHOG visualisation

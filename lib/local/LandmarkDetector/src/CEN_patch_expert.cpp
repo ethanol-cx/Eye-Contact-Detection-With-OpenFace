@@ -46,6 +46,8 @@
 // For exponential
 #include <math.h> 
 
+#include <cblas.h>
+
 using namespace LandmarkDetector;
 
 // Copy constructor	(do not perform a deep copy of data as it is very large, also there is no real need to stor the copies

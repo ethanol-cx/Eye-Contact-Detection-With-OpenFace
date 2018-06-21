@@ -33,9 +33,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // FaceLandmarkImg.cpp : Defines the entry point for the console application for detecting landmarks in images.
 
-// OpenBLAS
-#include <cblas.h>
-
 // dlib
 #include <dlib/image_processing/frontal_face_detector.h>
 
