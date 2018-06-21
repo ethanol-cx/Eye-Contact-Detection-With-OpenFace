@@ -9,9 +9,24 @@ set(CMAKE_CONFIG_DIR etc/OpenFace)
 set(CONFIG_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_CONFIG_DIR}")
 add_definitions(-DCONFIG_DIR="${CONFIG_DIR}")
 
-find_package( BLAS REQUIRED )
-include_directories( ${BLAS_INCLUDE_DIRS} )
-LINK_DIRECTORIES(${BLAS_LIBRARY_DIRS})
+# make sure we'll use OpenBLAS only: there's a header file naming difference between different
+# implementations; so OpenFace wants cblas.h;
+set(BLA_VENDOR "OpenBLAS")
+find_package( BLAS QUIET)
+
+if ( BLAS_LIBRARIES STREQUAL "FALSE")
+	unset(BLAS_LIBRARIES)
+endif()
+
+if ( ${BLAS_FOUND} )
+    MESSAGE("BLAS information:")
+    MESSAGE("  BLAS Vendor: ${BLA_VENDOR}")
+    MESSAGE("  BLAS_LIBRARIES: ${BLAS_LIBRARIES}")
+    MESSAGE("  BLAS_ROOT_DIR: ${BLAS_ROOT_DIR}")
+else()
+    message(WARNING "BLAS not found in the system. Using the one vended with OpenFace.")
+    include_directories(lib/3rdParty/OpenBLAS/include)
+endif()
 
 find_package( OpenCV 3.3 REQUIRED COMPONENTS core imgproc calib3d highgui objdetect)
 MESSAGE("OpenCV information:") 
