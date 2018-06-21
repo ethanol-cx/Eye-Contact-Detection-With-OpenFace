@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.2)
-project (OpenFace 2.0.2)
+project(OpenFace VERSION 2.0.2)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
 
