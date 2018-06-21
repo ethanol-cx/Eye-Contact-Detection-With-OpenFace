@@ -1,15 +1,3 @@
-#TBB library
-include_directories(${TBB_ROOT_DIR}/include)
-
-include_directories(${BLAS_ROOT_DIR})
-
-include_directories(${BOOST_INCLUDE_DIR})
-
-include_directories(${DLIB_INCLUDE_DIR})
-
-#OpenBlas library
-include_directories(../../3rdParty/OpenBLAS/include)
-
 #LandmarkDetector library
 include_directories(../../local/LandmarkDetector/include)
 
@@ -24,10 +12,27 @@ SET(HEADERS
     include/GazeEstimation.h
 )
 
-include_directories(./include)
-include_directories(${GazeAnalyser_SOURCE_DIR}/include)
+add_library( GazeAnalyser ${SOURCE} ${HEADERS})
+add_library( OpenFace::GazeAnalyser ALIAS GazeAnalyser)
 
-add_library( GazeAnalyser ${SOURCE} ${HEADERS} )
+target_include_directories(GazeAnalyser PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/OpenFace>)
 
-install (TARGETS GazeAnalyser DESTINATION lib)
+target_include_directories(GazeAnalyser PRIVATE ${GAZEANALYSER_SOURCE_DIR}/include)
+target_include_directories(GazeAnalyser PUBLIC ${TBB_ROOT_DIR}/include)
+target_include_directories(GazeAnalyser PUBLIC ${Boost_INCLUDE_DIRS})
+target_include_directories(GazeAnalyser PUBLIC ${Boost_INCLUDE_DIRS}/boost)
+target_include_directories(GazeAnalyser PUBLIC ${OpenCV_INCLUDE_DIRS})
+
+target_link_libraries(GazeAnalyser PUBLIC ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES} ${BLAS_LIBRARIES})
+target_link_libraries(GazeAnalyser PUBLIC dlib)
+
+if(${BLAS_FOUND})
+    target_include_directories(GazeAnalyser PRIVATE ${BLAS_ROOT_DIR})
+else()
+    target_include_directories(GazeAnalyser PRIVATE ../../3rdParty/OpenBLAS/include)
+endif()
+
+install (TARGETS GazeAnalyser EXPORT OpenFaceTargets LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 install (FILES ${HEADERS} DESTINATION include/OpenFace)

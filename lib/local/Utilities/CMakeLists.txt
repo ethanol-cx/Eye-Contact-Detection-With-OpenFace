@@ -1,10 +1,3 @@
-include_directories(${BOOST_INCLUDE_DIR})
-include_directories(${DLIB_INCLUDE_DIR})
-
-#OpenBlas library
-include_directories(../../3rdParty/OpenBLAS/include)
-
-
 SET(SOURCE
     src/ImageCapture.cpp
 	src/RecorderCSV.cpp
@@ -27,10 +20,21 @@ SET(HEADERS
 	include/Visualizer.h	
 )
 
-include_directories(./include)
-include_directories(${UTILITIES_SOURCE_DIR}/include)
-
 add_library( Utilities ${SOURCE} ${HEADERS})
+add_library( OpenFace::Utilities ALIAS Utilities)
 
-install (TARGETS Utilities DESTINATION lib)
+target_include_directories(Utilities PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/OpenFace>)
+
+target_include_directories(Utilities PRIVATE ${UTILITIES_SOURCE_DIR}/include)
+target_include_directories(Utilities PUBLIC ${TBB_ROOT_DIR}/include)
+target_include_directories(Utilities PUBLIC ${Boost_INCLUDE_DIRS})
+target_include_directories(Utilities PUBLIC ${Boost_INCLUDE_DIRS}/boost)
+target_include_directories(Utilities PUBLIC ${OpenCV_INCLUDE_DIRS})
+
+target_link_libraries(Utilities PUBLIC ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES})
+target_link_libraries(Utilities PUBLIC dlib)
+
+install (TARGETS Utilities EXPORT OpenFaceTargets LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 install (FILES ${HEADERS} DESTINATION include/OpenFace)
