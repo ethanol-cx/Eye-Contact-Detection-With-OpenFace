@@ -71,6 +71,7 @@ before_install:
       brew install dlib;
       brew install opencv3;
       brew upgrade boost;
+      export PKG_CONFIG_PATH=/usr/local/opt/openblas/lib/pkgconfig;
     fi
   
 script:
