@@ -51,7 +51,7 @@ target_include_directories(LandmarkDetector PUBLIC ${Boost_INCLUDE_DIRS}/boost)
 target_include_directories(LandmarkDetector PUBLIC ${OpenCV_INCLUDE_DIRS})
 
 target_link_libraries(LandmarkDetector PUBLIC ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES} ${OpenBLAS_LIB})
-target_link_libraries(LandmarkDetector PUBLIC dlib)
+target_link_libraries(LandmarkDetector PUBLIC dlib::dlib)
 
 target_include_directories(LandmarkDetector PRIVATE ${OpenBLAS_INCLUDE_DIR})
 

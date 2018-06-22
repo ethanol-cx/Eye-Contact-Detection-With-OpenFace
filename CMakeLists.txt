@@ -146,7 +146,7 @@ else ()
 endif ()
 
 # dlib
-find_package(dlib 19.13 QUIET)
+find_package(dlib 19.13)
 if(${dlib_FOUND})
     message("dlib information:")
     message("  dlib version: ${dlib_VERSION}")
@@ -155,14 +155,8 @@ if(${dlib_FOUND})
     if (NOT TARGET dlib)
         add_library(dlib INTERFACE IMPORTED GLOBAL)
     endif()
-    set_target_properties(dlib PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${dlib_INCLUDE_DIRS}")
-    set_target_properties(dlib PROPERTIES INTERFACE_LINK_LIBRARIES "${dlib_LIBRARIES}")
 else()
-    message(WARNING "dlib not found in the system. Using the one vended with OpenFace.")
-
-    # dlib library
-    add_subdirectory(lib/3rdParty/dlib)
-    target_include_directories(dlib INTERFACE lib/3rdParty/dlib/include)
+    message(FATAL_ERROR "dlib not found in the system, please install dlib")
 endif()
 
 # suppress auto_ptr deprecation warnings
