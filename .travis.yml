@@ -76,13 +76,12 @@ before_install:
       cmake ..;
       cmake --build . --config Release;
       sudo make install;
+      cd ../..;
       brew install opencv3;
       brew upgrade boost;
     fi
   
 script:
-  - ls /usr/include
-  - ls /usr/include/openblas
   - $CXX --version
   - cd lib/local/LandmarkDetector/model/patch_experts
   - wget https://www.dropbox.com/s/7na5qsjzz8yfoer/cen_patches_0.25_of.dat?dl=1
