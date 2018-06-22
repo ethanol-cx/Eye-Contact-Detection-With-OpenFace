@@ -82,8 +82,7 @@ SET(OpenBLAS_FOUND ON)
 
 # Check include files
 IF(NOT OpenBLAS_INCLUDE_DIR)
-    SET(OpenBLAS_FOUND OFF)
-    MESSAGE(STATUS "Could not find OpenBLAS include. Turning OpenBLAS_FOUND off")
+    MESSAGE(STATUS "Could not find OpenBLAS include, defaulting to using OpenFace vended ones")
 ENDIF()
 
 # Check libraries
