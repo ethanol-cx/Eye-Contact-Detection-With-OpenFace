@@ -264,9 +264,7 @@ void CNN::ClearPrecomp()
 void CNN::Read(const string& location)
 {
 
-	#ifndef __APPLE__
-		openblas_set_num_threads(1);
-	#endif
+	openblas_set_num_threads(1);
 
 	ifstream cnn_stream(location, ios::in | ios::binary);
 	if (cnn_stream.is_open())

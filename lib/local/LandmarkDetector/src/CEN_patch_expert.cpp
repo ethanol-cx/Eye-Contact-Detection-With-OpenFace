@@ -69,9 +69,7 @@ void CEN_patch_expert::Read(ifstream &stream)
 {
 
 	// Setting up OpenBLAS
-	#ifndef __APPLE__
-		openblas_set_num_threads(1);
-	#endif
+	openblas_set_num_threads(1);
 	
 	// Sanity check
 	int read_type;

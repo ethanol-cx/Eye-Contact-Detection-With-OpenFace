@@ -54,6 +54,7 @@ SET(Open_BLAS_INCLUDE_SEARCH_PATHS
   /usr/include/x86_64-linux-gnu
   /usr/local/include
   /usr/include
+  /usr/local/opt/openblas/include
 )
 
 SET(Open_BLAS_LIB_SEARCH_PATHS
@@ -71,6 +72,7 @@ SET(Open_BLAS_LIB_SEARCH_PATHS
         /usr/lib/x86_64-linux-gnu
         /usr/lib64
         /usr/lib
+		/usr/local/opt/openblas/lib
  )
 
 FIND_PATH(OpenBLAS_INCLUDE_DIR NAMES cblas.h PATHS ${Open_BLAS_INCLUDE_SEARCH_PATHS} NO_DEFAULT_PATH)
