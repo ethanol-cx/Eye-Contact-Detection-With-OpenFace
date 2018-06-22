@@ -79,9 +79,11 @@ FIND_PATH(OpenBLAS_INCLUDE_DIR NAMES openblas_config.h PATHS ${Open_BLAS_INCLUDE
 FIND_LIBRARY(OpenBLAS_LIB NAMES openblas PATHS ${Open_BLAS_LIB_SEARCH_PATHS}  NO_DEFAULT_PATH)
 
 SET(OpenBLAS_FOUND ON)
+SET(OpenBLAS_INCLUDE_FOUND ON)
 
 # Check include files
 IF(NOT OpenBLAS_INCLUDE_DIR)
+    SET(OpenBLAS_INCLUDE_FOUND OFF)
     MESSAGE(STATUS "Could not find OpenBLAS include, defaulting to using OpenFace vended ones")
 ENDIF()
 
