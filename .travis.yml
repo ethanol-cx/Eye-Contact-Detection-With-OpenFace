@@ -68,7 +68,14 @@ before_install:
       brew update;
       brew install tbb;
       brew install openblas;
-      brew install dlib;
+      wget http://dlib.net/files/dlib-19.13.tar.bz2;
+      tar xf dlib-19.13.tar.bz2;
+      cd dlib-19.13;
+      mkdir build;
+      cd build;
+      cmake ..;
+      cmake --build . --config Release;
+      sudo make install;
       brew install opencv3;
       brew upgrade boost;
     fi
