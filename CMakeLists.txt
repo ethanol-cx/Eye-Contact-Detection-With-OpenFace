@@ -24,7 +24,7 @@ if ( ${OpenBLAS_FOUND} )
     MESSAGE("  OpenBLAS_INCLUDE_DIR: ${OpenBLAS_INCLUDE_DIR}")
 else()
     MESSAGE(WARNING "OpenBLAS not found in the system. Using the one vended with OpenFace.")
-    include_directories(lib/3rdParty/OpenBLAS/include)
+	set(OpenBLAS_INCLUDE_DIR lib/3rdParty/OpenBLAS/include)
 endif()
 
 find_package( OpenCV 3.3 REQUIRED COMPONENTS core imgproc calib3d highgui objdetect)
