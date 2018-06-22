@@ -35,7 +35,7 @@
 
 #include "CNN_utils.h"
 
-#include <openblas/cblas.h>
+#include <cblas.h>
 
 using namespace std;
 
