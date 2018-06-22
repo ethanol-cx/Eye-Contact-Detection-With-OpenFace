@@ -75,26 +75,18 @@ SET(Open_BLAS_LIB_SEARCH_PATHS
 		/usr/local/opt/openblas/lib
  )
 
-FIND_PATH(OpenBLAS_INCLUDE_DIR NAMES cblas.h PATHS ${Open_BLAS_INCLUDE_SEARCH_PATHS} NO_DEFAULT_PATH)
-FIND_PATH(OpenBLAS_INCLUDE_DIR_F NAMES f77blas.h PATHS ${Open_BLAS_INCLUDE_SEARCH_PATHS} NO_DEFAULT_PATH)
+FIND_PATH(OpenBLAS_INCLUDE_DIR NAMES openblas_config.h PATHS ${Open_BLAS_INCLUDE_SEARCH_PATHS} NO_DEFAULT_PATH)
 FIND_LIBRARY(OpenBLAS_LIB NAMES openblas PATHS ${Open_BLAS_LIB_SEARCH_PATHS}  NO_DEFAULT_PATH)
 
 SET(OpenBLAS_FOUND ON)
 
-#    Check include files
+# Check include files
 IF(NOT OpenBLAS_INCLUDE_DIR)
     SET(OpenBLAS_FOUND OFF)
     MESSAGE(STATUS "Could not find OpenBLAS include. Turning OpenBLAS_FOUND off")
 ENDIF()
 
-#    Check include files
-IF(NOT OpenBLAS_INCLUDE_DIR_F)
-    MESSAGE(STATUS "Could not find f77blas include.")
-ELSE(NOT OpenBLAS_INCLUDE_DIR_F)
-	MESSAGE(STATUS "Found f77blas include: ${OpenBLAS_INCLUDE_DIR_F}")
-ENDIF()
-
-#    Check libraries
+# Check libraries
 IF(NOT OpenBLAS_LIB)
     SET(OpenBLAS_FOUND OFF)
     MESSAGE(STATUS "Could not find OpenBLAS lib. Turning OpenBLAS_FOUND off")
