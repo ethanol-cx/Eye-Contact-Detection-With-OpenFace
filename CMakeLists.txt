@@ -17,7 +17,7 @@ add_definitions(-DCONFIG_DIR="${CONFIG_DIR}")
 #if ( BLAS_LIBRARIES STREQUAL "FALSE")
 #	unset(BLAS_LIBRARIES)
 #endif()
-
+find_package(OpenBLAS REQUIRED)
 if ( ${OpenBLAS_FOUND} )
     MESSAGE("OpenBLAS information:")
     MESSAGE("  OpenBLAS_LIBRARIES: ${OpenBLAS_LIB}")
