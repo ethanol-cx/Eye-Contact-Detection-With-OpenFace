@@ -25,14 +25,10 @@ target_include_directories(GazeAnalyser PUBLIC ${Boost_INCLUDE_DIRS})
 target_include_directories(GazeAnalyser PUBLIC ${Boost_INCLUDE_DIRS}/boost)
 target_include_directories(GazeAnalyser PUBLIC ${OpenCV_INCLUDE_DIRS})
 
-target_link_libraries(GazeAnalyser PUBLIC ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES} ${BLAS_LIBRARIES})
+target_link_libraries(GazeAnalyser PUBLIC ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES} ${OpenBLAS_LIB})
 target_link_libraries(GazeAnalyser PUBLIC dlib)
 
-if(${BLAS_FOUND})
-    target_include_directories(GazeAnalyser PRIVATE ${BLAS_ROOT_DIR})
-else()
-    target_include_directories(GazeAnalyser PRIVATE ../../3rdParty/OpenBLAS/include)
-endif()
+target_include_directories(GazeAnalyser PRIVATE ${OpenBLAS_INCLUDE_DIR})
 
 install (TARGETS GazeAnalyser EXPORT OpenFaceTargets LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 install (FILES ${HEADERS} DESTINATION include/OpenFace)

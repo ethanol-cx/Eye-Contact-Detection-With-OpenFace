@@ -50,14 +50,10 @@ target_include_directories(LandmarkDetector PUBLIC ${Boost_INCLUDE_DIRS})
 target_include_directories(LandmarkDetector PUBLIC ${Boost_INCLUDE_DIRS}/boost)
 target_include_directories(LandmarkDetector PUBLIC ${OpenCV_INCLUDE_DIRS})
 
-target_link_libraries(LandmarkDetector PUBLIC ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES} ${BLAS_LIBRARIES})
+target_link_libraries(LandmarkDetector PUBLIC ${OpenCV_LIBS} ${Boost_LIBRARIES} ${TBB_LIBRARIES} ${OpenBLAS_LIB})
 target_link_libraries(LandmarkDetector PUBLIC dlib)
 
-if(${BLAS_FOUND})
-    target_include_directories(LandmarkDetector PRIVATE ${BLAS_ROOT_DIR})
-else()
-    target_include_directories(LandmarkDetector PRIVATE ../../3rdParty/OpenBLAS/include)
-endif()
+target_include_directories(LandmarkDetector PRIVATE ${OpenBLAS_INCLUDE_DIR})
 
 install (TARGETS LandmarkDetector EXPORT OpenFaceTargets LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 install (FILES ${HEADERS} DESTINATION include/OpenFace)
