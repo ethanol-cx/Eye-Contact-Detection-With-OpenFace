@@ -20,7 +20,7 @@ before_install:
   # OpenCV dependencies, dlib and boost
   - if [ ${TRAVIS_OS_NAME} = linux ]; then  
       sudo apt-get update;
-      sudo apt-get install libopenblas-dev;
+      sudo apt-get install libopenblas-dev libopenblas-base;
       sudo apt-get install git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev;      
       sudo apt-get install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev checkinstall;
       sudo apt-get install cmake;
