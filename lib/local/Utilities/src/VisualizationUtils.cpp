@@ -34,9 +34,6 @@
 #include "VisualizationUtils.h"
 #include "RotationHelpers.h"
 
-// OpenBLAS
-#include <f77blas.h>
-
 // For FHOG visualisation
 #include <dlib/opencv.h>
 #include <dlib/image_processing/frontal_face_detector.h>
