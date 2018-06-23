@@ -97,7 +97,7 @@ script:
   - mkdir build
   - cd build
   - cmake -D CMAKE_BUILD_TYPE=RELEASE CMAKE_CXX_FLAGS="-std=c++11" -D CMAKE_EXE_LINKER_FLAGS="-std=c++11" .. 
-  - make -j4
+  - make
   - ../build/bin/FeatureExtraction -f "../samples/2015-10-15-15-14.avi" -q -mloc model/main_clm_general.txt
   - ../build/bin/FaceLandmarkImg -fdir ../samples -out_dir data -multi_view 1 -wild -q
   - ../build/bin/FaceLandmarkImg -f ../samples/sample1.jpg -out_dir data -multi_view 1 -wild -q
