@@ -47,8 +47,6 @@
 #include <LandmarkDetectorUtils.h>
 #include <RotationHelpers.h>
 
-#include <f77blas.h>
-
 using namespace LandmarkDetector;
 
 //=============================================================================

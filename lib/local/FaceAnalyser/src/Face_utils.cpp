@@ -39,9 +39,6 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
 
-// OpenBLAS
-#include <f77blas.h>
-
 // For FHOG visualisation
 #include <dlib/opencv.h>
 #include <dlib/image_processing/frontal_face_detector.h>

@@ -43,18 +43,6 @@
 // Local includes
 #include "LandmarkDetectorUtils.h"
 
-#include <f77blas.h>
-
-// Instead of including cblas.h (the definitions from OpenBLAS and other BLAS libraries differ, declare the required OpenBLAS functionality here)
-#ifdef __cplusplus
-extern "C" {
-	/* Assume C declarations for C++ */
-#endif  /* __cplusplus */
-
-	/*Set the number of threads on runtime.*/
-	void openblas_set_num_threads(int num_threads);
-}
-
 using namespace LandmarkDetector;
 
 // Copy constructors of neuron and patch expert
