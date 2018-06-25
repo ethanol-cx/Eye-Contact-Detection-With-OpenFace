@@ -45,9 +45,10 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include "tbb/concurrent_queue.h"
+
 #ifdef _WIN32 
 	// For speeding up writing
-	#include "tbb/concurrent_queue.h"
 	#include "tbb/task_group.h"
 #else
 	#include <thread>
