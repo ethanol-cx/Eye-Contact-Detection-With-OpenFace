@@ -38,10 +38,6 @@
 #include "RecorderHOG.h"
 #include "RecorderOpenFaceParameters.h"
 
-// For speeding up writing
-#include "tbb/concurrent_queue.h"
-#include "tbb/task_group.h"
-
 // System includes
 #include <vector>
 
@@ -50,7 +46,9 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #ifdef _WIN32 
-
+	// For speeding up writing
+	#include "tbb/concurrent_queue.h"
+	#include "tbb/task_group.h"
 #else
 	#include <thread>
 #endif
