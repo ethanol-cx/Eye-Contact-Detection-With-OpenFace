@@ -51,6 +51,8 @@
 
 #include <LandmarkDetectorUtils.h>
 
+#include <f77blas.h>
+
 using namespace LandmarkDetector;
 //===========================================================================
 

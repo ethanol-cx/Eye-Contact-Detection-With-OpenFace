@@ -43,6 +43,8 @@
 // Local includes
 #include "LandmarkDetectorUtils.h"
 
+#include <f77blas.h>
+
 // Instead of including cblas.h (the definitions from OpenBLAS and other BLAS libraries differ, declare the required OpenBLAS functionality here)
 #ifdef __cplusplus
 extern "C" {
