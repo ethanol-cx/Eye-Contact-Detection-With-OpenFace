@@ -409,7 +409,7 @@ double DetectionValidator::CheckCNN(const cv::Mat_<float>& warped_img, int view_
 		if (layer_type == 0)
 		{
 
-			convolution_direct_blas_nts(outputs, input_maps, cnn_convolutional_layers_weights[view_id][cnn_layer], cnn_convolutional_layers[view_id][cnn_layer][0][0].rows, cnn_convolutional_layers[view_id][cnn_layer][0][0].cols, cnn_convolutional_layers_im2col_precomp[view_id][cnn_layer]);
+			convolution_direct_blas(outputs, input_maps, cnn_convolutional_layers_weights[view_id][cnn_layer], cnn_convolutional_layers[view_id][cnn_layer][0][0].rows, cnn_convolutional_layers[view_id][cnn_layer][0][0].cols, cnn_convolutional_layers_im2col_precomp[view_id][cnn_layer]);
 
 			cnn_layer++;
 		}

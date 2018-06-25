@@ -35,7 +35,7 @@
 
 #include "CNN_utils.h"
 
-#include <cblas.h>
+#include <f77blas.h>
 
 using namespace std;
 
@@ -399,43 +399,6 @@ namespace LandmarkDetector
 		}
 	}
 
-
-	void convolution_direct_blas(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k)
-	{
-		outputs.clear();
-
-		int height_in = input_maps[0].rows;
-		int width_n = input_maps[0].cols;
-
-		// determine how many blocks there will be with a sliding window of width x height in the input
-		int yB = height_in - height_k + 1;
-		int xB = width_n - width_k + 1;
-
-		cv::Mat_<float> input_matrix((int)input_maps.size() * height_k * width_k + 1, yB * xB, 1.0f);
-
-		// Comibine im2col accross channels to prepare for matrix multiplication
-		for (int i = 0; i < (int)input_maps.size(); ++i)
-		{
-			cv::Mat_<float> tmp = input_matrix(cv::Rect(0, i * height_k * width_k, yB * xB, height_k * width_k));
-			im2col_t(input_maps[i], width_k, height_k, tmp);
-		}
-
-		float* m1 = (float*)weight_matrix.data;
-		float* m2 = (float*)input_matrix.data;
-
-		cv::Mat_<float> out(weight_matrix.rows, input_matrix.cols, 1.0);
-		float* m3 = (float*)out.data;
-
-		cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, input_matrix.cols, weight_matrix.rows, weight_matrix.cols, 1, m2, input_matrix.cols, m1, weight_matrix.cols, 0.0, m3, input_matrix.cols);
-
-		// Move back to vectors and reshape accordingly (also add the bias)
-		for (int k = 0; k < out.rows; ++k)
-		{
-			outputs.push_back(out.row(k).reshape(1, yB));
-		}
-
-	}
-
 	void im2col(const cv::Mat_<float>& input, const unsigned int width, const unsigned int height, cv::Mat_<float>& output)
 	{
 	
@@ -533,8 +496,8 @@ namespace LandmarkDetector
 		}
 	}
 
-	// A non thread safe but faster convolution
-	void convolution_direct_blas_nts(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k, cv::Mat_<float>& pre_alloc_im2col)
+	// A fast convolution implementation, can provide a pre-allocated im2col as well, if empty, it is created
+	void convolution_direct_blas(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k, cv::Mat_<float>& pre_alloc_im2col)
 	{
 		outputs.clear();
 	
@@ -546,7 +509,7 @@ namespace LandmarkDetector
 		int xB = width_n - width_k + 1;
 		int num_rows = yB * xB;
 
-		// Instead of re-allocating data use the first rows of already allocated data and re-allocate only if not enough rows are present
+		// Instead of re-allocating data use the first rows of already allocated data and re-allocate only if not enough rows are present, this is what makes this non thread safe, as same memory would be used
 		im2col_multimap(input_maps, width_k, height_k, pre_alloc_im2col);
 		
 		float* m1 = (float*)pre_alloc_im2col.data;
