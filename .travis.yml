@@ -83,6 +83,8 @@ before_install:
   
 script:
   - $CXX --version
+  - ls /usr/local/Cellar/tbb/2018_U5
+  - ls /usr/local/Cellar/tbb
   - cd lib/local/LandmarkDetector/model/patch_experts
   - wget https://www.dropbox.com/s/7na5qsjzz8yfoer/cen_patches_0.25_of.dat?dl=1
   - wget https://www.dropbox.com/s/k7bj804cyiu474t/cen_patches_0.35_of.dat?dl=1
