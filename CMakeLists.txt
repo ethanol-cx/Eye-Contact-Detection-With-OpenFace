@@ -10,19 +10,13 @@ set(CONFIG_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_CONFIG_DIR}")
 add_definitions(-DCONFIG_DIR="${CONFIG_DIR}")
 
 # make sure we'll use OpenBLAS only: there's a header file naming difference between different
-# implementations; so OpenFace wants cblas.h;
-#set(BLA_VENDOR "OpenBLAS")
-#find_package( BLAS QUIET)
-
-#if ( BLAS_LIBRARIES STREQUAL "FALSE")
-#	unset(BLAS_LIBRARIES)
-#endif()
+# implementations; so OpenFace wants OpenBLAS;
 find_package(OpenBLAS REQUIRED)
 if ( ${OpenBLAS_FOUND} )
     MESSAGE("OpenBLAS information:")
     MESSAGE("  OpenBLAS_LIBRARIES: ${OpenBLAS_LIB}")
 else()
-    MESSAGE(FATAL_ERROR "OpenBLAS not found in the system. Using the one vended with OpenFace.")
+    MESSAGE(FATAL_ERROR "OpenBLAS not found in the system.")
 endif()
 
 if ( ${OpenBLAS_INCLUDE_FOUND} )
@@ -50,6 +44,8 @@ MESSAGE("  Boost_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}")
 find_package( TBB CONFIG )
 if (NOT ${TBB_FOUND})
     find_package( TBB REQUIRED )
+else()
+	MESSAGE("TBB found in CONFIG: ${TBB_DIR}") 
 endif()
 
 MESSAGE("TBB information:")
