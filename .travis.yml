@@ -21,8 +21,8 @@ before_install:
   - if [ ${TRAVIS_OS_NAME} = linux ]; then  
       sudo apt-get update;
       sudo apt-get install libopenblas-dev libopenblas-base;
-      sudo apt-get install git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev;      
-      sudo apt-get install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev checkinstall;
+      sudo apt-get install git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev;
+      sudo apt-get install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev;
       sudo apt-get install cmake;
       sudo apt-get install libboost-all-dev;
       wget http://dlib.net/files/dlib-19.13.tar.bz2;
@@ -68,15 +68,7 @@ before_install:
       brew update;
       brew install tbb;
       brew install openblas;
-      wget http://dlib.net/files/dlib-19.13.tar.bz2;
-      tar xf dlib-19.13.tar.bz2;
-      cd dlib-19.13;
-      mkdir build;
-      cd build;
-      cmake ..;
-      cmake --build . --config Release;
-      sudo make install;
-      cd ../..;
+      brew install dlib;
       brew install opencv3;
       brew upgrade boost;
     fi

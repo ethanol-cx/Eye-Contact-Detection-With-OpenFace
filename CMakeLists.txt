@@ -40,12 +40,14 @@ MESSAGE("  Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
 MESSAGE("  Boost_LIBRARIES: ${Boost_LIBRARIES}") 
 MESSAGE("  Boost_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}") 
 
-
+# Try finding TBB in default location
 find_package( TBB CONFIG )
-if (NOT ${TBB_FOUND})
+
+# If not found, use FindTBB.cmake
+if (NOT ${TBB_FOUND} OR NOT ${TBB_LIBRARIES})
     find_package( TBB REQUIRED )
 else()
-	MESSAGE("TBB found in CONFIG: ${TBB_DIR}") 
+	MESSAGE("TBB found in CONFIG: ${TBB_LIBRARIES}") 
 endif()
 
 MESSAGE("TBB information:")
