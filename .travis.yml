@@ -7,7 +7,6 @@ branches:
   only:
     - master
     - develop
-    - feature/dlib-update
 compiler:
   - gcc
 
@@ -84,7 +83,6 @@ script:
   - mv cen_patches_0.35_of.dat?dl=1 cen_patches_0.35_of.dat
   - mv cen_patches_0.50_of.dat?dl=1 cen_patches_0.50_of.dat
   - mv cen_patches_1.00_of.dat?dl=1 cen_patches_1.00_of.dat
-  - ls
   - cd ../../../../../
   - mkdir build
   - cd build
