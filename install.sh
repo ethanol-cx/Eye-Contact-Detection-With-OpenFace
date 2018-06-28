@@ -4,7 +4,7 @@
 # Description: Install everything necessary for OpenFace to compile.
 # Author: Daniyal Shahrokhian <daniyal@kth.se>
 # Date: 20170428
-# Version : 1.01
+# Version : 1.02
 # Usage: bash install.sh
 # NOTES: There are certain steps to be taken in the system before installing 
 #        via this script (refer to README): Run 
@@ -27,12 +27,10 @@ fi
 echo "Installing Essential dependencies..."
 sudo apt-get -y update
 sudo apt-get -y install build-essential
-sudo apt-get -y install llvm
-sudo apt-get -y install clang-3.7 libc++-dev libc++abi-dev
 sudo apt-get -y install cmake
 sudo apt-get -y install libopenblas-dev liblapack-dev
 sudo apt-get -y install git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev
-sudo apt-get -y install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev checkinstall
+sudo apt-get -y install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev
 echo "Essential dependencies installed."
 
 # OpenCV Dependency
@@ -50,6 +48,22 @@ cd ../..
 rm 3.4.0.zip
 sudo rm -r opencv-3.4.0
 echo "OpenCV installed."
+
+# dlib dependecy
+echo "Downloading dlib"
+wget http://dlib.net/files/dlib-19.13.tar.bz2;
+tar xf dlib-19.13.tar.bz2;
+cd dlib-19.13;
+mkdir -p build;
+cd build;
+echo "Installing dlib"
+cmake ..;
+cmake --build . --config Release;
+sudo make install;
+sudo ldconfig;
+cd ../..;    
+rm -r dlib-19.13.tar.bz2
+echo "dlib installed"
 
 # Boost C++ Dependency
 echo "Installing Boost..."

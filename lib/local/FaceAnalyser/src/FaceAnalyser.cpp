@@ -526,7 +526,7 @@ void FaceAnalyser::PostprocessPredictions()
 	{
 		int success_ind = 0;
 		int all_ind = 0;
-		int all_frames_size = timestamps.size();
+		int all_frames_size = (int)timestamps.size();
 		
 		while(all_ind < all_frames_size && success_ind < max_init_frames)
 		{
@@ -616,14 +616,14 @@ void FaceAnalyser::ExtractAllPredictionsOfflineReg(vector<std::pair<std::string,
 			{
 				if (au_name.compare(dyn_au_names[a]) == 0)
 				{
-					au_id = a;
+					au_id = (int)a;
 				}
 			}
 
 			if (au_id != -1 && AU_SVR_dynamic_appearance_lin_regressors.GetCutoffs()[au_id] != -1)
 			{
 				double cutoff = AU_SVR_dynamic_appearance_lin_regressors.GetCutoffs()[au_id];
-				offsets.push_back(au_good.at((double)au_good.size() * cutoff));
+				offsets.push_back(au_good.at((int)((double)au_good.size() * cutoff)));
 			}
 			else
 			{
@@ -703,22 +703,26 @@ void FaceAnalyser::ExtractAllPredictionsOfflineClass(vector<std::pair<std::strin
 		// Perform a moving average of 7 frames on classifications
 		int window_size = 7;
 		vector<double> au_vals_tmp = au_vals;
-		for (size_t i = (window_size - 1)/2; i < au_vals.size() - (window_size - 1) / 2; ++i)
+		if(au_vals.size() > (window_size - 1) / 2)
 		{
-			double sum = 0;
-			for (int w = -(window_size - 1) / 2; w <= (window_size - 1) / 2; ++w)
+			for (size_t i = (window_size - 1)/2; i < au_vals.size() - (window_size - 1) / 2; ++i)
 			{
-				sum += au_vals_tmp[i + w];
+				double sum = 0;
+				int div_by = 0;
+				for (int w = -(window_size - 1) / 2; w <= (window_size - 1) / 2 && (i+w < au_vals_tmp.size()); ++w)
+				{
+					sum += au_vals_tmp[i + w];
+					div_by++;
+				}
+				sum = sum / div_by;
+				if (sum < 0.5)
+					sum = 0;
+				else
+					sum = 1;
+
+				au_vals[i] = sum;
 			}
-			sum = sum / window_size;
-			if (sum < 0.5)
-				sum = 0;
-			else
-				sum = 1;
-
-			au_vals[i] = sum;
 		}
-
 		au_predictions.push_back(std::pair<string,vector<double>>(au_name, au_vals));
 
 	}
