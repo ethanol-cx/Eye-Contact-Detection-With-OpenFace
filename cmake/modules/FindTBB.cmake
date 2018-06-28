@@ -173,6 +173,8 @@ if(NOT TBB_FOUND)
     endif()
   endif()
   
+  MESSAGE("Searching for TBB in: ${TBB_INCLUDE_DIRS}")
+  
   ##################################
   # Find the TBB include dir
   ##################################
@@ -303,4 +305,6 @@ if(NOT TBB_FOUND)
   unset(TBB_LIB_PATH_SUFFIX)
   unset(TBB_DEFAULT_SEARCH_DIR)
 
+else()
+  MESSAGE("TBB already found")  
 endif()
