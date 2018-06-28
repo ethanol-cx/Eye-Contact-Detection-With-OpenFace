@@ -450,7 +450,7 @@ void CCNF_patch_expert::ResponseOpenBlas(const cv::Mat_<float> &area_of_interest
 	// Perform matrix multiplication in OpenBLAS (fortran call)
 	float alpha1 = 1.0;
 	float beta1 = 0.0;
-	char* N = "N";
+	char N[2]; N[0] = 'N';
 	sgemm_(N, N, &normalized_input.cols, &weight_matrix.rows, &weight_matrix.cols, &alpha1, (float*)normalized_input.data, &normalized_input.cols, (float*)weight_matrix.data, &weight_matrix.cols, &beta1, (float*)neuron_resp_full.data, &normalized_input.cols);
 
 	// Above is a faster version of this

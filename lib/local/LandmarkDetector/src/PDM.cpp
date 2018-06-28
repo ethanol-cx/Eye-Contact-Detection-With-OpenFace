@@ -146,7 +146,7 @@ void PDM::CalcShape3D(cv::Mat_<float>& out_shape, const cv::Mat_<float>& p_local
 	int p_local_cols = p_local.cols;
 	int princ_comp_rows = princ_comp.rows;
 	int princ_comp_cols = princ_comp.cols;
-	char* N = "N";
+	char N[2]; N[0] = 'N';
 	sgemm_(N, N, &p_local_cols, &princ_comp_rows, &princ_comp_cols, &alpha1, (float*)p_local.data, &p_local_cols, (float*)princ_comp.data, &princ_comp_cols, &beta1, (float*)out_shape.data, &p_local_cols);
 
 	// Above is a fast (but ugly) version of 
@@ -646,7 +646,7 @@ void PDM::CalcParams(cv::Vec6f& out_params_global, cv::Mat_<float>& out_params_l
 		// Perform matrix multiplication in OpenBLAS (fortran call)
 		float alpha1 = 1.0;
 		float beta1 = 1.0;
-		char* N = "N";
+		char N[2]; N[0] = 'N';
 		sgemm_(N, N, &J.cols, &J_w_t.rows, &J_w_t.cols, &alpha1, (float*)J.data, &J.cols, (float*)J_w_t.data, &J_w_t.cols, &beta1, (float*)Hessian.data, &J.cols);
 
 		// Above is a fast (but ugly) version of 

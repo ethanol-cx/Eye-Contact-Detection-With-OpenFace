@@ -217,7 +217,7 @@ void CEN_patch_expert::Response(const cv::Mat_<float> &area_of_interest, cv::Mat
 		// Perform matrix multiplication in OpenBLAS (fortran call)
 		float alpha1 = 1.0;
 		float beta1 = 0.0;
-		char* N = "N";
+		char N[2]; N[0] = 'N';
 		sgemm_(N, N, &resp.cols, &weight.rows, &weight.cols, &alpha1, m1, &resp.cols, m2, &weight.cols, &beta1, m3, &resp.cols);
 
 		// The above is a faster version of this, by calling the fortran version directly
@@ -490,7 +490,7 @@ void CEN_patch_expert::ResponseInternal(cv::Mat_<float>& response)
 		// Perform matrix multiplication in OpenBLAS (fortran call)
 		float alpha1 = 1.0;
 		float beta1 = 0.0;
-		char* N = "N";
+		char N[2]; N[0] = 'N';
 		sgemm_(N, N, &resp.cols, &weights[layer].rows, &weights[layer].cols, &alpha1, m1, &resp.cols, m2, &weights[layer].cols, &beta1, m3, &resp.cols);
 
 		// The above is a faster version of this, by calling the fortran version directly

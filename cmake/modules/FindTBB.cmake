@@ -149,7 +149,7 @@ if(NOT TBB_FOUND)
     # OS X
     set(TBB_DEFAULT_SEARCH_DIR 
 		"/opt/intel/tbb"
-		"/usr/local/Cellar/tbb/"
+		"/usr/local/Cellar/tbb"
 		"/usr/local/Cellar/tbb/2018_U5")
     
     # TODO: Check to see which C++ library is being used by the compiler.
