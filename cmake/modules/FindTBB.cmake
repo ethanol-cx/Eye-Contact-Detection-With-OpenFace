@@ -92,7 +92,7 @@
 
 include(FindPackageHandleStandardArgs)
 
-if(NOT TBB_FOUND)
+if("${TBB_LIBRARIES}" STREQUAL "")
 
   ##################################
   # Check the build type
