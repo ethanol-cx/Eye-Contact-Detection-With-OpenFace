@@ -44,10 +44,12 @@ MESSAGE("  Boost_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}")
 find_package( TBB CONFIG )
 
 # If not found, use FindTBB.cmake
-#if ("${TBB_LIBRARIES}" STREQUAL "" OR NOT ${TBB_LIBRARIES})
 if ("${TBB_LIBRARIES}" STREQUAL "")
 	MESSAGE("TBB not found in CONFIG, searching with FindTBB.cmake.") 
     find_package( TBB REQUIRED )
+	if ("${TBB_LIBRARIES}" STREQUAL "")
+		MESSAGE(FATAL_ERROR "TBB not found")
+	endif()
 else()
 	MESSAGE("TBB found in CONFIG: ${TBB_LIBRARIES}") 
 endif()
