@@ -149,8 +149,7 @@ if("${TBB_LIBRARIES}" STREQUAL "")
     # OS X
     set(TBB_DEFAULT_SEARCH_DIR 
 		"/opt/intel/tbb"
-		"/usr/local/Cellar/tbb"
-		"/usr/local/Cellar/tbb/2018_U5")
+		"/usr/local/Cellar/tbb")
     
     # TODO: Check to see which C++ library is being used by the compiler.
     if(NOT ${CMAKE_SYSTEM_VERSION} VERSION_LESS 13.0)
@@ -305,6 +304,4 @@ if("${TBB_LIBRARIES}" STREQUAL "")
   unset(TBB_LIB_PATH_SUFFIX)
   unset(TBB_DEFAULT_SEARCH_DIR)
 
-else()
-  MESSAGE("TBB already found")  
 endif()
