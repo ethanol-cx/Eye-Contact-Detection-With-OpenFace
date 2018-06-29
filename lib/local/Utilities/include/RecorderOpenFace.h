@@ -175,11 +175,13 @@ namespace Utilities
 		
 		// Do not exceed 100MB in the concurrent queue
 		const int TRACKED_QUEUE_CAPACITY = 100;
+		bool tracked_writing_thread_started;
 		cv::Mat vis_to_out;
 		tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > vis_to_out_queue;
 
 		// For aligned face writing
 		const int ALIGNED_QUEUE_CAPACITY = 100;
+		bool aligned_writing_thread_started;
 		cv::Mat aligned_face;
 		tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > aligned_face_queue;
 

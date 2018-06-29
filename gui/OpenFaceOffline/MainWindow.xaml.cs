@@ -759,7 +759,7 @@ namespace OpenFaceOffline
                 }
                 else
                 {
-                    d.Filter = "Video files|*.avi;*.wmv;*.mov;*.mpg;*.mpeg;*.mp4";
+                    d.Filter = "Video files|*.avi;*.webm;*.wmv;*.mov;*.mpg;*.mpeg;*.mp4";
                 }
                 if (d.ShowDialog(this) == true)
                 {
