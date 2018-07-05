@@ -480,7 +480,7 @@ namespace LandmarkDetector
 			for (int i = 0; i < n; ++i)
 			{
 				float val_x = landmarks.at<float>(i, 0);
-				float val_y = landmarks.at<float>(i, 0);
+				float val_y = landmarks.at<float>(i, 1);
 
 				if (i == 0 || val_x < min_x)
 					min_x = val_x;

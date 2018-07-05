@@ -344,9 +344,15 @@ float DetectionValidator::Check(const cv::Vec3d& orientation, const cv::Mat_<uch
 	xs = xs - min_x;
 	ys = ys - min_y;
 
+	// If the ROI is non existent return failure (this could happen if all landmarks are outside of the image)
+	if (max_x - min_x <= 1 || max_y - min_y <= 1)
+	{
+		return 0.0f;
+	}
+
 	cv::Mat_<float> intensity_img_float_local;
 	intensity_img(cv::Rect(min_x, min_y, max_x - min_x, max_y - min_y)).convertTo(intensity_img_float_local, CV_32F);
-	
+
 	// the piece-wise affine image warping
 	paws[id].Warp(intensity_img_float_local, warped, detected_landmarks_local);
 
