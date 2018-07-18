@@ -662,7 +662,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<float> >& o_regions, const 
 	// Force the image to three channels
 	if (img_in.channels() == 1)
 	{
-		cv::cvtColor(img_in, input_img, CV_GRAY2RGB);
+		cv::cvtColor(img_in, input_img, cv::COLOR_GRAY2RGB);
 	}
 	else
 	{
