@@ -158,7 +158,7 @@ namespace Utilities
 			// Only draw the line if one of the points is inside the image
 			if (p1.inside(image_rect) || p2.inside(image_rect))
 			{
-				cv::line(image, p1, p2, color, thickness, CV_AA);
+				cv::line(image, p1, p2, color, thickness, cv::LINE_AA);
 			}
 
 		}

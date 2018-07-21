@@ -52,11 +52,11 @@ namespace Utilities
 			{
 				cv::Mat tmp = in / 256;
 				tmp.convertTo(out, CV_8U);
-				cv::cvtColor(out, out, CV_BGR2GRAY);
+				cv::cvtColor(out, out, cv::COLOR_BGR2GRAY);
 			}
 			else
 			{
-				cv::cvtColor(in, out, CV_BGR2GRAY);
+				cv::cvtColor(in, out, cv::COLOR_BGR2GRAY);
 			}
 		}
 		else if (in.channels() == 4)
@@ -65,11 +65,11 @@ namespace Utilities
 			{
 				cv::Mat tmp = in / 256;
 				tmp.convertTo(out, CV_8U);
-				cv::cvtColor(out, out, CV_BGRA2GRAY);
+				cv::cvtColor(out, out, cv::COLOR_BGRA2GRAY);
 			}
 			else
 			{
-				cv::cvtColor(in, out, CV_BGRA2GRAY);
+				cv::cvtColor(in, out, cv::COLOR_BGRA2GRAY);
 			}
 		}
 		else

@@ -186,8 +186,8 @@ void Visualizer::SetObservationLandmarks(const cv::Mat_<float>& landmarks_2D, do
 				int thickness = (int)std::ceil(3.0* ((double)captured_image.cols) / 640.0);
 				int thickness_2 = (int)std::ceil(1.0* ((double)captured_image.cols) / 640.0);
 
-				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(0, 0, 255), thickness, CV_AA, draw_shiftbits);
-				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
+				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(0, 0, 255), thickness, cv::LINE_AA, draw_shiftbits);
+				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(255, 0, 0), thickness_2, cv::LINE_AA, draw_shiftbits);
 
 			}
 			else
@@ -199,8 +199,8 @@ void Visualizer::SetObservationLandmarks(const cv::Mat_<float>& landmarks_2D, do
 				int thickness = (int)std::ceil(2.5* ((double)captured_image.cols) / 640.0);
 				int thickness_2 = (int)std::ceil(1.0* ((double)captured_image.cols) / 640.0);
 
-				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(0, 0, 155), thickness, CV_AA, draw_shiftbits);
-				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(155, 0, 0), thickness_2, CV_AA, draw_shiftbits);
+				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(0, 0, 155), thickness, cv::LINE_AA, draw_shiftbits);
+				cv::circle(captured_image, featurePoint, 1 * draw_multiplier, cv::Scalar(155, 0, 0), thickness_2, cv::LINE_AA, draw_shiftbits);
 
 			}
 		}
@@ -309,12 +309,12 @@ void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::stri
 			int offset = MARGIN_Y + idx * (AU_TRACKBAR_HEIGHT + 10);
 			std::ostringstream au_i;
 			au_i << std::setprecision(2) << std::setw(4) << std::fixed << intensity;
-			cv::putText(action_units_image, name, cv::Point(10, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(present ? 0 : 200, 0, 0), 1, CV_AA);
-			cv::putText(action_units_image, AUS_DESCRIPTION.at(name), cv::Point(55, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, CV_AA);
+			cv::putText(action_units_image, name, cv::Point(10, offset + 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(present ? 0 : 200, 0, 0), 1, cv::LINE_AA);
+			cv::putText(action_units_image, AUS_DESCRIPTION.at(name), cv::Point(55, offset + 10), cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, cv::LINE_AA);
 
 			if (present)
 			{
-				cv::putText(action_units_image, au_i.str(), cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 100, 0), 1, CV_AA);
+				cv::putText(action_units_image, au_i.str(), cv::Point(160, offset + 10), cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 100, 0), 1, cv::LINE_AA);
 				cv::rectangle(action_units_image, cv::Point(MARGIN_X, offset),
 					cv::Point((int)(MARGIN_X + AU_TRACKBAR_LENGTH * intensity / 5.0), offset + AU_TRACKBAR_HEIGHT),
 					cv::Scalar(128, 128, 128),
@@ -322,7 +322,7 @@ void Visualizer::SetObservationActionUnits(const std::vector<std::pair<std::stri
 			}
 			else
 			{
-				cv::putText(action_units_image, "0.00", cv::Point(160, offset + 10), CV_FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, CV_AA);
+				cv::putText(action_units_image, "0.00", cv::Point(160, offset + 10), cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(0, 0, 0), 1, cv::LINE_AA);
 			}
 			idx++;
 		}
@@ -363,9 +363,9 @@ void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv
 
 				cv::Point nextFeaturePoint(cvRound(eye_landmarks2d[next_point].x * (double)draw_multiplier), cvRound(eye_landmarks2d[next_point].y * (double)draw_multiplier));
 				if ((i < 28 && (i < 8 || i > 19)) || (i >= 28 && (i < 8 + 28 || i > 19 + 28)))
-					cv::line(captured_image, featurePoint, nextFeaturePoint, cv::Scalar(255, 0, 0), thickness_2, CV_AA, draw_shiftbits);
+					cv::line(captured_image, featurePoint, nextFeaturePoint, cv::Scalar(255, 0, 0), thickness_2, cv::LINE_AA, draw_shiftbits);
 				else
-					cv::line(captured_image, featurePoint, nextFeaturePoint, cv::Scalar(0, 0, 255), thickness_2, CV_AA, draw_shiftbits);
+					cv::line(captured_image, featurePoint, nextFeaturePoint, cv::Scalar(0, 0, 255), thickness_2, cv::LINE_AA, draw_shiftbits);
 
 			}
 
@@ -395,12 +395,12 @@ void Visualizer::SetObservationGaze(const cv::Point3f& gaze_direction0, const cv
 			cv::Mat_<float> mesh_0 = (cv::Mat_<float>(2, 3) << points_left[0].x, points_left[0].y, points_left[0].z, points_left[1].x, points_left[1].y, points_left[1].z);
 			Project(proj_points, mesh_0, fx, fy, cx, cy);
 			cv::line(captured_image, cv::Point(cvRound(proj_points.at<float>(0, 0) * (float)draw_multiplier), cvRound(proj_points.at<float>(0, 1) * (float)draw_multiplier)),
-				cv::Point(cvRound(proj_points.at<float>(1, 0) * (float)draw_multiplier), cvRound(proj_points.at<float>(1, 1) * (float)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
+				cv::Point(cvRound(proj_points.at<float>(1, 0) * (float)draw_multiplier), cvRound(proj_points.at<float>(1, 1) * (float)draw_multiplier)), cv::Scalar(110, 220, 0), 2, cv::LINE_AA, draw_shiftbits);
 
 			cv::Mat_<float> mesh_1 = (cv::Mat_<float>(2, 3) << points_right[0].x, points_right[0].y, points_right[0].z, points_right[1].x, points_right[1].y, points_right[1].z);
 			Project(proj_points, mesh_1, fx, fy, cx, cy);
 			cv::line(captured_image, cv::Point(cvRound(proj_points.at<float>(0, 0) * (float)draw_multiplier), cvRound(proj_points.at<float>(0, 1) * (float)draw_multiplier)),
-				cv::Point(cvRound(proj_points.at<float>(1, 0) * (float)draw_multiplier), cvRound(proj_points.at<float>(1, 1) * (float)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
+				cv::Point(cvRound(proj_points.at<float>(1, 0) * (float)draw_multiplier), cvRound(proj_points.at<float>(1, 1) * (float)draw_multiplier)), cv::Scalar(110, 220, 0), 2, cv::LINE_AA, draw_shiftbits);
 
 		}
 	}
@@ -413,7 +413,7 @@ void Visualizer::SetFps(double fps)
 	std::sprintf(fpsC, "%d", (int)fps);
 	std::string fpsSt("FPS:");
 	fpsSt += fpsC;
-	cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, CV_AA);
+	cv::putText(captured_image, fpsSt, cv::Point(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0), 1, cv::LINE_AA);
 }
 
 char Visualizer::ShowObservation()
