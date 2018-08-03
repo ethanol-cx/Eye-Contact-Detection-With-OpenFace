@@ -417,8 +417,7 @@ namespace HeadPoseLive
                         // Add objects to recording queues
                         List<float> pose = new List<float>();
                         face_model.GetPose(pose, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
-                        RawImage image = new RawImage(frame);
-                        recording_objects.Enqueue(new Tuple<RawImage, bool, List<float>>(image, detectionSucceeding, pose));
+                        recording_objects.Enqueue(new Tuple<RawImage, bool, List<float>>(frame, detectionSucceeding, pose));
 
                     }
                 }

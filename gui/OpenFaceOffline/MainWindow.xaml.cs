@@ -229,8 +229,8 @@ namespace OpenFaceOffline
             landmark_detector.Reset();
 
             // Loading an image file
-            var frame = new RawImage(reader.GetNextImage());
-            var gray_frame = new RawImage(reader.GetCurrentFrameGray());
+            var frame = reader.GetNextImage();
+            var gray_frame = reader.GetCurrentFrameGray();
 
             // Setup recording
             RecorderOpenFaceParameters rec_params = new RecorderOpenFaceParameters(true, reader.IsWebcam(),
@@ -281,8 +281,8 @@ namespace OpenFaceOffline
                 if (skip_frames > 0)
                     skip_frames--;
 
-                frame = new RawImage(reader.GetNextImage());
-                gray_frame = new RawImage(reader.GetCurrentFrameGray());
+                frame = reader.GetNextImage();
+                gray_frame = reader.GetCurrentFrameGray();
 
                 lastFrameTime = CurrentTime;
                 processing_fps.AddFrame();
@@ -339,8 +339,8 @@ namespace OpenFaceOffline
             face_analyser = new FaceAnalyserManaged(AppDomain.CurrentDomain.BaseDirectory, false, image_output_size, MaskAligned);
 
             // Loading an image file
-            var frame = new RawImage(reader.GetNextImage());
-            var gray_frame = new RawImage(reader.GetCurrentFrameGray());
+            var frame = reader.GetNextImage();
+            var gray_frame = reader.GetCurrentFrameGray();
 
             // For FPS tracking
             DateTime? startTime = CurrentTime;
@@ -405,8 +405,8 @@ namespace OpenFaceOffline
 
                 recorder.SetObservationVisualization(visualizer_of.GetVisImage());
 
-                frame = new RawImage(reader.GetNextImage());
-                gray_frame = new RawImage(reader.GetCurrentFrameGray());
+                frame = reader.GetNextImage();
+                gray_frame = reader.GetCurrentFrameGray();
 
                 // Write out the tracked image
                 if(RecordTracked)

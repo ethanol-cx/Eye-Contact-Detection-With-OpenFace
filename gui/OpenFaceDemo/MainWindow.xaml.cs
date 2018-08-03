@@ -224,8 +224,8 @@ namespace OpenFaceDemo
             {
 
                 // Loading an image file
-                RawImage frame = new RawImage(reader.GetNextImage());
-                RawImage gray_frame = new RawImage(reader.GetCurrentFrameGray());
+                RawImage frame = reader.GetNextImage();
+                RawImage gray_frame = reader.GetCurrentFrameGray();
                 
                 lastFrameTime = CurrentTime;
                 processing_fps.AddFrame();
