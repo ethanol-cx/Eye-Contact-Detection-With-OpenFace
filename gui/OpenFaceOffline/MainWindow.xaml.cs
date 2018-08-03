@@ -362,6 +362,8 @@ namespace OpenFaceOffline
 
                 RecorderOpenFace recorder = new RecorderOpenFace(reader.GetName(), rec_params, record_root);
 
+                visualizer_of.SetImage(frame, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy());
+
                 // Detect faces here and return bounding boxes
                 List<Rect> face_detections = new List<Rect>();
                 List<float> confidences = new List<float>();
@@ -400,6 +402,8 @@ namespace OpenFaceOffline
                     RecordObservation(recorder, visualizer_of.GetVisImage(), i, detection_succeeding, reader.GetFx(), reader.GetFy(), reader.GetCx(), reader.GetCy(), 0, 0);
 
                 }
+
+                recorder.SetObservationVisualization(visualizer_of.GetVisImage());
 
                 frame = new RawImage(reader.GetNextImage());
                 gray_frame = new RawImage(reader.GetCurrentFrameGray());
