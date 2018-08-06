@@ -574,7 +574,7 @@ void PDM::CalcParams(cv::Vec6f& out_params_global, cv::Mat_<float>& out_params_l
 	float height = abs(min_y - max_y);
 
 	cv::Rect_<float> model_bbox;
-	CalcBoundingBox(model_bbox, cv::Vec6f(1.0, 0.0, 0.0, 0.0, 0.0, 0.0), cv::Mat_<double>(this->NumberOfModes(), 1, 0.0));
+	CalcBoundingBox(model_bbox, cv::Vec6f(1.0, 0.0, 0.0, 0.0, 0.0, 0.0), cv::Mat_<float>(this->NumberOfModes(), 1, 0.0));
 
 	cv::Rect_<float> bbox(min_x, min_y, width, height);
 
