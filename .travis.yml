@@ -7,7 +7,7 @@ branches:
   only:
     - master
     - develop
-    - feature/2.0.4
+    - feature/travis_fixes
 compiler:
   - gcc
 
@@ -70,7 +70,6 @@ before_install:
       brew install openblas;
       brew install dlib;
       brew install opencv3;
-      brew upgrade boost;
     fi
   
 script:
