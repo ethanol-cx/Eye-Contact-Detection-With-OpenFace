@@ -244,8 +244,8 @@ bool ImageCapture::OpenDirectory(std::string directory, std::string bbox_directo
 			if (!bbox_directory.empty())
 			{
 				boost::filesystem::path current_file = *file_iterator;
-				boost::filesystem::path bbox_file = current_file.replace_extension("txt");
-
+				boost::filesystem::path bbox_file = bbox_directory / current_file.filename().replace_extension("txt");
+				
 				// If there is a bounding box file push it to the list of bounding boxes
 				if (boost::filesystem::exists(bbox_file))
 				{
