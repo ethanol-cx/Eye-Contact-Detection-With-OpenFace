@@ -99,3 +99,4 @@ matlab_runners/Action Unit Experiments/AU_predictions/
 lib/local/Utilities/Debug/
 lib/3rdParty/CameraEnumerator/Debug/
 lib/local/CppInerop/Debug/
+*.user
