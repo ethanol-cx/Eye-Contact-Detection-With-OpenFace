@@ -703,7 +703,7 @@ void FaceAnalyser::ExtractAllPredictionsOfflineClass(vector<std::pair<std::strin
 		// Perform a moving average of 7 frames on classifications
 		int window_size = 7;
 		vector<double> au_vals_tmp = au_vals;
-		if(au_vals.size() > (window_size - 1) / 2)
+		if((int)au_vals.size() > (window_size - 1) / 2)
 		{
 			for (size_t i = (window_size - 1)/2; i < au_vals.size() - (window_size - 1) / 2; ++i)
 			{

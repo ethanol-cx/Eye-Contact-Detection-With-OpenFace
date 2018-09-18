@@ -96,7 +96,7 @@ namespace UtilitiesOF {
 
 			std::vector<std::string> image_files_std;
 
-			for (size_t i = 0; i < image_files->Count; ++i)
+			for (int i = 0; i < image_files->Count; ++i)
 			{
 				std::string image_file = msclr::interop::marshal_as<std::string>(image_files[i]);
 				image_files_std.push_back(image_file);

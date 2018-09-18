@@ -520,7 +520,7 @@ bool DetectLandmarksInImageMultiHypEarlyTerm(const cv::Mat_<uchar> &grayscale_im
 
 	// Setup the parameters accordingly
 	// Only do the first iteration
-	for (int i = 1; i < params.window_sizes_current.size(); ++i)
+	for (size_t i = 1; i < params.window_sizes_current.size(); ++i)
 	{
 		params.window_sizes_current[i] = 0;
 	}

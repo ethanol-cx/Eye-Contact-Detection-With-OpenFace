@@ -147,7 +147,7 @@ namespace GazeAnalyser_Interop {
 
 			// Perform manual projection of points
 			vector<cv::Point2f> imagePoints_left;
-			for (int i = 0; i < points_left.size(); ++i)
+			for (size_t i = 0; i < points_left.size(); ++i)
 			{
 				float x = points_left[i].x * fx / points_left[i].z + cx;
 				float y = points_left[i].y * fy / points_left[i].z + cy;
@@ -156,7 +156,7 @@ namespace GazeAnalyser_Interop {
 			}
 
 			vector<cv::Point2f> imagePoints_right;
-			for (int i = 0; i < points_right.size(); ++i)
+			for (size_t i = 0; i < points_right.size(); ++i)
 			{
 				float x = points_right[i].x * fx / points_right[i].z + cx;
 				float y = points_right[i].y * fy / points_right[i].z + cy;

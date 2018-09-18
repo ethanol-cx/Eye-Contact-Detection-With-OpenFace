@@ -468,7 +468,7 @@ void SequenceCapture::CaptureThread()
 		}
 		else if (is_image_seq)
 		{
-			if (image_files.empty() || frame_num_int >= image_files.size())
+			if (image_files.empty() || frame_num_int >= (int)image_files.size())
 			{
 				// Indicate lack of success by returning an empty image
 				tmp_frame = cv::Mat();

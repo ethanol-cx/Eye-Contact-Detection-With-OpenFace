@@ -7,7 +7,7 @@ branches:
   only:
     - master
     - develop
-    - feature/no-ui-fix
+    - feature/code_cleanup
 compiler:
   - gcc
 

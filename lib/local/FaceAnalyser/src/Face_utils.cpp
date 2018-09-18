@@ -34,6 +34,8 @@
 
 #include <Face_utils.h>
 
+#include <RotationHelpers.h>
+
 // OpenCV includes
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -131,7 +133,7 @@ namespace FaceAnalysis
 			extract_rigid_points(source_landmarks, destination_landmarks);
 		}
 
-		cv::Matx22f scale_rot_matrix = AlignShapesWithScale(source_landmarks, destination_landmarks);
+		cv::Matx22f scale_rot_matrix = Utilities::AlignShapesWithScale(source_landmarks, destination_landmarks);
 		cv::Matx23f warp_matrix;
 
 		warp_matrix(0,0) = scale_rot_matrix(0,0);
@@ -170,7 +172,7 @@ namespace FaceAnalysis
 			extract_rigid_points(source_landmarks, destination_landmarks);
 		}
 
-		cv::Matx22f scale_rot_matrix = AlignShapesWithScale(source_landmarks, destination_landmarks);
+		cv::Matx22f scale_rot_matrix = Utilities::AlignShapesWithScale(source_landmarks, destination_landmarks);
 		cv::Matx23f warp_matrix;
 
 		warp_matrix(0,0) = scale_rot_matrix(0,0);
@@ -332,88 +334,6 @@ namespace FaceAnalysis
 
 		new_descriptor.copyTo(descriptors.row(row_to_change));
 	}	
-
-	//===========================================================================
-	// Point set and landmark manipulation functions
-	//===========================================================================
-	// Using Kabsch's algorithm for aligning shapes
-	//This assumes that align_from and align_to are already mean normalised
-	cv::Matx22f AlignShapesKabsch2D(const cv::Mat_<float>& align_from, const cv::Mat_<float>& align_to)
-	{
-
-		cv::SVD svd(align_from.t() * align_to);
-
-		// make sure no reflection is there
-		// corr ensures that we do only rotaitons and not reflections
-		float d = cv::determinant(svd.vt.t() * svd.u.t());
-
-		cv::Matx22f corr = cv::Matx22f::eye();
-		if (d > 0)
-		{
-			corr(1, 1) = 1;
-		}
-		else
-		{
-			corr(1, 1) = -1;
-		}
-
-		cv::Matx22f R;
-		cv::Mat(svd.vt.t()*cv::Mat(corr)*svd.u.t()).copyTo(R);
-
-		return R;
-	}
-
-	//=============================================================================
-	// Basically Kabsch's algorithm but also allows the collection of points to be different in scale from each other
-	cv::Matx22f AlignShapesWithScale(cv::Mat_<float>& src, cv::Mat_<float> dst)
-	{
-		int n = src.rows;
-
-		// First we mean normalise both src and dst
-		float mean_src_x = cv::mean(src.col(0))[0];
-		float mean_src_y = cv::mean(src.col(1))[0];
-
-		float mean_dst_x = cv::mean(dst.col(0))[0];
-		float mean_dst_y = cv::mean(dst.col(1))[0];
-
-		cv::Mat_<float> src_mean_normed = src.clone();
-		src_mean_normed.col(0) = src_mean_normed.col(0) - mean_src_x;
-		src_mean_normed.col(1) = src_mean_normed.col(1) - mean_src_y;
-
-		cv::Mat_<float> dst_mean_normed = dst.clone();
-		dst_mean_normed.col(0) = dst_mean_normed.col(0) - mean_dst_x;
-		dst_mean_normed.col(1) = dst_mean_normed.col(1) - mean_dst_y;
-
-		// Find the scaling factor of each
-		cv::Mat src_sq;
-		cv::pow(src_mean_normed, 2, src_sq);
-
-		cv::Mat dst_sq;
-		cv::pow(dst_mean_normed, 2, dst_sq);
-
-		float s_src = sqrt(cv::sum(src_sq)[0] / n);
-		float s_dst = sqrt(cv::sum(dst_sq)[0] / n);
-
-		src_mean_normed = src_mean_normed / s_src;
-		dst_mean_normed = dst_mean_normed / s_dst;
-
-		float s = s_dst / s_src;
-
-		// Get the rotation
-		cv::Matx22f R = AlignShapesKabsch2D(src_mean_normed, dst_mean_normed);
-
-		cv::Matx22f	A;
-		cv::Mat(s * R).copyTo(A);
-
-		cv::Mat_<float> aligned = (cv::Mat(cv::Mat(A) * src.t())).t();
-		cv::Mat_<float> offset = dst - aligned;
-
-		float t_x = cv::mean(offset.col(0))[0];
-		float t_y = cv::mean(offset.col(1))[0];
-
-		return A;
-
-	}
 
 	//============================================================================
 	// Matrix reading functionality

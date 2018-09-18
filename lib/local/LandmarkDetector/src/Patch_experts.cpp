@@ -36,6 +36,8 @@
 
 #include "Patch_experts.h"
 
+#include "RotationHelpers.h"
+
 // TBB includes
 #include <tbb/tbb.h>
 
@@ -156,7 +158,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 	cv::Mat_<float> reference_shape_2D = (reference_shape.reshape(1, 2).t());
 	cv::Mat_<float> image_shape_2D = landmark_locations.reshape(1, 2).t();
 
-	sim_img_to_ref = AlignShapesWithScale_f(image_shape_2D, reference_shape_2D);
+	sim_img_to_ref = Utilities::AlignShapesWithScale(image_shape_2D, reference_shape_2D);
 	sim_ref_to_img = sim_img_to_ref.inv(cv::DECOMP_LU);
 	
 	float a1 = sim_ref_to_img(0, 0);
@@ -461,21 +463,21 @@ bool Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 		}
 
 		// Reading in weights/biases/cutoffs
-		for (int i = 0; i < centers[0].size(); ++i)
+		for (size_t i = 0; i < centers[0].size(); ++i)
 		{
 			double weight;
 			earlyTermFile >> weight;
 			early_term_weights.push_back(weight);
 		}
 
-		for (int i = 0; i < centers[0].size(); ++i)
+		for (size_t i = 0; i < centers[0].size(); ++i)
 		{
 			double bias;
 			earlyTermFile >> bias;
 			early_term_biases.push_back(bias);
 		}
 
-		for (int i = 0; i < centers[0].size(); ++i)
+		for (size_t i = 0; i < centers[0].size(); ++i)
 		{
 			double cutoff;
 			earlyTermFile >> cutoff;
