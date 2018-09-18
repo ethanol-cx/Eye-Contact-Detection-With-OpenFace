@@ -195,7 +195,7 @@ namespace HeadPoseLive
             InitializeComponent();
 
             DateTime now = DateTime.Now;
-            
+
             // Set the icon
             Uri iconUri = new Uri("logo1.ico", UriKind.RelativeOrAbsolute);
             this.Icon = BitmapFrame.Create(iconUri);
@@ -722,23 +722,25 @@ namespace HeadPoseLive
                 PauseButton.Content = "Pause";
             }
         }
-
+       
         private void ScreenshotButton_Click(object sender, RoutedEventArgs e)
         {
 
-            int Top = (int)this.Top;
-            int Left = (int)this.Left;
+            PresentationSource source = PresentationSource.FromVisual(Application.Current.MainWindow);
 
-            int Width = (int)this.Width;
-            int Height = (int)this.Height;
+            var topLeft = source.CompositionTarget.TransformToDevice.Transform(new System.Windows.Point(this.Left, this.Top));
+            var bottomRight = source.CompositionTarget.TransformToDevice.Transform(new System.Windows.Point(this.Left + this.Width, this.Top + this.Height));
+
+            int Width = (int)(bottomRight.X - topLeft.X);
+            int Height = (int)(bottomRight.Y - topLeft.Y);
 
             using (Bitmap bmpScreenCapture = new Bitmap(Width,
                                                         Height))
             {
                 using (System.Drawing.Graphics g = Graphics.FromImage(bmpScreenCapture))
                 {
-                    g.CopyFromScreen(Left,
-                                     Top,
+                    g.CopyFromScreen((int)(topLeft.X),
+                                     (int)(topLeft.Y),
                                      0, 0,
                                      bmpScreenCapture.Size,
                                      CopyPixelOperation.SourceCopy);
