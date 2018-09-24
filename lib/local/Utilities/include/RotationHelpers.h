@@ -31,8 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __ROTATION_HELPERS_h_
-#define __ROTATION_HELPERS_h_
+#ifndef ROTATION_HELPERS_H
+#define ROTATION_HELPERS_H
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/calib3d.hpp>
@@ -243,4 +243,4 @@ namespace Utilities
 	}
 
 }
-#endif
+#endif // ROTATION_HELPERS_H

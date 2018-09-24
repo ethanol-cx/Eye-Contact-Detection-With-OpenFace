@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __SVRSTATICLINREGRESSORS_h_
-#define __SVRSTATICLINREGRESSORS_h_
+#ifndef SVR_STATIC_LIN_REGRESSORS_H
+#define SVR_STATIC_LIN_REGRESSORS_H
 
 #include <vector>
 #include <string>
@@ -81,4 +81,4 @@ private:
 };
   //===========================================================================
 }
-#endif
+#endif // SVR_STATIC_LIN_REGRESSORS_H

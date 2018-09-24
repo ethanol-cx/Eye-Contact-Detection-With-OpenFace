@@ -31,8 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __IMAGE_MANIPULATION_HELPERS_h_
-#define __IMAGE_MANIPULATION_HELPERS_h_
+#ifndef IMAGE_MANIPULATION_HELPERS_H
+#define IMAGE_MANIPULATION_HELPERS_H
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -88,4 +88,4 @@ namespace Utilities
 
 
 }
-#endif
+#endif // IMAGE_MANIPULATION_HELPERS_H

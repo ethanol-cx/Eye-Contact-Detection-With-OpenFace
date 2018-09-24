@@ -33,8 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef __CEN_PATCH_EXPERT_h_
-#define __CEN_PATCH_EXPERT_h_
+#ifndef CEN_PATCH_EXPERT_H
+#define CEN_PATCH_EXPERT_H
 
 // system includes
 #include <vector>
@@ -88,4 +88,4 @@ namespace LandmarkDetector
 	void interpolationMatrix(cv::Mat_<float>& mapMatrix, int response_height, int response_width, int input_width, int input_height);
 
 }
-#endif
+#endif // CEN_PATCH_EXPERT_H

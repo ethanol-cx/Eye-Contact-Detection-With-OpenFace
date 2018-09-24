@@ -32,11 +32,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-//  Header for all external CLM/CLNF/CLM-Z methods of interest to the user
+//  Header for all external CLM/CLNF/CE-CLM methods of interest to the user
 //
 //
-#ifndef __LANDMARK_DETECTOR_FUNC_h_
-#define __LANDMARK_DETECTOR_FUNC_h_
+#ifndef LANDMARK_DETECTOR_FUNC_H
+#define LANDMARK_DETECTOR_FUNC_H
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -78,4 +78,4 @@ namespace LandmarkDetector
 	// The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
 	cv::Vec6f GetPoseWRTCamera(const CLNF& clnf_model, float fx, float fy, float cx, float cy);
 }
-#endif
+#endif // LANDMARK_DETECTOR_FUNC_H

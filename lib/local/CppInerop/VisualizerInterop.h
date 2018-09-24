@@ -156,11 +156,7 @@ namespace UtilitiesOF {
 		!Visualizer()
 		{
 			// Automatically closes capture object before freeing memory.	
-			if (m_visualizer != nullptr)
-			{
-				delete m_visualizer;
-			}
-
+			delete m_visualizer;
 		}
 
 		// Destructor. Called on explicit Dispose() only.

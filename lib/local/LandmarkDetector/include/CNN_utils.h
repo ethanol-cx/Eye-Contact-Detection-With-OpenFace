@@ -31,9 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-//  Header for all external CLNF/CLM-Z/CLM methods of interest to the user
-#ifndef __CNN_UTILS_h_
-#define __CNN_UTILS_h_
+#ifndef CNN_UTILS_H
+#define CNN_UTILS_H
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -60,4 +59,4 @@ namespace LandmarkDetector
 	// Convolution using matrix multiplication and OpenBLAS optimization, can also provide a pre-allocated im2col result for faster processing
 	void convolution_direct_blas(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k, cv::Mat_<float>& pre_alloc_im2col);
 }
-#endif
+#endif // CNN_UTILS_H

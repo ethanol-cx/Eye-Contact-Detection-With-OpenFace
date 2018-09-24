@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __PDM_h_
-#define __PDM_h_
+#ifndef PDM_H
+#define PDM_H
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -102,4 +102,4 @@ class PDM{
   };
   //===========================================================================
 }
-#endif
+#endif // PDM_H

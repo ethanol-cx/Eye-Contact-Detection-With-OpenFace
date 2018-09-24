@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __CCNF_PATCH_EXPERT_h_
-#define __CCNF_PATCH_EXPERT_h_
+#ifndef CCNF_PATCH_EXPERT_H
+#define CCNF_PATCH_EXPERT_H
 
 #include <opencv2/core/core.hpp>
 
@@ -126,4 +126,4 @@ public:
 };
   //===========================================================================
 }
-#endif
+#endif // CCNF_PATCH_EXPERT_H

@@ -31,8 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __IMAGE_CAPTURE_h_
-#define __IMAGE_CAPTURE_h_
+#ifndef IMAGE_CAPTURE_H
+#define IMAGE_CAPTURE_H
 
 // System includes
 #include <fstream>
@@ -118,4 +118,4 @@ namespace Utilities
 
 	};
 }
-#endif
+#endif // IMAGE_CAPTURE_H

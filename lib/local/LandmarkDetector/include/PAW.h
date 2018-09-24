@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __PAW_h_
-#define __PAW_h_
+#ifndef PAW_H
+#define PAW_H
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -135,4 +135,4 @@ namespace LandmarkDetector
 	};
 	//===========================================================================
 }
-#endif
+#endif // PAW_H

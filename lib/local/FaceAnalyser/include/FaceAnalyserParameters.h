@@ -33,8 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 //  Parameters of the Face analyser
-#ifndef __FACE_ANALYSER_PARAM_H
-#define __FACE_ANALYSER_PARAM_H
+#ifndef FACE_ANALYSER_PARAM_H
+#define FACE_ANALYSER_PARAM_H
 
 #include <vector>
 #include <opencv2/core/core.hpp>
@@ -101,4 +101,4 @@ private:
 
 }
 
-#endif // __FACE_ANALYSER_PARAM_H
+#endif // FACE_ANALYSER_PARAM_H

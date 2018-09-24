@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __FACE_UTILS_h_
-#define __FACE_UTILS_h_
+#ifndef FACE_UTILS_H
+#define FACE_UTILS_H
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -70,4 +70,4 @@ namespace FaceAnalysis
 	void SkipComments(std::ifstream& stream);
 
 }
-#endif
+#endif // FACE_UTILS_H

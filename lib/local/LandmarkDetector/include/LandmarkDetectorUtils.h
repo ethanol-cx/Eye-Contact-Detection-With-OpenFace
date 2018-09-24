@@ -32,9 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-//  Header for all external CLNF/CLM-Z/CLM methods of interest to the user
-#ifndef __LANDMARK_DETECTOR_UTILS_h_
-#define __LANDMARK_DETECTOR_UTILS_h_
+#ifndef LANDMARK_DETECTOR_UTILS_H
+#define LANDMARK_DETECTOR_UTILS_H
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -106,4 +105,4 @@ namespace LandmarkDetector
 
 
 }
-#endif
+#endif // LANDMARK_DETECTOR_UTILS_H

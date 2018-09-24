@@ -175,25 +175,10 @@ namespace UtilitiesOF {
 		// May be called multiple times.
 		!ImageReader()
 		{
-			// Automatically closes capture object before freeing memory.	
-			if (m_image_capture != nullptr)
-			{
-				delete m_image_capture;
-			}
-
-			if (m_rgb_frame != nullptr)
-			{
-				delete m_rgb_frame;
-			}
-			if (m_gray_frame != nullptr)
-			{
-				delete m_gray_frame;
-			}
-			if (m_is_opened != nullptr)
-			{
-				delete m_is_opened;
-			}
-
+			delete m_image_capture;
+			delete m_rgb_frame;
+			delete m_gray_frame;
+			delete m_is_opened;
 		}
 
 		// Destructor. Called on explicit Dispose() only.

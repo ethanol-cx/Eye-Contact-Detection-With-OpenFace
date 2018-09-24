@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __FACEANALYSER_h_
-#define __FACEANALYSER_h_
+#ifndef FACEANALYSER_H
+#define FACEANALYSER_H
 
 // STL includes
 #include <string>
@@ -242,4 +242,4 @@ private:
 };
   //===========================================================================
 }
-#endif
+#endif // FACEANALYSER_H

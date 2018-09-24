@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __SVRDYNAMICLINREGRESSORS_h_
-#define __SVRDYNAMICLINREGRESSORS_h_
+#ifndef SVR_DYNAMIC_LIN_REGRESSORS_H
+#define SVR_DYNAMIC_LIN_REGRESSORS_H
 
 #include <vector>
 #include <string>
@@ -89,4 +89,4 @@ private:
 };
   //===========================================================================
 }
-#endif
+#endif // SVR_DYNAMIC_LIN_REGRESSORS_H

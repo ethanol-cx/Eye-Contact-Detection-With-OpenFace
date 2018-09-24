@@ -31,8 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __VISUALIZER_h_
-#define __VISUALIZER_h_
+#ifndef VISUALIZER_H
+#define VISUALIZER_H
 
 // System includes
 #include <vector>

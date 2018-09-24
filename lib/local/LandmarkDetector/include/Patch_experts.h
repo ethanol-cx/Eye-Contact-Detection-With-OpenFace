@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __Patch_experts_h_
-#define __Patch_experts_h_
+#ifndef PATCH_EXPERTS_H
+#define PATCH_EXPERTS_H
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -121,4 +121,4 @@ private:
 };
  
 }
-#endif
+#endif // PATCH_EXPERTS_H

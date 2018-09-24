@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __LANDMARK_DETECTION_VALIDATOR_h_
-#define __LANDMARK_DETECTION_VALIDATOR_h_
+#ifndef LANDMARK_DETECTION_VALIDATOR_H
+#define LANDMARK_DETECTION_VALIDATOR_H
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -114,4 +114,4 @@ private:
 };
 
 }
-#endif
+#endif // LANDMARK_DETECTION_VALIDATOR_H

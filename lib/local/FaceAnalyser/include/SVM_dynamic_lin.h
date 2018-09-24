@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __SVMDYNAMICLIN_h_
-#define __SVMDYNAMICLIN_h_
+#ifndef SVM_DYNAMIC_LIN_H
+#define SVM_DYNAMIC_LIN_H
 
 #include <vector>
 #include <string>
@@ -84,4 +84,4 @@ private:
 };
   //===========================================================================
 }
-#endif
+#endif // SVM_DYNAMIC_LIN_H

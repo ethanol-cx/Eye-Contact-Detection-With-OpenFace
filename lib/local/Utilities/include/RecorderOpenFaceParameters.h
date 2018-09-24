@@ -32,8 +32,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 //  Parameters of the Face analyser
-#ifndef __RECORDER_OPENFACE_PARAM_H
-#define __RECORDER_OPENFACE_PARAM_H
+#ifndef RECORDER_OPENFACE_PARAM_H
+#define RECORDER_OPENFACE_PARAM_H
 
 #include <vector>
 #include <opencv2/core/core.hpp>
@@ -114,4 +114,4 @@ namespace Utilities
 
 }
 
-#endif // ____RECORDER_OPENFACE_PARAM_H
+#endif // RECORDER_OPENFACE_PARAM_H

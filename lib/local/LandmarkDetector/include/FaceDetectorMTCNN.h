@@ -31,8 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __FACE_DETECTOR_MTCNN_h_
-#define __FACE_DETECTOR_MTCNN_h_
+#ifndef FACE_DETECTOR_MTCNN_H
+#define FACE_DETECTOR_MTCNN_H
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -132,4 +132,4 @@ namespace LandmarkDetector
 	};
 
 }
-#endif
+#endif // FACE_DETECTOR_MTCNN_H

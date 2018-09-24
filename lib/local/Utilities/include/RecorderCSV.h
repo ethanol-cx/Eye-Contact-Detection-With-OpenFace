@@ -31,8 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __RECORDER_CSV_h_
-#define __RECORDER_CSV_h_
+#ifndef RECORDER_CSV_H
+#define RECORDER_CSV_H
 
 // System includes
 #include <fstream>
@@ -97,4 +97,4 @@ namespace Utilities
 
 	};
 }
-#endif
+#endif // RECORDER_CSV_H

@@ -32,9 +32,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-//  Parameters of the CLNF, CLM-Z and CLM trackers
-#ifndef __LANDMARK_DETECTOR_PARAM_H
-#define __LANDMARK_DETECTOR_PARAM_H
+//  Parameters of the CE-CLM, CLNF, and CLM trackers
+#ifndef LANDMARK_DETECTOR_PARAM_H
+#define LANDMARK_DETECTOR_PARAM_H
 
 #include <vector>
 
@@ -120,4 +120,4 @@ struct FaceModelParameters
 
 }
 
-#endif // __LANDMARK_DETECTOR_PARAM_H
+#endif // LANDMARK_DETECTOR_PARAM_H

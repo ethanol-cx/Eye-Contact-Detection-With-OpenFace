@@ -31,8 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __RECORDER_HOG_h_
-#define __RECORDER_HOG_h_
+#ifndef RECORDER_HOG_H
+#define RECORDER_HOG_H
 
 // System includes
 #include <vector>
@@ -85,4 +85,4 @@ namespace Utilities
 
 	};
 }
-#endif
+#endif // RECORDER_HOG_H
