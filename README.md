@@ -1,4 +1,4 @@
-# OpenFace 2.0.4: an open source facial behavior analysis toolkit
+# OpenFace 2.0.5: an open source facial behavior analysis toolkit
 
 [![Build Status](https://travis-ci.org/TadasBaltrusaitis/OpenFace.svg?branch=master)](https://travis-ci.org/TadasBaltrusaitis/OpenFace)
 [![Build status](https://ci.appveyor.com/api/projects/status/8msiklxfbhlnsmxp/branch/master?svg=true)](https://ci.appveyor.com/project/TadasBaltrusaitis/openface/branch/master)
@@ -79,7 +79,7 @@ in IEEE Int. _Conference on Computer Vision Workshops, 300 Faces in-the-Wild Cha
 
 **Rendering of Eyes for Eye-Shape Registration and Gaze Estimation**
 Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling
-in _IEEE International. Conference on Computer Vision (ICCV)_, 2015
+in _IEEE International Conference on Computer Vision (ICCV)_, 2015
 
 #### Facial Action Unit detection
 
