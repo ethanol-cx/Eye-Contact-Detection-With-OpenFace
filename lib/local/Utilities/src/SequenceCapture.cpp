@@ -13,19 +13,19 @@
 //       reports and manuals, must cite at least one of the following works:
 //
 //       OpenFace 2.0: Facial Behavior Analysis Toolkit
-//       Tadas Baltrušaitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
+//       Tadas BaltruÅ¡aitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
 //       in IEEE International Conference on Automatic Face and Gesture Recognition, 2018  
 //
 //       Convolutional experts constrained local model for facial landmark detection.
-//       A. Zadeh, T. Baltrušaitis, and Louis-Philippe Morency,
+//       A. Zadeh, T. BaltruÅ¡aitis, and Louis-Philippe Morency,
 //       in Computer Vision and Pattern Recognition Workshops, 2017.    
 //
 //       Rendering of Eyes for Eye-Shape Registration and Gaze Estimation
-//       Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
+//       Erroll Wood, Tadas BaltruÅ¡aitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
 //       in IEEE International. Conference on Computer Vision (ICCV),  2015 
 //
 //       Cross-dataset learning and person-specific normalisation for automatic Action Unit detection
-//       Tadas Baltrušaitis, Marwa Mahmoud, and Peter Robinson 
+//       Tadas BaltruÅ¡aitis, Marwa Mahmoud, and Peter Robinson 
 //       in Facial Expression Recognition and Analysis Challenge, 
 //       IEEE International Conference on Automatic Face and Gesture Recognition, 2015 
 //
@@ -232,16 +232,16 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 	latest_gray_frame = cv::Mat();
 
 	capture.open(device);
-	capture.set(CV_CAP_PROP_FRAME_WIDTH, image_width);
-	capture.set(CV_CAP_PROP_FRAME_HEIGHT, image_height);
+	capture.set(cv::CAP_PROP_FRAME_WIDTH, image_width);
+	capture.set(cv::CAP_PROP_FRAME_HEIGHT, image_height);
 
 	is_webcam = true;
 	is_image_seq = false;
 
 	vid_length = 0;
 
-	this->frame_width = (int)capture.get(CV_CAP_PROP_FRAME_WIDTH);
-	this->frame_height = (int)capture.get(CV_CAP_PROP_FRAME_HEIGHT);
+	this->frame_width = (int)capture.get(cv::CAP_PROP_FRAME_WIDTH);
+	this->frame_height = (int)capture.get(cv::CAP_PROP_FRAME_HEIGHT);
 
 	if (!capture.isOpened())
 	{
@@ -254,7 +254,7 @@ bool SequenceCapture::OpenWebcam(int device, int image_width, int image_height, 
 		std::cout << "Defaulting to " << frame_width << "x" << frame_height << std::endl;
 	}
 
-	this->fps = capture.get(CV_CAP_PROP_FPS);
+	this->fps = capture.get(cv::CAP_PROP_FPS);
 
 	// Check if fps is nan or less than 0
 	if (fps != fps || fps <= 0)
@@ -319,7 +319,7 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 		return false;
 	}
 
-	this->fps = capture.get(CV_CAP_PROP_FPS);
+	this->fps = capture.get(cv::CAP_PROP_FPS);
 	
 	// Check if fps is nan or less than 0
 	if (fps != fps || fps <= 0)
@@ -331,10 +331,10 @@ bool SequenceCapture::OpenVideoFile(std::string video_file, float fx, float fy, 
 	is_webcam = false;
 	is_image_seq = false;
 	
-	this->frame_width = (int)capture.get(CV_CAP_PROP_FRAME_WIDTH);
-	this->frame_height = (int)capture.get(CV_CAP_PROP_FRAME_HEIGHT);
+	this->frame_width = (int)capture.get(cv::CAP_PROP_FRAME_WIDTH);
+	this->frame_height = (int)capture.get(cv::CAP_PROP_FRAME_HEIGHT);
 
-	vid_length = (int)capture.get(CV_CAP_PROP_FRAME_COUNT);
+	vid_length = (int)capture.get(cv::CAP_PROP_FRAME_COUNT);
 
 	SetCameraIntrinsics(fx, fy, cx, cy);
 
@@ -390,7 +390,7 @@ bool SequenceCapture::OpenImageSequence(std::string directory, float fx, float f
 	}
 
 	// Assume all images are same size in an image sequence
-	cv::Mat tmp = cv::imread(image_files[0], CV_LOAD_IMAGE_COLOR);
+	cv::Mat tmp = cv::imread(image_files[0], cv::IMREAD_COLOR);
 	this->frame_height = tmp.size().height;
 	this->frame_width = tmp.size().width;
 
@@ -476,7 +476,7 @@ void SequenceCapture::CaptureThread()
 			}
 			else
 			{
-				tmp_frame = cv::imread(image_files[frame_num_int], CV_LOAD_IMAGE_COLOR);
+				tmp_frame = cv::imread(image_files[frame_num_int], cv::IMREAD_COLOR);
 			}
 			timestamp_curr = 0;
 		}
