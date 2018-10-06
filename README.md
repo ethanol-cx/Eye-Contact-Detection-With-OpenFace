@@ -79,7 +79,7 @@ in IEEE Int. _Conference on Computer Vision Workshops, 300 Faces in-the-Wild Cha
 
 **Rendering of Eyes for Eye-Shape Registration and Gaze Estimation**
 Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling
-in _IEEE International. Conference on Computer Vision (ICCV)_, 2015
+in _IEEE International Conference on Computer Vision (ICCV)_, 2015
 
 #### Facial Action Unit detection
 
