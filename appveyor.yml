@@ -3,10 +3,11 @@ branches:
   only:
   - develop
   - master
-  - /^feature/-.*$/
+  - feature/code_cleanup
 max_jobs: 4  
 configuration:
 - Release
+- Debug
 platform:
 - x64
 - Win32

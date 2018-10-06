@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __GAZEESTIMATION_h_
-#define __GAZEESTIMATION_h_
+#ifndef GAZE_ESTIMATION_H
+#define GAZE_ESTIMATION_H
 
 #include "LandmarkDetectorModel.h"
 
@@ -51,4 +51,4 @@ namespace GazeAnalysis
 	cv::Point3f GetPupilPosition(cv::Mat_<float> eyeLdmks3d);
 
 }
-#endif
+#endif // GAZE_ESTIMATION_H

@@ -222,21 +222,9 @@ namespace UtilitiesOF {
 		// May be called multiple times.
 		!SequenceReader()
 		{
-			// Automatically closes capture object before freeing memory.	
-			if (m_sequence_capture != nullptr)
-			{
-				delete m_sequence_capture;
-			}
-
-			if (m_rgb_frame != nullptr)
-			{
-				delete m_rgb_frame;
-			}
-			if (m_gray_frame != nullptr)
-			{
-				delete m_gray_frame;
-			}
-
+			delete m_sequence_capture;
+			delete m_rgb_frame;
+			delete m_gray_frame;
 		}
 
 		// Destructor. Called on explicit Dispose() only.

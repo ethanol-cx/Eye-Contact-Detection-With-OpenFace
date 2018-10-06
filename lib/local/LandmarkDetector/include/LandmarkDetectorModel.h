@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __LANDMARK_DETECTOR_MODEL_h_
-#define __LANDMARK_DETECTOR_MODEL_h_
+#ifndef LANDMARK_DETECTOR_MODEL_H
+#define LANDMARK_DETECTOR_MODEL_H
 
 // OpenCV dependencies
 #include <opencv2/core/core.hpp>
@@ -209,4 +209,4 @@ private:
   };
   //===========================================================================
 }
-#endif
+#endif // LANDMARK_DETECTOR_MODEL_H

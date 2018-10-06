@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __LANDMARK_DETECTOR_INTEROP_h_
-#define __LANDMARK_DETECTOR_INTEROP_h_
+#ifndef LANDMARK_DETECTOR_INTEROP_H
+#define LANDMARK_DETECTOR_INTEROP_H
 
 #pragma once
 
@@ -450,4 +450,4 @@ namespace CppInterop {
 
 }
 
-#endif
+#endif // LANDMARK_DETECTOR_INTEROP_H

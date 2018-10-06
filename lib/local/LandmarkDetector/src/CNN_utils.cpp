@@ -77,7 +77,7 @@ namespace LandmarkDetector
 				auto iter = input_output_maps[0].row(k).begin();
 				float neg_mult = prelu_weights.at<float>(k);
 
-				for (size_t i = 0; i < w; ++i)
+				for (int i = 0; i < w; ++i)
 				{
 					float in_val = *iter;
 					// Apply the PReLU
@@ -105,7 +105,7 @@ namespace LandmarkDetector
 			cv::Size orig_size = input_maps[0].size();
 			cv::Mat_<float> input_concat((int)input_maps.size(), input_maps[0].cols * input_maps[0].rows);
 
-			for (int in = 0; in < input_maps.size(); ++in)
+			for (int in = 0; in < (int)input_maps.size(); ++in)
 			{
 				cv::Mat_<float> add = input_maps[in];
 

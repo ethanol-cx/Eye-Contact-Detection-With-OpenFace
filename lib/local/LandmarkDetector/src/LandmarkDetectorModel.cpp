@@ -1128,7 +1128,7 @@ float CLNF::NU_RLMS(cv::Vec6f& final_global, cv::Mat_<float>& final_local, const
 
 		// Solve for the parameter update (from Baltrusaitis 2013 based on eq (36) Saragih 2011)
 		cv::Mat_<float> param_update;
-		cv::solve(Hessian, J_w_t_m, param_update, CV_CHOLESKY);
+		cv::solve(Hessian, J_w_t_m, param_update, cv::DECOMP_CHOLESKY);
 		
 		// update the reference
 		pdm.UpdateModelParameters(param_update, current_local, current_global);		

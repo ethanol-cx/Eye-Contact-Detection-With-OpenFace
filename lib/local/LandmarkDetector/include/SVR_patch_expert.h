@@ -33,8 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef __SVR_PATCH_EXPERT_h_
-#define __SVR_PATCH_EXPERT_h_
+#ifndef SVR_PATCH_EXPERT_H
+#define SVR_PATCH_EXPERT_H
 
 // system includes
 #include <map>
@@ -111,4 +111,4 @@ class Multi_SVR_patch_expert{
 
 };
 }
-#endif
+#endif // SVR_PATCH_EXPERT_H

@@ -96,7 +96,7 @@ namespace UtilitiesOF {
 
 			std::vector<std::string> image_files_std;
 
-			for (size_t i = 0; i < image_files->Count; ++i)
+			for (int i = 0; i < image_files->Count; ++i)
 			{
 				std::string image_file = msclr::interop::marshal_as<std::string>(image_files[i]);
 				image_files_std.push_back(image_file);
@@ -175,25 +175,10 @@ namespace UtilitiesOF {
 		// May be called multiple times.
 		!ImageReader()
 		{
-			// Automatically closes capture object before freeing memory.	
-			if (m_image_capture != nullptr)
-			{
-				delete m_image_capture;
-			}
-
-			if (m_rgb_frame != nullptr)
-			{
-				delete m_rgb_frame;
-			}
-			if (m_gray_frame != nullptr)
-			{
-				delete m_gray_frame;
-			}
-			if (m_is_opened != nullptr)
-			{
-				delete m_is_opened;
-			}
-
+			delete m_image_capture;
+			delete m_rgb_frame;
+			delete m_gray_frame;
+			delete m_is_opened;
 		}
 
 		// Destructor. Called on explicit Dispose() only.

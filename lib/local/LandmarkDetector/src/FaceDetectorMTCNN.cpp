@@ -354,9 +354,9 @@ void CNN::Read(const string& location)
 
 				// Rearrange the flattened kernels into weight matrices for direct convolution computation
 				cv::Mat_<float> weight_matrix(num_in_maps * kernels_rearr[0][0].rows * kernels_rearr[0][0].cols, num_kernels);
-				for (size_t k = 0; k < num_kernels; ++k)
+				for (int k = 0; k < num_kernels; ++k)
 				{
-					for (size_t i = 0; i < num_in_maps; ++i)
+					for (int i = 0; i < num_in_maps; ++i)
 					{
 						// Flatten the kernel
 						cv::Mat_<float> k_flat = kernels_rearr[k][i].t();
@@ -370,7 +370,7 @@ void CNN::Read(const string& location)
 
 				// Add a bias term to the weight matrix for efficiency
 				cv::Mat_<float> W(weight_matrix.rows, weight_matrix.cols + 1, 1.0);
-				for (size_t k = 0; k < weight_matrix.rows; ++k)
+				for (int k = 0; k < weight_matrix.rows; ++k)
 				{
 					W.at<float>(k, weight_matrix.cols) = biases[k];
 				}

@@ -33,9 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// FaceAnalyser_Interop.h
-#ifndef __GAZE_ANALYSER_INTEROP_h_
-#define __GAZE_ANALYSER_INTEROP_h_
+#ifndef GAZE_ANALYSER_INTEROP_H
+#define GAZE_ANALYSER_INTEROP_H
 
 #pragma once
 
@@ -147,7 +146,7 @@ namespace GazeAnalyser_Interop {
 
 			// Perform manual projection of points
 			vector<cv::Point2f> imagePoints_left;
-			for (int i = 0; i < points_left.size(); ++i)
+			for (size_t i = 0; i < points_left.size(); ++i)
 			{
 				float x = points_left[i].x * fx / points_left[i].z + cx;
 				float y = points_left[i].y * fy / points_left[i].z + cy;
@@ -156,7 +155,7 @@ namespace GazeAnalyser_Interop {
 			}
 
 			vector<cv::Point2f> imagePoints_right;
-			for (int i = 0; i < points_right.size(); ++i)
+			for (size_t i = 0; i < points_right.size(); ++i)
 			{
 				float x = points_right[i].x * fx / points_right[i].z + cx;
 				float y = points_right[i].y * fy / points_right[i].z + cy;
@@ -175,31 +174,11 @@ namespace GazeAnalyser_Interop {
 		// May be called multiple times.
 		!GazeAnalyserManaged()
 		{
-			if (gazeDirection0 != nullptr)
-			{
-				delete gazeDirection0;
-			}
-
-			if (gazeDirection1 != nullptr)
-			{
-				delete gazeDirection1;
-			}
-
-			if (gazeAngle != nullptr)
-			{
-				delete gazeAngle;
-			}
-
-			if (pupil_left != nullptr)
-			{
-				delete pupil_left;
-			}
-
-			if (pupil_right != nullptr)
-			{
-				delete pupil_right;
-			}
-
+			delete gazeDirection0;
+			delete gazeDirection1;
+			delete gazeAngle;
+			delete pupil_left;
+			delete pupil_right;
 		}
 
 		// Destructor. Called on explicit Dispose() only.
@@ -211,4 +190,4 @@ namespace GazeAnalyser_Interop {
 	};
 }
 
-#endif
+#endif // GAZE_ANALYSER_INTEROP_H

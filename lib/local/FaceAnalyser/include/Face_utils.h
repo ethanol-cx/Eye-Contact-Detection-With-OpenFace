@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __FACE_UTILS_h_
-#define __FACE_UTILS_h_
+#ifndef FACE_UTILS_H
+#define FACE_UTILS_H
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -55,17 +55,6 @@ namespace FaceAnalysis
 	// The following two methods go hand in hand
 	void ExtractSummaryStatistics(const cv::Mat_<double>& descriptors, cv::Mat_<double>& sum_stats, bool mean, bool stdev, bool max_min);
 	void AddDescriptor(cv::Mat_<double>& descriptors, cv::Mat_<double> new_descriptor, int curr_frame, int num_frames_to_keep = 120);
-
-	//===========================================================================
-	// Point set and landmark manipulation functions
-	//===========================================================================
-	// Using Kabsch's algorithm for aligning shapes
-	//This assumes that align_from and align_to are already mean normalised
-	cv::Matx22f AlignShapesKabsch2D(const cv::Mat_<float>& align_from, const cv::Mat_<float>& align_to);
-
-	//=============================================================================
-	// Basically Kabsch's algorithm but also allows the collection of points to be different in scale from each other
-	cv::Matx22f AlignShapesWithScale(cv::Mat_<float>& src, cv::Mat_<float> dst);
 	
 	//============================================================================
 	// Matrix reading functionality
@@ -81,4 +70,4 @@ namespace FaceAnalysis
 	void SkipComments(std::ifstream& stream);
 
 }
-#endif
+#endif // FACE_UTILS_H

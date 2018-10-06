@@ -31,8 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __RECORDER_OPENFACE_h_
-#define __RECORDER_OPENFACE_h_
+#ifndef RECORDER_OPENFACE_H
+#define RECORDER_OPENFACE_H
 
 #include "RecorderCSV.h"
 #include "RecorderHOG.h"
@@ -196,4 +196,4 @@ namespace Utilities
 
 	};
 }
-#endif
+#endif // RECORDER_OPENFACE_H

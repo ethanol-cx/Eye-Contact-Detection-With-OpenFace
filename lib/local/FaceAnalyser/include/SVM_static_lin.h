@@ -32,8 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __SVMSTATICLIN_h_
-#define __SVMSTATICLIN_h_
+#ifndef SVM_STATIC_LIN_H
+#define SVM_STATIC_LIN_H
 
 #include <vector>
 #include <string>
@@ -84,4 +84,4 @@ private:
 };
   //===========================================================================
 }
-#endif
+#endif // SVM_STATIC_LIN_H

@@ -31,8 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __VISUALIZATION_UTILS_h_
-#define __VISUALIZATION_UTILS_h_
+#ifndef VISUALIZATION_UTILS_H
+#define VISUALIZATION_UTILS_H
 
 #include <opencv2/core/core.hpp>
 
@@ -71,4 +71,4 @@ namespace Utilities
 	};
 
 }
-#endif
+#endif // VISUALIZATION_UTILS_H

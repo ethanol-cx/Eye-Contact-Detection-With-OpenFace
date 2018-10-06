@@ -14,19 +14,19 @@
 //       reports and manuals, must cite at least one of the following works:
 //
 //       OpenFace 2.0: Facial Behavior Analysis Toolkit
-//       Tadas Baltrušaitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
+//       Tadas BaltruÅ¡aitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
 //       in IEEE International Conference on Automatic Face and Gesture Recognition, 2018  
 //
 //       Convolutional experts constrained local model for facial landmark detection.
-//       A. Zadeh, T. Baltrušaitis, and Louis-Philippe Morency,
+//       A. Zadeh, T. BaltruÅ¡aitis, and Louis-Philippe Morency,
 //       in Computer Vision and Pattern Recognition Workshops, 2017.    
 //
 //       Rendering of Eyes for Eye-Shape Registration and Gaze Estimation
-//       Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
+//       Erroll Wood, Tadas BaltruÅ¡aitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
 //       in IEEE International. Conference on Computer Vision (ICCV),  2015 
 //
 //       Cross-dataset learning and person-specific normalisation for automatic Action Unit detection
-//       Tadas Baltrušaitis, Marwa Mahmoud, and Peter Robinson 
+//       Tadas BaltruÅ¡aitis, Marwa Mahmoud, and Peter Robinson 
 //       in Facial Expression Recognition and Analysis Challenge, 
 //       IEEE International Conference on Automatic Face and Gesture Recognition, 2015 
 //
@@ -150,11 +150,11 @@ namespace LandmarkDetector
 	void matchTemplate_m(const cv::Mat_<float>& input_img, cv::Mat_<double>& img_dft, cv::Mat& _integral_img, cv::Mat& _integral_img_sq, const cv::Mat_<float>&  templ, map<int, cv::Mat_<double> >& templ_dfts, cv::Mat_<float>& result, int method)
 	{
 
-		int numType = method == CV_TM_CCORR || method == CV_TM_CCORR_NORMED ? 0 :
-			method == CV_TM_CCOEFF || method == CV_TM_CCOEFF_NORMED ? 1 : 2;
-		bool isNormed = method == CV_TM_CCORR_NORMED ||
-			method == CV_TM_SQDIFF_NORMED ||
-			method == CV_TM_CCOEFF_NORMED;
+		int numType = method == cv::TM_CCORR || method == cv::TM_CCORR_NORMED ? 0 :
+			method == cv::TM_CCOEFF || method == cv::TM_CCOEFF_NORMED ? 1 : 2;
+		bool isNormed = method == cv::TM_CCORR_NORMED ||
+			method == cv::TM_SQDIFF_NORMED ||
+			method == cv::TM_CCOEFF_NORMED;
 
 		// Assume result is defined properly
 		if (result.empty())
@@ -164,7 +164,7 @@ namespace LandmarkDetector
 		}
 		LandmarkDetector::crossCorr_m(input_img, img_dft, templ, templ_dfts, result);
 
-		if (method == CV_TM_CCORR)
+		if (method == cv::TM_CCORR)
 			return;
 
 		double invArea = 1. / ((double)templ.rows * templ.cols);
@@ -174,7 +174,7 @@ namespace LandmarkDetector
 		double *q0 = 0, *q1 = 0, *q2 = 0, *q3 = 0;
 		double templNorm = 0, templSum2 = 0;
 
-		if (method == CV_TM_CCOEFF)
+		if (method == cv::TM_CCOEFF)
 		{
 			// If it has not been precomputed compute it now
 			if (_integral_img.empty())
@@ -200,7 +200,7 @@ namespace LandmarkDetector
 
 			templNorm = templSdv[0] * templSdv[0] + templSdv[1] * templSdv[1] + templSdv[2] * templSdv[2] + templSdv[3] * templSdv[3];
 
-			if (templNorm < DBL_EPSILON && method == CV_TM_CCOEFF_NORMED)
+			if (templNorm < DBL_EPSILON && method == cv::TM_CCOEFF_NORMED)
 			{
 				result.setTo(1.0);
 				return;
@@ -276,169 +276,12 @@ namespace LandmarkDetector
 					else if (fabs(num) < t*1.125)
 						num = num > 0 ? 1 : -1;
 					else
-						num = method != CV_TM_SQDIFF_NORMED ? 0 : 1;
+						num = method != cv::TM_SQDIFF_NORMED ? 0 : 1;
 				}
 
 				rrow[j] = (float)num;
 			}
 		}
-	}
-
-
-	//===========================================================================
-	// Point set and landmark manipulation functions
-	//===========================================================================
-	// Using Kabsch's algorithm for aligning shapes
-	//This assumes that align_from and align_to are already mean normalised
-	cv::Matx22d AlignShapesKabsch2D(const cv::Mat_<double>& align_from, const cv::Mat_<double>& align_to)
-	{
-
-		cv::SVD svd(align_from.t() * align_to);
-
-		// make sure no reflection is there
-		// corr ensures that we do only rotaitons and not reflections
-		double d = cv::determinant(svd.vt.t() * svd.u.t());
-
-		cv::Matx22d corr = cv::Matx22d::eye();
-		if (d > 0)
-		{
-			corr(1, 1) = 1;
-		}
-		else
-		{
-			corr(1, 1) = -1;
-		}
-
-		cv::Matx22d R;
-		cv::Mat(svd.vt.t()*cv::Mat(corr)*svd.u.t()).copyTo(R);
-
-		return R;
-	}
-
-	cv::Matx22f AlignShapesKabsch2D_f(const cv::Mat_<float>& align_from, const cv::Mat_<float>& align_to)
-	{
-
-		cv::SVD svd(align_from.t() * align_to);
-
-		// make sure no reflection is there
-		// corr ensures that we do only rotaitons and not reflections
-		float d = cv::determinant(svd.vt.t() * svd.u.t());
-
-		cv::Matx22f corr = cv::Matx22f::eye();
-		if (d > 0)
-		{
-			corr(1, 1) = 1;
-		}
-		else
-		{
-			corr(1, 1) = -1;
-		}
-
-		cv::Matx22f R;
-		cv::Mat(svd.vt.t()*cv::Mat(corr)*svd.u.t()).copyTo(R);
-
-		return R;
-	}
-
-	//=============================================================================
-	// Basically Kabsch's algorithm but also allows the collection of points to be different in scale from each other
-	cv::Matx22d AlignShapesWithScale(cv::Mat_<double>& src, cv::Mat_<double> dst)
-	{
-		int n = src.rows;
-
-		// First we mean normalise both src and dst
-		double mean_src_x = cv::mean(src.col(0))[0];
-		double mean_src_y = cv::mean(src.col(1))[0];
-
-		double mean_dst_x = cv::mean(dst.col(0))[0];
-		double mean_dst_y = cv::mean(dst.col(1))[0];
-
-		cv::Mat_<double> src_mean_normed = src.clone();
-		src_mean_normed.col(0) = src_mean_normed.col(0) - mean_src_x;
-		src_mean_normed.col(1) = src_mean_normed.col(1) - mean_src_y;
-
-		cv::Mat_<double> dst_mean_normed = dst.clone();
-		dst_mean_normed.col(0) = dst_mean_normed.col(0) - mean_dst_x;
-		dst_mean_normed.col(1) = dst_mean_normed.col(1) - mean_dst_y;
-
-		// Find the scaling factor of each
-		cv::Mat src_sq;
-		cv::pow(src_mean_normed, 2, src_sq);
-
-		cv::Mat dst_sq;
-		cv::pow(dst_mean_normed, 2, dst_sq);
-
-		double s_src = sqrt(cv::sum(src_sq)[0] / n);
-		double s_dst = sqrt(cv::sum(dst_sq)[0] / n);
-
-		src_mean_normed = src_mean_normed / s_src;
-		dst_mean_normed = dst_mean_normed / s_dst;
-
-		double s = s_dst / s_src;
-
-		// Get the rotation
-		cv::Matx22d R = AlignShapesKabsch2D(src_mean_normed, dst_mean_normed);
-
-		cv::Matx22d	A;
-		cv::Mat(s * R).copyTo(A);
-
-		cv::Mat_<double> aligned = (cv::Mat(cv::Mat(A) * src.t())).t();
-		cv::Mat_<double> offset = dst - aligned;
-
-		double t_x = cv::mean(offset.col(0))[0];
-		double t_y = cv::mean(offset.col(1))[0];
-
-		return A;
-
-	}
-
-	cv::Matx22f AlignShapesWithScale_f(cv::Mat_<float>& src, cv::Mat_<float> dst)
-	{
-		int n = src.rows;
-
-		// First we mean normalise both src and dst
-		float mean_src_x = cv::mean(src.col(0))[0];
-		float mean_src_y = cv::mean(src.col(1))[0];
-
-		float mean_dst_x = cv::mean(dst.col(0))[0];
-		float mean_dst_y = cv::mean(dst.col(1))[0];
-
-		cv::Mat_<float> src_mean_normed = src.clone();
-		src_mean_normed.col(0) = src_mean_normed.col(0) - mean_src_x;
-		src_mean_normed.col(1) = src_mean_normed.col(1) - mean_src_y;
-
-		cv::Mat_<float> dst_mean_normed = dst.clone();
-		dst_mean_normed.col(0) = dst_mean_normed.col(0) - mean_dst_x;
-		dst_mean_normed.col(1) = dst_mean_normed.col(1) - mean_dst_y;
-
-		// Find the scaling factor of each
-		cv::Mat src_sq;
-		cv::pow(src_mean_normed, 2, src_sq);
-
-		cv::Mat dst_sq;
-		cv::pow(dst_mean_normed, 2, dst_sq);
-
-		float s_src = sqrt(cv::sum(src_sq)[0] / n);
-		float s_dst = sqrt(cv::sum(dst_sq)[0] / n);
-
-		src_mean_normed = src_mean_normed / s_src;
-		dst_mean_normed = dst_mean_normed / s_dst;
-
-		float s = s_dst / s_src;
-
-		// Get the rotation
-		cv::Matx22f R = AlignShapesKabsch2D_f(src_mean_normed, dst_mean_normed);
-
-		cv::Matx22f	A = s * R;
-
-		cv::Mat_<float> aligned = (cv::Mat(cv::Mat(A) * src.t())).t();
-		cv::Mat_<float> offset = dst - aligned;
-
-		float t_x = cv::mean(offset.col(0))[0];
-		float t_y = cv::mean(offset.col(1))[0];
-
-		return A;
-
 	}
 
 	// Useful utility for grabing a bounding box around a set of 2D landmarks (as a 1D 2n x 1 vector of xs followed by doubles or as an n x 2 vector)
@@ -700,8 +543,7 @@ namespace LandmarkDetector
 
 			if (min_width != -1)
 			{
-				if (region.width < min_width || region.x < ((float)intensity.cols) * roi.x || region.y < ((float)intensity.cols) * roi.y ||
-					region.x + region.width >((float)intensity.cols) * (roi.x + roi.width) || region.y + region.height >((float)intensity.rows) * (roi.y + roi.height))
+				if (region.width < min_width || region.x < ((float)intensity.cols) * roi.x || region.y < ((float)intensity.cols) * roi.y || region.x + region.width >((float)intensity.cols) * (roi.x + roi.width) || region.y + region.height >((float)intensity.rows) * (roi.y + roi.height))
 					continue;
 			}
 

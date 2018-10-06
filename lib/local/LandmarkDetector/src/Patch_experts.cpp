@@ -14,19 +14,19 @@
 //       reports and manuals, must cite at least one of the following works:
 //
 //       OpenFace 2.0: Facial Behavior Analysis Toolkit
-//       Tadas Baltrušaitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
+//       Tadas BaltruÅ¡aitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
 //       in IEEE International Conference on Automatic Face and Gesture Recognition, 2018  
 //
 //       Convolutional experts constrained local model for facial landmark detection.
-//       A. Zadeh, T. Baltrušaitis, and Louis-Philippe Morency,
+//       A. Zadeh, T. BaltruÅ¡aitis, and Louis-Philippe Morency,
 //       in Computer Vision and Pattern Recognition Workshops, 2017.    
 //
 //       Rendering of Eyes for Eye-Shape Registration and Gaze Estimation
-//       Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
+//       Erroll Wood, Tadas BaltruÅ¡aitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
 //       in IEEE International. Conference on Computer Vision (ICCV),  2015 
 //
 //       Cross-dataset learning and person-specific normalisation for automatic Action Unit detection
-//       Tadas Baltrušaitis, Marwa Mahmoud, and Peter Robinson 
+//       Tadas BaltruÅ¡aitis, Marwa Mahmoud, and Peter Robinson 
 //       in Facial Expression Recognition and Analysis Challenge, 
 //       IEEE International Conference on Automatic Face and Gesture Recognition, 2015 
 //
@@ -35,6 +35,8 @@
 #include "stdafx.h"
 
 #include "Patch_experts.h"
+
+#include "RotationHelpers.h"
 
 // TBB includes
 #include <tbb/tbb.h>
@@ -156,7 +158,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 	cv::Mat_<float> reference_shape_2D = (reference_shape.reshape(1, 2).t());
 	cv::Mat_<float> image_shape_2D = landmark_locations.reshape(1, 2).t();
 
-	sim_img_to_ref = AlignShapesWithScale_f(image_shape_2D, reference_shape_2D);
+	sim_img_to_ref = Utilities::AlignShapesWithScale(image_shape_2D, reference_shape_2D);
 	sim_ref_to_img = sim_img_to_ref.inv(cv::DECOMP_LU);
 	
 	float a1 = sim_ref_to_img(0, 0);
@@ -246,7 +248,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 		// Extract the region of interest around the current landmark location
 		cv::Mat_<float> area_of_interest(area_of_interest_height, area_of_interest_width, 0.0f);
 
-		cv::warpAffine(grayscale_image, area_of_interest, sim, area_of_interest.size(), cv::WARP_INVERSE_MAP + CV_INTER_LINEAR);		
+		cv::warpAffine(grayscale_image, area_of_interest, sim, area_of_interest.size(), cv::WARP_INVERSE_MAP + cv::INTER_LINEAR);
 
 		// Get intensity response either from the SVR, CCNF, or CEN patch experts (prefer CEN as they are the most accurate so far)
 		if (!cen_expert_intensity.empty())
@@ -280,7 +282,7 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 						// Extract the region of interest around the current landmark location
 						cv::Mat_<float> area_of_interest_r(area_of_interest_height, area_of_interest_width, 0.0f);
 
-						cv::warpAffine(grayscale_image, area_of_interest_r, sim_r, area_of_interest_r.size(), cv::WARP_INVERSE_MAP + CV_INTER_LINEAR);
+						cv::warpAffine(grayscale_image, area_of_interest_r, sim_r, area_of_interest_r.size(), cv::WARP_INVERSE_MAP + cv::INTER_LINEAR);
 
 						cv::Mat_<float> prealloc_mat_right = preallocated_im2col[mirror_id][im2col_size];
 
@@ -461,21 +463,21 @@ bool Patch_experts::Read(vector<string> intensity_svr_expert_locations, vector<s
 		}
 
 		// Reading in weights/biases/cutoffs
-		for (int i = 0; i < centers[0].size(); ++i)
+		for (size_t i = 0; i < centers[0].size(); ++i)
 		{
 			double weight;
 			earlyTermFile >> weight;
 			early_term_weights.push_back(weight);
 		}
 
-		for (int i = 0; i < centers[0].size(); ++i)
+		for (size_t i = 0; i < centers[0].size(); ++i)
 		{
 			double bias;
 			earlyTermFile >> bias;
 			early_term_biases.push_back(bias);
 		}
 
-		for (int i = 0; i < centers[0].size(); ++i)
+		for (size_t i = 0; i < centers[0].size(); ++i)
 		{
 			double cutoff;
 			earlyTermFile >> cutoff;

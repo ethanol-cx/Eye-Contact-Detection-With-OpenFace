@@ -31,8 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __SEQUENCE_CAPTURE_h_
-#define __SEQUENCE_CAPTURE_h_
+#ifndef SEQUENCE_CAPTURE_H
+#define SEQUENCE_CAPTURE_H
 
 // System includes
 #include <fstream>
@@ -162,4 +162,4 @@ namespace Utilities
 
 	};
 }
-#endif
+#endif // SEQUENCE_CAPTURE_H
