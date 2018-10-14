@@ -93,6 +93,11 @@ FaceAnalyserParameters::FaceAnalyserParameters(vector<string> &arguments):root()
 			sim_align_face_mask = false;
 			valid[i] = false;
 		}
+		else if (arguments[i].compare("-align_paw") == 0)
+		{
+			align_paw = true;
+			valid[i] = false;
+		}
 		else if (arguments[i].compare("-simscale") == 0)
 		{
 			sim_scale_out = stod(arguments[i + 1]);
@@ -161,6 +166,7 @@ void FaceAnalyserParameters::init()
 	this->sim_scale_out = 0.7;
 	this->sim_size_out = 112;
 	this->sim_align_face_mask = true;
+	this->align_paw = false;
 
 	this->model_location = "AU_predictors/main_dynamic_svms.txt";
 
@@ -190,7 +196,7 @@ void FaceAnalyserParameters::init()
 }
 
 // Use getters and setters for these as they might need to reload models and make sure the scale and size ratio makes sense
-void FaceAnalyserParameters::setAlignedOutput(int output_size, double scale, bool masked)
+void FaceAnalyserParameters::setAlignedOutput(int output_size, double scale, bool masked, bool paw)
 {
 	this->sim_size_out = output_size;
 	// If we set the size but not the scale, adapt the scale to the right size
@@ -204,6 +210,7 @@ void FaceAnalyserParameters::setAlignedOutput(int output_size, double scale, boo
 	}
 
 	this->sim_align_face_mask = masked;
+	this->align_paw = paw;
 
 }
 // This will also change the model location

@@ -47,8 +47,15 @@ namespace FaceAnalysis
 	// Defining a set of useful utility functions to be used within FaceAnalyser
 
 	// Aligning a face to a common reference frame
-	void AlignFace(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const LandmarkDetector::PDM& pdm, bool rigid = true, double scale = 0.7, int width = 96, int height = 96);
-	void AlignFaceMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const LandmarkDetector::PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid = true, double scale = 0.7, int width = 96, int height = 96);
+
+	// Aligning a face to a common reference frame using a similarity transform
+	void AlignFaceSimilarity(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const LandmarkDetector::PDM& pdm, bool rigid = true, double scale = 0.7, int width = 96, int height = 96);
+
+	// Aligning a face to a common reference frame using a similarity transform and masking out non-face area
+	void AlignFaceSimilarityMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const LandmarkDetector::PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid = true, double scale = 0.7, int width = 96, int height = 96);
+
+	// Align a face to a common reference frame using Piece-wise affine warping on triangles
+	void AlignFacePAW(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, const LandmarkDetector::PDM& pdm, const cv::Mat_<int> triangulation, double scale = 0.7, int width = 96, int height = 96);
 
 	void Extract_FHOG_descriptor(cv::Mat_<double>& descriptor, const cv::Mat& image, int& num_rows, int& num_cols, int cell_size = 8);
 

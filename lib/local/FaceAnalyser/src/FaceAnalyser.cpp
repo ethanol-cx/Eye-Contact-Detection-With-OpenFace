@@ -64,6 +64,7 @@ FaceAnalyser::FaceAnalyser(const FaceAnalysis::FaceAnalyserParameters& face_anal
 	this->Read(face_analyser_params.getModelLoc());
 		
 	align_mask = face_analyser_params.getAlignMask();
+	align_paw = face_analyser_params.getAlignPAW();
 	align_scale_out = face_analyser_params.getSimScaleOut();
 	align_width_out = face_analyser_params.getSimSizeOut();
 	align_height_out = face_analyser_params.getSimSizeOut();
@@ -258,22 +259,26 @@ void FaceAnalyser::PredictStaticAUsAndComputeFeatures(const cv::Mat& frame, cons
 	pdm.CalcParams(params_global, params_local, detected_landmarks);
 
 	// The aligned face requirement for AUs
-	AlignFaceMask(aligned_face_for_au, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_au, align_width_au, align_height_au);
+	AlignFaceSimilarityMask(aligned_face_for_au, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_au, align_width_au, align_height_au);
 
 	// If the aligned face for AU matches the output requested one, just reuse it, else compute it
-	if (align_scale_out == align_scale_au && align_width_out == align_width_au && align_height_out == align_height_au && align_mask)
+	if (align_scale_out == align_scale_au && align_width_out == align_width_au && align_height_out == align_height_au && align_mask && !align_paw)
 	{
 		aligned_face_for_output = aligned_face_for_au.clone();
 	}
 	else
 	{
-		if (align_mask)
+		if (align_mask && !align_paw)
 		{
-			AlignFaceMask(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_out, align_width_out, align_height_out);
+			AlignFaceSimilarityMask(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_out, align_width_out, align_height_out);
+		}
+		if (align_paw)
+		{
+			AlignFacePAW(aligned_face_for_output, frame, detected_landmarks, pdm, triangulation, align_scale_out, align_width_out, align_height_out);
 		}
 		else
 		{
-			AlignFace(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, true, align_scale_out, align_width_out, align_height_out);
+			AlignFaceSimilarity(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, true, align_scale_out, align_width_out, align_height_out);
 		}
 	}
 
@@ -340,22 +345,26 @@ void FaceAnalyser::AddNextFrame(const cv::Mat& frame, const cv::Mat_<float>& det
 		pdm.CalcParams(params_global, params_local, detected_landmarks);
 
 		// The aligned face requirement for AUs
-		AlignFaceMask(aligned_face_for_au, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_au, align_width_au, align_height_au);
+		AlignFaceSimilarityMask(aligned_face_for_au, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_au, align_width_au, align_height_au);
 
 		// If the aligned face for AU matches the output requested one, just reuse it, else compute it
-		if (align_scale_out == align_scale_au && align_width_out == align_width_au && align_height_out == align_height_au && align_mask)
+		if (align_scale_out == align_scale_au && align_width_out == align_width_au && align_height_out == align_height_au && align_mask && !align_paw)
 		{
 			aligned_face_for_output = aligned_face_for_au.clone();
 		}
 		else
 		{
-			if (align_mask)
+			if (align_mask && !align_paw)
 			{
-				AlignFaceMask(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_out, align_width_out, align_height_out);
+				AlignFaceSimilarityMask(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, triangulation, true, align_scale_out, align_width_out, align_height_out);
+			}
+			if (align_paw)
+			{
+				AlignFacePAW(aligned_face_for_output, frame, detected_landmarks, pdm, triangulation, align_scale_out, align_width_out, align_height_out);
 			}
 			else
 			{
-				AlignFace(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, true, align_scale_out, align_width_out, align_height_out);
+				AlignFaceSimilarity(aligned_face_for_output, frame, detected_landmarks, params_global, pdm, true, align_scale_out, align_width_out, align_height_out);
 			}
 		}
 	}

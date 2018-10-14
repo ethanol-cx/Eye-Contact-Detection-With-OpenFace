@@ -102,8 +102,8 @@ namespace LandmarkDetector
 		PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangulation);
 
 		// The final optional argument allows for optimisation if the triangle indices from previous frame are known (for tracking in video)
-		PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangulation, float in_min_x, float in_min_y, float in_max_x, float in_max_y);
-
+		PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangulation, float in_min_x, float in_min_y, float in_max_x, float in_max_y, int out_width, int out_height);
+		
 		// Copy constructor
 		PAW(const PAW& other);
 

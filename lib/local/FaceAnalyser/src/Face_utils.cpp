@@ -115,8 +115,8 @@ namespace FaceAnalysis
 		}
 	}
 
-	// Aligning a face to a common reference frame
-	void AlignFace(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const LandmarkDetector::PDM& pdm, bool rigid, double sim_scale, int out_width, int out_height)
+	// Aligning a face to a common reference frame using a similarity transform
+	void AlignFaceSimilarity(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const LandmarkDetector::PDM& pdm, bool rigid, double sim_scale, int out_width, int out_height)
 	{
 		// Will warp to scaled mean shape
 		cv::Mat_<float> similarity_normalised_shape = pdm.mean_shape * sim_scale;
@@ -154,8 +154,8 @@ namespace FaceAnalysis
 		cv::warpAffine(frame, aligned_face, warp_matrix, cv::Size(out_width, out_height), cv::INTER_LINEAR);
 	}
 
-	// Aligning a face to a common reference frame
-	void AlignFaceMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const LandmarkDetector::PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid, double sim_scale, int out_width, int out_height)
+	// Aligning a face to a common reference frame using a similarity transform and masking out non-face area
+	void AlignFaceSimilarityMask(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& detected_landmarks, cv::Vec6f params_global, const LandmarkDetector::PDM& pdm, const cv::Mat_<int>& triangulation, bool rigid, double sim_scale, int out_width, int out_height)
 	{
 		// Will warp to scaled mean shape
 		cv::Mat_<float> similarity_normalised_shape = pdm.mean_shape * sim_scale;
@@ -217,7 +217,7 @@ namespace FaceAnalysis
 
 		destination_landmarks = cv::Mat(destination_landmarks.t()).reshape(1, 1).t();
 
-		LandmarkDetector::PAW paw(destination_landmarks, triangulation, 0, 0, aligned_face.cols-1, aligned_face.rows-1);
+		LandmarkDetector::PAW paw(destination_landmarks, triangulation, 0,0, aligned_face.cols-1, aligned_face.rows-1, aligned_face.cols, aligned_face.rows);
 		
 		// Mask each of the channels (a bit of a roundabout way, but OpenCV 3.1 in debug mode doesn't seem to be able to handle a more direct way using split and merge)
 		vector<cv::Mat> aligned_face_channels(aligned_face.channels());
@@ -241,6 +241,39 @@ namespace FaceAnalysis
 		{
 			aligned_face = aligned_face_channels[0];
 		}
+	}
+
+	// Align a face to a common reference frame using Piece-wise affine warping on triangles
+	void AlignFacePAW(cv::Mat& aligned_face, const cv::Mat& frame, const cv::Mat_<float>& source_landmarks, const LandmarkDetector::PDM& pdm, const cv::Mat_<int> triangulation, double scale, int width, int height)
+	{
+		// Will warp to scaled mean shape
+		cv::Mat_<float> similarity_normalised_shape = pdm.mean_shape * scale;
+
+		int num_verts = pdm.NumberOfPoints();
+
+		// Discard the z component
+		similarity_normalised_shape = similarity_normalised_shape(cv::Rect(0, 0, 1, 2 * num_verts)).clone();
+
+		// Center around output image
+		double min_x;
+		double max_x;
+		cv::minMaxLoc(similarity_normalised_shape(cv::Rect(0, 0, 1, num_verts)), &min_x, &max_x);
+
+		double min_y;
+		double max_y;
+		cv::minMaxLoc(similarity_normalised_shape(cv::Rect(0, num_verts, 1, num_verts)), &min_y, &max_y);
+
+		float add_x = width / 2.0f - (max_x + min_x) / 2.0f;
+		float add_y = height / 2.0f - (max_x + min_x) / 2.0f;
+
+		similarity_normalised_shape(cv::Rect(0, 0, 1, num_verts)) += add_x;
+		similarity_normalised_shape(cv::Rect(0, num_verts, 1, num_verts)) += add_y;
+
+		LandmarkDetector::PAW paw(similarity_normalised_shape, triangulation, 0, 0, width, height, width, height);
+		cv::Mat warped;
+
+		paw.Warp(frame, aligned_face, source_landmarks);
+
 	}
 
 	// Create a row vector Felzenszwalb HOG descriptor from a given image

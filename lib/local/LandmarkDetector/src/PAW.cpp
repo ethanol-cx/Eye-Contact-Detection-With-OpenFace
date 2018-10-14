@@ -166,7 +166,7 @@ PAW::PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangul
 }
 
 // Manually define min and max values
-PAW::PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangulation, float in_min_x, float in_min_y, float in_max_x, float in_max_y)
+PAW::PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangulation, float in_min_x, float in_min_y, float in_max_x, float in_max_y, int out_width, int out_height)
 {
 	// Initialise some variables directly
 	this->destination_landmarks = destination_shape;
@@ -242,14 +242,11 @@ PAW::PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangul
 
 	max_x = in_max_x;
 	max_y = in_max_y;
-
-	int w = (int)(max_x - min_x + 1.5);
-	int h = (int)(max_y - min_y + 1.5);
-
+	
 	// Round the min_x and min_y for simplicity?
 
-	pixel_mask = cv::Mat_<uchar>(h, w, (uchar)0);
-	triangle_id = cv::Mat_<int>(h, w, -1);
+	pixel_mask = cv::Mat_<uchar>(out_height, out_width, (uchar)0);
+	triangle_id = cv::Mat_<int>(out_height, out_width, -1);
 
 	int curr_tri = -1;
 
