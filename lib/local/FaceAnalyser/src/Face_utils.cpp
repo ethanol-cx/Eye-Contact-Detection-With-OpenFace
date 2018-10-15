@@ -264,7 +264,7 @@ namespace FaceAnalysis
 		cv::minMaxLoc(similarity_normalised_shape(cv::Rect(0, num_verts, 1, num_verts)), &min_y, &max_y);
 
 		float add_x = width / 2.0f - (max_x + min_x) / 2.0f;
-		float add_y = height / 2.0f - (max_x + min_x) / 2.0f;
+		float add_y = height / 2.0f - (max_y + min_y) / 2.0f;
 
 		similarity_normalised_shape(cv::Rect(0, 0, 1, num_verts)) += add_x;
 		similarity_normalised_shape(cv::Rect(0, num_verts, 1, num_verts)) += add_y;
