@@ -40,9 +40,6 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc.hpp>
 
-// TBB includes
-#include <tbb/tbb.h>
-
 // System includes
 #include <fstream>
 
@@ -681,7 +678,6 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<float> >& o_regions, const 
 	vector<vector<float> > scores_cross_scale(num_scales);
 	vector<vector<cv::Rect_<float> > > proposal_corrections_cross_scale(num_scales);
 
-	//tbb::parallel_for(0, (int)num_scales, [&](int i) {
 	for (int i = 0; i < num_scales; ++i)
 	{
 		double scale = ((double)face_support / (double)min_face_size)*cv::pow(pyramid_factor, i);
@@ -746,7 +742,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<float> >& o_regions, const 
 	// Creating proposal images from previous step detections
 	vector<bool> above_thresh;
 	above_thresh.resize(proposal_boxes_all.size(), false);
-	//tbb::parallel_for(0, (int)proposal_boxes_all.size(), [&](int k) {
+
 	for (size_t k = 0; k < proposal_boxes_all.size(); ++k) 
 	{
 		float width_target = proposal_boxes_all[k].width + 1;
@@ -819,7 +815,7 @@ bool FaceDetectorMTCNN::DetectFaces(vector<cv::Rect_<float> >& o_regions, const 
 	// Preparing for the ONet stage
 	above_thresh.clear();
 	above_thresh.resize(proposal_boxes_all.size());
-	//tbb::parallel_for(0, (int)proposal_boxes_all.size(), [&](int k) {
+
 	for (size_t k = 0; k < proposal_boxes_all.size(); ++k)
 	{
 		float width_target = proposal_boxes_all[k].width + 1;

@@ -38,9 +38,6 @@
 
 #include "RotationHelpers.h"
 
-// TBB includes
-#include <tbb/tbb.h>
-
 // Math includes
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -212,133 +209,129 @@ void Patch_experts::Response(vector<cv::Mat_<float> >& patch_expert_responses, c
 	// We do not want to create threads for invisible landmarks, so construct an index of visible ones
 	std::vector<int> vis_lmk = Collect_visible_landmarks(visibilities, scale, view_id, n);
 
-	// calculate the patch responses for every landmark, Actual work happens here. If openMP is turned on it is possible to do this in parallel,
-	// this might work well on some machines, while potentially have an adverse effect on others
-	//#ifdef _OPENMP
-	//#pragma omp parallel for
-	//#endif
-	tbb::parallel_for(0, (int)vis_lmk.size(), [&](int i) {
-	//for (int i = 0; i < vis_lmk.size(); i++)
-	{
-
-		// Work out how big the area of interest has to be to get a response of window size
-		int area_of_interest_width;
-		int area_of_interest_height;
-		int ind = vis_lmk.at(i);
-
-		if (use_cen)
-		{
-			area_of_interest_width = window_size + cen_expert_intensity[scale][view_id][ind].width_support - 1;
-			area_of_interest_height = window_size + cen_expert_intensity[scale][view_id][ind].height_support - 1;
-		}
-		else if (use_ccnf)
-		{
-			area_of_interest_width = window_size + ccnf_expert_intensity[scale][view_id][ind].width - 1;
-			area_of_interest_height = window_size + ccnf_expert_intensity[scale][view_id][ind].height - 1;
-		}
-		else
-		{
-			area_of_interest_width = window_size + svr_expert_intensity[scale][view_id][ind].width - 1;
-			area_of_interest_height = window_size + svr_expert_intensity[scale][view_id][ind].height - 1;
-		}
-
-		// scale and rotate to mean shape to reference frame
-		cv::Mat sim = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<float>(ind, 0) - a1 * (area_of_interest_width - 1.0f) / 2.0f + b1 * (area_of_interest_width - 1.0f) / 2.0f, b1, a1, landmark_locations.at<float>(ind + n, 0) - a1 * (area_of_interest_width - 1.0f) / 2.0f - b1 * (area_of_interest_width - 1.0f) / 2.0f);
-
-		// Extract the region of interest around the current landmark location
-		cv::Mat_<float> area_of_interest(area_of_interest_height, area_of_interest_width, 0.0f);
-
-		cv::warpAffine(grayscale_image, area_of_interest, sim, area_of_interest.size(), cv::WARP_INVERSE_MAP + cv::INTER_LINEAR);
-
-		// Get intensity response either from the SVR, CCNF, or CEN patch experts (prefer CEN as they are the most accurate so far)
-		if (!cen_expert_intensity.empty())
+	// calculate the patch responses for every landmark (this is the heavy lifting of landmark detection)
+	parallel_for_(cv::Range(0, vis_lmk.size()), [&](const cv::Range& range) {
+		for (int i = range.start; i < range.end; i++)
 		{
 
-			int im2col_size = (area_of_interest_width * area_of_interest_height - 1) / 2;
+			// Work out how big the area of interest has to be to get a response of window size
+			int area_of_interest_width;
+			int area_of_interest_height;
+			int ind = vis_lmk.at(i);
 
-			cv::Mat_<float> prealloc_mat = preallocated_im2col[ind][im2col_size];
-
-			// If frontal view we can do mirrored landmarks together
-			if (view_id == 0)
+			if (use_cen)
 			{
-				// If the patch expert does not have values, means it's a mirrored version and will be done in another part of a loop
-				if (!cen_expert_intensity[scale][view_id][ind].biases.empty())
-				{
-					// No mirrored expert, so do normally
-					int mirror_id = mirror_inds.at<int>(ind);
-					if (mirror_id == ind)
-					{
-						cv::Mat_<float> empty(0,0,0.0f);
-						cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, empty, patch_expert_responses[ind], empty, interp_mat, prealloc_mat, empty);
-					}
-					else
-					{
-
-						// Grab mirrored area of interest
-
-						// scale and rotate to mean shape to reference frame
-						cv::Mat sim_r = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<float>(mirror_id, 0) - a1 * (area_of_interest_width - 1.0f) / 2.0f + b1 * (area_of_interest_width - 1.0f) / 2.0f, b1, a1, landmark_locations.at<float>(mirror_id + n, 0) - a1 * (area_of_interest_width - 1.0f) / 2.0f - b1 * (area_of_interest_width - 1.0f) / 2.0f);
-
-						// Extract the region of interest around the current landmark location
-						cv::Mat_<float> area_of_interest_r(area_of_interest_height, area_of_interest_width, 0.0f);
-
-						cv::warpAffine(grayscale_image, area_of_interest_r, sim_r, area_of_interest_r.size(), cv::WARP_INVERSE_MAP + cv::INTER_LINEAR);
-
-						cv::Mat_<float> prealloc_mat_right = preallocated_im2col[mirror_id][im2col_size];
-
-						cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, area_of_interest_r, patch_expert_responses[ind], patch_expert_responses[mirror_id], interp_mat, prealloc_mat, prealloc_mat_right);
-
-						preallocated_im2col[mirror_id][im2col_size] = prealloc_mat_right;
-
-					}
-				}
+				area_of_interest_width = window_size + cen_expert_intensity[scale][view_id][ind].width_support - 1;
+				area_of_interest_height = window_size + cen_expert_intensity[scale][view_id][ind].height_support - 1;
+			}
+			else if (use_ccnf)
+			{
+				area_of_interest_width = window_size + ccnf_expert_intensity[scale][view_id][ind].width - 1;
+				area_of_interest_height = window_size + ccnf_expert_intensity[scale][view_id][ind].height - 1;
 			}
 			else
 			{
-				// For space and memory saving use a mirrored patch expert
-				if (!cen_expert_intensity[scale][view_id][ind].biases.empty())
+				area_of_interest_width = window_size + svr_expert_intensity[scale][view_id][ind].width - 1;
+				area_of_interest_height = window_size + svr_expert_intensity[scale][view_id][ind].height - 1;
+			}
+
+			// scale and rotate to mean shape to reference frame
+			cv::Mat sim = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<float>(ind, 0) - a1 * (area_of_interest_width - 1.0f) / 2.0f + b1 * (area_of_interest_width - 1.0f) / 2.0f, b1, a1, landmark_locations.at<float>(ind + n, 0) - a1 * (area_of_interest_width - 1.0f) / 2.0f - b1 * (area_of_interest_width - 1.0f) / 2.0f);
+
+			// Extract the region of interest around the current landmark location
+      cv::Mat_<float> area_of_interest(area_of_interest_height, area_of_interest_width, 0.0f);
+
+    	cv::warpAffine(grayscale_image, area_of_interest, sim, area_of_interest.size(), cv::WARP_INVERSE_MAP + cv::INTER_LINEAR);
+
+			// Get intensity response either from the SVR, CCNF, or CEN patch experts (prefer CEN as they are the most accurate so far)
+			if (!cen_expert_intensity.empty())
+			{
+
+				int im2col_size = (area_of_interest_width * area_of_interest_height - 1) / 2;
+
+				cv::Mat_<float> prealloc_mat = preallocated_im2col[ind][im2col_size];
+
+				// If frontal view we can do mirrored landmarks together
+				if (view_id == 0)
 				{
-					cv::Mat_<float> empty(0, 0, 0.0f);
-					cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, empty, patch_expert_responses[ind], empty, interp_mat, prealloc_mat, empty);
-					
-					// A slower, but slightly more accurate version
-					//cen_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
+					// If the patch expert does not have values, means it's a mirrored version and will be done in another part of a loop
+					if (!cen_expert_intensity[scale][view_id][ind].biases.empty())
+					{
+						// No mirrored expert, so do normally
+						int mirror_id = mirror_inds.at<int>(ind);
+						if (mirror_id == ind)
+						{
+							cv::Mat_<float> empty(0, 0, 0.0f);
+							cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, empty, patch_expert_responses[ind], empty, interp_mat, prealloc_mat, empty);
+						}
+						else
+						{
+
+							// Grab mirrored area of interest
+
+							// scale and rotate to mean shape to reference frame
+							cv::Mat sim_r = (cv::Mat_<float>(2, 3) << a1, -b1, landmark_locations.at<float>(mirror_id, 0) - a1 * (area_of_interest_width - 1.0f) / 2.0f + b1 * (area_of_interest_width - 1.0f) / 2.0f, b1, a1, landmark_locations.at<float>(mirror_id + n, 0) - a1 * (area_of_interest_width - 1.0f) / 2.0f - b1 * (area_of_interest_width - 1.0f) / 2.0f);
+
+							// Extract the region of interest around the current landmark location
+							cv::Mat_<float> area_of_interest_r(area_of_interest_height, area_of_interest_width, 0.0f);
+
+  						cv::warpAffine(grayscale_image, area_of_interest_r, sim_r, area_of_interest_r.size(), cv::WARP_INVERSE_MAP + cv::INTER_LINEAR);
+
+							cv::Mat_<float> prealloc_mat_right = preallocated_im2col[mirror_id][im2col_size];
+
+							cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, area_of_interest_r, patch_expert_responses[ind], patch_expert_responses[mirror_id], interp_mat, prealloc_mat, prealloc_mat_right);
+
+							preallocated_im2col[mirror_id][im2col_size] = prealloc_mat_right;
+
+						}
+					}
 				}
 				else
 				{
-					cv::Mat_<float> empty(0, 0, 0.0f);
-					cen_expert_intensity[scale][mirror_views.at<int>(view_id)][mirror_inds.at<int>(ind)].ResponseSparse(empty, area_of_interest, empty, patch_expert_responses[ind], interp_mat, empty, prealloc_mat);
+					// For space and memory saving use a mirrored patch expert
+					if (!cen_expert_intensity[scale][view_id][ind].biases.empty())
+					{
+						cv::Mat_<float> empty(0, 0, 0.0f);
+						cen_expert_intensity[scale][view_id][ind].ResponseSparse(area_of_interest, empty, patch_expert_responses[ind], empty, interp_mat, prealloc_mat, empty);
+
+						// A slower, but slightly more accurate version
+						//cen_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
+					}
+					else
+					{
+						cv::Mat_<float> empty(0, 0, 0.0f);
+						cen_expert_intensity[scale][mirror_views.at<int>(view_id)][mirror_inds.at<int>(ind)].ResponseSparse(empty, area_of_interest, empty, patch_expert_responses[ind], interp_mat, empty, prealloc_mat);
+					}
 				}
+
+				preallocated_im2col[ind][im2col_size] = prealloc_mat;
+
 			}
+			else if (!ccnf_expert_intensity.empty())
+			{
+				// get the correct size response window			
+				patch_expert_responses[ind] = cv::Mat_<float>(window_size, window_size);
 
-			preallocated_im2col[ind][im2col_size] = prealloc_mat;
+				int im2col_size = area_of_interest_width * area_of_interest_height;
 
+				cv::Mat_<float> prealloc_mat = preallocated_im2col[ind][im2col_size];
+
+				ccnf_expert_intensity[scale][view_id][ind].ResponseOpenBlas(area_of_interest, patch_expert_responses[ind], prealloc_mat);
+
+				preallocated_im2col[ind][im2col_size] = prealloc_mat;
+
+				// Below is an alternative way to compute the same, but that uses FFT instead of OpenBLAS
+				// ccnf_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
+
+			}
+			else
+			{
+				// get the correct size response window			
+				patch_expert_responses[ind] = cv::Mat_<float>(window_size, window_size);
+
+				svr_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
+			}
 		}
-		else if (!ccnf_expert_intensity.empty())
-		{
-			// get the correct size response window			
-			patch_expert_responses[ind] = cv::Mat_<float>(window_size, window_size);
-
-			int im2col_size = area_of_interest_width * area_of_interest_height;
-
-			cv::Mat_<float> prealloc_mat = preallocated_im2col[ind][im2col_size];
-
-			ccnf_expert_intensity[scale][view_id][ind].ResponseOpenBlas(area_of_interest, patch_expert_responses[ind], prealloc_mat);
-
-			preallocated_im2col[ind][im2col_size] = prealloc_mat;
-
-			// Below is an alternative way to compute the same, but that uses FFT instead of OpenBLAS
-			// ccnf_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
-
-		}
-		else
-		{
-			// get the correct size response window			
-			patch_expert_responses[ind] = cv::Mat_<float>(window_size, window_size);
-
-			svr_expert_intensity[scale][view_id][ind].Response(area_of_interest, patch_expert_responses[ind]);
-		}
-	}
 	});
 }
 

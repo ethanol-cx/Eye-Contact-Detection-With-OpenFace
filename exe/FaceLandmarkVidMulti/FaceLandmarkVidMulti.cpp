@@ -263,13 +263,11 @@ int main(int argc, char **argv)
 
 			}
 
-			// Keep only non overlapping detections (also convert to a concurrent vector
+			// Keep only non overlapping detections (so as not to start tracking where the face is already tracked)
 			NonOverlapingDetections(face_models, face_detections);
-
-			vector<tbb::atomic<bool> > face_detections_used(face_detections.size());
+			std::vector<bool> face_detections_used(face_detections.size(), false);
 
 			// Go through every model and update the tracking
-			//tbb::parallel_for(0, (int)face_models.size(), [&](int model) {
 			for (unsigned int model = 0; model < face_models.size(); ++model)
 			{
 
@@ -288,9 +286,10 @@ int main(int argc, char **argv)
 
 					for (size_t detection_ind = 0; detection_ind < face_detections.size(); ++detection_ind)
 					{
-						// if it was not taken by another tracker take it (if it is false swap it to true and enter detection, this makes it parallel safe)
-						if (face_detections_used[detection_ind].compare_and_swap(true, false) == false)
+						// if it was not taken by another tracker take it
+						if (!face_detections_used[detection_ind])
 						{
+							face_detections_used[detection_ind] = true;
 
 							// Reinitialise the model
 							face_models[model].Reset();
@@ -314,7 +313,6 @@ int main(int argc, char **argv)
 					detection_success = LandmarkDetector::DetectLandmarksInVideo(rgb_image, face_models[model], det_parameters[model], grayscale_image);
 				}
 			}
-			//});
 
 			// Keeping track of FPS
 			fps_tracker.AddFrame();

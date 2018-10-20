@@ -79,14 +79,14 @@ void CreateDirectory(std::string output_path)
 	}
 }
 
-void VideoWritingTask(tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > *writing_queue, bool is_sequence, cv::VideoWriter *video_writer)
+void RecorderOpenFace::VideoWritingTask(bool is_sequence)
 {
 
 	std::pair<std::string, cv::Mat> tracked_data;
 
 	while (true)
 	{
-		writing_queue->pop(tracked_data);
+		vis_to_out_queue.pop(tracked_data);
 
 		// Indicate that the thread should complete
 		if (tracked_data.second.empty())
@@ -96,9 +96,9 @@ void VideoWritingTask(tbb::concurrent_bounded_queue<std::pair<std::string, cv::M
 
 		if (is_sequence)
 		{
-			if (video_writer->isOpened())
+			if (video_writer.isOpened())
 			{
-				video_writer->write(tracked_data.second);
+				video_writer.write(tracked_data.second);
 			}
 		}
 		else
@@ -112,14 +112,14 @@ void VideoWritingTask(tbb::concurrent_bounded_queue<std::pair<std::string, cv::M
 	}
 }
 
-void AlignedImageWritingTask(tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > *writing_queue)
+void RecorderOpenFace::AlignedImageWritingTask()
 {
 
 	std::pair<std::string, cv::Mat> tracked_data;
 
 	while (true)
 	{
-		writing_queue->pop(tracked_data);
+		aligned_face_queue.pop(tracked_data);
 
 		// Empty frame indicates termination
 		if (tracked_data.second.empty())
@@ -373,13 +373,7 @@ void RecorderOpenFace::WriteObservation()
 			aligned_face_queue.set_capacity(capacity);
 
 			// Start the alignment output thread			
-#ifdef _WIN32 
-			// For keeping track of tasks
-			writing_threads.run([&] {AlignedImageWritingTask(&aligned_face_queue); });
-#else
-			// Start the alignment output thread
-			aligned_writing_thread = std::thread(&AlignedImageWritingTask, &aligned_face_queue);
-#endif
+			aligned_writing_thread = std::thread(&RecorderOpenFace::AlignedImageWritingTask, this);
 		}
 
 		char name[100];
@@ -442,13 +436,7 @@ void RecorderOpenFace::WriteObservationTracked()
 			}
 
 			// Start the video and tracked image writing thread
-#ifdef _WIN32 
-			// For keeping track of tasks
-			writing_threads.run([&] {VideoWritingTask(&vis_to_out_queue, params.isSequence(), &video_writer); });
-#else
-			video_writing_thread = std::thread(&VideoWritingTask, &vis_to_out_queue, params.isSequence(), &video_writer);
-#endif
-
+			video_writing_thread = std::thread(&RecorderOpenFace::VideoWritingTask, this, params.isSequence());
 
 		}
 
@@ -541,14 +529,10 @@ void RecorderOpenFace::Close()
 	aligned_face_queue.push(std::pair<string, cv::Mat>("", cv::Mat()));
 
 	// Make sure the recording threads complete
-#ifdef _WIN32 
-	writing_threads.wait();
-#else
 	if (video_writing_thread.joinable())
 		video_writing_thread.join();
 	if (aligned_writing_thread.joinable())
 		aligned_writing_thread.join();
-#endif
 
 	tracked_writing_thread_started = false;
 	aligned_writing_thread_started = false;

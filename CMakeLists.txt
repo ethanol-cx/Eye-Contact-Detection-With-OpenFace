@@ -48,25 +48,6 @@ else()
     MESSAGE(FATAL_ERROR "Boost not found in the system.")
 endif()
 
-# Try finding TBB in default location
-find_package( TBB CONFIG )
-
-# If not found, use FindTBB.cmake
-if ("${TBB_LIBRARIES}" STREQUAL "")
-	MESSAGE("TBB not found in CONFIG, searching with FindTBB.cmake.") 
-    find_package( TBB REQUIRED )
-	if ("${TBB_LIBRARIES}" STREQUAL "")
-		MESSAGE(FATAL_ERROR "TBB not found")
-	endif()
-else()
-	MESSAGE("TBB found in CONFIG: ${TBB_LIBRARIES}") 
-endif()
-
-MESSAGE("TBB information:")
-MESSAGE("  TBB_VERSION: ${TBB_VERSION}")
-MESSAGE("  TBB_INCLUDE_DIRS: ${TBB_INCLUDE_DIRS}")
-MESSAGE("  TBB_LIBRARIES: ${TBB_LIBRARIES}")
-
 # Move LandmarkDetector model
 file(GLOB files "lib/local/LandmarkDetector/model/*.txt")
 foreach(file ${files})

@@ -100,6 +100,6 @@ I did my best to make sure that the code runs out of the box but there are alway
 
 Copyright can be found in the Copyright.txt
 
-You have to respect boost, TBB, dlib, OpenBLAS, and OpenCV licenses.
+You have to respect boost, dlib, OpenBLAS, and OpenCV licenses.
 
 Furthermore you have to respect the licenses of the datasets used for model training - https://github.com/TadasBaltrusaitis/OpenFace/wiki/Datasets

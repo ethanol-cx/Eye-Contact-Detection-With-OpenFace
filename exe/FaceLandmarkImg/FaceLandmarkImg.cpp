@@ -38,8 +38,6 @@
 
 #include "LandmarkCoreIncludes.h"
 
-#include <tbb/tbb.h>
-
 #include <FaceAnalyser.h>
 #include <GazeEstimation.h>
 

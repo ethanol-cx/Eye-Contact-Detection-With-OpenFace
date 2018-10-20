@@ -40,9 +40,6 @@
 #include <filesystem.hpp>
 #include <filesystem/fstream.hpp>
 
-// TBB includes
-#include <tbb/tbb.h>
-
 // Local includes
 #include <LandmarkDetectorUtils.h>
 #include <RotationHelpers.h>
@@ -646,41 +643,43 @@ bool CLNF::DetectLandmarks(const cv::Mat_<uchar> &image, FaceModelParameters& pa
 		bool parts_used = false;		
 
 		// Do the hierarchical models in parallel
-		tbb::parallel_for(0, (int)hierarchical_models.size(), [&](int part_model){
-		{
-
-			int n_part_points = hierarchical_models[part_model].pdm.NumberOfPoints();
-
-			vector<pair<int, int>> mappings = this->hierarchical_mapping[part_model];
-
-			cv::Mat_<float> part_model_locs(n_part_points * 2, 1, 0.0f);
-
-			// Extract the corresponding landmarks
-			for (size_t mapping_ind = 0; mapping_ind < mappings.size(); ++mapping_ind)
+		parallel_for_(cv::Range(0, hierarchical_models.size()), [&](const cv::Range& range) {
+			for (int part_model = range.start; part_model < range.end; part_model++)
 			{
-				part_model_locs.at<float>(mappings[mapping_ind].second) = detected_landmarks.at<float>(mappings[mapping_ind].first);
-				part_model_locs.at<float>(mappings[mapping_ind].second + n_part_points) = detected_landmarks.at<float>(mappings[mapping_ind].first + this->pdm.NumberOfPoints());
+				
+				int n_part_points = hierarchical_models[part_model].pdm.NumberOfPoints();
+
+				vector<pair<int, int>> mappings = this->hierarchical_mapping[part_model];
+
+				cv::Mat_<float> part_model_locs(n_part_points * 2, 1, 0.0f);
+
+				// Extract the corresponding landmarks
+				for (size_t mapping_ind = 0; mapping_ind < mappings.size(); ++mapping_ind)
+				{
+					part_model_locs.at<float>(mappings[mapping_ind].second) = detected_landmarks.at<float>(mappings[mapping_ind].first);
+					part_model_locs.at<float>(mappings[mapping_ind].second + n_part_points) = detected_landmarks.at<float>(mappings[mapping_ind].first + this->pdm.NumberOfPoints());
+				}
+
+				// Fit the part based model PDM
+				hierarchical_models[part_model].pdm.CalcParams(hierarchical_models[part_model].params_global, hierarchical_models[part_model].params_local, part_model_locs);
+
+				// Only do this if we don't need to upsample
+				if (params_global[0] > 0.9 * hierarchical_models[part_model].patch_experts.patch_scaling[0])
+				{
+					parts_used = true;
+
+					this->hierarchical_params[part_model].window_sizes_current = this->hierarchical_params[part_model].window_sizes_init;
+
+					// Do the actual landmark detection
+					hierarchical_models[part_model].DetectLandmarks(image, hierarchical_params[part_model]);
+
+				}
+				else
+				{
+					hierarchical_models[part_model].pdm.CalcShape2D(hierarchical_models[part_model].detected_landmarks, hierarchical_models[part_model].params_local, hierarchical_models[part_model].params_global);
+				}
+		
 			}
-
-			// Fit the part based model PDM
-			hierarchical_models[part_model].pdm.CalcParams(hierarchical_models[part_model].params_global, hierarchical_models[part_model].params_local, part_model_locs);
-
-			// Only do this if we don't need to upsample
-			if (params_global[0] > 0.9 * hierarchical_models[part_model].patch_experts.patch_scaling[0])
-			{
-				parts_used = true;
-
-				this->hierarchical_params[part_model].window_sizes_current = this->hierarchical_params[part_model].window_sizes_init;
-
-				// Do the actual landmark detection
-				hierarchical_models[part_model].DetectLandmarks(image, hierarchical_params[part_model]);
-
-			}
-			else
-			{
-				hierarchical_models[part_model].pdm.CalcShape2D(hierarchical_models[part_model].detected_landmarks, hierarchical_models[part_model].params_local, hierarchical_models[part_model].params_global);
-			}
-		}
 		});
 
 		// Recompute main model based on the fit part models

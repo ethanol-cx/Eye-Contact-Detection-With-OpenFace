@@ -40,9 +40,6 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc.hpp>
 
-// TBB includes
-#include <tbb/tbb.h>
-
 // System includes
 #include <fstream>
 

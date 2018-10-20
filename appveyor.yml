@@ -4,6 +4,7 @@ branches:
   - develop
   - master
   - feature/code_cleanup
+  - feature/parallel_for
 max_jobs: 4  
 configuration:
 - Release
