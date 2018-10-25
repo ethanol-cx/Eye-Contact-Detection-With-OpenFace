@@ -9,6 +9,7 @@ branches:
     - develop
     - feature/code_cleanup
     - feature/parallel_for
+    - feature/openblas_update
 compiler:
   - gcc
 

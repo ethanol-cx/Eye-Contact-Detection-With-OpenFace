@@ -1,8 +1,8 @@
 ﻿Using the following OpenBLAS implementation - https://github.com/xianyi/OpenBLAS
 
 The pre-compiled library was acquired from (64 bit version):
-https://sourceforge.net/projects/openblas/files/v0.2.19/ 
-File - OpenBLAS-v0.2.19-Win64-int32.zip
+Manually building OpenBLAS 0.3.3 from code using Miniconda - https://github.com/xianyi/OpenBLAS/wiki/How-to-use-OpenBLAS-in-Microsoft-Visual-Studio
+version - https://github.com/xianyi/OpenBLAS/archive/v0.3.3.zip
 
 The pre-compiled library was acquired from (32 bit version):
 https://sourceforge.net/projects/openblas/files/v0.2.15/ 

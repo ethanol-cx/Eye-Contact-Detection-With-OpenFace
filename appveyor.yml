@@ -5,6 +5,7 @@ branches:
   - master
   - feature/code_cleanup
   - feature/parallel_for
+  - feature/openblas_update
 max_jobs: 4  
 configuration:
 - Release
