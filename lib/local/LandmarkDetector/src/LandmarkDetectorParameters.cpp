@@ -150,13 +150,6 @@ FaceModelParameters::FaceModelParameters(vector<string> &arguments)
 			valid[i + 1] = false;
 			i++;
 		}
-		else if (arguments[i].compare("-q") == 0)
-		{
-
-			quiet_mode = true;
-
-			valid[i] = false;
-		}
 		else if (arguments[i].compare("-wild") == 0)
 		{
 			// For in the wild fitting these parameters are suitable
@@ -345,7 +338,6 @@ void FaceModelParameters::init()
 	// Face detection
 	haar_face_detector_location = "classifiers/haarcascade_frontalface_alt.xml";
 	mtcnn_face_detector_location = "model/mtcnn_detector/MTCNN_detector.txt";
-	quiet_mode = false;
 
 	// By default use MTCNN
 	curr_face_detector = MTCNN_DETECTOR;

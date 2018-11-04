@@ -197,7 +197,7 @@ void RecorderOpenFace::PrepareRecording(const std::string& in_filename)
 		}
 		else
 		{
-			this->media_filename = out_name + ".jpg";
+			this->media_filename = out_name + "." + params.imageFormatVisualization();
 			metadata_file << "Output image:" << this->media_filename << endl;
 			this->media_filename = (path(record_root) / this->media_filename).string();
 		}
@@ -378,18 +378,18 @@ void RecorderOpenFace::WriteObservation()
 
 		char name[100];
 
-		// Filename is based on frame number
+		// Filename is based on frame number (TODO stringstream this)
 		if(params.isSequence())
-			std::sprintf(name, "frame_det_%02d_%06d.bmp", face_id, frame_number);
+			std::sprintf(name, "frame_det_%02d_%06d.", face_id, frame_number);
 		else
-			std::sprintf(name, "face_det_%06d.bmp", face_id);
+			std::sprintf(name, "face_det_%06d.", face_id);
 
 		// Construct the output filename
 		boost::filesystem::path slash("/");
 
 		std::string preferredSlash = slash.make_preferred().string();
 
-		string out_file = aligned_output_directory + preferredSlash + string(name);
+		string out_file = aligned_output_directory + preferredSlash + string(name) + params.imageFormatAligned();
 
 		if(params.outputBadAligned() || landmark_detection_success)
 		{

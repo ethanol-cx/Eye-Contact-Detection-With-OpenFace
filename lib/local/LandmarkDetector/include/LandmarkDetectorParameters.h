@@ -99,9 +99,6 @@ struct FaceModelParameters
 	string mtcnn_face_detector_location;
 	FaceDetector curr_face_detector;
 
-	// Should the results be visualised and reported to console
-	bool quiet_mode;
-
 	// Should the model be refined hierarchically (if available)
 	bool refine_hierarchical;
 

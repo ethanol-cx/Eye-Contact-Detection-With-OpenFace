@@ -58,6 +58,9 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 	// Default output code
 	this->output_codec = "DIVX";
 
+	this->image_format_aligned = "bmp";
+	this->image_format_visualization = "jpg";
+
 	bool output_set = false;
 
 	this->output_2D_landmarks = false;
@@ -74,6 +77,16 @@ RecorderOpenFaceParameters::RecorderOpenFaceParameters(std::vector<std::string> 
 
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
+		if (arguments[i].compare("-format_aligned") == 0)
+		{
+			this->image_format_aligned = arguments[i+1];
+			i++;
+		}
+		if (arguments[i].compare("-format_vis_image") == 0)
+		{
+			this->image_format_visualization = arguments[i + 1];
+			i++;
+		}
 		if (arguments[i].compare("-nobadaligned") == 0)
 		{
 			this->record_aligned_bad = false;

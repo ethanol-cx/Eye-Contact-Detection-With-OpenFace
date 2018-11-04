@@ -70,6 +70,8 @@ namespace Utilities
 		bool outputTracked() const { return output_tracked; }
 		bool outputAlignedFaces() const { return output_aligned_faces; }
 		std::string outputCodec() const { return output_codec; }
+		std::string imageFormatAligned() const { return image_format_aligned; }
+		std::string imageFormatVisualization() const { return image_format_visualization; }
 		double outputFps() const { return fps_vid_out; }
 
 		bool outputBadAligned() const { return record_aligned_bad; }
@@ -106,6 +108,10 @@ namespace Utilities
 		// Some video recording parameters
 		std::string output_codec;
 		double fps_vid_out;
+
+		// Image recording parameters
+		std::string image_format_aligned;
+		std::string image_format_visualization;
 
 		// Camera parameters for recording in the meta file;
 		float fx, fy, cx, cy;
