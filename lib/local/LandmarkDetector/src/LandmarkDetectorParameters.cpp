@@ -331,7 +331,8 @@ void FaceModelParameters::init()
 	validation_boundary = 0.725f;
 
 	limit_pose = true;
-	multi_view = false;
+
+	multi_view = true;
 
 	reinit_video_every = 2;
 

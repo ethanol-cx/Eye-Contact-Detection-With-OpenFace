@@ -342,9 +342,10 @@ bool LandmarkDetector::DetectLandmarksInVideo(const cv::Mat &rgb_image, CLNF& cl
 
 			// Do the actual landmark detection (and keep it only if successful)
 			// Perform multi-hypothesis detection here (as face detector can pick up multiple of them)
+			bool old_value = params.multi_view;
 			params.multi_view = true;
 			bool landmark_detection_success = DetectLandmarksInImage(rgb_image, bounding_box, clnf_model, params, grayscale_image);
-			params.multi_view = false;
+			params.multi_view = old_value;
 
 
 			// If landmark reinitialisation unsucessful continue from previous estimates
