@@ -1,4 +1,4 @@
-![ ](https://i.imgur.com/nXpVJep.gif)
+![ ](https://camo.githubusercontent.com/3b74084ed00cb47fe3d2604372ebf842369e40fe/68747470733a2f2f692e696d6775722e636f6d2f6e5870564a65702e676966)
 
 # Eye Contact Detection built on top of OpenFace 2.0.6
 
