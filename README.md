@@ -8,7 +8,7 @@ Project Contributors: John Dwyer, Nik Pash, Chuanxiu Xiong, Alec Schule, Christi
 
 Research conducted under the guidance of Lauren Klien, PhD candidate at the [USC Robotics Interaction Lab](http://robotics.usc.edu/interaction/).
 
-![USC Interaction Lab Logo](http://robotics.usc.edu/interaction/img/ILAB_icon_yellow_nodecap.png)
+<img src="http://robotics.usc.edu/interaction/img/ILAB_icon_yellow_nodecap.png" height="280">
 
 [![Build Status](https://travis-ci.org/TadasBaltrusaitis/OpenFace.svg?branch=master)](https://travis-ci.org/TadasBaltrusaitis/OpenFace)
 [![Build status](https://ci.appveyor.com/api/projects/status/8msiklxfbhlnsmxp/branch/master?svg=true)](https://ci.appveyor.com/project/TadasBaltrusaitis/openface/branch/master)
