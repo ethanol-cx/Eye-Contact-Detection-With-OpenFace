@@ -1,4 +1,4 @@
-![alt text](https://github.com/pashpashpash/Eye-Detection-With-OpenFace/DetectEyeContact.gif)
+![ ](https://i.imgur.com/nXpVJep.gif)
 
 # OpenFace 2.0.6: an open source facial behavior analysis toolkit
 
