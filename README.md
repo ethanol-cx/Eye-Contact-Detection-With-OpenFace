@@ -1,3 +1,5 @@
+![alt text](https://github.com/pashpashpash/Eye-Detection-With-OpenFace/DetectEyeContact.gif)
+
 # OpenFace 2.0.6: an open source facial behavior analysis toolkit
 
 [![Build Status](https://travis-ci.org/TadasBaltrusaitis/OpenFace.svg?branch=master)](https://travis-ci.org/TadasBaltrusaitis/OpenFace)
