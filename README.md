@@ -6,7 +6,7 @@ We present a tool made for the USC interaction lab under the guidance of Lauren 
 
 Project Contributors: John Dwyer, Nik Pash, Chuanxiu Xiong, Alec Schule, Christian Glover
 
-Research conducted under the guidance of Lauren Klien, PhD candidate at University of Southern California.
+Research conducted under the guidance of Lauren Klien, PhD candidate at the University of Southern California [Interaction Lab](http://robotics.usc.edu/interaction/).
 
 ![USC Interaction Lab Logo](http://robotics.usc.edu/interaction/img/ILAB_icon_yellow_nodecap.png)
 
