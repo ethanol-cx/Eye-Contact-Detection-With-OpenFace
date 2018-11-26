@@ -1,5 +1,5 @@
 # Ready to run eye detection software on Mac
-In this folder you'll find a binary file named `DetectEyeContact` –– it is a modified version of `FaceLandmarkVid`, recompiled on a Mac to extend the functionality of detecting eye contact in babies. You'll need to download all of the [OpenFace models located here](https://www.dropbox.com/sh/f84ylup6npucn5t/AABzpvGSvE5E2GksPd7Yx5z_a?dl=0) before running `DetectEyeContact`. The `model` folder contains all of the mac-compiled models that OpenFace uses to extract facial features – download & place it in this directory prior to running.
+In this folder you'll find a binary file named `DetectEyeContact` –– it is a modified version of `FaceLandmarkVid`, recompiled on a Mac to extend the functionality of detecting eye contact in babies. You'll need to download the [OpenFace model folder located here](https://www.dropbox.com/sh/f84ylup6npucn5t/AABzpvGSvE5E2GksPd7Yx5z_a?dl=0) before running `DetectEyeContact`. The `model` folder contains all of the mac-compiled models that OpenFace uses to extract facial features – download & place it in this directory prior to running.
 
 
 ## Instructions
