@@ -2,11 +2,11 @@
 
 # Eye Contact Detection built on top of OpenFace 2.0.6
 
-We present a tool made for the USC interaction lab under the guidance of Lauren Klien, PhD. This tool uses state of the art prediction models to predict eye contact in infants with a 97% success rate. Please check the [eye_contact_files](https://github.com/pashpashpash/Eye-Detection-With-OpenFace/tree/master/eye_contact_files) directory for installation/running instructions.
+We present a tool made for the [USC Interaction Lab](http://robotics.usc.edu/interaction/img/ILAB_icon_yellow_nodecap.png) under the guidance of Lauren Klien, PhD. This tool uses state of the art prediction models to predict eye contact in infants with a 97% success rate. Please check the [eye_contact_files](https://github.com/pashpashpash/Eye-Detection-With-OpenFace/tree/master/eye_contact_files) directory for installation/running instructions.
 
 Project Contributors: John Dwyer, Nik Pash, Chuanxiu Xiong, Alec Schule, Christian Glover
 
-Research conducted under the guidance of Lauren Klien, PhD candidate at the [USC Robotics Interaction Lab](http://robotics.usc.edu/interaction/).
+Research conducted under the guidance of Lauren Klien, PhD candidate at University of Southern California.
 
 <img src="http://robotics.usc.edu/interaction/img/ILAB_icon_yellow_nodecap.png" height="280">
 
