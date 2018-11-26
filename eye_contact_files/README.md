@@ -3,7 +3,7 @@ This directory contains all of the resources you need to recompile the source co
 ## Easy run on Mac
 Navigate to the [ready2run_mac_binary](https://github.com/pashpashpash/Eye-Detection-With-OpenFace/tree/master/eye_contact_files/ready2run_mac_binary) folder to run the executable code on Mac. This won't work on linux.
 ## Source Code Installation and Recompilation
-To have full control over the source code (and be able to recompile it) you'll need to run all of the [OpenFace installation instructions](https://github.com/TadasBaltrusaitis/OpenFace/wiki) in the root directory, and then replace the `FaceLandmarkVid.cpp` file for the one our team wrote, located in the [bin_replacement](https://github.com/pashpashpash/Eye-Detection-With-OpenFace/tree/master/eye_contact_files/bin_replacement) folder. Once you've successfully replaced the OpenFace `FaceLandmarkVid.cpp` for ours, navigate back to the root directory and recompile using
+To have full control over the source code (and be able to recompile it) you'll need to run all of the [OpenFace installation instructions](https://github.com/TadasBaltrusaitis/OpenFace/wiki) in the root directory, and then replace the `FaceLandmarkVid.cpp` file for the one our team wrote, located in this folder. Once you've successfully replaced the OpenFace `FaceLandmarkVid.cpp` for ours, navigate back to the root directory and recompile using
 ```cmake```
 and
 ```make```
