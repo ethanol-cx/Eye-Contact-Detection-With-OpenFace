@@ -1,4 +1,4 @@
-# Eye Detection Source Code
+# Eye Contact Detection Source Code
 This directory contains all of the resources you need to recompile the source code from scratch (in the [bin_replacement](https://github.com/pashpashpash/Eye-Detection-With-OpenFace/tree/master/eye_contact_files/bin_replacement) folder) as well as easily run the software without needing to compile (in the [ready2run_mac_binary](https://github.com/pashpashpash/Eye-Detection-With-OpenFace/tree/master/eye_contact_files/ready2run_mac_binary) folder).
 ## Easy run on Mac
 Navigate to the [ready2run_mac_binary](https://github.com/pashpashpash/Eye-Detection-With-OpenFace/tree/master/eye_contact_files/ready2run_mac_binary) folder to run the executable code on Mac. This won't work on linux.
