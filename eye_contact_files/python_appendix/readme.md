@@ -25,7 +25,7 @@ Specify the first file in line 3, and the file to add to it in line 4.
 `predictorServer.py` - The predictorServer file is used for calling predictions in real time from OpenFace.
 Specify the model file you'd like to call predictions from in line 18 as a joblib file.
 
-`predictorClient.py` - The client file is used to connect to the server and ask for a prediction from command line arguments
+`predictorClient.py` - The client file is used to connect to the server and ask for a prediction from command line arguments. There is additional commented out functionality within this file that you can un-comment to allow for real-time `csv` prediction output as well as checking against annotations while running on a pre-recorded/pre-annotated video.
 
 `gaussianTrain.py` - Used for training, evaluating and serializing as a joblib a Gaussian Naive Bayes model on the data.
 Specify the data set file name you'd like to train from in line 10.
