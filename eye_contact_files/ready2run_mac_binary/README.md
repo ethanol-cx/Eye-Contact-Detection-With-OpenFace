@@ -24,4 +24,4 @@ You can get some degree of customization without needing to recompile the C++.
 
 For example, if you'd like to check against annotations while running a pre-recorded video, open the `predictorClient.py` file in a text-editor of your choice, and un-comment the corresponding blob.
 
-Similarly, to write predictions to a file in real-time, open the `predictorClient.py` file and un-comment the corresponding blob.
+Similarly, to write predictions to a file in real-time, open the `predictorClient.py` file and un-comment the corresponding blob. For further details on any of the eye contact detection files, please refer to the [python appendix](https://github.com/pashpashpash/Eye-Contact-Detection-With-OpenFace/tree/master/eye_contact_files/python_appendix).
