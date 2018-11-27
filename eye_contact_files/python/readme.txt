@@ -1,4 +1,19 @@
 Here's our suite of tools for creating models to predict eye contact with OpenFace features
+To create models to use in the eye contact prediction software, follow these steps:
+
+1. Use OpenFace Feature extraction on training data videos to obtain the features csv. Annotate the video with ELAN for when the subject is looking or not. Export these annotations as a csv.
+
+2. Combine feature extractions and annotations with processor.py. Follow the instructions within the file for specifying the csv files.
+
+3. Use stacker.py to combine individual videos into one large dataset before training.
+
+4. Use any of the machine learning files (gaussianTrain.py, ) to train and output a .joblib file of your predictive model.
+
+5. Specify the .joblib file in the predictorServer.py for the server to make predictions from.
+
+Note- the features in openface you are using to predict must match the features the .joblib file is trained from. The same number of features but not the same will result in inaccurate predictions, and using a different number of features will cause errors.
+
+
 The files here are as follows:
 
 processor.py - Used for matching ELAN annotations in csv form with OpenFace features after performing feature extraction on a video.
