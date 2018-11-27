@@ -15,7 +15,7 @@ Once in the `/bin/` folder,  you'll need to start the python server that loads t
 python3 predictorServer.py
 ```
 
-If you get any errors, run a pip install on the missing dependencies. Next, open up a second terminal window and navigate to this same directory.
+For an explanation of any of the python scripts used by the eye contact detection software, please refer to [the python appendix](https://github.com/pashpashpash/Eye-Contact-Detection-With-OpenFace/tree/master/eye_contact_files/python_appendix). If you get any errors, run a pip install on the missing dependencies. Next, open up a second terminal window and navigate to this same directory.
 
 While the `predictorServer.py` is running in another terminal window, run eye contact detection on a pre-recorded video by running
 ```
